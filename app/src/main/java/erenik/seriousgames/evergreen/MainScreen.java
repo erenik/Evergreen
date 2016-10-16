@@ -1,12 +1,16 @@
 package erenik.seriousgames.evergreen;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -68,16 +72,35 @@ public class MainScreen extends AppCompatActivity {
             hide();
         }
     };
+
+    private int dailyAction = -1;
+    private int skill = -1;
+    private int activeAction = -1;
+
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
      */
-    private final View.OnTouchListener selectAction = new View.OnTouchListener() {
+    private final View.OnClickListener selectActionSkill = new View.OnClickListener() {
+
         @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            System.out.println("Select skill");
-            return false;
+        public void onClick(View view)
+        {
+            findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
+            findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
+            findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
+
+            int selection = -1;
+            switch(view.getId())
+            {
+                case R.id.buttonChooseSkill: selection = SelectActivity.SELECT_SKILL; break;
+                case R.id.buttonChooseAction: selection = SelectActivity.SELECT_DAILY_ACTION; break;
+                case R.id.buttonChooseActiveAction: selection = SelectActivity.SELECT_ACTIVE_ACTION; break;
+            }
+            Intent i = new Intent(getBaseContext(), SelectActivity.class);
+            i.putExtra("Type", selection);
+            startActivityForResult(i, selection);
         }
     };
 
@@ -88,22 +111,23 @@ public class MainScreen extends AppCompatActivity {
         setContentView(R.layout.activity_main_screen);
 
         mVisible = true;
-        mControlsView = findViewById(R.id.fullscreen_content_controls);
-        mContentView = findViewById(R.id.fullscreen_content);
 
+//        mControlsView = findViewById(R.id.fullscreen_content_controls);
+  //      mContentView = findViewById(R.id.fullscreen_content);
 
-        // Set up the user interaction to manually show or hide the system UI.
-        mContentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggle();
-            }
-        });
+        // Dynamically adjust size of the icons for HP, food, etc. to be 33% of screen size.
+        Display display = getWindowManager().getDefaultDisplay();
+        int width = display.getWidth();
+        double ratio = ((float) (width))/300.0;
+        int height = (int)(ratio*50);
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.ChooseAction).setOnTouchListener(selectAction);
+        findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
+        findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
+        findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
+
     }
 
     @Override
@@ -113,9 +137,46 @@ public class MainScreen extends AppCompatActivity {
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-        delayedHide(100);
+       // delayedHide(100);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        int type = requestCode;
+        System.out.println("onActivityResult called, req: "+requestCode+" code: " + resultCode);
+        if (resultCode < 0)
+            return;
+        switch(type)
+        {
+            case SelectActivity.SELECT_ACTIVE_ACTION:
+                activeAction = resultCode;
+                UpdateActiveActionButton();
+                break;
+            case SelectActivity.SELECT_DAILY_ACTION:
+                dailyAction = resultCode;
+                UpdateDailyActionButton();
+                break;
+            case SelectActivity.SELECT_SKILL:
+                skill = resultCode;
+                UpdateSkillButton();
+                break;
+        }
+    }
+    private void UpdateActiveActionButton() {
+        int idBtn = R.id.buttonChooseActiveAction;
+        TextView tv = (TextView) findViewById(idBtn);
+        if (activeAction >= 0)
+            tv.setText("Change Active Action: " + getResources().getStringArray(R.array.activeActions)[activeAction]);
+        else
+            tv.setText("Active action");
+    }
+    private void UpdateDailyActionButton() {
+        ((TextView) findViewById(R.id.buttonChooseAction)).setText("Change Action: " + getResources().getStringArray(R.array.dailyActions)[dailyAction]);
+    }
+    private void UpdateSkillButton(){
+        ((TextView) findViewById(R.id.buttonChooseSkill)).setText("Change Skill: "+getResources().getStringArray(R.array.skills)[skill]);
+    }
     private void toggle() {
         if (mVisible) {
             hide();

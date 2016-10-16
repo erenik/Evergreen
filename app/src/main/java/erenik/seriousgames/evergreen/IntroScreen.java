@@ -117,6 +117,7 @@ public class IntroScreen extends AppCompatActivity {
                         break;
                     default: // Load next view.
                     {
+                        System.out.println("Starting new activity");
                         Intent i = new Intent(getBaseContext(), MainScreen.class);
                         startActivity(i);
                         break;

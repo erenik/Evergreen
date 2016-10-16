@@ -23,7 +23,8 @@
             android:name=".MainScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_main_screen"
-            android:theme="@style/FullscreenTheme"></activity>
+            android:theme="@style/FullscreenTheme" />
+        <activity android:name=".SelectActivity"></activity>
     </application>
 
 </manifest>

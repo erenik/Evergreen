@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
+    android:background="#B3FFB3"
     tools:context="erenik.seriousgames.evergreen.MainScreen">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -12,60 +12,180 @@
     <!-- Status above -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         >
 
+        <!-- /// First Row of stats -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:layout_gravity="center_horizontal|top">
 
-
+            <!-- HP -->
             <ImageView
-                android:layout_width="wrap_content"
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="match_parent"
+                android:id="@+id/imageViewHP" android:src="@drawable/heart"
+                android:contentDescription="A heart" />
+            <TextView android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
-                android:id="@+id/imageView"
-                android:src="@drawable/Heart"
-                android:contentDescription="A heart"
-                />
+                android:text="10/10" android:id="@+id/textViewHP"
+                android:layout_gravity="center_vertical"
+                android:elegantTextHeight="false"
+                android:textSize="20dp" />
+
+            <!-- Food -->
+            <ImageView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="fill_parent"
+                android:id="@+id/imageView2" android:src="@drawable/food" />
+            <TextView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="10/10" android:id="@+id/textViewFood"
+                android:layout_gravity="center_vertical"
+                android:elegantTextHeight="false"
+                android:textSize="20dp" />
+
+            <!-- Materials -->
+            <ImageView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="fill_parent"
+                android:id="@+id/imageViewMaterials" android:src="@drawable/materials" />
+            <TextView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="10/10" android:id="@+id/textViewMaterials"
+                android:layout_gravity="center_vertical"
+                android:elegantTextHeight="false"
+                android:textSize="20dp" />
+        </LinearLayout>
+
+        <!-- /// Second Row of stats -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center_horizontal|top">
+
+            <!-- Attack -->
+            <ImageView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="match_parent"
+                android:id="@+id/imageViewAttack" android:src="@drawable/attack"
+                android:contentDescription="A heart" />
+            <TextView android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="10/10" android:id="@+id/textViewAttack"
+                android:layout_gravity="center_vertical"
+                android:textSize="20dp" />
+
+            <!-- Defense -->
+            <ImageView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="fill_parent"
+                android:id="@+id/imageViewDef" android:src="@drawable/defense" />
+            <TextView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="10/10" android:id="@+id/textViewDefense"
+                android:layout_gravity="center_vertical"
+                android:textSize="20dp" />
+
+            <!-- Emissions -->
+            <ImageView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="fill_parent"
+                android:id="@+id/imageView" android:src="@drawable/emissions" />
+            <TextView
+                android:layout_width="0px" android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="10/10" android:id="@+id/textViewEmissions"
+                android:layout_gravity="center_vertical"
+                android:textSize="20dp" />
+        </LinearLayout>
+
+        <Button
+            style="?metaButtonBarButtonStyle"
+            android:id="@+id/buttonChooseActiveAction"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="0.8"
+            android:text="Active actions"
+            android:textSize="16dp"
+            android:layout_gravity="center_horizontal" />
+
+        <Button
+            android:id="@+id/buttonChooseAction"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.8"
+            android:text="Choose action"
+            android:textSize="16dp" />
+
+        <Button
+            android:id="@+id/buttonChooseSkill"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.8"
+            android:text="Choose skill"
+            android:textSize="16dp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:id="@+id/scrollView"
+            android:layout_gravity="center_horizontal" >
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="10/10"
+                android:text="New Text\ntetet\ntetet\netet\netet\netete\netete\netet\netetet\netet\net\net\net\net\net\net\net\net\ne"
                 android:id="@+id/textView" />
-        </LinearLayout>
-
+        </ScrollView>
 
         <LinearLayout
-            android:id="@+id/LinearLayout"
-            style="?metaButtonBarStyle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:background="@color/black_overlay"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
 
             <Button
-                android:id="@+id/ChooseAction"
                 style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp"
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Chooce action" />
-            <Button
-                android:id="@+id/ChooseSkill"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Chooce skill" />
+                android:layout_weight="0.8"
+                android:text="Help"
+                android:textSize="16dp" />
 
+            <Button
+                style="?metaButtonBarButtonStyle"
+                android:id="@+id/button4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.8"
+                android:text="Next Day"
+                android:textSize="16dp" />
+
+            <Button
+                style="?metaButtonBarButtonStyle"
+                android:id="@+id/button3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.8"
+                android:text="Messages"
+                android:textSize="16dp" />
         </LinearLayout>
 
+        <!-- Some empty space at the bottom for design purposes? -->
 
     </LinearLayout>
 

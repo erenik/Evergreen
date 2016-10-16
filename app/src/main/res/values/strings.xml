@@ -10,7 +10,7 @@
     <string name="introText4">Once upon a time...</string>
 
     <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="dummy_content">Hello\nworld</string>
 
     <string name="title_activity_main_screen">MainScreen</string>
     <string name="Heart">drawable/Heart.png</string>
