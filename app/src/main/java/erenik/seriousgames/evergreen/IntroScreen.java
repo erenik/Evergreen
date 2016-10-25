@@ -1,6 +1,7 @@
 package erenik.seriousgames.evergreen;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +15,9 @@ import android.widget.TextView;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class IntroScreen extends AppCompatActivity {
+public class IntroScreen extends AppCompatActivity
+{
+    Player player = Player.getSingleton();
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -117,6 +120,8 @@ public class IntroScreen extends AppCompatActivity {
                         break;
                     default: // Load next view.
                     {
+                        player.name = "TestNAme";
+                        player.SaveLocally();
                         System.out.println("Starting new activity");
                         Intent i = new Intent(getBaseContext(), MainScreen.class);
                         startActivity(i);

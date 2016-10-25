@@ -16,7 +16,9 @@ import android.widget.TextView;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainScreen extends AppCompatActivity {
+public class MainScreen extends AppCompatActivity
+{
+    Player player = Player.getSingleton();
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -104,22 +106,20 @@ public class MainScreen extends AppCompatActivity {
         }
     };
 
+    /// Main init function
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main_screen);
 
         mVisible = true;
+        // Load stuff as needed.
+        player.LoadLocally();
+        player.SaveLocally(); // Save copy?
+        /// Update GUI.
+        UpdateGUI();
 
-//        mControlsView = findViewById(R.id.fullscreen_content_controls);
-  //      mContentView = findViewById(R.id.fullscreen_content);
-
-        // Dynamically adjust size of the icons for HP, food, etc. to be 33% of screen size.
-        Display display = getWindowManager().getDefaultDisplay();
-        int width = display.getWidth();
-        double ratio = ((float) (width))/300.0;
-        int height = (int)(ratio*50);
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -128,6 +128,21 @@ public class MainScreen extends AppCompatActivity {
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
 
+    }
+
+    void UpdateGUI()
+    {
+        SetText(R.id.textViewHP, player.Get(Player.Stat.HP)+"");
+        SetText(R.id.textViewFood, player.Get(Player.Stat.FOOD)+"");
+        SetText(R.id.textViewMaterials, player.Get(Player.Stat.MATERIALS)+"");
+        SetText(R.id.textViewAttack, player.Get(Player.Stat.BASE_ATTACK)+"");
+        SetText(R.id.textViewDefense, player.Get(Player.Stat.BASE_DEFENSE)+"");
+        SetText(R.id.textViewEmissions, player.Get(Player.Stat.EMISSIONS)+"");
+    }
+
+    void SetText(int viewID, String text)
+    {
+        ((TextView) findViewById(viewID)).setText(text);
     }
 
     @Override
