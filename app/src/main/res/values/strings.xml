@@ -3,6 +3,9 @@
 
     <string name="nextButton">Continue</string>
 
+
+    <string name="chooseAction">Choose action</string>
+    <string name="chooseSkill">Choose skill</string>
     <!-- /// Intro texts -->
     <string name="introText1">Once upon a time...</string>
     <string name="introText2">ffff...</string>

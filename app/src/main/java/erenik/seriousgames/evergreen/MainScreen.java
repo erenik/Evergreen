@@ -75,10 +75,6 @@ public class MainScreen extends AppCompatActivity
         }
     };
 
-    private int dailyAction = -1;
-    private int skill = -1;
-    private int activeAction = -1;
-
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
@@ -110,6 +106,7 @@ public class MainScreen extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
@@ -132,12 +129,16 @@ public class MainScreen extends AppCompatActivity
 
     void UpdateGUI()
     {
-        SetText(R.id.textViewHP, player.Get(Player.Stat.HP)+"");
-        SetText(R.id.textViewFood, player.Get(Player.Stat.FOOD)+"");
-        SetText(R.id.textViewMaterials, player.Get(Player.Stat.MATERIALS)+"");
-        SetText(R.id.textViewAttack, player.Get(Player.Stat.BASE_ATTACK)+"");
-        SetText(R.id.textViewDefense, player.Get(Player.Stat.BASE_DEFENSE)+"");
-        SetText(R.id.textViewEmissions, player.Get(Player.Stat.EMISSIONS)+"");
+        SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.GetInt(Stat.MAX_HP));
+        SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
+        SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
+        SetText(R.id.textViewAttack, player.Attack()+"");
+        SetText(R.id.textViewDefense, player.Defense()+"");
+        SetText(R.id.textViewEmissions, player.GetInt(Stat.EMISSIONS) + "");
+
+        UpdateActiveActionButton();
+        UpdateDailyActionButton();
+        UpdateSkillButton();
     }
 
     void SetText(int viewID, String text)
@@ -165,32 +166,42 @@ public class MainScreen extends AppCompatActivity
         switch(type)
         {
             case SelectActivity.SELECT_ACTIVE_ACTION:
-                activeAction = resultCode;
+                player.activeAction = resultCode;
                 UpdateActiveActionButton();
                 break;
             case SelectActivity.SELECT_DAILY_ACTION:
-                dailyAction = resultCode;
+                player.dailyAction = resultCode;
                 UpdateDailyActionButton();
                 break;
             case SelectActivity.SELECT_SKILL:
-                skill = resultCode;
+                player.skill = resultCode;
                 UpdateSkillButton();
                 break;
         }
+        player.SaveLocally(); // Save copy?
     }
     private void UpdateActiveActionButton() {
         int idBtn = R.id.buttonChooseActiveAction;
         TextView tv = (TextView) findViewById(idBtn);
-        if (activeAction >= 0)
-            tv.setText("Change Active Action: " + getResources().getStringArray(R.array.activeActions)[activeAction]);
+        if (player.activeAction >= 0)
+            tv.setText("Change Active Action: " + getResources().getStringArray(R.array.activeActions)[player.activeAction]);
         else
             tv.setText("Active action");
     }
     private void UpdateDailyActionButton() {
-        ((TextView) findViewById(R.id.buttonChooseAction)).setText("Change Action: " + getResources().getStringArray(R.array.dailyActions)[dailyAction]);
+        TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
+        if (player.dailyAction >= 0)
+            tv.setText("Change Action: " + getResources().getStringArray(R.array.dailyActions)[player.dailyAction]);
+        else
+            tv.setText(R.string.chooseAction);
     }
-    private void UpdateSkillButton(){
-        ((TextView) findViewById(R.id.buttonChooseSkill)).setText("Change Skill: "+getResources().getStringArray(R.array.skills)[skill]);
+    private void UpdateSkillButton()
+    {
+        TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
+        if (player.skill >= 0)
+            tv.setText("Change Skill: "+getResources().getStringArray(R.array.skills)[player.skill]);
+        else
+            tv.setText(R.string.chooseSkill);
     }
     private void toggle() {
         if (mVisible) {
