@@ -12,24 +12,24 @@
             android:name=".IntroScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
-            android:theme="@style/FullscreenTheme">
-        </activity>
+            android:theme="@style/FullscreenTheme"></activity>
         <activity
             android:name=".MainScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_main_screen"
             android:theme="@style/FullscreenTheme" />
         <activity android:name=".SelectActivity" />
-        <activity android:name=".Startup"
+        <activity
+            android:name=".Startup"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/app_name"
-            >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".GameOver"></activity>
     </application>
 
 </manifest>

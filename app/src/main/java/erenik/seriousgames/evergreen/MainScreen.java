@@ -101,7 +101,55 @@ public class MainScreen extends AppCompatActivity
             startActivityForResult(i, selection);
         }
     };
+    View.OnClickListener nextDay = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            NextDay();
+        }
+    };
 
+    /// o-o
+    void NextDay()
+    {
+        // Yeah.
+        player.Adjust(Stat.FOOD, -2);
+        if (player.GetInt(Stat.FOOD) > 0)
+            player.Adjust(Stat.HP, 1);
+        else
+            player.Adjust(Stat.HP, -1);
+        // Generate events?
+        DAction da = DAction.NONE;
+        try {
+            da = DAction.values()[player.dailyAction];
+        } catch (Exception e)
+        {
+            System.out.println(e.toString());
+        }
+        switch (da)
+        {
+            case FOOD:
+            {
+                player.Adjust(Stat.FOOD, 5);
+                break;
+            }
+            case MATERIALS: player.Adjust(Stat.MATERIALS, 3); break;
+            case SCOUT:
+                // Randomize.
+                System.out.println("So Random!!!");
+                break;
+            case RECOVER:
+                player.Adjust(Stat.HP, 2);
+                break;
+            case BUILD_DEF:
+                player.Adjust(Stat.SHELTER_DEFENSE, 0.5f / player.Get(Stat.SHELTER_DEFENSE));
+                break;
+            default:
+                System.out.println("Nooo");
+        }
+
+        // Finally, update gui.
+        UpdateGUI();
+    }
     /// Main init function
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -124,6 +172,7 @@ public class MainScreen extends AppCompatActivity
         findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
+        findViewById(R.id.nextDay).setOnClickListener(nextDay);
 
     }
 

@@ -4,6 +4,8 @@
     <string name="nextButton">Continue</string>
 
 
+    <string name="gameOverText">Game over</string>
+
     <string name="chooseAction">Choose action</string>
     <string name="chooseSkill">Choose skill</string>
     <!-- /// Intro texts -->

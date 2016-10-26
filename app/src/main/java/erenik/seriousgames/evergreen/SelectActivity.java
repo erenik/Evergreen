@@ -47,10 +47,16 @@ public class SelectActivity extends AppCompatActivity
         int arrayId = -1;
         switch(type)
         {
-            case SELECT_DAILY_ACTION: arrayId = R.array.dailyActions; break;
+            case SELECT_DAILY_ACTION:
+                arrayId = R.array.dailyActions;
+                break;
             case SELECT_ACTIVE_ACTION: arrayId = R.array.activeActions; break;
             case SELECT_SKILL: arrayId = R.array.skills; break;
         }
+
+  //      ArrayAdapter<CharSequence> adapter = new ArrayAdapter();
+//        DAction
+
         /// Populate the spinner!
         Spinner spinner = (Spinner) findViewById(R.id.spinnerSelect);
         // Create an ArrayAdapter using the string array and a default spinner layout

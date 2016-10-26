@@ -1,8 +1,37 @@
 package erenik.seriousgames.evergreen;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
+
+// Daily Action
+enum DAction
+{
+    FOOD("Gather berries"),
+    MATERIALS("Gather materials"),
+    SCOUT("Scout the area"),
+    RECOVER("Recover"),
+    BUILD_DEF("Build defenses"),
+
+    /* <item>Build defenses</item>
+    <item>Augment transport</item>
+    <item>Look for player</item>
+    <item>Expedition</item>
+    <item>Invent</item>
+    <item>Craft</item>
+    <item>Steal</item>
+    <item>Attack a player</item>
+*/
+    NONE("None")
+    ;
+    DAction(String txt)
+    {
+        this.text = txt;
+    }
+    String text;
+};
+
 
 enum Stat
 {
@@ -62,6 +91,21 @@ public class Player
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
     }
+    void Adjust(Stat s, float amount)
+    {
+        statArr[s.ordinal()] += amount;
+        if (s == Stat.HP ) {
+            if (GetInt(Stat.HP) > GetInt(Stat.MAX_HP))
+                SetInt(Stat.HP, GetInt(Stat.MAX_HP));
+            if (GetInt(Stat.HP) <= 0){
+                System.out.println("GaME OVER!!!");
+                Intent i = new Intent(App.currentActivity.getBaseContext(), GameOver.class);
+                App.currentActivity.startActivity(i);
+
+                // Quit?
+            }
+        }
+    }
     // Getter for main stats.
     float Get(int stat)
     {
@@ -74,6 +118,10 @@ public class Player
     int GetInt(Stat s)
     {
         return (int) statArr[s.ordinal()];
+    }
+    void SetInt(Stat s, int am)
+    {
+        statArr[s.ordinal()] = am;
     }
     void Set(int stat, float value)
     {
