@@ -141,14 +141,26 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="4"
-            android:id="@+id/scrollView"
+            android:id="@+id/scrollViewLog"
             android:layout_gravity="center_horizontal" >
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="New Text\ntetet\ntetet\netet\netet\netete\netete\netet\netetet\netet\net\net\net\net\net\net\net\net\ne"
-                android:id="@+id/textView" />
+                android:id="@+id/layoutLog"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="New Text\ntetet\"
+                    android:id="@+id/textViewLog" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Yo vafan."
+                    android:id="@+id/textViewLog2"
+                    android:textColor="@color/attacked" />
+            </LinearLayout>
         </ScrollView>
 
         <LinearLayout

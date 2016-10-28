@@ -10,4 +10,6 @@ public class GameOver extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_over);
     }
+
+    // Delayed, make buttons visible?
 }

@@ -2,6 +2,7 @@ package erenik.seriousgames.evergreen;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,7 +10,9 @@ import android.os.Handler;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -104,49 +107,17 @@ public class MainScreen extends AppCompatActivity
     View.OnClickListener nextDay = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            NextDay();
+            try {
+                NextDay();
+            } catch (NotAliveException e) {
+                e.printStackTrace();
+            }
         }
     };
 
     /// o-o
-    void NextDay()
-    {
-        // Yeah.
-        player.Adjust(Stat.FOOD, -2);
-        if (player.GetInt(Stat.FOOD) > 0)
-            player.Adjust(Stat.HP, 1);
-        else
-            player.Adjust(Stat.HP, -1);
-        // Generate events?
-        DAction da = DAction.NONE;
-        try {
-            da = DAction.values()[player.dailyAction];
-        } catch (Exception e)
-        {
-            System.out.println(e.toString());
-        }
-        switch (da)
-        {
-            case FOOD:
-            {
-                player.Adjust(Stat.FOOD, 5);
-                break;
-            }
-            case MATERIALS: player.Adjust(Stat.MATERIALS, 3); break;
-            case SCOUT:
-                // Randomize.
-                System.out.println("So Random!!!");
-                break;
-            case RECOVER:
-                player.Adjust(Stat.HP, 2);
-                break;
-            case BUILD_DEF:
-                player.Adjust(Stat.SHELTER_DEFENSE, 0.5f / player.Get(Stat.SHELTER_DEFENSE));
-                break;
-            default:
-                System.out.println("Nooo");
-        }
-
+    void NextDay() throws NotAliveException {
+        player.NextDay();
         // Finally, update gui.
         UpdateGUI();
     }
@@ -188,6 +159,31 @@ public class MainScreen extends AppCompatActivity
         UpdateActiveActionButton();
         UpdateDailyActionButton();
         UpdateSkillButton();
+        // Update log.
+        ViewGroup v = (ViewGroup) findViewById(R.id.layoutLog);
+        // Remove children.
+        v.removeAllViews();
+        // Add new ones?
+        int numDisplay = player.log.size();
+        final int MAX_DISPLAY = 10;
+        numDisplay = numDisplay > MAX_DISPLAY ? MAX_DISPLAY : numDisplay;
+        for (int i = player.log.size() - numDisplay; i < player.log.size(); ++i)
+        {
+            Log l = player.log.get(i);
+            String s = l.text;
+            TextView t = new TextView(getBaseContext());
+            t.setText(s);
+            int hex = ContextCompat.getColor(getBaseContext(), l.type.GetResourceColor());
+            System.out.println("Colorizing: "+Integer.toHexString(hex));
+            t.setTextColor(hex);
+            v.addView(t);
+            t.setFocusable(true); // Focusable.
+            t.setFocusableInTouchMode(true);
+            t.requestFocus(); // Request focus, make visible?
+        }
+        // Scroll down?
+//        ScrollView sv = (ScrollView) findViewById(R.id.scrollViewLog);
+  //      sv.fullScroll(ScrollView.FOCUS_DOWN);
     }
 
     void SetText(int viewID, String text)
