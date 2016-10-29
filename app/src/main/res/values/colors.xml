@@ -10,4 +10,6 @@
     <color name="info">#FF222222</color>
     <color name="attacked">#FFFF0000</color>
     <color name="event">#FF111111</color>
+    <color name="progress">#FFBBBB00</color>
+    <color name="problemNotification">#FFFFA500</color>
 </resources>

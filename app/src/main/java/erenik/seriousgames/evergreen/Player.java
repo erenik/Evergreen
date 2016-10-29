@@ -45,7 +45,8 @@ enum Stat
     FOOD(5),
     MATERIALS(3),
     BASE_ATTACK(10), ATTACK_BONUS(0),
-    BASE_DEFENSE(10), DEFENSE_BONUS(0), SHELTER_DEFENSE(1),
+    BASE_DEFENSE(10), DEFENSE_BONUS(0),
+    SHELTER_DEFENSE(1), SHELTER_DEFENSE_PROGRESS(0), // Level and progress towards next level.
     SPEED(1),
     EMISSIONS(0);
     Stat(float defaultValue)
@@ -57,7 +58,9 @@ enum Stat
 
 enum LogType
 {
-    INFO,
+    INFO, // General info
+    PROBLEM_NOTIFICATION, // Warning/problem notifications.
+    PROGRESS,
     ATTACKED, // For when taking damage.
     EVENT,
     ;
@@ -71,8 +74,10 @@ enum LogType
         switch(this)
         {
             case INFO: return R.color.info;
+            case PROGRESS: return R.color.progress;
             case ATTACKED: return R.color.attacked;
             case EVENT: return R.color.event;
+            case PROBLEM_NOTIFICATION: return R.color.problemNotification;
         }
         return R.color.black;
 
@@ -157,6 +162,7 @@ public class Player
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
+
     }
     void Adjust(Stat s, float amount)
     {
@@ -262,9 +268,9 @@ public class Player
             Adjust(Stat.HP, 1);
         }
         else {
-            float loss = GetInt(Stat.FOOD);
+            float loss = Get(Stat.FOOD) / 5;
             Adjust(Stat.HP, loss);
-            Log("Starving, lost 1 HP.", LogType.ATTACKED);
+            Log("Starving, lost "+(-loss)+" HP.", LogType.ATTACKED);
             if (!IsAlive())
                 return;
         }
@@ -289,18 +295,22 @@ public class Player
         {
             System.out.println(e.toString());
         }
+        float starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
+        float units = 1;
         switch (da)
         {
             case FOOD:
             {
-                float units = r.nextInt(5) + 2;
+                units = r.nextInt(5) + 2;
+                units *= starvingModifier;
                 Adjust(Stat.FOOD, units);
                 Log("Found " + units + " units of food.", LogType.INFO);
                 events.add(new Event(EventType.PICKING_BERRIES, 10.f));
                 break;
             }
             case MATERIALS:
-                float units = r.nextInt(5) + 2;
+                units = r.nextInt(5) + 2;
+                units *= starvingModifier;
                 Log("Found " + units + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
@@ -308,14 +318,29 @@ public class Player
                 Scout();
                 break;
             case RECOVER:
-                float rec = 2;
-                Adjust(Stat.HP, rec);
-                Log("Recovered "+rec+" HP.", LogType.INFO);
+                units = 2;
+                units *= starvingModifier;
+                Adjust(Stat.HP, units);
+                Log("Recovered "+units+" HP.", LogType.INFO);
                 break;
             case BUILD_DEF:
-                float progress = 0.5f / Get(Stat.SHELTER_DEFENSE);
-                Adjust(Stat.SHELTER_DEFENSE, progress);
-                Log("Building shelter defense progressed by "+progress+" units, now at "+Get(Stat.SHELTER_DEFENSE), LogType.INFO);
+                Adjust(Stat.MATERIALS, -2); // Consume!
+                float progress = 5 / Get(Stat.SHELTER_DEFENSE);
+                progress *= starvingModifier;
+                float materialModifier = (Get(Stat.MATERIALS) < 0 ?  (1 / (1 + Math.abs(Get(Stat.MATERIALS)))): 1);
+                progress *= materialModifier;
+                if (materialModifier < 1)
+                    Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
+                SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
+                Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
+                float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
+                Log("Building shelter defense progress increased by "+progress+" units, Now at "+Get(Stat.SHELTER_DEFENSE_PROGRESS), LogType.INFO);
+                if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
+                {
+                    Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
+                    Adjust(Stat.SHELTER_DEFENSE, 1);
+                    Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
+                }
                 break;
             default:
                 System.out.println("Nooo");
