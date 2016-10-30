@@ -31,6 +31,8 @@ public class Startup extends AppCompatActivity {
             // Load main-screen.
             Intent i = new Intent(getBaseContext(), MainScreen.class);
             startActivity(i);
+            // Kill this activity so that we cannot go back here. Only used on init.
+            finish();
         }
         else
         {
@@ -38,6 +40,8 @@ public class Startup extends AppCompatActivity {
             // New game.
             Intent i = new Intent(getBaseContext(), IntroScreen.class);
             startActivity(i);
+            // Kill this activity so that we cannot go back here. Only used on init.
+            finish();
         }
     }
 }

@@ -2,6 +2,7 @@ package erenik.seriousgames.evergreen;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,7 +20,7 @@ import android.widget.TextView;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainScreen extends AppCompatActivity
+public class MainScreen extends FragmentActivity //AppCompatActivity
 {
     Player player = Player.getSingleton();
     /**
@@ -63,10 +64,11 @@ public class MainScreen extends AppCompatActivity
         @Override
         public void run() {
             // Delayed display of UI elements
+            /*
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.show();
-            }
+            }*/
             mControlsView.setVisibility(View.VISIBLE);
         }
     };
@@ -111,6 +113,7 @@ public class MainScreen extends AppCompatActivity
                 NextDay();
             } catch (NotAliveException e) {
                 e.printStackTrace();
+                System.exit(-2);
             }
         }
     };
@@ -120,6 +123,7 @@ public class MainScreen extends AppCompatActivity
         player.NextDay();
         // Finally, update gui.
         UpdateGUI();
+        player.HandleGeneratedEvents(getSupportFragmentManager());
     }
     /// Main init function
     @Override
@@ -165,7 +169,7 @@ public class MainScreen extends AppCompatActivity
         v.removeAllViews();
         // Add new ones?
         int numDisplay = player.log.size();
-        final int MAX_DISPLAY = 10;
+        final int MAX_DISPLAY = 20;
         numDisplay = numDisplay > MAX_DISPLAY ? MAX_DISPLAY : numDisplay;
         for (int i = player.log.size() - numDisplay; i < player.log.size(); ++i)
         {
@@ -257,12 +261,8 @@ public class MainScreen extends AppCompatActivity
         }
     }
 
-    private void hide() {
-        // Hide UI first
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
+    private void hide()
+    {
         mControlsView.setVisibility(View.GONE);
         mVisible = false;
 

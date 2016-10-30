@@ -4,11 +4,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -22,7 +27,13 @@ enum Stat
     BASE_DEFENSE(10), DEFENSE_BONUS(0),
     SHELTER_DEFENSE(1), SHELTER_DEFENSE_PROGRESS(0), // Level and progress towards next level.
     SPEED(1),
-    EMISSIONS(0);
+    EMISSIONS(0),
+    ABANDONED_SHELTER(0), // Abandoned shelters to explore! Own event for it.
+    ENCOUNTERS(0),  // Random enemy encounters to defeat. Encountered while doing other tasks (scouting, gathering).
+    RANDOM_PLAYERS_SHELTERS(0),  // Random player shelters to be randomly allocated shortly (ask server to whom it belongs?) or postpone until later.
+    ENEMY_STRONGHOLDS(0), // Enemy strongholds that you've found.
+    ;
+
     Stat(float defaultValue)
     {
         this.defaultValue = defaultValue;
@@ -93,7 +104,7 @@ public class Player
     int skill = -1;
     int activeAction = -1;
     /// Increment every passing day. Stop once dying.
-    int turnSurvived = 0;
+    int turnSurvived = 1;
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
@@ -102,6 +113,9 @@ public class Player
     List<Event> events = new ArrayList<Event>();
     /// Log of messages for this specific player.
     List<Log> log = new ArrayList<Log>();
+
+    /// Array of exp in each Skill.
+    List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
@@ -139,7 +153,8 @@ public class Player
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
-
+        for (int i = 0; i < skills.size(); ++i) // Reset EXP in each skill?
+            skills.get(i).setTotalEXP(0);
     }
     void Adjust(Stat s, float amount)
     {
@@ -254,12 +269,14 @@ public class Player
     void NewDay()
     {
         // New day, assign transport?
+        ++player.turnSurvived;
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     void NextDay() throws NotAliveException
     {
         if (GetInt(Stat.HP) <= 0)
             throw new NotAliveException();
+        Log("-- Day "+player.turnSurvived+" --", LogType.INFO);
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
@@ -276,12 +293,36 @@ public class Player
 
         // Analyze some chosen hours of activity. Generate events and stuff for each?
         EvaluateActions();
-        // Generate events?
+
+        /// Force the player to play through the generated events before they proceed.
+//        HandleGeneratedEvents();
 
         // Attacks of the evergreen?
 
-        if (IsAlive())
+        if (IsAlive() && AllEventsHandled())
             NewDay();
+    }
+
+    // Present dialogue-box for handled events.
+    void HandleGeneratedEvents(FragmentManager fragMan)
+    {
+        EventDialogFragment event = new EventDialogFragment();
+        event.type = Finding.Nothing;
+        // Check events to run.
+        if (Get(Stat.ENCOUNTERS) > 0)
+            event.type = Finding.Encounter;
+        else if (Get(Stat.ABANDONED_SHELTER) > 0)
+            event.type = Finding.AbandonedShelter;
+        else if (Get(Stat.RANDOM_PLAYERS_SHELTERS) > 0)
+            event.type = Finding.RandomPlayerShelter;
+        if (event.type != Finding.Nothing)
+            event.show(fragMan, "event");
+    }
+    private boolean AllEventsHandled()
+    {
+        if (Get(Stat.ENCOUNTERS) > 0)
+            return false;
+        return true;
     }
 
     String Stringify(float value)
@@ -293,15 +334,36 @@ public class Player
             return ""+iValue;
         return String.format("%.2f", value);
     }
-    float relativeDuration = 1.f;
+    float hoursPerAction  = 1.f;
+    float foodHarvested = 0.0f;
+    DAction da;
     void EvaluateActions()
     {
         t_starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
-        relativeDuration = (1.f / (dailyActions.size()));
-        System.out.println("relDur: "+relativeDuration);
-        for (int i = 0; i < dailyActions.size(); ++i)
+        // Have this increase with some skill?
+        float hoursSimulated = 6.f;
+        int div = dailyActions.size();
+        switch(div) // Add waste time if many actions are scheduled.
         {
-            DAction da = dailyActions.get(i);
+            case 8: div += 4.f; break;
+            case 7: div += 2.f; break;
+            case 6: div += 1.f; break;
+            case 5: div += 0.5f; break;
+            case 4: div += 0.25f; break;
+        }
+        if (div > 8)
+            div += 5.f;
+        if (div > 6)
+            Log("Having scheduled too much to do during the day, you manage to lose a lot of time between the actions you had intended to do. You are even forced to cancel entirely some of the actions you wanted to do.", LogType.PROBLEM_NOTIFICATION);
+        else if (dailyActions.size() > 3)
+            Log("During the day, you lose some time while changing tasks. Choose 3 or fewer actions per day for full efficiency.", LogType.PROBLEM_NOTIFICATION);
+        hoursPerAction = hoursSimulated / div;
+        System.out.println("hoursPerAction: "+hoursPerAction);
+        foodHarvested = 0.0f;
+        // Execute at most 8 actions per day, regardless of queue.
+        for (int i = 0; i < dailyActions.size() && i < 6; ++i)
+        {
+            da = dailyActions.get(i);
             EvaluateAction(da);
         }
     }
@@ -311,31 +373,28 @@ public class Player
         switch (da)
         {
             case FOOD:
-            {
                 units = r.nextInt(5) + 2;
                 units *= t_starvingModifier;
-                units *= relativeDuration;
+                units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
-                Log("Found " + Stringify(units) + " units of food.", LogType.INFO);
+                Log(da.text+": Found " + Stringify(units) + " units of food.", LogType.INFO);
                 events.add(new Event(EventType.PICKING_BERRIES, 10.f));
                 break;
-            }
             case MATERIALS:
                 units = r.nextInt(5) + 2;
                 units *= t_starvingModifier;
-                units *= relativeDuration;
-                Log("Found " + Stringify(units) + " units of materials.", LogType.INFO);
+                units *= hoursPerAction;
+                Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
             case SCOUT:
                 Scout();
                 break;
             case RECOVER:
-                units = 2;
+                units = hoursPerAction * 0.5f;
                 units *= t_starvingModifier;
-                units *= relativeDuration;
                 Adjust(Stat.HP, units);
-                Log("Recovered "+Stringify(units)+" HP.", LogType.INFO);
+                Log(da.text+": Recovered "+Stringify(units)+" HP.", LogType.INFO);
                 break;
             case BUILD_DEF:
                 BuildDefenses();
@@ -347,23 +406,88 @@ public class Player
     void Scout()
     {
         int speed = Speed();
-        // Randomize.
-        float chance = r.nextFloat() * 5;
-        System.out.println("So Random!!!");
-        // Find encounter
+        // Randomize something each hour? Many things with speed?
+        float toRandom = 1 + speed * hoursPerAction;
+        toRandom *= t_starvingModifier;
+        String s = da.text+": While scouting the area, you ";
+        Map<Finding, Integer> chances = new HashMap<Finding, Integer>();
+        chances.put(Finding.Encounter, 4);
+        chances.put(Finding.Nothing, 5);
+        chances.put(Finding.Food, 4);
+        chances.put(Finding.Materials, 3);
+        chances.put(Finding.AbandonedShelter, 2);
+        chances.put(Finding.RandomPlayerShelter, 1);
+        chances.put(Finding.EnemyStronghold, 1);
+        int sumChances = 0;
+        for (int i = 0; i < chances.size(); ++i)
+        {
+            sumChances += (Integer) chances.values().toArray()[i];
+        }
+        System.out.println("Sum chances: "+sumChances);
+        List<Finding> foundList = new ArrayList<Finding>();
+        while(toRandom > 0)
+        {
+            toRandom -= 1;
+            float chance = r.nextFloat() * sumChances;
+            for (int i = 0; i < chances.size(); ++i)
+            {
+                int step = (Integer) chances.values().toArray()[i];
+                chance -= step;
+                if (chance < 0) // Found it
+                {
+                    foundList.add((Finding)chances.keySet().toArray()[i]);
+                }
+            }
+        }
+        float amount = 0;
+        int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0;
+        float foodFound = 0, matFound = 0;
+        for (int i = 0; i < foundList.size(); ++i)
+        {
+            Finding f = foundList.get(i);
+            switch(f)            // Evaluate it.
+            {
+                case Nothing: break;
+                case Encounter: numEncounters  += 1; break;
+                case Food: foodFound += 1 + r.nextFloat() * 2; break;
+                case Materials: matFound = 1 + r.nextFloat() * 2; break;
+                case AbandonedShelter: numAbShelters += 1; break;
+                case RandomPlayerShelter: numRPS += 1; break;
+                case EnemyStronghold: numEnStrong += 1; break;
+                default: s += "\n Not implemented: "+f.toString(); break;
+            }
+        }
+        /// Check config for preferred display verbosity of the search results?
+        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n encounter "+numEncounters+" groups of monsters" : "";
+        Adjust(Stat.ENCOUNTERS, numEncounters);
+        s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
+        Adjust(Stat.FOOD, foodFound);
+        s += numMatStashes > 1? "\n- find "+numMatStashes+" stashes of materials, totalling at "+Stringify(matFound)+" units" : numMatStashes == 1? "\n a stash of materials: "+Stringify(matFound)+" units" : "";
+        Adjust(Stat.MATERIALS, amount);
+        /// Advanced shit... Queue up for exploration later?
+        s += numAbShelters > 1? "\n- find "+numAbShelters+" seemingly abandoned shelters" : numAbShelters == 1? "\n- find an abandoned shelter." : "";
+        Adjust(Stat.ABANDONED_SHELTER, numAbShelters);
+        // Find max 1 player shelter per scouting round?
+        s += numRPS >= 1? "\n- find a shelter which seems to be inhabited" : "";
+        Adjust(Stat.RANDOM_PLAYERS_SHELTERS, numRPS >= 1? 1 : 0);
+        s += numEnStrong >= 1? "\n- find an enemy stronghold." : "";
+        Adjust(Stat.ENEMY_STRONGHOLDS, numEnStrong >= 1? 1 : 0);
 
+        Log(s, LogType.INFO);
     }
     void BuildDefenses()
     {
-        Adjust(Stat.MATERIALS, -2); // Consume!
-        float progress = 5 / Get(Stat.SHELTER_DEFENSE);
+        Adjust(Stat.MATERIALS, -hoursPerAction * 0.5f); // Consume! 1 unit of materials per hour?
+        GenerateEmissionsFromMaterialsConsumption(hoursPerAction * 0.5f); // Generate emissions for building.
+        float progress = 1 + r.nextFloat() * 5;
+        progress /= Get(Stat.SHELTER_DEFENSE);
         progress *= t_starvingModifier;
         CalcMaterialModifier();
         progress *= t_materialModifier;
-        progress *= relativeDuration;
+        progress *= hoursPerAction;
         Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
         float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
-        Log("Building shelter defense progress increased by " + Stringify(progress) + " units, Now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)), LogType.INFO);
+        Log(da.text+": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS))+" units out of "+requiredToNext+".", LogType.INFO);
         if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
         {
             Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
@@ -371,6 +495,29 @@ public class Player
             Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
         }
     }
+
+    // Generates emissions, taking into consideration material consumption?
+    private void GenerateEmissionsFromMaterialsConsumption(float baseEmissionsToBeGenerated)
+    {
+        float e = baseEmissionsToBeGenerated;
+        int lMatEfficiency = Get(Skill.MaterialEfficiency).Level();
+        switch(lMatEfficiency)
+        {
+            case 4: e *= 0.6f; // 0.3,   40,  Multiplicative effects for each timer :)
+            case 3: e *= 0.7f; // 0.5,   20,
+            case 2: e *= 0.8f; // 0.72,   10,
+            case 1: e *= 0.9f; break; // 0.9,   5,
+            default:
+            case 0: break;
+        }
+        Adjust(Stat.EMISSIONS, e);
+    }
+
+    private Skill Get(Skill skillType) {
+        int index = skillType.ordinal();
+        return skills.get(index);
+    }
+
     // To be called after taking required materials. Will calculate material modifier for giving penalties on material debts.
     void CalcMaterialModifier()
     {
