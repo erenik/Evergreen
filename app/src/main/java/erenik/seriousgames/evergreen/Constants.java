@@ -10,4 +10,7 @@ public class Constants {
     public static final String ACTIVE_ACTION = "activeAction";
     public static final String DAILY_ACTION = "dailyAction";
     public static final String SKILL = "skill";
+    public static final String NUM_DAILY_ACTIONS = "numDAction";
+    public static final String DAILY_ACTION_TYPE = "";
+    public static final String DAILY_ACTIONS = "dailyActions"; // STRing
 }

@@ -15,23 +15,66 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
-        <Spinner
+        <!-- First a scroll-view with the selectable skills or actions -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/spinnerSelect" />
+            android:text="Possible items"
+            android:id="@+id/textViewHeader1"
+            />
+        <!--android:layout_weight="wrap_content" -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0px"
+            android:layout_weight="3"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/layoutItems"
+                android:orientation="vertical">
 
+            </LinearLayout>
+        </ScrollView>
+        <!-- Then the scroll-view with skills that we have added/queued to perform -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current Queue"
+            android:id="@+id/textViewHeader2"
+            />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0px"
+            android:layout_weight="3"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/layoutQueue"
+                android:orientation="vertical">
+            </LinearLayout>
+        </ScrollView>
+
+
+        <!--
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinnerSelect" />
+        -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Name"
-            android:id="@+id/textView2"
+            android:id="@+id/textViewItemName"
             android:layout_gravity="center_horizontal" />
 
         <!-- Scroll view for all details below! -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="5"
+            android:layout_weight="2"
             android:id="@+id/scrollView2"
             android:layout_gravity="center_horizontal" >
 
@@ -44,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Description"
-                    android:id="@+id/textView3"
+                    android:id="@+id/textViewDescription"
                     android:layout_gravity="center_horizontal" />
 
                 <LinearLayout
@@ -58,8 +101,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Detailed description"
-                    android:id="@+id/textView4"
+                    android:text=""
+                    android:id="@+id/textViewDetailedDescription"
                     android:layout_gravity="center_horizontal" />
             </LinearLayout>
         </ScrollView>
@@ -76,6 +119,12 @@
                 android:layout_height="wrap_content"
                 android:text="Cancel"
                 android:id="@+id/buttonCancel" />
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Clear"
+                android:id="@+id/buttonClear" />
             <Button
                 android:layout_width="0dp"
                 android:layout_weight="1"

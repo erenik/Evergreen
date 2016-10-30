@@ -11,32 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-// Daily Action
-enum DAction
-{
-    FOOD("Gather berries"),
-    MATERIALS("Gather materials"),
-    SCOUT("Scout the area"),
-    RECOVER("Recover"),
-    BUILD_DEF("Build defenses"),
-
-    /* <item>Build defenses</item>
-    <item>Augment transport</item>
-    <item>Look for player</item>
-    <item>Expedition</item>
-    <item>Invent</item>
-    <item>Craft</item>
-    <item>Steal</item>
-    <item>Attack a player</item>
-*/
-    NONE("None")
-    ;
-    DAction(String txt)
-    {
-        this.text = txt;
-    }
-    String text;
-};
 
 
 enum Stat
@@ -115,11 +89,14 @@ public class Player
     String name;
     float[] statArr = new float[Stat.values().length];
     /// Used in main menu, and also saved.
-    int dailyAction = -1;
+    List<DAction> dailyActions = new ArrayList<DAction>();
     int skill = -1;
     int activeAction = -1;
     /// Increment every passing day. Stop once dying.
     int turnSurvived = 0;
+    /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
+    float t_starvingModifier = 1;
+    float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
 
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
     List<Event> events = new ArrayList<Event>();
@@ -218,7 +195,17 @@ public class Player
         }
         // Action
         e.putInt(Constants.ACTIVE_ACTION, activeAction);
-        e.putInt(Constants.DAILY_ACTION, dailyAction);
+        // Save daily actions as string?
+        String s = "";
+        for (int i = 0; i < dailyActions.size(); ++i)
+        {
+            DAction d = dailyActions.get(i);
+            if (d == null)
+                continue;
+            s += d.text+";";
+        }
+        e.putString(Constants.DAILY_ACTIONS, s);
+//        e.putInt(Constants.DAILY_ACTION, dailyAction);
         e.putInt(Constants.SKILL, skill);
         // Save/commit.
         boolean ok = e.commit();
@@ -242,7 +229,18 @@ public class Player
         }
         // Choices.
         activeAction = sp.getInt(Constants.ACTIVE_ACTION, -1);
-        dailyAction = sp.getInt(Constants.DAILY_ACTION, -1);
+        // Save daily actions as string?
+        String s = sp.getString(Constants.DAILY_ACTIONS, "");
+        String[] split = s.split(";", 5);
+        int numSemiColons = split.length;
+        dailyActions.clear();
+        for (int i = 0; i < split.length; ++i)
+        {
+            DAction da = DAction.GetFromString(split[i]);
+            if (da == null)
+                continue;
+            dailyActions.add(da);
+        }
         skill = sp.getInt(Constants.SKILL, -1);
         return true;
     }
@@ -286,32 +284,47 @@ public class Player
             NewDay();
     }
 
+    String Stringify(float value)
+    {
+        // Stringifies target value, based on some assumptions.
+        int iValue = Math.round(value);
+        float remainder = value - iValue;
+        if (Math.abs(remainder) < 0.05f)
+            return ""+iValue;
+        return String.format("%.2f", value);
+    }
+    float relativeDuration = 1.f;
     void EvaluateActions()
     {
-        DAction da = DAction.NONE;
-        try {
-            da = DAction.values()[dailyAction];
-        } catch (Exception e)
+        t_starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
+        relativeDuration = (1.f / (dailyActions.size()));
+        System.out.println("relDur: "+relativeDuration);
+        for (int i = 0; i < dailyActions.size(); ++i)
         {
-            System.out.println(e.toString());
+            DAction da = dailyActions.get(i);
+            EvaluateAction(da);
         }
-        float starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
+    }
+    void EvaluateAction(DAction da)
+    {
         float units = 1;
         switch (da)
         {
             case FOOD:
             {
                 units = r.nextInt(5) + 2;
-                units *= starvingModifier;
+                units *= t_starvingModifier;
+                units *= relativeDuration;
                 Adjust(Stat.FOOD, units);
-                Log("Found " + units + " units of food.", LogType.INFO);
+                Log("Found " + Stringify(units) + " units of food.", LogType.INFO);
                 events.add(new Event(EventType.PICKING_BERRIES, 10.f));
                 break;
             }
             case MATERIALS:
                 units = r.nextInt(5) + 2;
-                units *= starvingModifier;
-                Log("Found " + units + " units of materials.", LogType.INFO);
+                units *= t_starvingModifier;
+                units *= relativeDuration;
+                Log("Found " + Stringify(units) + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
             case SCOUT:
@@ -319,28 +332,13 @@ public class Player
                 break;
             case RECOVER:
                 units = 2;
-                units *= starvingModifier;
+                units *= t_starvingModifier;
+                units *= relativeDuration;
                 Adjust(Stat.HP, units);
-                Log("Recovered "+units+" HP.", LogType.INFO);
+                Log("Recovered "+Stringify(units)+" HP.", LogType.INFO);
                 break;
             case BUILD_DEF:
-                Adjust(Stat.MATERIALS, -2); // Consume!
-                float progress = 5 / Get(Stat.SHELTER_DEFENSE);
-                progress *= starvingModifier;
-                float materialModifier = (Get(Stat.MATERIALS) < 0 ?  (1 / (1 + Math.abs(Get(Stat.MATERIALS)))): 1);
-                progress *= materialModifier;
-                if (materialModifier < 1)
-                    Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
-                SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
-                Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
-                float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
-                Log("Building shelter defense progress increased by "+progress+" units, Now at "+Get(Stat.SHELTER_DEFENSE_PROGRESS), LogType.INFO);
-                if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
-                {
-                    Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
-                    Adjust(Stat.SHELTER_DEFENSE, 1);
-                    Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
-                }
+                BuildDefenses();
                 break;
             default:
                 System.out.println("Nooo");
@@ -354,5 +352,33 @@ public class Player
         System.out.println("So Random!!!");
         // Find encounter
 
+    }
+    void BuildDefenses()
+    {
+        Adjust(Stat.MATERIALS, -2); // Consume!
+        float progress = 5 / Get(Stat.SHELTER_DEFENSE);
+        progress *= t_starvingModifier;
+        CalcMaterialModifier();
+        progress *= t_materialModifier;
+        progress *= relativeDuration;
+        Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
+        float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
+        Log("Building shelter defense progress increased by " + Stringify(progress) + " units, Now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)), LogType.INFO);
+        if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
+        {
+            Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
+            Adjust(Stat.SHELTER_DEFENSE, 1);
+            Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
+        }
+    }
+    // To be called after taking required materials. Will calculate material modifier for giving penalties on material debts.
+    void CalcMaterialModifier()
+    {
+        t_materialModifier = (Get(Stat.MATERIALS) < 0 ?  (1 / (1 + Math.abs(Get(Stat.MATERIALS)))): 1);
+        if (t_materialModifier < 1) // IF negative, add warning message and reset to 0 - cannot go further negative.
+        {
+            Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
+            SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
+        }
     }
 }

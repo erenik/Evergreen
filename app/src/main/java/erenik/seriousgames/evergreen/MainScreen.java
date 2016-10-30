@@ -132,7 +132,7 @@ public class MainScreen extends AppCompatActivity
         mVisible = true;
         // Load stuff as needed.
         player.LoadLocally();
-        player.SaveLocally(); // Save copy?
+//        player.SaveLocally(); // Save copy? - Why?
         /// Update GUI.
         UpdateGUI();
 
@@ -215,7 +215,7 @@ public class MainScreen extends AppCompatActivity
                 UpdateActiveActionButton();
                 break;
             case SelectActivity.SELECT_DAILY_ACTION:
-                player.dailyAction = resultCode;
+//                player.dailyAction = resultCode;
                 UpdateDailyActionButton();
                 break;
             case SelectActivity.SELECT_SKILL:
@@ -233,10 +233,11 @@ public class MainScreen extends AppCompatActivity
         else
             tv.setText("Active action");
     }
-    private void UpdateDailyActionButton() {
+    private void UpdateDailyActionButton()
+    {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
-        if (player.dailyAction >= 0)
-            tv.setText("Change Action: " + getResources().getStringArray(R.array.dailyActions)[player.dailyAction]);
+        if (player.dailyActions.size() >= 0)
+            tv.setText("Change Action: "+player.dailyActions.size()+" queued.");
         else
             tv.setText(R.string.chooseAction);
     }
