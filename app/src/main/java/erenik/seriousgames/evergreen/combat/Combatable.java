@@ -1,16 +1,23 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.combat;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import erenik.seriousgames.evergreen.logging.*;
+import erenik.seriousgames.evergreen.util.Tuple;
+import erenik.seriousgames.evergreen.act.encounter;
+import erenik.seriousgames.evergreen.util.Dice;
 
 /**
  * Created by Emil on 2016-10-30.
  */
 public class Combatable
 {
-    protected float hp, maxHP;
-    protected int attack, defense;
+    public float hp;
+    public float maxHP;
+    public int attack;
+    public int defense;
     static private Random r;
 
     /// Attempts to attack this unit, returns true if it hits.
@@ -77,12 +84,12 @@ public class Combatable
         }
     }
     /// Check HP?
-    boolean IsAlive()
+    public boolean IsAlive()
     {
         return hp > 0;
     }
     /// Order this enemy to attack the player. Returns true if it kills the player.
-    boolean Attack(Combatable target)
+    public boolean Attack(Combatable target)
     {
         for (int i = 0; i < attacksPerTurn; ++i)
         {
@@ -106,9 +113,9 @@ public class Combatable
         return false;
     }
 
-    String name = "NoName";
-    boolean isPlayer = false; // True for player.
-    int exp = 1;
+    public String name = "NoName";
+    protected boolean isPlayer = false; // True for player.
+    public int exp = 1;
     // Most of these are used mainly by enemies, but may also be used by some player weapons perhaps?
     EnemyType enemyType = null;
     int level = 0, // Base fight stats
@@ -127,5 +134,7 @@ public class Combatable
     List<Tuple<Integer,Integer> > ensnared = new ArrayList<Tuple<Integer, Integer>>(); // May be stacked, hence the list.
 
     float numDefeatedThisFightAttackBonus = 0, numDefeatedThisGameAttackBonus = 0;
-    Dice attackDamage = new Dice(1, 0, 1), tailWhipDamage, breathAttackDamage;
+    public Dice attackDamage = new Dice(1, 0, 1);
+    Dice tailWhipDamage;
+    Dice breathAttackDamage;
 };

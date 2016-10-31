@@ -1,54 +1,26 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.player;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import erenik.seriousgames.evergreen.App;
+import erenik.seriousgames.evergreen.player.*;
+import erenik.seriousgames.evergreen.Event;
+import erenik.seriousgames.evergreen.logging.*;
+import erenik.seriousgames.evergreen.act.EventDialogFragment;
+import erenik.seriousgames.evergreen.combat.Combatable;
+import erenik.seriousgames.evergreen.util.Dice;
 
 
-enum Stat
-{
-    HP(10), MAX_HP(10),
-    FOOD(5),
-    MATERIALS(3),
-    BASE_ATTACK(10), ATTACK_BONUS(0),
-    BASE_DEFENSE(10), DEFENSE_BONUS(0),
-    SHELTER_DEFENSE(1), SHELTER_DEFENSE_PROGRESS(0), // Level and progress towards next level.
-    SPEED(1),
-    EMISSIONS(0),
-    ABANDONED_SHELTER(0), // Abandoned shelters to explore! Own event for it.
-    ENCOUNTERS(0),  // Random enemy encounters to defeat. Encountered while doing other tasks (scouting, gathering).
-    RANDOM_PLAYERS_SHELTERS(0),  // Random player shelters to be randomly allocated shortly (ask server to whom it belongs?) or postpone until later.
-    ENEMY_STRONGHOLDS(0), // Enemy strongholds that you've found.
-    UNALLOCATED_EXP(20), // Free exp to be distributed among any skill when the player pleases.
-    ;
+;
 
-    Stat(float defaultValue)
-    {
-        this.defaultValue = defaultValue;
-    }
-    float defaultValue;
-};
-
-
-class NotAliveException extends Exception
-{
-    NotAliveException() {
-        super("HP reached below 0.");
-    }
-}
 
 /**
  * Created by Emil on 2016-10-25.
@@ -60,11 +32,11 @@ public class Player extends Combatable
 //    float hp, food, materials, base_attack, base_defense, emissions;
     float[] statArr = new float[Stat.values().length];
     /// Used in main menu, and also saved.
-    List<DAction> dailyActions = new ArrayList<DAction>();
-    int skill = -1;
-    int activeAction = -1;
+    public List<DAction> dailyActions = new ArrayList<DAction>();
+    public int skill = -1;
+    public int activeAction = -1;
     /// Increment every passing day. Stop once dying.
-    int turn = 1;
+    public int turn = 1;
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
@@ -72,7 +44,7 @@ public class Player extends Combatable
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
     List<Event> events = new ArrayList<Event>();
     /// Log of messages for this specific player.
-    List<Log> log = new ArrayList<Log>();
+    public List<Log> log = new ArrayList<Log>();
 
     /// Array of exp in each Skill.
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
@@ -81,7 +53,7 @@ public class Player extends Combatable
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
-    static Player getSingleton()
+    static public Player getSingleton()
     {
         return player;
     }
@@ -91,7 +63,7 @@ public class Player extends Combatable
         isPlayer = true;
         SetDefaultStats();
     }
-    boolean IsAlive()
+    public boolean IsAlive()
     {
         return GetInt(Stat.HP) > 0 && hp > 0;
     }
@@ -99,11 +71,11 @@ public class Player extends Combatable
     {
         return GetInt(Stat.SPEED);
     }
-    int Attack()
+    public int Attack()
     {
         return GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
     }
-    int Defense()
+    public int Defense()
     {
         return GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
     }
@@ -111,7 +83,7 @@ public class Player extends Combatable
     {
         return Defense() + GetInt(Stat.SHELTER_DEFENSE);
     }
-    void SetDefaultStats()
+    public void SetDefaultStats()
     {
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
@@ -119,22 +91,9 @@ public class Player extends Combatable
         for (int i = 0; i < skills.size(); ++i) // Reset EXP in each skill?
             skills.get(i).setTotalEXP(0);
     }
-    void Adjust(Stat s, float amount)
+    public void Adjust(Stat s, float amount)
     {
         statArr[s.ordinal()] += amount;
-        if (s == Stat.HP ) {
-            if (GetInt(Stat.HP) > GetInt(Stat.MAX_HP))
-                SetInt(Stat.HP, GetInt(Stat.MAX_HP));
-            if (GetInt(Stat.HP) <= 0)
-            {
-                Log("You died. Game over", LogType.ATTACKED);
-                System.out.println("GaME OVER!!!");
-                Intent i = new Intent(App.currentActivity.getBaseContext(), GameOver.class);
-                App.currentActivity.startActivity(i);
-
-                // Quit?
-            }
-        }
     }
     // Getter for main stats.
     float Get(int stat)
@@ -145,7 +104,7 @@ public class Player extends Combatable
     {
         return statArr[s.ordinal()];
     }
-    int GetInt(Stat s)
+    public int GetInt(Stat s)
     {
         return (int) statArr[s.ordinal()];
     }
@@ -153,9 +112,9 @@ public class Player extends Combatable
     {
         statArr[s.ordinal()] = am;
     }
-    void Set(int stat, float value)
+    public void Set(Stat stat, float value)
     {
-        statArr[stat] = value;
+        statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
     public boolean SaveLocally()
@@ -165,6 +124,7 @@ public class Player extends Combatable
         // Put.
         e.putString(Constants.NAME, name);
         e.putBoolean(Constants.SAVE_EXISTS, true);
+        e.putInt(Constants.TURN, turn);
         // Stats
         System.out.println("Saving stats");
         for (int i = 0; i < Stat.values().length; ++i)
@@ -199,6 +159,7 @@ public class Player extends Combatable
         if (!hasSave)
             return false;
         name = sp.getString(Constants.NAME, "BadSaveName");
+        turn = sp.getInt(Constants.TURN, 0);
         // Stats
         System.out.println("Loading stats");
         for (int i = 0; i < Stat.values().length; ++i)
@@ -233,17 +194,23 @@ public class Player extends Combatable
     {
         // New day, assign transport?
         ++player.turn;
+        System.out.println("Turn: " + player.turn);
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
-    void NextDay() throws NotAliveException
+    public void NextDay() throws NotAliveException
     {
+        NewDay();  // New day :3
         if (GetInt(Stat.HP) <= 0)
-            throw new NotAliveException();
+        {
+            App.GameOver();
+            return;
+        }
         Log("-- Day "+player.turn+" --", LogType.INFO);
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
             Adjust(Stat.HP, 1);
+            ClampHP();
         }
         else {
             float loss = Get(Stat.FOOD) / 5;
@@ -252,22 +219,34 @@ public class Player extends Combatable
             if (!IsAlive())
                 return;
         }
-        // Reset food to 0? Or have a debt on eating perhaps?
-
         // Analyze some chosen hours of activity. Generate events and stuff for each?
         EvaluateActions();
-
         /// Force the player to play through the generated events before they proceed.
 //        HandleGeneratedEvents();
 
         // Attacks of the evergreen?
+        int everGreenTurn = turn % 16;
+        switch(everGreenTurn)
+        {
+            default: break;
+            case 0: case 6:case 10:case 13: case 15: // The pattern repeats every 16 turns.
+                Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, 1);
+                break;
+        }
+    }
 
-        if (IsAlive() && AllEventsHandled())
-            NewDay();
+    public void ClampHP()
+    {
+        float hp = Get(Stat.HP);
+        if (hp > Get(Stat.MAX_HP))
+            hp = Get(Stat.MAX_HP);
+        else if (hp < 0)
+            hp = 0;
+        Set(Stat.HP, hp);
     }
 
     // Present dialogue-box for handled events.
-    void HandleGeneratedEvents(FragmentManager fragMan)
+    public void HandleGeneratedEvents(FragmentManager fragMan)
     {
         EventDialogFragment event = new EventDialogFragment();
         event.type = Finding.Nothing;
@@ -281,9 +260,11 @@ public class Player extends Combatable
         if (event.type != Finding.Nothing)
             event.show(fragMan, "event");
     }
-    private boolean AllEventsHandled()
+    public boolean AllMandatoryEventsHandled()
     {
         if (Get(Stat.ENCOUNTERS) > 0)
+            return false;
+        if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
             return false;
         return true;
     }
@@ -321,7 +302,7 @@ public class Player extends Combatable
         else if (dailyActions.size() > 3)
             Log("During the day, you lose some time while changing tasks. Choose 3 or fewer actions per day for full efficiency.", LogType.PROBLEM_NOTIFICATION);
         hoursPerAction = hoursSimulated / div;
-        System.out.println("hoursPerAction: "+hoursPerAction);
+//        System.out.println("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
         // Execute at most 8 actions per day, regardless of queue.
         for (int i = 0; i < dailyActions.size() && i < 6; ++i)
@@ -340,8 +321,7 @@ public class Player extends Combatable
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
-                Log(da.text+": Found " + Stringify(units) + " units of food.", LogType.INFO);
-                events.add(new Event(EventType.PICKING_BERRIES, 10.f));
+                Log(da.text + ": Found " + Stringify(units) + " units of food.", LogType.INFO);
                 break;
             case MATERIALS:
                 units = r.nextInt(5) + 2;
@@ -386,7 +366,7 @@ public class Player extends Combatable
         {
             sumChances += (Integer) chances.values().toArray()[i];
         }
-        System.out.println("Sum chances: "+sumChances);
+//        System.out.println("Sum chances: "+sumChances);
         List<Finding> foundList = new ArrayList<Finding>();
         while(toRandom > 0)
         {
@@ -412,8 +392,8 @@ public class Player extends Combatable
             {
                 case Nothing: break;
                 case Encounter: numEncounters  += 1; break;
-                case Food: foodFound += 1 + r.nextFloat() * 2; break;
-                case Materials: matFound = 1 + r.nextFloat() * 2; break;
+                case Food: numFoodStashes += 1; foodFound += 1 + r.nextFloat() * 2; break;
+                case Materials: numMatStashes += 1; matFound = 1 + r.nextFloat() * 2; break;
                 case AbandonedShelter: numAbShelters += 1; break;
                 case RandomPlayerShelter: numRPS += 1; break;
                 case EnemyStronghold: numEnStrong += 1; break;
@@ -421,7 +401,7 @@ public class Player extends Combatable
             }
         }
         /// Check config for preferred display verbosity of the search results?
-        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n encounter "+numEncounters+" groups of monsters" : "";
+        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
         Adjust(Stat.ENCOUNTERS, numEncounters);
         s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
         Adjust(Stat.FOOD, foodFound);
@@ -496,7 +476,6 @@ public class Player extends Combatable
     {
         // Check queued skills.
         int xp = expGained;
-        Log(expGained+" EXP gained.", LogType.EXP);
         while (xp > 0 && skillTrainingQueue.size() > 0) {
             Skill next = skillTrainingQueue.get(0);
             next.ordinal();

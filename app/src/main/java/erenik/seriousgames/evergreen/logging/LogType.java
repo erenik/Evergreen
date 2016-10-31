@@ -1,12 +1,14 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.logging;
 
 import java.util.Date;
+
+import erenik.seriousgames.evergreen.R;
 
 /**
  * Created by Emil on 2016-10-31.
  */
 
-enum LogType
+public enum LogType
 {
     INFO, // General info
     PROBLEM_NOTIFICATION, // Warning/problem notifications.
@@ -19,7 +21,7 @@ enum LogType
     {
         return getColor(getContext(), GetResourceColor());
     };*/ // Text font color for this message.
-    int GetResourceColor()
+    public int GetResourceColor()
     {
         switch(this)
         {
@@ -38,16 +40,4 @@ enum LogType
     }
 };
 
-/// For the player game-log. To be color-coded etc.?
-public class Log
-{
-    Log(String s, LogType t)
-    {
-        text = s;
-        type = t;
-        date = new Date();
-    }
-    Date date; // Time-stamp of this log message.
-    String text;
-    LogType type;
-};
+;

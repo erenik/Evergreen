@@ -7,13 +7,13 @@
     <color name="black_overlay">#66000000</color>
 
     <color name="black">#FF000000</color>
-    <color name="info">#FF222222</color>
+    <color name="info">#FFBBBBBB</color>
     <color name="attacked">#FFFF0000</color>
-    <color name="event">#FF111111</color>
-    <color name="progress">#FFBBBB00</color>
-    <color name="problemNotification">#FFFFA500</color>
-    <color name="attackMiss">#FF444444</color>
-    <color name="attack">#FF222222</color>
+    <color name="event">#FFEEEECC</color>
+    <color name="progress">#FFAA8888</color>
+    <color name="problemNotification">#FFFF8500</color>
+    <color name="attackMiss">#FF999999</color>
+    <color name="attack">#FFEEEEEE</color>
     <color name="exp">#FFDDDD55</color>
 
     <color name="backgroundMainGreen">#FF013220</color>

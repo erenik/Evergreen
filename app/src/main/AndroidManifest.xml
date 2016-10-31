@@ -9,18 +9,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".IntroScreen"
+            android:name=".act.IntroScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:theme="@style/FullscreenTheme" />
         <activity
-            android:name=".MainScreen"
+            android:name=".act.MainScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_main_screen"
             android:theme="@style/FullscreenTheme" />
-        <activity android:name=".SelectActivity" />
+        <activity android:name=".act.SelectActivity" />
         <activity
-            android:name=".Startup"
+            android:name=".act.Startup"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name">
             <intent-filter>
@@ -29,8 +29,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".GameOver" />
-        <activity android:name=".encounter"></activity>
+        <activity android:name=".act.GameOver" />
+        <activity android:name=".act.encounter"></activity>
     </application>
 
 </manifest>

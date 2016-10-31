@@ -1,20 +1,19 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.act;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.Display;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ScrollView;
 import android.widget.TextView;
+
+import erenik.seriousgames.evergreen.App;
+import erenik.seriousgames.evergreen.logging.*;
+import erenik.seriousgames.evergreen.player.*;
+import erenik.seriousgames.evergreen.R;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -90,6 +89,8 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         @Override
         public void onClick(View view)
         {
+            if (HandleNextEvent())
+                return;
             findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
             findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
             findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
@@ -119,12 +120,25 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     };
 
     /// o-o
-    void NextDay() throws NotAliveException {
+    void NextDay() throws NotAliveException
+    {
+        if (HandleNextEvent()) // Handle events if needed first.
+            return;
         player.NextDay();
         // Finally, update gui.
         UpdateGUI();
-        player.HandleGeneratedEvents(getSupportFragmentManager());
+        /// Queues next event to be handled, if there are any.
+        HandleNextEvent();
     }
+    /// Returns true if there was an event to process. During the event, or right after, if the event was played - call this function again to query the next one.
+    boolean HandleNextEvent()
+    {
+        if (player.AllMandatoryEventsHandled())
+            return false;
+        player.HandleGeneratedEvents(getSupportFragmentManager());
+        return true;
+    }
+
     /// Main init function
     @Override
     protected void onCreate(Bundle savedInstanceState)

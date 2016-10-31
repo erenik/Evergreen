@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.act;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,9 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import erenik.seriousgames.evergreen.App;
+import erenik.seriousgames.evergreen.combat.*;
+import erenik.seriousgames.evergreen.logging.Log;
+import erenik.seriousgames.evergreen.player.Player;
+import erenik.seriousgames.evergreen.R;
+import erenik.seriousgames.evergreen.player.*;
+import erenik.seriousgames.evergreen.util.Dice;
+import erenik.seriousgames.evergreen.logging.LogType;
+
 public class encounter extends AppCompatActivity
 {
-    static List<Enemy> enemies = new ArrayList<Enemy>(); // List of 'em.
+    public static List<Enemy> enemies = new ArrayList<Enemy>(); // List of 'em.
     static List<Log> log = new ArrayList<Log>();
     static Random r = new Random();
 
@@ -44,11 +53,10 @@ public class encounter extends AppCompatActivity
             Enemy e = new Enemy(et);
             enemies.add(e);
         }
-        Log("You encounter "+iAmount+" "+et.name+"s.", LogType.INFO);
+        Log("You encounter " + iAmount + " " + et.name + "s.", LogType.INFO);
     }
     /// Quick simulation
-    static void Simulate()
-    {
+    static void Simulate() {
         // Start it?
         Player player = Player.getSingleton();
         int expGained = 0;
@@ -75,14 +83,27 @@ public class encounter extends AppCompatActivity
                 expGained += e.exp;
             }
         }
-        Log("You survive the encounter.", LogType.INFO);
-        // Done.
-        player.GainEXP(expGained);
-        // Reduce encounters of this sort.
+        // Copy over relevant stats to the more persistant array of stats.
+        player.Set(Stat.HP, player.hp);
+        if (dead)
+        {
+            // Game over?
+            App.GameOver();
+        }
+        else
+        {
+            Log("You survive the encounter.", LogType.INFO);
+            Log("You gain "+expGained+" EXP.", LogType.EXP);
+            player.GainEXP(expGained);
+        }
+        player.log.addAll(log); // Add current log there with all attack stuff.
         if (isRandom)
             player.Adjust(Stat.ENCOUNTERS, -1);
+        else {
+            System.out.println("Dunno what to adjust after finishing encounter. Fix this?");
+            System.exit(14);
+        }
         // Spam all log stuff to console?
-        player.log.addAll(log); // Add current log there with all attack stuff.
         // Save?
         player.SaveLocally();
 

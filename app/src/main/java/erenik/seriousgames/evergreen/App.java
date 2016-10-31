@@ -2,26 +2,36 @@ package erenik.seriousgames.evergreen;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import erenik.seriousgames.evergreen.act.GameOver;
+import erenik.seriousgames.evergreen.player.Constants;
+
 /**
  * Created by Emil on 2016-10-26.
  */
 public class App {
     // Static reference. Updated from listener declared in Startup.
-    static Activity currentActivity;
-    static Activity mainScreenActivity;
+    public static Activity currentActivity;
+    public static Activity mainScreenActivity;
 
-    static Application.ActivityLifecycleCallbacks actLCCallback;
+    public static Application.ActivityLifecycleCallbacks actLCCallback;
 
     static List<Activity> runningActivities = new ArrayList<Activity>();
 
-    static SharedPreferences GetPreferences()
+    /// Go to game-over screen.
+    public static void GameOver()
+    {
+        System.out.println("GaME OVER!!!");
+        Intent i = new Intent(currentActivity.getBaseContext(), GameOver.class);
+        currentActivity.startActivity(i);
+    }
+    public static SharedPreferences GetPreferences()
     {
         Activity ac = currentActivity;
         if (ac == null)
@@ -32,7 +42,7 @@ public class App {
         return ac.getSharedPreferences(Constants.PREFERENCES, Activity.MODE_PRIVATE);
     }
     /// Makes a new singleton activity lc callback listener.
-    static void NewActivityLifeCycleCallback() {
+    public static void NewActivityLifeCycleCallback() {
         actLCCallback = new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityDestroyed(Activity activity) {

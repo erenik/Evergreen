@@ -1,6 +1,4 @@
-package erenik.seriousgames.evergreen;
-
-import android.content.SharedPreferences;
+package erenik.seriousgames.evergreen.player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +7,7 @@ import java.util.List;
  * Created by Emil on 2016-10-30.
  */
 // Daily Action
-enum DAction
+public enum DAction
 {
     FOOD("Gather berries", "Gather Food. Run out of food and you will soon be starving!"),
     MATERIALS("Gather materials", "Gather Materials used for constructing defenses, inventing, crafting and augmenting things."),
@@ -30,8 +28,8 @@ enum DAction
         this.text = txt;
         this.description = description;
     }
-    String text = "";
-    String description = "";
+    public String text = "";
+    public String description = "";
 
     class Argument
     {

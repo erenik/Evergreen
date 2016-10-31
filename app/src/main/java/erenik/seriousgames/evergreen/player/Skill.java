@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.player;
 
 import java.util.ArrayList;
 import java.util.List;

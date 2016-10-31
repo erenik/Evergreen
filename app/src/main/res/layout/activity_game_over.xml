@@ -8,7 +8,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:background="@color/backgroundMainGreen"
-    tools:context="erenik.seriousgames.evergreen.GameOver">
+    tools:context=".act.GameOver">
 
     <TextView
         android:layout_width="wrap_content"
@@ -19,4 +19,15 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:textSize="38dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/newGame"
+        android:id="@+id/buttonNewGame"
+        android:layout_marginTop="74dp"
+        android:background="@color/mainButtonBackground"
+        android:textColor="@color/mainButtonTextColor"
+        android:layout_below="@+id/textViewGameOver"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

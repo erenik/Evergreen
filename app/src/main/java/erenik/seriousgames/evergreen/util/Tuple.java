@@ -1,11 +1,11 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.util;
 
 /**
  * Created by Emil on 2016-10-30.
  */
 public class Tuple<X,Y> {
-    X x;
-    Y y;
+    public X x;
+    public Y y;
     public Tuple(X x, Y y)
     {
         this.x = x;

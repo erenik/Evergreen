@@ -5,6 +5,7 @@
 
 
     <string name="gameOverText">Game over</string>
+    <string name="newGame">Press to start new game</string>
 
     <string name="chooseAction">Choose action</string>
     <string name="chooseSkill">Choose skill</string>

@@ -1,22 +1,21 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.act;
 
-import android.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.text.AttributedCharacterIterator;
 import java.util.ArrayList;
 import java.util.List;
+
+import erenik.seriousgames.evergreen.player.*;
+import erenik.seriousgames.evergreen.EvergreenButton;
+import erenik.seriousgames.evergreen.R;
 
 
 public class SelectActivity extends AppCompatActivity

@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.util;
 
 import java.util.Random;
 
@@ -7,13 +7,13 @@ import java.util.Random;
  */
 public class Dice
 {
-    Dice(int type, int num, int bonus)
+    public Dice(int type, int num, int bonus)
     {
         diceType = type;
         dice = num;
         this.bonus = bonus;
     }
-    int Roll()
+    public int Roll()
     {
         int total = bonus;
         for (int i = 0; i < dice; ++i)
@@ -22,8 +22,8 @@ public class Dice
         return total;
     }
     int diceType; // Sides of the dice. E.g. 6 for D6, 3 for D3. etc.
-    int dice;
-    int bonus;
+    public int dice;
+    public int bonus;
     static Random r = new Random();
 
     static void InitSeed()
@@ -31,7 +31,7 @@ public class Dice
         r = new Random(System.nanoTime());
     }
     /// E.g. 2, 3 (2D6+3) may yield anything from 5 to 15, with larger distributions near 10.
-    static int RollD6(int numDice)
+    static public int RollD6(int numDice)
     {
         int total = 0;
         for (int i = 0; i < numDice; ++i)
@@ -39,7 +39,7 @@ public class Dice
         System.out.println(numDice+"D6 = "+total);
         return total;
     }
-    static int RollD3(int numDice)
+    static public int RollD3(int numDice)
     {
         int total = 0;
         for (int i = 0; i < numDice; ++i)

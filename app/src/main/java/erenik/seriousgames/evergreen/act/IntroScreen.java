@@ -1,7 +1,6 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.act;
 
 import android.annotation.SuppressLint;
-import android.app.Application;
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +9,9 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+
+import erenik.seriousgames.evergreen.player.Player;
+import erenik.seriousgames.evergreen.R;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.

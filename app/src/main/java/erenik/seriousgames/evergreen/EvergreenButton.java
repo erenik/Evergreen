@@ -48,7 +48,7 @@ public class EvergreenButton extends Button
         setTextColor(ContextCompat.getColor(context, R.color.mainButtonTextColor));
     }
     LinearLayout.LayoutParams layoutParams;
-    static int BackgroundColor(Context context)
+    public static int BackgroundColor(Context context)
     {
         return ContextCompat.getColor(context, R.color.mainButtonBackground);
     }
