@@ -169,16 +169,18 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         v.removeAllViews();
         // Add new ones?
         int numDisplay = player.log.size();
-        final int MAX_DISPLAY = 20;
+        final int MAX_DISPLAY = 50;
         numDisplay = numDisplay > MAX_DISPLAY ? MAX_DISPLAY : numDisplay;
-        for (int i = player.log.size() - numDisplay; i < player.log.size(); ++i)
+        int startIndex = player.log.size() - numDisplay;
+        System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
+        for (int i = startIndex; i < player.log.size(); ++i)
         {
             Log l = player.log.get(i);
             String s = l.text;
             TextView t = new TextView(getBaseContext());
             t.setText(s);
             int hex = ContextCompat.getColor(getBaseContext(), l.type.GetResourceColor());
-            System.out.println("Colorizing: "+Integer.toHexString(hex));
+           // System.out.println("Colorizing: "+Integer.toHexString(hex));
             t.setTextColor(hex);
             v.addView(t);
             t.setFocusable(true); // Focusable.

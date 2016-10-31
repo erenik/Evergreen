@@ -46,7 +46,8 @@ public enum Skill {
     // Exp aquired in this skill towards the next level?
     int EXPToNext()
     {
-        return 5;
+        int totalNeeded = EXPToLevelFrom0(Level() + 1);
+        return (int) (totalNeeded - this.totalExp);
     }
 
     public static List<String> Names()
@@ -71,20 +72,25 @@ public enum Skill {
         int expWasted = 0;
         int levelReached = 0;
     }
-    // Throws exception on level up of the skill. Returns amount of exp that was exceeding the maximum (potentially wasted).
-    int GainExp(float amount) throws LeveledUpException
+
+    //    // Throws exception on level up of the skill. Returns amount of exp that was exceeding the maximum (potentially wasted).
+    // Returns -1 usually. Returns 0 or positive number if that level is reached.
+    int GainExp(float amount)
     {
         int level = Level();
         totalExp += amount;
         int newLevel = Level();
         if (newLevel > level)
         {
-            int expWasted = 0;
+      /*      int expWasted = 0;
             if (newLevel == expRequired.length)
                 expWasted = (int) (totalExp - EXPMax());
             throw new LeveledUpException(newLevel, expWasted);
-        }
-        return 0;
+
+    */    }
+        if (newLevel != level)
+            return newLevel;
+        return -1;
     }
 
     private float totalExp = 0;
@@ -95,8 +101,12 @@ public enum Skill {
     /// Max XP total from L0 to max level.
     public int EXPMax()
     {
+        return EXPToLevelFrom0(99);
+    }
+    public int EXPToLevelFrom0(int level)
+    {
         int total = 0;
-        for (int i = 0; i < expRequired.length; ++i)
+        for (int i = 0; i < expRequired.length && i < level; ++i)
         {
             total += expRequired[i];
         }

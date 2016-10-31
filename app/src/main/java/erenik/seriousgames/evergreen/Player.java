@@ -32,6 +32,7 @@ enum Stat
     ENCOUNTERS(0),  // Random enemy encounters to defeat. Encountered while doing other tasks (scouting, gathering).
     RANDOM_PLAYERS_SHELTERS(0),  // Random player shelters to be randomly allocated shortly (ask server to whom it belongs?) or postpone until later.
     ENEMY_STRONGHOLDS(0), // Enemy strongholds that you've found.
+    UNALLOCATED_EXP(20), // Free exp to be distributed among any skill when the player pleases.
     ;
 
     Stat(float defaultValue)
@@ -41,33 +42,6 @@ enum Stat
     float defaultValue;
 };
 
-enum LogType
-{
-    INFO, // General info
-    PROBLEM_NOTIFICATION, // Warning/problem notifications.
-    PROGRESS,
-    ATTACKED, // For when taking damage.
-    EVENT,
-    ;
-    /*
-    int HexColor()
-    {
-        return getColor(getContext(), GetResourceColor());
-    };*/ // Text font color for this message.
-    int GetResourceColor()
-    {
-        switch(this)
-        {
-            case INFO: return R.color.info;
-            case PROGRESS: return R.color.progress;
-            case ATTACKED: return R.color.attacked;
-            case EVENT: return R.color.event;
-            case PROBLEM_NOTIFICATION: return R.color.problemNotification;
-        }
-        return R.color.black;
-
-    }
-};
 
 class NotAliveException extends Exception
 {
@@ -76,35 +50,21 @@ class NotAliveException extends Exception
     }
 }
 
-/// For the player game-log. To be color-coded etc.?
-class Log
-{
-    Log(String s, LogType t)
-    {
-        text = s;
-        type = t;
-        date = new Date();
-    }
-    Date date; // Time-stamp of this log message.
-    String text;
-    LogType type;
-};
 /**
  * Created by Emil on 2016-10-25.
  */
-public class Player
+public class Player extends Combatable
 {
     static Random r = new Random(System.nanoTime());
     // Main stats.
 //    float hp, food, materials, base_attack, base_defense, emissions;
-    String name;
     float[] statArr = new float[Stat.values().length];
     /// Used in main menu, and also saved.
     List<DAction> dailyActions = new ArrayList<DAction>();
     int skill = -1;
     int activeAction = -1;
     /// Increment every passing day. Stop once dying.
-    int turnSurvived = 1;
+    int turn = 1;
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
@@ -116,6 +76,8 @@ public class Player
 
     /// Array of exp in each Skill.
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
+    /// Queued skills to be leveled up.
+    List<Skill> skillTrainingQueue = new ArrayList<Skill>();
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
@@ -125,12 +87,13 @@ public class Player
     }
     private Player()
     {
-        name = "Noname";
+        name = "Parlais Haux Le'deur";
+        isPlayer = true;
         SetDefaultStats();
     }
     boolean IsAlive()
     {
-        return GetInt(Stat.HP) > 0;
+        return GetInt(Stat.HP) > 0 && hp > 0;
     }
     int Speed()
     {
@@ -203,9 +166,9 @@ public class Player
         e.putString(Constants.NAME, name);
         e.putBoolean(Constants.SAVE_EXISTS, true);
         // Stats
+        System.out.println("Saving stats");
         for (int i = 0; i < Stat.values().length; ++i)
         {
-            System.out.println("Saving "+Stat.values()[i].toString());
             e.putFloat(Stat.values()[i].toString(), statArr[i]);
         }
         // Action
@@ -237,9 +200,9 @@ public class Player
             return false;
         name = sp.getString(Constants.NAME, "BadSaveName");
         // Stats
+        System.out.println("Loading stats");
         for (int i = 0; i < Stat.values().length; ++i)
         {
-            System.out.println("Saving "+Stat.values()[i].toString());
             statArr[i] = sp.getFloat(Stat.values()[i].toString(), Stat.values()[i].defaultValue);
         }
         // Choices.
@@ -269,14 +232,14 @@ public class Player
     void NewDay()
     {
         // New day, assign transport?
-        ++player.turnSurvived;
+        ++player.turn;
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     void NextDay() throws NotAliveException
     {
         if (GetInt(Stat.HP) <= 0)
             throw new NotAliveException();
-        Log("-- Day "+player.turnSurvived+" --", LogType.INFO);
+        Log("-- Day "+player.turn+" --", LogType.INFO);
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
@@ -527,5 +490,39 @@ public class Player
             Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
             SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
         }
+    }
+
+    public void GainEXP(int expGained)
+    {
+        // Check queued skills.
+        int xp = expGained;
+        Log(expGained+" EXP gained.", LogType.EXP);
+        while (xp > 0 && skillTrainingQueue.size() > 0) {
+            Skill next = skillTrainingQueue.get(0);
+            next.ordinal();
+            Skill toSkillUp = skills.get(next.ordinal());
+            int needed = toSkillUp.EXPToNext();
+            int toGain = xp;
+            if (needed < xp)
+                toGain = needed;
+            xp -= toGain;
+            int levelReached = toSkillUp.GainExp(toGain);
+            if (levelReached >= 0) {
+                Log("Skill " + toSkillUp.text + " reached level " + levelReached + "!", LogType.EXP);
+                skillTrainingQueue.remove(0);
+            }
+        }
+        // If queue empty, place in unallocated points.
+        Adjust(Stat.UNALLOCATED_EXP, xp);
+    }
+
+    public void PrepareForCombat() {
+        // Load data into the Combatable variables from the more persistant ones saved here.
+        Combatable c = (Combatable) this;
+        c.attack = Attack();
+        c.defense = Defense();
+        c.hp = GetInt(Stat.HP);
+        c.maxHP = GetInt(Stat.MAX_HP);
+        c.attackDamage = new Dice(6, 1, 0);
     }
 }

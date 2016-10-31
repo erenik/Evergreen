@@ -1,5 +1,6 @@
 package erenik.seriousgames.evergreen;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
@@ -14,7 +15,8 @@ public class EventDialogFragment extends DialogFragment
 {
     Finding type = Finding.Nothing;
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    public Dialog onCreateDialog(final Bundle savedInstanceState)
+    {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(type.GetEventText()+"\nDo you want to play the event now?")
@@ -24,12 +26,25 @@ public class EventDialogFragment extends DialogFragment
                         // FIRE ZE MISSILES!
                         // Open new activity for this event.
                         // do it.
+                        // Do the fight.
+                        encounter.NewEncounter();
+                        encounter.Random(new Dice(3, 2, 0));
+                        encounter.Simulate();
+
+                        // Update GUI of main activity.
+                        Activity act = getActivity();
+                        if (act instanceof MainScreen)
+                        {
+                            MainScreen ms = (MainScreen) act;
+                            ms.UpdateGUI(); // Update GUI HP, log, etc.
+                        }
                     }
                 })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Later", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id)
                     {
                         // User cancelled the dialog
+
                     }
                 });
         // Create the AlertDialog object and return it

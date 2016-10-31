@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#B3FFB3"
+    android:background="@color/backgroundMainGreen"
     tools:context="erenik.seriousgames.evergreen.MainScreen">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -32,6 +32,7 @@
                 android:contentDescription="A heart" />
             <TextView android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewHP"
                 android:layout_gravity="center_vertical"
                 android:elegantTextHeight="false"
@@ -45,6 +46,7 @@
             <TextView
                 android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewFood"
                 android:layout_gravity="center_vertical"
                 android:elegantTextHeight="false"
@@ -58,6 +60,7 @@
             <TextView
                 android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewMaterials"
                 android:layout_gravity="center_vertical"
                 android:elegantTextHeight="false"
@@ -80,6 +83,7 @@
                 android:contentDescription="A heart" />
             <TextView android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewAttack"
                 android:layout_gravity="center_vertical"
                 android:textSize="20dp" />
@@ -92,6 +96,7 @@
             <TextView
                 android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewDefense"
                 android:layout_gravity="center_vertical"
                 android:textSize="20dp" />
@@ -104,6 +109,7 @@
             <TextView
                 android:layout_width="0px" android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainTextColor"
                 android:text="10/10" android:id="@+id/textViewEmissions"
                 android:layout_gravity="center_vertical"
                 android:textSize="20dp" />
@@ -112,9 +118,13 @@
         <Button
             style="?metaButtonBarButtonStyle"
             android:id="@+id/buttonChooseActiveAction"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="0.8"
+            android:textColor="@color/mainButtonTextColor"
+            android:background="@color/mainButtonBackground"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:text="Active actions"
             android:textSize="16dp"
             android:layout_gravity="center_horizontal" />
@@ -125,6 +135,9 @@
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="0.8"
+            android:textColor="@color/mainButtonTextColor"
+            android:background="@color/mainButtonBackground"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:text="Choose action"
             android:textSize="16dp" />
 
@@ -134,7 +147,10 @@
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="0.8"
-            android:text="@+id/chooseSkill"
+            android:textColor="@color/mainButtonTextColor"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:background="@color/mainButtonBackground"
+            android:text="Choose skill"
             android:textSize="16dp" />
 
         <ScrollView
@@ -153,6 +169,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="New Text\ntetet\"
+                    android:textColor="@color/mainTextColor"
                     android:id="@+id/textViewLog" />
                 <TextView
                     android:layout_width="match_parent"
@@ -174,8 +191,11 @@
                 android:id="@+id/button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
                 android:text="Help"
+                android:layout_margin="@dimen/activity_vertical_margin_smaller"
+                android:background="@color/mainButtonBackground"
                 android:textSize="16dp" />
 
             <Button
@@ -183,7 +203,10 @@
                 android:id="@+id/nextDay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
+                android:layout_margin="@dimen/activity_vertical_margin_smaller"
+                android:background="@color/mainButtonBackground"
                 android:text="Next Day"
                 android:textSize="16dp" />
 
@@ -192,7 +215,10 @@
                 android:id="@+id/button3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
+                android:layout_margin="@dimen/activity_vertical_margin_smaller"
+                android:background="@color/mainButtonBackground"
                 android:text="Messages"
                 android:textSize="16dp" />
         </LinearLayout>

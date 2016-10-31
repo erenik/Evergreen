@@ -85,7 +85,6 @@ public class SelectActivity extends AppCompatActivity
             updateQueue(); // Update queue gui.
         }
     };
-    int queueColor = 0xAAAAAAAA;
     // Updates queue gui.
     private void updateQueue()
     {
@@ -110,36 +109,29 @@ public class SelectActivity extends AppCompatActivity
                 case 7: id = R.id.queueLayout7; break;
             }
             ll.setId(id);
-            ll.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            ll.setBackgroundColor(queueColor);
-            ll.setPadding(0,0,0,5);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            ll.setLayoutParams(layoutParams);
+            ll.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
             vg.addView(ll);
 
             // Make a button out of it.
-            Button b = new Button(getBaseContext());
+            EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(selected.get(i));
-            b.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 2.0f));
+            layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
+//            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            b.setLayoutParams(layoutParams);
  //           b.setGravity(2);
             b.setOnClickListener(itemClicked);
             ll.addView(b);
 
-            /*
-            Button b2 = new Button(getBaseContext());
-            b2.setText("Button.");
-            b2.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)); // Yeah, yeah.
-            b2.setGravity(2);
-            b2.setBackgroundColor(0xFF000000);
-            b2.setOnClickListener(removeParentFromQueue);
-            ll.addView(b2);
-*/
             // Add a button in the button to remove it.
             ImageButton removeButton = new ImageButton(getBaseContext());
+            removeButton.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
             removeButton.setImageResource(R.drawable.remove);
             removeButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
             removeButton.setOnClickListener(removeParentFromQueue);
-            removeButton.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT, 3.0f)); // Weight at the end?
+            removeButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 4.0f)); // Weight at the end?
             ll.addView(removeButton);
         }
     }
@@ -205,9 +197,11 @@ public class SelectActivity extends AppCompatActivity
         for (int i = 0; i < itemNames.size(); ++i)
         {
             // Make a button out of it.
-            Button b = new Button(getBaseContext());
+            EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(itemNames.get(i));
-            b.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)); // Yeah, yeah.
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            b.setLayoutParams(layoutParams);
             vg.addView(b);
             b.setOnClickListener(addItem);
 

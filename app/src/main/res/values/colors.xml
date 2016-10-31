@@ -12,4 +12,13 @@
     <color name="event">#FF111111</color>
     <color name="progress">#FFBBBB00</color>
     <color name="problemNotification">#FFFFA500</color>
+    <color name="attackMiss">#FF444444</color>
+    <color name="attack">#FF222222</color>
+    <color name="exp">#FFDDDD55</color>
+
+    <color name="backgroundMainGreen">#FF013220</color>
+    <color name="mainTextColor">#FFBBBBBB</color>
+    <color name="mainButtonTextColor">#FFDDDDDD</color>
+    <color name="mainButtonBackground">#FF085b3d</color>
+
 </resources>
