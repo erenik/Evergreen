@@ -7,30 +7,35 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity
-            android:name=".act.IntroScreen"
+        android:theme="@style/Evergreen"
+        >
+        <!-- android:theme="@style/Evergreen" -->
+        <activity android:name=".act.IntroScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
-            android:theme="@style/FullscreenTheme" />
-        <activity
-            android:name=".act.MainScreen"
+            />
+        <!-- android:theme="@style/FullscreenTheme"  -->
+        <activity android:name=".act.MainScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_main_screen"
-            android:theme="@style/FullscreenTheme" />
+            />
+        <!-- android:theme="@style/FullscreenTheme" -->
         <activity android:name=".act.SelectActivity" />
-        <activity
-            android:name=".act.Startup"
+        <activity android:name=".act.Startup"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".act.GameOver" />
-        <activity android:name=".act.encounter"></activity>
+        <activity android:name=".act.encounter" />
+        <activity android:name=".act.logViewer"
+            android:label="@string/title_activity_log_viewer"
+            >
+            <!-- android:theme="@style/AppTheme.NoActionBar" -->
+        </activity>
     </application>
 
 </manifest>

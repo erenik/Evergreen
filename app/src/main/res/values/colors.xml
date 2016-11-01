@@ -8,7 +8,7 @@
 
     <color name="black">#FF000000</color>
     <color name="info">#FFBBBBBB</color>
-    <color name="attacked">#FFFF0000</color>
+    <color name="attacked">#FFf88000</color>
     <color name="event">#FFEEEECC</color>
     <color name="progress">#FFAA8888</color>
     <color name="problemNotification">#FFFF8500</color>
@@ -17,8 +17,14 @@
     <color name="exp">#FFDDDD55</color>
 
     <color name="backgroundMainGreen">#FF013220</color>
-    <color name="mainTextColor">#FFBBBBBB</color>
+    <color name="mainTextColor">#FFdedbcb</color>
     <color name="mainButtonTextColor">#FFDDDDDD</color>
-    <color name="mainButtonBackground">#FF085b3d</color>
+    <color name="mainButtonBackground">#FF00a166</color>
+    <!-- Old values
+    dedbcb
+    <color name="mainTextColor">#FFBBBBBB</color>
+    <color name="attacked">#FFFF0000</color>
+<color name="mainButtonBackground">#FF085b3d</color>
+    -->
 
 </resources>

@@ -118,12 +118,20 @@ public class Combatable
     public int exp = 1;
     // Most of these are used mainly by enemies, but may also be used by some player weapons perhaps?
     EnemyType enemyType = null;
-    int level = 0, // Base fight stats
-        ensnaring = 0, initialAttackBonus = 0, initialDamageBonus = 0, // Additional effects
-        damageReflecting = 0, encounterModifierPercent = 0,
-            multiplies = 0, timesMultiply = 0, timesMultiplied = 0,
-        vehicleAttackBonus = 0, fleePenalty = 0, attacksPerTurn = 1,
-        itemBribable = 0, materialBribable = 0;
+    int level = 0; // Base fight stats
+    int ensnaring = 0;
+    int initialAttackBonus = 0;
+    int initialDamageBonus = 0; // Additional effects
+    int damageReflecting = 0;
+    int encounterModifierPercent = 0;
+    int multiplies = 0;
+    int timesMultiply = 0;
+    int timesMultiplied = 0;
+    int vehicleAttackBonus = 0;
+    int fleePenalty = 0;
+    public int attacksPerTurn = 1;
+    int itemBribable = 0;
+    int materialBribable = 0;
     float attackChance = 1.f, tailWhipChance = 0, breathAttackChance = 0,
             healChance = 0.f, spellChance = 0.f, hpRegenPerTurn = 0.f,
         receivedDamageMultiplier = 1.f;

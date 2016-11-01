@@ -23,6 +23,8 @@ public class encounter extends AppCompatActivity
     static Random r = new Random();
 
     static boolean isRandom = false;
+    static boolean isAssaultOfTheEvergreen = false;
+
     /// Clears old lists.
     static void NewEncounter()
     {
@@ -68,7 +70,7 @@ public class encounter extends AppCompatActivity
                 Enemy e = enemies.get(i);
                 if (e.Attack(player))
                 {
-                    Log("You die.", LogType.ATTACKED);
+                    Log("You die.", LogType.INFO);
                     dead = true;
                     break;
                 }
@@ -99,6 +101,8 @@ public class encounter extends AppCompatActivity
         player.log.addAll(log); // Add current log there with all attack stuff.
         if (isRandom)
             player.Adjust(Stat.ENCOUNTERS, -1);
+        else if (isAssaultOfTheEvergreen)
+            player.Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1);
         else {
             System.out.println("Dunno what to adjust after finishing encounter. Fix this?");
             System.exit(14);
@@ -110,7 +114,63 @@ public class encounter extends AppCompatActivity
     }
     static void AssaultsOfTheEvergreen()
     {
+        isAssaultOfTheEvergreen = true;
+        Player player = Player.getSingleton();
+        int turn = player.turn;
+        System.out.println("turn: "+turn);
+        int level = turn / 16;
+        List<EnemyType> typesPossible = new ArrayList<EnemyType>();
+        for (int i = 0; i < EnemyType.values().length; ++i)
+        {
+            if (EnemyType.values()[i].level <= level)
+                typesPossible.add(EnemyType.values()[i]);
+        }
 
+        // Attacks of the evergreen?
+        int everGreenTurn = turn % 16;
+        int everGreenStage = turn / 16;
+        int d3 = 0, d6 = 0, bonus = 0;
+        switch(everGreenTurn)
+        {
+            default: break; // The pattern repeats every 16 turns.
+            case 0:  // Turns 16, 32, 48 and 64.
+                bonus += everGreenStage + 1;
+                d6 += everGreenStage;
+            case 15:
+                bonus += everGreenStage + 1;
+                d6 += everGreenStage;
+            case 13:
+                d3 += 1;
+                d6 += everGreenStage;
+            case 10:
+                d3 += 1;
+                d6 += everGreenStage;
+            case 6:
+                d3 += 1;
+                d6 += everGreenStage;
+                bonus += everGreenStage;
+                break;
+        }
+        if (turn == 64)
+        {
+            d6 *= 2; // Double the dice?
+            d3 *= 2;
+            bonus *= 2;
+        }
+        /// Randomly choose type.
+        int ri = r.nextInt(typesPossible.size());
+        EnemyType et = typesPossible.get(ri);
+        int totalEnemies = Dice.RollD3(d3) + Dice.RollD6(d6) + bonus;
+        totalEnemies *= et.encounterAmount;
+        if (totalEnemies < 1)
+            totalEnemies = 1;
+        int iAmount = totalEnemies;
+        for (int i = 0; i < iAmount; ++i)
+        {
+            Enemy e = new Enemy(et);
+            enemies.add(e);
+        }
+        Log("Your shelter is attacked by " + iAmount + " " + et.name + "s!", LogType.INFO);
     }
 
     @Override

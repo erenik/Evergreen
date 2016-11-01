@@ -16,10 +16,24 @@ public enum Finding {
         }
         return "Not implemented: "+this.toString();
     }
+    public String Question()
+    {
+        switch(this)
+        {
+            case Encounter:
+            case AttacksOfTheEvergreen:
+                return "\n\nDo you want to play the event now?";
+            case AbandonedShelter:
+                return "\n\nDo you want to explore it now?";
+            default:
+                return "BadQuestion";
+        }
+    }
     public boolean Skippable()
     {
         switch(this)
         {
+            case AttacksOfTheEvergreen:
             case Encounter:
                 return false;
             default:

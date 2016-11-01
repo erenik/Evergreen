@@ -91,10 +91,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         {
             if (HandleNextEvent())
                 return;
-            findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
-            findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
-            findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
-
             int selection = -1;
             switch(view.getId())
             {
@@ -116,6 +112,18 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
                 e.printStackTrace();
                 System.exit(-2);
             }
+        }
+    };
+    /// For the log...? Or open in a new activity? Since it's just readng?
+    boolean fullScreen;
+    View.OnClickListener toggleLogFullScreen = new View.OnClickListener() {
+        @Override
+        public void onClick(View v)
+        {
+            Intent i = new Intent(getBaseContext(), logViewer.class);
+            startActivity(i);
+            System.out.println("Toggle fullscreen");
+//            fullScreen = !fullScreen;
         }
     };
 
@@ -162,7 +170,8 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
         findViewById(R.id.nextDay).setOnClickListener(nextDay);
-
+        findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
+        findViewById(R.id.layoutLog).setOnClickListener(toggleLogFullScreen);
     }
 
     void UpdateGUI()
@@ -178,32 +187,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         UpdateDailyActionButton();
         UpdateSkillButton();
         // Update log.
-        ViewGroup v = (ViewGroup) findViewById(R.id.layoutLog);
-        // Remove children.
-        v.removeAllViews();
-        // Add new ones?
-        int numDisplay = player.log.size();
-        final int MAX_DISPLAY = 50;
-        numDisplay = numDisplay > MAX_DISPLAY ? MAX_DISPLAY : numDisplay;
-        int startIndex = player.log.size() - numDisplay;
-        System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
-        for (int i = startIndex; i < player.log.size(); ++i)
-        {
-            Log l = player.log.get(i);
-            String s = l.text;
-            TextView t = new TextView(getBaseContext());
-            t.setText(s);
-            int hex = ContextCompat.getColor(getBaseContext(), l.type.GetResourceColor());
-           // System.out.println("Colorizing: "+Integer.toHexString(hex));
-            t.setTextColor(hex);
-            v.addView(t);
-            t.setFocusable(true); // Focusable.
-            t.setFocusableInTouchMode(true);
-            t.requestFocus(); // Request focus, make visible?
-        }
-        // Scroll down?
-//        ScrollView sv = (ScrollView) findViewById(R.id.scrollViewLog);
-  //      sv.fullScroll(ScrollView.FOCUS_DOWN);
+        Log.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50);
     }
 
     void SetText(int viewID, String text)
@@ -235,11 +219,9 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
                 UpdateActiveActionButton();
                 break;
             case SelectActivity.SELECT_DAILY_ACTION:
-//                player.dailyAction = resultCode;
                 UpdateDailyActionButton();
                 break;
             case SelectActivity.SELECT_SKILL:
-                player.skill = resultCode;
                 UpdateSkillButton();
                 break;
         }
@@ -264,8 +246,8 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     private void UpdateSkillButton()
     {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
-        if (player.skill >= 0)
-            tv.setText("Change Skill: "+getResources().getStringArray(R.array.skills)[player.skill]);
+        if (player.skillTrainingQueue.size() >= 0)
+            tv.setText("Change Skill: "+player.skillTrainingQueue.size()+" queued.");
         else
             tv.setText(R.string.chooseSkill);
     }

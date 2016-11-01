@@ -14,4 +14,5 @@ public class Constants {
     public static final String DAILY_ACTION_TYPE = "";
     public static final String DAILY_ACTIONS = "dailyActions"; // STRing
     public static final String TURN = "turn";
+    public static final String SKILL_TRAINING_QUEUE = "skillTrainingQueue";
 }

@@ -27,11 +27,16 @@ public class EventDialogFragment extends DialogFragment
         Player player = Player.getSingleton();
         boolean skippable = true;
         float units = 0.f;
+        skippable = type.Skippable();
+        moreText = type.Question();
         switch(type)
         {
-            case AttacksOfTheEvergreen:
-
+            case AbandonedShelter:
+            {
+                skippable = true;
                 break;
+            }
+            case AttacksOfTheEvergreen:
             case Encounter:
                 skippable = false;
                 break;
@@ -52,13 +57,12 @@ public class EventDialogFragment extends DialogFragment
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         switch (type) {
+                            case AttacksOfTheEvergreen:
+                                AttacksOfTheEvergreen();
+                                break;
                             case Encounter:
                                 RandomEncounter();
-                                //, Materials, RandomPlayerShelter,
-                                  //  AbandonedShelter, EnemyStronghold, AttacksOfTheEvergreen,
-
                         }
-
                         // Update GUI of main activity.
                         Activity act = getActivity();
                         if (act instanceof MainScreen) {
@@ -77,6 +81,14 @@ public class EventDialogFragment extends DialogFragment
         // Create the AlertDialog object and return it
         return builder.create();
     }
+
+    private void AttacksOfTheEvergreen()
+    {
+        encounter.NewEncounter();
+        encounter.AssaultsOfTheEvergreen();
+        encounter.Simulate();
+    }
+
     void RandomEncounter()
     {
         // Open new activity for this event?

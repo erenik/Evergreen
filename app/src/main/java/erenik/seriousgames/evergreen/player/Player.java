@@ -33,13 +33,15 @@ public class Player extends Combatable
     float[] statArr = new float[Stat.values().length];
     /// Used in main menu, and also saved.
     public List<DAction> dailyActions = new ArrayList<DAction>();
-    public int skill = -1;
     public int activeAction = -1;
     /// Increment every passing day. Stop once dying.
     public int turn = 1;
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
+
+    /// Currently equipped weapon. Null if not equiped. Pointer to weapon in inventory if equipped.
+    Item equippedWeapon = null;
 
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
     List<Event> events = new ArrayList<Event>();
@@ -49,10 +51,12 @@ public class Player extends Combatable
     /// Array of exp in each Skill.
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
     /// Queued skills to be leveled up.
-    List<Skill> skillTrainingQueue = new ArrayList<Skill>();
+    public List<Skill> skillTrainingQueue = new ArrayList<Skill>();
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
+    public List<LogType> logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
+
     static public Player getSingleton()
     {
         return player;
@@ -71,20 +75,40 @@ public class Player extends Combatable
     {
         return GetInt(Stat.SPEED);
     }
+    public int UnarmedCombatBonus()
+    {
+        return equippedWeapon == null? Get(Skill.UnarmedCombat).Level() : 0;
+    }
     public int Attack()
     {
-        return GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
+        int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
+        att += UnarmedCombatBonus();
+        att += equippedWeapon != null ?  equippedWeapon.attackBonus + (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
+        return att;
     }
     public int Defense()
     {
-        return GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
+        int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
+        def += (UnarmedCombatBonus()-1) / 2;
+        def += Get(Skill.DefensiveTraining).Level();
+        return def;
     }
+    public Dice Damage()
+    {
+        // Base damage, 1D6, no bonuses.
+        Dice damage = new Dice(6, 1, 0);
+        damage.bonus += UnarmedCombatBonus();
+        damage.bonus += equippedWeapon != null ?  equippedWeapon.damageBonus + Get(Skill.WeaponizedCombat).Level() / 2 : 0;
+        return damage;
+    }
+
     int ShelterDefense()
     {
         return Defense() + GetInt(Stat.SHELTER_DEFENSE);
     }
     public void SetDefaultStats()
     {
+        turn = 0;
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
@@ -137,14 +161,15 @@ public class Player extends Combatable
         String s = "";
         for (int i = 0; i < dailyActions.size(); ++i)
         {
-            DAction d = dailyActions.get(i);
-            if (d == null)
-                continue;
-            s += d.text+";";
+            s += dailyActions.get(i).text+";";
         }
         e.putString(Constants.DAILY_ACTIONS, s);
-//        e.putInt(Constants.DAILY_ACTION, dailyAction);
-        e.putInt(Constants.SKILL, skill);
+        s = "";
+        for (int i = 0; i < skillTrainingQueue.size(); ++i)
+        {
+            s += skillTrainingQueue.get(i).text+";";
+        }
+        e.putString(Constants.SKILL_TRAINING_QUEUE, s);
         // Save/commit.
         boolean ok = e.commit();
         System.out.println("Save OK: "+ok);
@@ -171,7 +196,6 @@ public class Player extends Combatable
         // Save daily actions as string?
         String s = sp.getString(Constants.DAILY_ACTIONS, "");
         String[] split = s.split(";", 5);
-        int numSemiColons = split.length;
         dailyActions.clear();
         for (int i = 0; i < split.length; ++i)
         {
@@ -180,7 +204,17 @@ public class Player extends Combatable
                 continue;
             dailyActions.add(da);
         }
-        skill = sp.getInt(Constants.SKILL, -1);
+        /// Load skill training queue.
+        skillTrainingQueue.clear();
+        s = sp.getString(Constants.SKILL_TRAINING_QUEUE, "");
+        split = s.split(";", 5);
+        for (int i = 0; i < split.length; ++i)
+        {
+            Skill skill = Skill.GetFromString(split[i]);
+            if (skill == null)
+                continue;
+            skillTrainingQueue.add(skill);
+        }
         return true;
     }
 
@@ -219,6 +253,13 @@ public class Player extends Combatable
             if (!IsAlive())
                 return;
         }
+        /// Gain EXP? Spend unspent EXP?
+        int expToGain = (int) (2 + Get(Stat.UNALLOCATED_EXP));
+        // Erase unallocated exp. It will be re-added later perhaps.
+        Set(Stat.UNALLOCATED_EXP, 0);
+        System.out.println("Exp gained: "+expToGain);
+        GainEXP(expToGain);
+
         // Analyze some chosen hours of activity. Generate events and stuff for each?
         EvaluateActions();
         /// Force the player to play through the generated events before they proceed.
@@ -257,6 +298,8 @@ public class Player extends Combatable
             event.type = Finding.AbandonedShelter;
         else if (Get(Stat.RANDOM_PLAYERS_SHELTERS) > 0)
             event.type = Finding.RandomPlayerShelter;
+        else if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
+            event.type = Finding.AttacksOfTheEvergreen;
         if (event.type != Finding.Nothing)
             event.show(fragMan, "event");
     }
@@ -430,7 +473,7 @@ public class Player extends Combatable
         progress *= hoursPerAction;
         Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
         float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
-        Log(da.text+": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS))+" units out of "+requiredToNext+".", LogType.INFO);
+        Log(da.text + ": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)) + " units out of " + requiredToNext + ".", LogType.INFO);
         if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
         {
             Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
@@ -476,17 +519,28 @@ public class Player extends Combatable
     {
         // Check queued skills.
         int xp = expGained;
-        while (xp > 0 && skillTrainingQueue.size() > 0) {
+        while (xp > 0 && skillTrainingQueue.size() > 0)
+        {
             Skill next = skillTrainingQueue.get(0);
             next.ordinal();
             Skill toSkillUp = skills.get(next.ordinal());
             int needed = toSkillUp.EXPToNext();
+            if (needed <= 0)
+            {
+                System.out.println("Needed " + needed + ": skipping this skill, de-queueing.");
+                skillTrainingQueue.remove(0);
+                continue;
+            }
+            System.out.println("EXP to next level? "+needed);
             int toGain = xp;
             if (needed < xp)
                 toGain = needed;
             xp -= toGain;
+            int oldLevel = toSkillUp.Level();
             int levelReached = toSkillUp.GainExp(toGain);
-            if (levelReached >= 0) {
+            int newLevel = toSkillUp.Level();
+            if (newLevel > oldLevel)
+            {
                 Log("Skill " + toSkillUp.text + " reached level " + levelReached + "!", LogType.EXP);
                 skillTrainingQueue.remove(0);
             }
@@ -502,6 +556,13 @@ public class Player extends Combatable
         c.defense = Defense();
         c.hp = GetInt(Stat.HP);
         c.maxHP = GetInt(Stat.MAX_HP);
-        c.attackDamage = new Dice(6, 1, 0);
+        c.attackDamage = Damage();
+        c.attacksPerTurn = AttacksPerTurn();
+    }
+    private int AttacksPerTurn()
+    {
+        int attacks = 1;
+        attacks += (UnarmedCombatBonus()-1) / 2;
+        return attacks;
     }
 }

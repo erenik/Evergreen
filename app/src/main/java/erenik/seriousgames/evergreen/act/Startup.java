@@ -1,5 +1,6 @@
 package erenik.seriousgames.evergreen.act;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
@@ -10,7 +11,7 @@ import erenik.seriousgames.evergreen.player.Constants;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.R;
 
-public class Startup extends AppCompatActivity {
+public class Startup extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState)

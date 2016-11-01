@@ -24,5 +24,5 @@ public enum EnemyType
     int attack;
     int defense;
     int exp;
-    public float encounterAmount;
+    public float encounterAmount; // 1.0 for default (100%) of attack amount.
 }

@@ -151,6 +151,16 @@ public class SelectActivity extends AppCompatActivity
                         player.dailyActions.add(da);
                 }
             }
+            else if (type == SELECT_SKILL)
+            {
+                player.skillTrainingQueue.clear();
+                for (int i = 0; i < selected.size(); ++i)
+                {
+                    Skill s = Skill.GetFromString(selected.get(i));
+                    if (s != null)
+                        player.skillTrainingQueue.add(s);
+                }
+            }
             finish();
         }
     };
@@ -199,28 +209,21 @@ public class SelectActivity extends AppCompatActivity
             EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(itemNames.get(i));
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            layoutParams.setMargins((int) getResources().getDimension(R.dimen.activity_horizontal_margin), 0, (int) getResources().getDimension(R.dimen.activity_horizontal_margin), (int) getResources().getDimension(R.dimen.activity_vertical_margin));
             b.setLayoutParams(layoutParams);
             vg.addView(b);
             b.setOnClickListener(addItem);
-
-            // Add additional buttons as needed?
-/*            if (type == SELECT_SKILL)
-            {
-
-            }
-  */
         }
         // Load from player.
         Player p = Player.getSingleton();
-        List<DAction> lda = p.dailyActions;
-        for (int i = 0; i < lda.size(); ++i)
+        if (type == SELECT_DAILY_ACTION) {
+            for (int i = 0; i < p.dailyActions.size(); ++i)
+                selected.add(p.dailyActions.get(i).text);
+        }
+        else if (type == SELECT_SKILL)
         {
-            DAction da = lda.get(i);
-            if (da == null)
-                continue;
-            System.out.println("da: "+da);
-            selected.add(da.text);
+            for (int i = 0; i < p.skillTrainingQueue.size(); ++i)
+                selected.add(p.skillTrainingQueue.get(i).text);
         }
         // Update the queue
         updateQueue();

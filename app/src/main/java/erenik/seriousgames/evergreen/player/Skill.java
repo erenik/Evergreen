@@ -41,12 +41,14 @@ public enum Skill {
         this.expRequired = expRequired;
         this.briefDescription = briefDescription;
     }
-    String text = "text";
+    public String text = "text";
     String briefDescription = "Desc";
     // Exp aquired in this skill towards the next level?
     int EXPToNext()
     {
+        int level = Level();
         int totalNeeded = EXPToLevelFrom0(Level() + 1);
+//        System.out.println("totalNeeded: "+totalNeeded+" and totalExp: "+totalExp);
         return (int) (totalNeeded - this.totalExp);
     }
 
@@ -58,6 +60,16 @@ public enum Skill {
             l.add(values()[i].text);
         }
         return l;
+    }
+
+    public static Skill GetFromString(String s)
+    {
+        for (int i = 0; i < Skill.values().length; ++i)
+        {
+            if (Skill.values()[i].text.equals(s))
+                return Skill.values()[i];
+        }
+        return null;
     }
 
     public class LeveledUpException extends  Exception
@@ -80,16 +92,11 @@ public enum Skill {
         int level = Level();
         totalExp += amount;
         int newLevel = Level();
-        if (newLevel > level)
-        {
-      /*      int expWasted = 0;
-            if (newLevel == expRequired.length)
-                expWasted = (int) (totalExp - EXPMax());
-            throw new LeveledUpException(newLevel, expWasted);
-
-    */    }
         if (newLevel != level)
+        {
+            System.out.println("Skill.GainExp: new level reached");
             return newLevel;
+        }
         return -1;
     }
 
@@ -110,6 +117,7 @@ public enum Skill {
         {
             total += expRequired[i];
         }
+        System.out.println("Exp to level "+level+" of skill "+text+": "+total);
         return total;
     }
     // Current level in this skill.
@@ -117,10 +125,10 @@ public enum Skill {
     {
         float exp = totalExp;
         int level = 0;
-        while (exp > 0 && level < expRequired.length)
+        while (exp >= 0 && level < expRequired.length)
         {
             exp -= expRequired[level];
-            if (exp > 0)
+            if (exp >= 0)
                 ++level;
         }
         return level;
