@@ -41,7 +41,7 @@ public class Player extends Combatable
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
 
     /// Currently equipped weapon. Null if not equiped. Pointer to weapon in inventory if equipped.
-    Item equippedWeapon = null;
+    Invention equippedWeapon = null, equippedArmor = null, equippedTool = null, equippedRangedWeapon = null;
 
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
     List<Event> events = new ArrayList<Event>();
@@ -52,6 +52,8 @@ public class Player extends Combatable
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
     /// Queued skills to be leveled up.
     public List<Skill> skillTrainingQueue = new ArrayList<Skill>();
+    List<Invention> inventions = new ArrayList<>(); // Blueprints, 1 of each.
+    List<Invention> inventory = new ArrayList<>(); // Inventory, may have duplicates of items that can be traded etc.
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
@@ -67,9 +69,16 @@ public class Player extends Combatable
         isPlayer = true;
         SetDefaultStats();
     }
+    public int MaxHP()
+    {
+        int maxHP = GetInt(Stat.MAX_HP);
+        for (int i = 0; i < Get(Skill.Survival).Level(); ++i)
+            maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
+        return  maxHP;
+    }
     public boolean IsAlive()
     {
-        return GetInt(Stat.HP) > 0 && hp > 0;
+        return GetInt(Stat.HP) > 0;
     }
     int Speed()
     {
@@ -79,17 +88,29 @@ public class Player extends Combatable
     {
         return equippedWeapon == null? Get(Skill.UnarmedCombat).Level() : 0;
     }
+    /// Fetches total form all equipped gear.
+    public int GetEquipped(InventionStat stat)
+    {
+        List<Invention> equipped = new ArrayList<>();
+        equipped.add(equippedWeapon); equipped.add(equippedArmor); equipped.add(equippedTool); equipped.add(equippedRangedWeapon);
+        int tot = 0;
+        for (int i = 0; i < equipped.size(); ++i)
+            tot += equipped.get(i) != null? equipped.get(i).Get(stat) : 0;
+        return tot;
+    }
     public int Attack()
     {
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
         att += UnarmedCombatBonus();
-        att += equippedWeapon != null ?  equippedWeapon.attackBonus + (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
+        att += GetEquipped(InventionStat.AttackBonus);
+        att += equippedWeapon != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
     public int Defense()
     {
         int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
         def += (UnarmedCombatBonus()-1) / 2;
+        def += GetEquipped(InventionStat.DefenseBonus);
         def += Get(Skill.DefensiveTraining).Level();
         return def;
     }
@@ -98,10 +119,15 @@ public class Player extends Combatable
         // Base damage, 1D6, no bonuses.
         Dice damage = new Dice(6, 1, 0);
         damage.bonus += UnarmedCombatBonus();
-        damage.bonus += equippedWeapon != null ?  equippedWeapon.damageBonus + Get(Skill.WeaponizedCombat).Level() / 2 : 0;
+        if (equippedWeapon != null) { // Weapon equipped.
+            damage.diceType = equippedWeapon.Get(InventionStat.AttackDamageDiceType);
+            damage.dice = equippedWeapon.Get(InventionStat.AttackDamageDice);
+            damage.bonus = equippedWeapon.Get(InventionStat.AttackDamageBonus);
+            damage.bonus += Get(Skill.WeaponizedCombat).Level() / 2;
+            System.out.println("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
+        }
         return damage;
     }
-
     int ShelterDefense()
     {
         return Defense() + GetInt(Stat.SHELTER_DEFENSE);
@@ -251,10 +277,13 @@ public class Player extends Combatable
             Adjust(Stat.HP, loss);
             Log("Starving, lost "+(-loss)+" HP.", LogType.ATTACKED);
             if (!IsAlive())
+            {
+                Log("Died of starvation", LogType.ATTACKED);
                 return;
+            }
         }
         /// Gain EXP? Spend unspent EXP?
-        int expToGain = (int) (2 + Get(Stat.UNALLOCATED_EXP));
+        int expToGain = (int) (2 + Get(Skill.Studious).Level() + Get(Stat.UNALLOCATED_EXP));
         // Erase unallocated exp. It will be re-added later perhaps.
         Set(Stat.UNALLOCATED_EXP, 0);
         System.out.println("Exp gained: "+expToGain);
@@ -360,7 +389,7 @@ public class Player extends Combatable
         switch (da)
         {
             case FOOD:
-                units = r.nextInt(5) + 2;
+                units = Dice.RollD3(2 + Get(Skill.Foraging).Level());  // r.nextInt(5) + 2;
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
@@ -373,11 +402,14 @@ public class Player extends Combatable
                 Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
+            case Invent:
+                Invent(da);
+                break;
             case SCOUT:
                 Scout();
                 break;
             case RECOVER:
-                units = hoursPerAction * 0.5f;
+                units = 0.5f * hoursPerAction * (1 + 0.5f * Get(Skill.Survival).Level()); // Recovery +50/100/150/200/250%
                 units *= t_starvingModifier;
                 Adjust(Stat.HP, units);
                 Log(da.text+": Recovered "+Stringify(units)+" HP.", LogType.INFO);
@@ -389,6 +421,64 @@ public class Player extends Combatable
                 System.out.println("Nooo");
         }
     }
+
+    private void Invent(DAction inventAction)
+    {
+        float emit = ConsumeMaterials(hoursPerAction * 0.5f);
+        // How many times to random.
+        float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
+        toRandom *= t_starvingModifier;
+        toRandom *= CalcMaterialModifier();
+        String s = da.text+": ";
+        // Check if inveting has been queued for any special item?
+        boolean inventedSomething = false;
+        System.out.println("toRandom iterations: "+toRandom);
+        for (int i = 0; i < toRandom; ++i) // Times to random.
+        {
+            float relativeChance = toRandom > 1? 1 : toRandom;
+            InventionType type = null;
+            if (type == null) {
+                type = InventionType.RandomType();
+                relativeChance += 0.1f;
+                System.out.println("Type: "+type.name());
+            }
+            Invention inv = AttemptInvent(type, relativeChance);
+            if (inv != null){
+                inventedSomething = true;
+                // Add it to inventory too.
+                inventory.add(new Invention(inv));
+                if (inv.type == InventionType.Weapon)    // // Equip it.
+                    equippedWeapon = inv;
+                if (inv.type == InventionType.Armor)
+                    equippedArmor = inv;
+                if (inv.type == InventionType.Tool)
+                    equippedTool = inv;
+                if (inv.type == InventionType.RangedWeapon)
+                    equippedRangedWeapon = inv;
+            }
+            toRandom -= 1;
+        }
+        if (inventedSomething == false)
+            Log(s+"Failed to invent anything.", LogType.INFO);
+    }
+    Invention AttemptInvent(InventionType type, float relativeChance)
+    {
+        float rMax = (1.f + 0.1f * Get(Skill.Inventing).Level()) * relativeChance;
+        float random = r.nextFloat() * rMax; // Random 0 to 1 + 0.1 max for each Inventing level, * relChance
+        System.out.println("random: "+random+" out of "+rMax);
+        if (random < 0.75f)
+            return null;            // No success.
+        int levelSuccess = (int) ((random - 0.85f) / 0.1f); // HQ1@ 0.95, 2@ 1.05, 3@ 1.15, 4@ 1.25, etc.
+        if (levelSuccess < 0)
+            levelSuccess = 0;
+        Invention inv = new Invention(type);
+        inv.Set(InventionStat.QualityLevel, levelSuccess);
+        inv.RandomizeDetails();
+        inventions.add(inv);
+        Log("Invented a new "+inv.type.text()+": "+inv.name, LogType.INFO);
+        return inv;
+    }
+
     void Scout()
     {
         int speed = Speed();
@@ -463,9 +553,8 @@ public class Player extends Combatable
     }
     void BuildDefenses()
     {
-        Adjust(Stat.MATERIALS, -hoursPerAction * 0.5f); // Consume! 1 unit of materials per hour?
-        GenerateEmissionsFromMaterialsConsumption(hoursPerAction * 0.5f); // Generate emissions for building.
-        float progress = 1 + r.nextFloat() * 5;
+        float emit = ConsumeMaterials(hoursPerAction * 0.5f);
+        float progress = Dice.RollD3(2 + Get(Skill.Architecting).Level());
         progress /= Get(Stat.SHELTER_DEFENSE);
         progress *= t_starvingModifier;
         CalcMaterialModifier();
@@ -481,31 +570,36 @@ public class Player extends Combatable
             Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
         }
     }
-
-    // Generates emissions, taking into consideration material consumption?
-    private void GenerateEmissionsFromMaterialsConsumption(float baseEmissionsToBeGenerated)
+    // Varies with skills n stuff. Generates emissions.
+    private float ConsumeMaterials(float baseAmount)
     {
-        float e = baseEmissionsToBeGenerated;
+        float s = baseAmount;
         int lMatEfficiency = Get(Skill.MaterialEfficiency).Level();
         switch(lMatEfficiency)
         {
-            case 4: e *= 0.6f; // 0.3,   40,  Multiplicative effects for each timer :)
-            case 3: e *= 0.7f; // 0.5,   20,
-            case 2: e *= 0.8f; // 0.72,   10,
-            case 1: e *= 0.9f; break; // 0.9,   5,
+            case 4: s *= 0.6f; // 0.3,   40,  Multiplicative effects for each timer :)
+            case 3: s *= 0.7f; // 0.5,   20,
+            case 2: s *= 0.8f; // 0.72,   10,
+            case 1: s *= 0.9f; break; // 0.9,   5,
             default:
             case 0: break;
         }
-        Adjust(Stat.EMISSIONS, e);
+        Adjust(Stat.MATERIALS, -s); // Consume! 1 unit of materials per hour?
+        GenerateEmissions(s);
+        return s;
+    }
+    private void GenerateEmissions(float amount)
+    {
+        Adjust(Stat.EMISSIONS, amount);
     }
 
-    private Skill Get(Skill skillType) {
+    public Skill Get(Skill skillType) {
         int index = skillType.ordinal();
         return skills.get(index);
     }
 
     // To be called after taking required materials. Will calculate material modifier for giving penalties on material debts.
-    void CalcMaterialModifier()
+    float CalcMaterialModifier()
     {
         t_materialModifier = (Get(Stat.MATERIALS) < 0 ?  (1 / (1 + Math.abs(Get(Stat.MATERIALS)))): 1);
         if (t_materialModifier < 1) // IF negative, add warning message and reset to 0 - cannot go further negative.
@@ -513,6 +607,7 @@ public class Player extends Combatable
             Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
             SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
         }
+        return t_materialModifier;
     }
 
     public void GainEXP(int expGained)
@@ -549,11 +644,11 @@ public class Player extends Combatable
         Adjust(Stat.UNALLOCATED_EXP, xp);
     }
 
-    public void PrepareForCombat() {
+    public void PrepareForCombat(boolean attacksOnShelter) {
         // Load data into the Combatable variables from the more persistant ones saved here.
         Combatable c = (Combatable) this;
         c.attack = Attack();
-        c.defense = Defense();
+        c.defense = attacksOnShelter? ShelterDefense() : Defense();
         c.hp = GetInt(Stat.HP);
         c.maxHP = GetInt(Stat.MAX_HP);
         c.attackDamage = Damage();

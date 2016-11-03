@@ -25,13 +25,20 @@ public class encounter extends AppCompatActivity
     static boolean isRandom = false;
     static boolean isAssaultOfTheEvergreen = false;
 
+    static Player player = Player.getSingleton();
+    static boolean dead = false;
+    static int expGained = 0;
+
     /// Clears old lists.
-    static void NewEncounter()
+    static void NewEncounter(boolean inShelter)
     {
         enemies.clear();
         log.clear();
         Player player = Player.getSingleton();
-        player.PrepareForCombat();
+        player.PrepareForCombat(inShelter);
+        dead = false;
+        expGained = 0;
+        player.consecutiveFleeAttempts = 0;
     }
     static void Random(Dice dice)
     {
@@ -58,32 +65,20 @@ public class encounter extends AppCompatActivity
         Log("You encounter " + iAmount + " " + et.name + "s.", LogType.INFO);
     }
     /// Quick simulation
-    static void Simulate() {
+    static void Simulate()
+    {
+        /// Will vary based on encounter-type and equipped weapons etc.
+        int playerFreeAttacks = 1;
         // Start it?
-        Player player = Player.getSingleton();
-        int expGained = 0;
-        boolean dead = false;
         while(enemies.size() > 0 && player.IsAlive())
         {
-            for (int i = 0; i < 5 && i < enemies.size(); ++i)
-            {
-                Enemy e = enemies.get(i);
-                if (e.Attack(player))
-                {
-                    Log("You die.", LogType.INFO);
-                    dead = true;
-                    break;
-                }
-            }
+            if (playerFreeAttacks > 0)
+                --playerFreeAttacks;
+            else
+                DoEnemyAttackRound();
             if (dead)
                 break;
-            Enemy e = enemies.get(0);
-            player.Attack(e);
-            if (!e.IsAlive()) {
-                Log("The "+e.name+" dies.", LogType.INFO);
-                enemies.remove(e);
-                expGained += e.exp;
-            }
+            DoPlayerAttackRound();
         }
         // Copy over relevant stats to the more persistant array of stats.
         player.Set(Stat.HP, player.hp);
@@ -110,8 +105,52 @@ public class encounter extends AppCompatActivity
         // Spam all log stuff to console?
         // Save?
         player.SaveLocally();
-
     }
+    static void DoEnemyAttackRound()
+    {
+        for (int i = 0; i < 5 && i < enemies.size(); ++i)
+        {
+            Enemy e = enemies.get(i);
+            if (e.Attack(player))
+            {
+                Log("You die.", LogType.INFO);
+                dead = true;
+                break;
+            }
+        }
+    }
+    static void DoPlayerAttackRound()
+    {
+        // Flee? Under 25%?
+        if (player.hp < player.maxHP * 0.3f)
+        {
+            int fleetRetreat = player.Get(Skill.FleetRetreat).Level();
+            int fleeCR = (enemies.size()-1) / 2 - fleetRetreat - player.consecutiveFleeAttempts;
+            int roll = Dice.RollD6(4); // 4-24, 14 mid, +/- 10
+            if (roll > 14 + fleeCR) {
+                // Success?
+                Log("You run away.", LogType.INFO);
+                if (fleetRetreat > 0)
+                    expGained += Math.pow(2, fleetRetreat - 1);
+                enemies.clear();
+                return;
+            }
+            else
+            {
+                Log("You try to run away, but fail", LogType.INFO);
+                ++player.consecutiveFleeAttempts;
+            }
+        }
+        // Attack?
+        Enemy e = enemies.get(0);
+        player.Attack(e);
+        if (e.hp < 0) {
+            Log("The "+e.name+" dies.", LogType.INFO);
+            enemies.remove(e);
+            expGained += e.exp;
+        }
+    }
+
     static void AssaultsOfTheEvergreen()
     {
         isAssaultOfTheEvergreen = true;

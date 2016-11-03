@@ -17,12 +17,13 @@ public enum DAction
     AUGMENT_TRANSPORT("Augment transport", "Consume materials to improve various aspects of your transport of choice"),
     LOOK_FOR_PLAYER("Look for player", "Attempt to look for a specific player, or just any player's shelter"),
     EXPEDITION("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters."),
-    INVENT("Invent", "Invent new weapons, armor, items or shelter additions"),
+    Invent("Invent", "Invent new weapons, armor, items or shelter additions"),
     CRAFT("Craft", "Craft items which you have previously invented or obtained the blueprints for"),
     STEAL("Steal", "Steal resources, items and/or blueprints from another player"),
     ATTACK_A_PLAYER("Attack a player", "Attack a target player's shelter."),
     Study("Study", "Study a specific skill. Gain EXP towards that specific skill."),
     ;
+
     DAction(String txt, String description)
     {
         this.text = txt;

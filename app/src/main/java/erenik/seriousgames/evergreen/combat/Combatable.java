@@ -19,6 +19,7 @@ public class Combatable
     public int attack;
     public int defense;
     static private Random r;
+    public int consecutiveFleeAttempts = 0;
 
     /// Attempts to attack this unit, returns true if it hits.
     boolean Attack(int attack)
@@ -61,6 +62,7 @@ public class Combatable
     {
         int a = attack - ensnared.size();
         a += (hitsAttempted == 0? initialAttackBonus : 0); // Add attack bonus if it's the first attack, and there exists any such bonus..?
+        a -= consecutiveFleeAttempts; // Decreases when trying to flee.
         return a;
     }
     /// Apply poisons, regen, remove debuffs, etc.
@@ -84,10 +86,6 @@ public class Combatable
         }
     }
     /// Check HP?
-    public boolean IsAlive()
-    {
-        return hp > 0;
-    }
     /// Order this enemy to attack the player. Returns true if it kills the player.
     public boolean Attack(Combatable target)
     {
@@ -105,7 +103,7 @@ public class Combatable
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
             encounter.Log(isPlayer? "You attack the "+target.name+" for "+damageDealt+" points of damage." : "The "+name+" attacks you and deals "+damageDealt+" points of damage.",
                     isPlayer? LogType.ATTACK : LogType.ATTACKED);
-            if (!target.IsAlive()) // Killed player?
+            if (target.hp  < 0) // Killed player?
             {
                 return true;
             }

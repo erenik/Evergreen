@@ -84,7 +84,7 @@ public class EventDialogFragment extends DialogFragment
 
     private void AttacksOfTheEvergreen()
     {
-        encounter.NewEncounter();
+        encounter.NewEncounter(true);
         encounter.AssaultsOfTheEvergreen();
         encounter.Simulate();
     }
@@ -92,7 +92,7 @@ public class EventDialogFragment extends DialogFragment
     void RandomEncounter()
     {
         // Open new activity for this event?
-        encounter.NewEncounter();
+        encounter.NewEncounter(false);
         encounter.Random(new Dice(3, 2, 0));
         encounter.Simulate();
     }

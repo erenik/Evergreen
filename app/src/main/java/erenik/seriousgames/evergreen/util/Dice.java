@@ -21,7 +21,7 @@ public class Dice
         System.out.println(dice+"D"+diceType+""+(bonus > 0? "+"+bonus : bonus < 0? ""+bonus : "")+" = "+total);
         return total;
     }
-    int diceType; // Sides of the dice. E.g. 6 for D6, 3 for D3. etc.
+    public int diceType; // Sides of the dice. E.g. 6 for D6, 3 for D3. etc.
     public int dice;
     public int bonus;
     static Random r = new Random();
