@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen.player;
+package erenik.seriousgames.evergreen.Invention;
 
 /**
  * Created by Emil on 2016-11-02.
@@ -7,6 +7,10 @@ public enum InventionStat
 {
     QualityLevel(0),
     MaterialCost(5),
+    ProgressRequiredToCraft(5),
+    // Weapon stats
+    WeaponType(0),
+    AdditionalEffect(-1),
     AttackBonus(0),
     AttackDamageDiceType(6), // Should be 3 or 6. Used for both traps and weapons.
     AttackDamageDice(0), // 1 or more for weapons n stuff.

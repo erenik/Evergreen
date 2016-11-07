@@ -8,4 +8,5 @@
     <item type="id" name="queueLayout5"/>
     <item type="id" name="queueLayout6"/>
     <item type="id" name="queueLayout7"/>
+    <item type="id" name="nameInput"/>
 </resources>

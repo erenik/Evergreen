@@ -14,63 +14,89 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
-        <!-- First a scroll-view with the selectable skills or actions -->
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Possible items"
-            android:textColor="@color/mainTextColor"
-            android:id="@+id/textViewHeader1"
-            />
-        <!--android:layout_weight="wrap_content" -->
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0px"
-            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="0.25"
             >
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/layoutItems"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_weight="3"
+                >
+                <!-- First a scroll-view with the selectable skills or actions -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Possible items"
+                    android:textColor="@color/mainTextColor"
+                    android:id="@+id/textViewPossibleItems"
+                    />
+                <!--android:layout_weight="wrap_content" -->
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0px"
+                    android:layout_weight="3"
+                    >
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/layoutItems"
+                        android:orientation="vertical">
+
+                    </LinearLayout>
+                </ScrollView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="3"
+                >
+                <!-- Then the scroll-view with skills that we have added/queued to perform -->
+                <TextView
+                    style="@style/EvergreenText"
+                    android:text="Current Queue"
+                    android:id="@+id/textViewHeader2"
+                    />
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0px"
+                    android:layout_weight="3"
+                    >
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/layoutQueue"
+                        android:orientation="vertical"
+                        >
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                style="@style/EvergreenText"
+                                android:layout_width="match_parent"
+                                android:text = "Yo"
+                                android:layout_weight="10"
+                                />
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:src="@drawable/remove"
+                                android:layout_weight="10"
+                                />
+                        </LinearLayout>
+                    </LinearLayout>
+                </ScrollView>
 
             </LinearLayout>
-        </ScrollView>
-        <!-- Then the scroll-view with skills that we have added/queued to perform -->
-        <TextView
-            style="@style/EvergreenText"
-            android:text="Current Queue"
-            android:id="@+id/textViewHeader2"
-            />
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0px"
-            android:layout_weight="3"
-            >
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/layoutQueue"
-                android:orientation="vertical"
-                >
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        style="@style/EvergreenText"
-                        android:layout_width="match_parent"
-                        android:text = "Yo"
-                        android:layout_weight="10"
-                        />
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/remove"
-                        android:layout_weight="10"
-                        />
-                </LinearLayout>
-            </LinearLayout>
-        </ScrollView>
+
+        </LinearLayout>
+
+
 
 
         <!--
@@ -83,12 +109,13 @@
             style="@style/EvergreenText"
             android:text="Name"
             android:id="@+id/textViewItemName"
-            android:layout_gravity="center_horizontal" />
+            android:layout_gravity="center_horizontal"
+            />
 
         <!-- Scroll view for all details below! -->
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:id="@+id/scrollView2"
             android:layout_gravity="center_horizontal" >
@@ -155,4 +182,5 @@
 
 
     </LinearLayout>
+
 </FrameLayout>

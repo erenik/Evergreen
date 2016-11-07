@@ -11,7 +11,11 @@ import java.util.Map;
 import java.util.Random;
 
 import erenik.seriousgames.evergreen.App;
-import erenik.seriousgames.evergreen.player.*;
+import erenik.seriousgames.evergreen.Invention.Invention;
+import erenik.seriousgames.evergreen.Invention.InventionStat;
+import erenik.seriousgames.evergreen.Invention.InventionType;
+import erenik.seriousgames.evergreen.Invention.WeaponType;
+import erenik.seriousgames.evergreen.StringUtils;
 import erenik.seriousgames.evergreen.Event;
 import erenik.seriousgames.evergreen.logging.*;
 import erenik.seriousgames.evergreen.act.EventDialogFragment;
@@ -32,7 +36,7 @@ public class Player extends Combatable
 //    float hp, food, materials, base_attack, base_defense, emissions;
     float[] statArr = new float[Stat.values().length];
     /// Used in main menu, and also saved.
-    public List<DAction> dailyActions = new ArrayList<DAction>();
+    public List<String> dailyActions = new ArrayList<>();
     public int activeAction = -1;
     /// Increment every passing day. Stop once dying.
     public int turn = 1;
@@ -51,9 +55,18 @@ public class Player extends Combatable
     /// Array of exp in each Skill.
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
     /// Queued skills to be leveled up.
-    public List<Skill> skillTrainingQueue = new ArrayList<Skill>();
-    List<Invention> inventions = new ArrayList<>(); // Blueprints, 1 of each.
+    public List<String> skillTrainingQueue = new ArrayList<>();
+    public List<Invention> inventions = new ArrayList<>(); // Blueprints, 1 of each.
     List<Invention> inventory = new ArrayList<>(); // Inventory, may have duplicates of items that can be traded etc.
+    /// To increase bonuses/chance of invention if failing a lot in series.
+    int successiveInventingAttempts = 0;
+    int successiveCraftingAttempts = 0;
+    /// Total crafting progress into current crafting invention.
+    int craftingProgress = 0;
+    Invention inventionCurrentlyBeingCrafted = null; // For inventions requiring multiple turns to craft.
+
+    public List<String> knownStrongholds = new ArrayList<>();
+    public List<String> knownPlayerNames = new ArrayList<>();
 
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
@@ -66,7 +79,6 @@ public class Player extends Combatable
     private Player()
     {
         name = "Parlais Haux Le'deur";
-        isPlayer = true;
         SetDefaultStats();
     }
     public int MaxHP()
@@ -134,12 +146,26 @@ public class Player extends Combatable
     }
     public void SetDefaultStats()
     {
+        isPlayer = true;
         turn = 0;
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
         for (int i = 0; i < skills.size(); ++i) // Reset EXP in each skill?
             skills.get(i).setTotalEXP(0);
+        inventions.clear();
+        /// Give a default invention.
+        Invention inv = new Invention(InventionType.Weapon);
+        inv.Set(InventionStat.WeaponType, WeaponType.Club.ordinal());
+        inv.UpdateWeaponStats();
+        inventions.add(inv);
+        // Clear both queues.
+        dailyActions.clear();
+        skillTrainingQueue.clear();
+        // Save.
+        SaveLocally();
+        // Load.
+        LoadLocally();
     }
     public void Adjust(Stat s, float amount)
     {
@@ -185,16 +211,10 @@ public class Player extends Combatable
         e.putInt(Constants.ACTIVE_ACTION, activeAction);
         // Save daily actions as string?
         String s = "";
-        for (int i = 0; i < dailyActions.size(); ++i)
-        {
-            s += dailyActions.get(i).text+";";
-        }
+        s += StringUtils.join(dailyActions, ";");
         e.putString(Constants.DAILY_ACTIONS, s);
         s = "";
-        for (int i = 0; i < skillTrainingQueue.size(); ++i)
-        {
-            s += skillTrainingQueue.get(i).text+";";
-        }
+        s += StringUtils.join(skillTrainingQueue, ";");
         e.putString(Constants.SKILL_TRAINING_QUEUE, s);
         // Save/commit.
         boolean ok = e.commit();
@@ -221,14 +241,14 @@ public class Player extends Combatable
         activeAction = sp.getInt(Constants.ACTIVE_ACTION, -1);
         // Save daily actions as string?
         String s = sp.getString(Constants.DAILY_ACTIONS, "");
-        String[] split = s.split(";", 5);
+        String[] split = s.split(";", 8);
         dailyActions.clear();
         for (int i = 0; i < split.length; ++i)
         {
-            DAction da = DAction.GetFromString(split[i]);
-            if (da == null)
+            String splitStr = split[i];
+            if (splitStr.length() < 3)
                 continue;
-            dailyActions.add(da);
+            dailyActions.add(splitStr);
         }
         /// Load skill training queue.
         skillTrainingQueue.clear();
@@ -236,10 +256,11 @@ public class Player extends Combatable
         split = s.split(";", 5);
         for (int i = 0; i < split.length; ++i)
         {
-            Skill skill = Skill.GetFromString(split[i]);
-            if (skill == null)
+            String skillStr = split[i];
+            if (skillStr.length() < 3)
                 continue;
-            skillTrainingQueue.add(skill);
+            skillTrainingQueue.add(skillStr);
+
         }
         return true;
     }
@@ -379,7 +400,8 @@ public class Player extends Combatable
         // Execute at most 8 actions per day, regardless of queue.
         for (int i = 0; i < dailyActions.size() && i < 6; ++i)
         {
-            da = dailyActions.get(i);
+            /// Parse actions and execute them.
+            da = DAction.ParseFrom(dailyActions.get(i));
             EvaluateAction(da);
         }
     }
@@ -388,6 +410,9 @@ public class Player extends Combatable
         float units = 1;
         switch (da)
         {
+            case Craft:
+                Craft(da);
+                break;
             case FOOD:
                 units = Dice.RollD3(2 + Get(Skill.Foraging).Level());  // r.nextInt(5) + 2;
                 units *= t_starvingModifier;
@@ -422,6 +447,80 @@ public class Player extends Combatable
         }
     }
 
+    private void Craft(DAction da)
+    {
+        float emit = ConsumeMaterials(hoursPerAction * 0.5f);
+        // How many times to random.
+        float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
+        toRandom *= t_starvingModifier;
+        toRandom *= CalcMaterialModifier();
+        String s = da.text+": ";
+        // Check if inveting has been queued for any special item?
+        if (da.requiredArguments.size() == 0) {
+            System.out.println("required argument in Player.Craft");
+            System.exit(14);
+        }
+        String whatToCraft = da.requiredArguments.get(0).value;
+        whatToCraft = whatToCraft.trim();
+        Invention toCraft = null;
+        for (int i = 0; i < inventions.size(); ++i)
+        {
+            Invention inv = inventions.get(i);
+            System.out.println("Invention names: "+inv.name+", toCraft: "+whatToCraft);
+            if (inv.name.equals(whatToCraft))
+                toCraft = inv;
+        }
+        if (toCraft == null) {
+            System.exit(15);
+            return;
+        }
+        int progressRequired = toCraft.Get(InventionStat.ProgressRequiredToCraft);
+        float progress = 0.0f;
+        boolean craftedSomething = false;
+        System.out.println("toRandom iterations: "+toRandom);
+        successiveCraftingAttempts = 0;
+        float progressGained = 0;
+        for (int i = 0; i < toRandom; ++i) // Times to random.
+        {
+            float relativeChance = toRandom > 1.0 ? 1 : toRandom;
+            relativeChance += successiveCraftingAttempts * 0.05f;
+            progress += Dice.RollD3(1) * relativeChance;
+            ++successiveInventingAttempts;
+            toRandom -= 1;
+        }
+        progressGained += progress;
+        /// Success.
+        if (progress > progressRequired)
+        {
+            // Crafted!
+            Invention newWeapon = new Invention(toCraft);
+            float ratioOverProgressed = (progress - progressRequired) / progressRequired;
+            System.out.println("ratioOverProgressed: "+ratioOverProgressed);
+            Random rCrafting = new Random(System.nanoTime());
+            int levelAdjustment = 0;
+            while(ratioOverProgressed > 0)
+            {
+                float randF = rCrafting.nextFloat();
+                if (randF < ratioOverProgressed)
+                {
+                    System.out.println("level increased +1");
+                }
+                ratioOverProgressed -= randF;
+            }
+            newWeapon.Set(InventionStat.QualityLevel, newWeapon.Get(InventionStat.QualityLevel) + levelAdjustment);
+            // Update quality level.
+            newWeapon.UpdateWeaponStats();
+            newWeapon.UpdateWeaponAdditionalEffect();
+            inventory.add(newWeapon);
+            Log("Crafting complete: "+newWeapon.name, LogType.INFO);
+        }
+        else
+        {
+            Log("Crafting progressed by "+progressGained+" units.", LogType.INFO);
+            // Store as unfinished business?
+        }
+    }
+
     private void Invent(DAction inventAction)
     {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
@@ -435,15 +534,29 @@ public class Player extends Combatable
         System.out.println("toRandom iterations: "+toRandom);
         for (int i = 0; i < toRandom; ++i) // Times to random.
         {
-            float relativeChance = toRandom > 1? 1 : toRandom;
+            float relativeChance = toRandom > 1.0 ? 1 : toRandom;
+            float bonus = successiveInventingAttempts * 0.03f * relativeChance;
+            System.out.println("Bonus due to previous failed attempts: "+bonus);
+            relativeChance += bonus;
             InventionType type = null;
-            if (type == null) {
+//            System.out.println("Args? "+da.requiredArguments.size());
+            if (da.requiredArguments.size() > 0)
+            {
+                String typeStr = da.requiredArguments.get(0).value;
+  //              System.out.println("Typestr: "+typeStr);
+                type = InventionType.GetFromString(typeStr);
+            }
+            if (type == null)
+                System.out.println("Bad invention type");
+            if (type == InventionType.Any)
+            {
                 type = InventionType.RandomType();
-                relativeChance += 0.1f;
+                relativeChance += 0.05f; // + 5% chance of inventing if random?
                 System.out.println("Type: "+type.name());
             }
             Invention inv = AttemptInvent(type, relativeChance);
             if (inv != null){
+                successiveInventingAttempts = 0;
                 inventedSomething = true;
                 // Add it to inventory too.
                 inventory.add(new Invention(inv));
@@ -456,6 +569,7 @@ public class Player extends Combatable
                 if (inv.type == InventionType.RangedWeapon)
                     equippedRangedWeapon = inv;
             }
+            ++successiveInventingAttempts;
             toRandom -= 1;
         }
         if (inventedSomething == false)
@@ -475,7 +589,7 @@ public class Player extends Combatable
         inv.Set(InventionStat.QualityLevel, levelSuccess);
         inv.RandomizeDetails();
         inventions.add(inv);
-        Log("Invented a new "+inv.type.text()+": "+inv.name, LogType.INFO);
+        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.INFO);
         return inv;
     }
 
@@ -609,14 +723,17 @@ public class Player extends Combatable
         }
         return t_materialModifier;
     }
-
     public void GainEXP(int expGained)
     {
         // Check queued skills.
         int xp = expGained;
         while (xp > 0 && skillTrainingQueue.size() > 0)
         {
-            Skill next = skillTrainingQueue.get(0);
+            Skill next = Skill.GetFromString(skillTrainingQueue.get(0));
+            if (next == null){
+                System.out.println("Bad skill String: "+skillTrainingQueue.get(0));
+                System.exit(16);
+            }
             next.ordinal();
             Skill toSkillUp = skills.get(next.ordinal());
             int needed = toSkillUp.EXPToNext();
@@ -659,5 +776,11 @@ public class Player extends Combatable
         int attacks = 1;
         attacks += (UnarmedCombatBonus()-1) / 2;
         return attacks;
+    }
+
+    public List<String> KnownPlayerNames()
+    {
+        List<String> ll = new ArrayList<>();
+        return ll;
     }
 }

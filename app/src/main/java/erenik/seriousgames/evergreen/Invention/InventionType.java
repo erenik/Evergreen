@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen.player;
+package erenik.seriousgames.evergreen.Invention;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.Random;
 
 public enum InventionType
 {
+    Any(0), // Used as a wild-card.
     Weapon(3),
     Armor(2),
     RangedWeapon(1),
@@ -21,10 +22,11 @@ public enum InventionType
     // When randoming type to invent (unspecified)
     public int chance = 0;
 
-    String text()
+    public String text()
     {
         switch(this)
         {
+            case Any: return "Any";
             case Armor:
             case Weapon:
                 return name();
@@ -36,7 +38,7 @@ public enum InventionType
                 return "BadString";
         }
     }
-    static InventionType RandomType()
+    public static InventionType RandomType()
     {
         Map<InventionType, Integer> chances = new HashMap<InventionType, Integer>();
         // Assume random for now.
@@ -63,4 +65,32 @@ public enum InventionType
         return type;
     };
 
+    public static List<String> GetStrings()
+    {
+        List<String> l = new ArrayList<>();
+        for (int i = 0; i < values().length; ++i)
+            l.add(values()[i].text());
+        return l;
+    }
+    public boolean IsCraftable()
+    {
+        switch(this)
+        {
+            case VehicleUpgrade:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    public static InventionType GetFromString(String typeStr)
+    {
+        typeStr = typeStr.trim();
+        for (int i = 0; i < values().length; ++i)
+        {
+            if (values()[i].text().equals(typeStr))
+                return values()[i];
+        }
+        return null;
+    }
 }

@@ -1,5 +1,7 @@
 package erenik.seriousgames.evergreen.act;
 
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,7 +20,7 @@ import erenik.seriousgames.evergreen.EvergreenButton;
 import erenik.seriousgames.evergreen.R;
 
 
-public class SelectActivity extends AppCompatActivity
+public class SelectActivity extends FragmentActivity
 {
     static final int SELECT_ACTIVE_ACTION = 2;
     static final int SELECT_DAILY_ACTION = 0;
@@ -34,7 +36,22 @@ public class SelectActivity extends AppCompatActivity
         public void onClick(View v)
         {
             Button b = (Button)v;
-            selected.add(b.getText().toString());
+            String text = b.getText().toString();
+            if (type == SELECT_DAILY_ACTION)
+            {
+                // Get action
+                DAction da = DAction.GetFromString(text);
+                if (da.requiredArguments.size() >= 1)
+                {
+                    // Open window to confirm addition of it.
+                    SelectDetailsDialogFragment sdf = new SelectDetailsDialogFragment();
+                    sdf.da = da;
+                    FragmentManager fragMan = getSupportFragmentManager();
+                    sdf.show(fragMan, "selectDactionDetails");
+                    return;
+                }
+            }
+            selected.add(text);
             clicked(b.getText());
             updateQueue(); // Update queue gui.
         }
@@ -55,12 +72,18 @@ public class SelectActivity extends AppCompatActivity
         DAction action = DAction.GetFromString(s);
         if (action != null)
         {
-            TextView tvName = (TextView) findViewById(R.id.textViewItemName);
-            tvName.setText(action.text);
-            TextView desc = (TextView) findViewById(R.id.textViewDescription);
-            desc.setText(action.description);
+            dActionClicked(action);
         }
     }
+
+    public void dActionClicked(DAction da)
+    {
+        TextView tvName = (TextView) findViewById(R.id.textViewItemName);
+        tvName.setText(da.text);
+        TextView desc = (TextView) findViewById(R.id.textViewDescription);
+        desc.setText(da.description);
+    }
+
     private final View.OnClickListener clear = new View.OnClickListener()
     {
         @Override
@@ -85,7 +108,7 @@ public class SelectActivity extends AppCompatActivity
         }
     };
     // Updates queue gui.
-    private void updateQueue()
+    public void updateQueue()
     {
         // Yeah.
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutQueue);
@@ -109,7 +132,7 @@ public class SelectActivity extends AppCompatActivity
             }
             ll.setId(id);
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
             ll.setLayoutParams(layoutParams);
             ll.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
             vg.addView(ll);
@@ -126,7 +149,8 @@ public class SelectActivity extends AppCompatActivity
 
             // Add a button in the button to remove it.
             ImageButton removeButton = new ImageButton(getBaseContext());
-            removeButton.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
+            removeButton.setBackgroundColor(0x00); // SEe-through?
+//            removeButton.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
             removeButton.setImageResource(R.drawable.remove);
             removeButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
             removeButton.setOnClickListener(removeParentFromQueue);
@@ -146,9 +170,8 @@ public class SelectActivity extends AppCompatActivity
                 player.dailyActions.clear();
                 for (int i = 0; i < selected.size(); ++i)
                 {
-                    DAction da = DAction.GetFromString(selected.get(i));
-                    if (da != null)
-                        player.dailyActions.add(da);
+                    // Just save it as Strings?
+                    player.dailyActions.add(selected.get(i));
                 }
             }
             else if (type == SELECT_SKILL)
@@ -156,9 +179,7 @@ public class SelectActivity extends AppCompatActivity
                 player.skillTrainingQueue.clear();
                 for (int i = 0; i < selected.size(); ++i)
                 {
-                    Skill s = Skill.GetFromString(selected.get(i));
-                    if (s != null)
-                        player.skillTrainingQueue.add(s);
+                    player.skillTrainingQueue.add(selected.get(i));
                 }
             }
             finish();
@@ -200,6 +221,8 @@ public class SelectActivity extends AppCompatActivity
                 itemNames = Skill.Names();
                 break;
         }
+        TextView tv = (TextView) findViewById(R.id.textViewPossibleItems);
+        tv.setText(itemsHeaderName);
 
         /// Populate the available items.
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutItems);
@@ -209,7 +232,7 @@ public class SelectActivity extends AppCompatActivity
             EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(itemNames.get(i));
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins((int) getResources().getDimension(R.dimen.activity_horizontal_margin), 0, (int) getResources().getDimension(R.dimen.activity_horizontal_margin), (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            layoutParams.setMargins((int) getResources().getDimension(R.dimen.activity_horizontal_margin), 0, (int) getResources().getDimension(R.dimen.activity_horizontal_margin), (int) getResources().getDimension(R.dimen.listSelectionMargin));
             b.setLayoutParams(layoutParams);
             vg.addView(b);
             b.setOnClickListener(addItem);
@@ -218,12 +241,12 @@ public class SelectActivity extends AppCompatActivity
         Player p = Player.getSingleton();
         if (type == SELECT_DAILY_ACTION) {
             for (int i = 0; i < p.dailyActions.size(); ++i)
-                selected.add(p.dailyActions.get(i).text);
+                selected.add(p.dailyActions.get(i));
         }
         else if (type == SELECT_SKILL)
         {
             for (int i = 0; i < p.skillTrainingQueue.size(); ++i)
-                selected.add(p.skillTrainingQueue.get(i).text);
+                selected.add(p.skillTrainingQueue.get(i));
         }
         // Update the queue
         updateQueue();
