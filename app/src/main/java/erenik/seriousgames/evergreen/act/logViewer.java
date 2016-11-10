@@ -36,6 +36,15 @@ public class logViewer extends AppCompatActivity
             UpdateShownLog();
         }
     };
+    private View.OnClickListener toggleLogFullScreen = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v) {
+            System.out.println("yo.");
+            finish(); // Finish it just.
+            System.out.println("Toggle fullscreen");
+        }
+    };
 
     void SetFilter(LogType lt, boolean filterIt)
     {
@@ -75,20 +84,6 @@ public class logViewer extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_viewer);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-
-/*        // Fabulous!
-FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-        */
         ///  Update checkboxes.
         CheckBox missedAttacks = (CheckBox) findViewById(R.id.checkboxMissedAttacks);
         missedAttacks.setChecked(IsFiltered(LogType.ATTACK_MISS));
@@ -99,6 +94,7 @@ FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        CheckBox
         // Update initial contents.
         UpdateShownLog();
+        findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
     }
     void UpdateShownLog()
     {

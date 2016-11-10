@@ -15,6 +15,7 @@ import erenik.seriousgames.evergreen.Invention.Invention;
 import erenik.seriousgames.evergreen.Invention.InventionStat;
 import erenik.seriousgames.evergreen.Invention.InventionType;
 import erenik.seriousgames.evergreen.Invention.WeaponType;
+import erenik.seriousgames.evergreen.Simulator;
 import erenik.seriousgames.evergreen.StringUtils;
 import erenik.seriousgames.evergreen.Event;
 import erenik.seriousgames.evergreen.logging.*;
@@ -22,15 +23,12 @@ import erenik.seriousgames.evergreen.act.EventDialogFragment;
 import erenik.seriousgames.evergreen.combat.Combatable;
 import erenik.seriousgames.evergreen.util.Dice;
 
-
-;
-
-
 /**
  * Created by Emil on 2016-10-25.
  */
 public class Player extends Combatable
 {
+    Simulator simulator = Simulator.getSingleton();
     static Random r = new Random(System.nanoTime());
     // Main stats.
 //    float hp, food, materials, base_attack, base_defense, emissions;
@@ -39,7 +37,10 @@ public class Player extends Combatable
     public List<String> dailyActions = new ArrayList<>();
     public int activeAction = -1;
     /// Increment every passing day. Stop once dying.
-    public int turn = 1;
+    public int Turn()
+    {
+        return (int) Math.round(Get(Stat.TurnSurvived));
+    };
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
@@ -71,14 +72,15 @@ public class Player extends Combatable
     // Auto-created. Start-using whenever.
     static private Player player = new Player();
     public List<LogType> logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
-
+    public boolean isAI = false;
+    /// Used for clients/single-simulator for self.
     static public Player getSingleton()
     {
         return player;
     }
     private Player()
     {
-        name = "Parlais Haux Le'deur";
+        SetName("Parlais Haux Le'deur");
         SetDefaultStats();
     }
     public int MaxHP()
@@ -113,7 +115,7 @@ public class Player extends Combatable
     public int Attack()
     {
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
-        att += UnarmedCombatBonus();
+        att += UnarmedCombatBonus(); // Max +9 Attack
         att += GetEquipped(InventionStat.AttackBonus);
         att += equippedWeapon != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
@@ -121,7 +123,7 @@ public class Player extends Combatable
     public int Defense()
     {
         int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
-        def += (UnarmedCombatBonus()-1) / 2;
+        def += (UnarmedCombatBonus()-1) / 3;
         def += GetEquipped(InventionStat.DefenseBonus);
         def += Get(Skill.DefensiveTraining).Level();
         return def;
@@ -130,7 +132,7 @@ public class Player extends Combatable
     {
         // Base damage, 1D6, no bonuses.
         Dice damage = new Dice(6, 1, 0);
-        damage.bonus += UnarmedCombatBonus();
+        damage.bonus += UnarmedCombatBonus()/2; // Max +4 damage
         if (equippedWeapon != null) { // Weapon equipped.
             damage.diceType = equippedWeapon.Get(InventionStat.AttackDamageDiceType);
             damage.dice = equippedWeapon.Get(InventionStat.AttackDamageDice);
@@ -147,7 +149,6 @@ public class Player extends Combatable
     public void SetDefaultStats()
     {
         isPlayer = true;
-        turn = 0;
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
@@ -156,7 +157,7 @@ public class Player extends Combatable
         inventions.clear();
         /// Give a default invention.
         Invention inv = new Invention(InventionType.Weapon);
-        inv.Set(InventionStat.WeaponType, WeaponType.Club.ordinal());
+        inv.Set(InventionStat.SubType, WeaponType.Club.ordinal());
         inv.UpdateWeaponStats();
         inventions.add(inv);
         // Clear both queues.
@@ -198,9 +199,8 @@ public class Player extends Combatable
         SharedPreferences sp = App.GetPreferences();
         SharedPreferences.Editor e = sp.edit();
         // Put.
-        e.putString(Constants.NAME, name);
+        e.putString(Constants.NAME, Name());
         e.putBoolean(Constants.SAVE_EXISTS, true);
-        e.putInt(Constants.TURN, turn);
         // Stats
         System.out.println("Saving stats");
         for (int i = 0; i < Stat.values().length; ++i)
@@ -227,10 +227,11 @@ public class Player extends Combatable
     {
         SharedPreferences sp = App.GetPreferences();
         boolean hasSave = sp.getBoolean(Constants.SAVE_EXISTS, false);
-        if (!hasSave)
+        if (!hasSave) {
+            System.out.println("No save exists. New game needed.");
             return false;
+        }
         name = sp.getString(Constants.NAME, "BadSaveName");
-        turn = sp.getInt(Constants.TURN, 0);
         // Stats
         System.out.println("Loading stats");
         for (int i = 0; i < Stat.values().length; ++i)
@@ -274,19 +275,20 @@ public class Player extends Combatable
     void NewDay()
     {
         // New day, assign transport?
-        ++player.turn;
-        System.out.println("Turn: " + player.turn);
+        Adjust(Stat.TurnSurvived, 1);
+        System.out.println("Turn: " + player.Turn());
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
-    public void NextDay() throws NotAliveException
+    public void NextDay()
     {
-        NewDay();  // New day :3
         if (GetInt(Stat.HP) <= 0)
         {
             App.GameOver();
             return;
         }
-        Log("-- Day "+player.turn+" --", LogType.INFO);
+        NewDay();  // New day :3
+        System.out.println("Yeah yeah");
+        Log("-- Day "+player.Turn()+" --", LogType.INFO);
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
@@ -316,7 +318,7 @@ public class Player extends Combatable
 //        HandleGeneratedEvents();
 
         // Attacks of the evergreen?
-        int everGreenTurn = turn % 16;
+        int everGreenTurn = (int) (Turn()) % 16;
         switch(everGreenTurn)
         {
             default: break;
@@ -329,8 +331,8 @@ public class Player extends Combatable
     public void ClampHP()
     {
         float hp = Get(Stat.HP);
-        if (hp > Get(Stat.MAX_HP))
-            hp = Get(Stat.MAX_HP);
+        if (hp > MaxHP())
+            hp = MaxHP();
         else if (hp < 0)
             hp = 0;
         Set(Stat.HP, hp);
@@ -410,43 +412,102 @@ public class Player extends Combatable
         float units = 1;
         switch (da)
         {
-            case Craft:
-                Craft(da);
-                break;
-            case FOOD:
+            case GatherFood:
                 units = Dice.RollD3(2 + Get(Skill.Foraging).Level());  // r.nextInt(5) + 2;
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
                 Log(da.text + ": Found " + Stringify(units) + " units of food.", LogType.INFO);
                 break;
-            case MATERIALS:
+            case GatherMaterials:
                 units = r.nextInt(5) + 2;
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
-            case Invent:
-                Invent(da);
-                break;
-            case SCOUT:
-                Scout();
-                break;
-            case RECOVER:
+            case Scout: Scout(); break;
+            case Recover:
                 units = 0.5f * hoursPerAction * (1 + 0.5f * Get(Skill.Survival).Level()); // Recovery +50/100/150/200/250%
                 units *= t_starvingModifier;
                 Adjust(Stat.HP, units);
-                Log(da.text+": Recovered "+Stringify(units)+" HP.", LogType.INFO);
+                ClampHP();
+                Log(da.text + ": Recovered " + Stringify(units) + " HP.", LogType.INFO);
                 break;
-            case BUILD_DEF:
+            case BuildDefenses:
                 BuildDefenses();
+                break;
+            case AugmentTransport:
+                Log("Not implemented yet", LogType.ATTACKED);
+                break;
+            case LookForPlayer:
+                LookForPlayer(da);
+                break;
+            case Expedition:
+                Log("Not implemented yet", LogType.ATTACKED);
+                break;
+            case Invent:
+                Invent(da);
+                break;
+            case Craft:
+                Craft(da);
+                break;
+            case Steal:
+                Steal(da);
+                break;
+            case AttackAPlayer:
+                Log("Not implemented yet", LogType.ATTACKED);
+                break;
+            case Study:
+                // Gain exp into current skill perhaps..?
+                int toGain = Dice.RollD3(2) + Get(Skill.Studious).Level();
+                Log("Studies grant you "+toGain+" experience points.", LogType.PROGRESS);
+                GainEXP(toGain);
                 break;
             default:
                 System.out.println("Nooo");
         }
     }
 
+    private void Steal(DAction da)
+    {
+        String name = da.requiredArguments.get(0).value;
+        Player p = simulator.GetPlayer(name);
+        if (p == null)
+        {
+            Log("No player found with that name.", LogType.ATTACK_MISS);
+            return;
+        }
+        // Calc success?
+        Log("Not implemented yet", LogType.ATTACKED);
+    }
+
+    void LookForPlayer(DAction da)
+    {
+        // Determine chances.
+        // Search query.
+        // Found?
+        String name = this.da.requiredArguments.get(1).value;
+        Player player = null;
+        switch (this.da.requiredArguments.get(0).value)
+        {
+            default:
+            case "Exactly": player = simulator.GetPlayer(name); break;
+            case "Starts with":
+            case "StartsWith":
+                player = simulator.GetPlayer(name, false, true);
+                break;
+            case "Contains":
+                player = simulator.GetPlayer(name, true, false);
+                break;
+        }
+        if (player == null) {
+            Log("Unable to find a player with given name: "+name, LogType.ATTACK_MISS);
+            return;
+        }
+        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
+        knownPlayerNames.add(name);
+    }
     private void Craft(DAction da)
     {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
@@ -535,9 +596,6 @@ public class Player extends Combatable
         for (int i = 0; i < toRandom; ++i) // Times to random.
         {
             float relativeChance = toRandom > 1.0 ? 1 : toRandom;
-            float bonus = successiveInventingAttempts * 0.03f * relativeChance;
-            System.out.println("Bonus due to previous failed attempts: "+bonus);
-            relativeChance += bonus;
             InventionType type = null;
 //            System.out.println("Args? "+da.requiredArguments.size());
             if (da.requiredArguments.size() > 0)
@@ -555,41 +613,80 @@ public class Player extends Combatable
                 System.out.println("Type: "+type.name());
             }
             Invention inv = AttemptInvent(type, relativeChance);
+            // Craft it on success?
             if (inv != null){
                 successiveInventingAttempts = 0;
                 inventedSomething = true;
                 // Add it to inventory too.
                 inventory.add(new Invention(inv));
-                if (inv.type == InventionType.Weapon)    // // Equip it.
-                    equippedWeapon = inv;
-                if (inv.type == InventionType.Armor)
-                    equippedArmor = inv;
-                if (inv.type == InventionType.Tool)
-                    equippedTool = inv;
-                if (inv.type == InventionType.RangedWeapon)
-                    equippedRangedWeapon = inv;
+                Equip(inv);
             }
             ++successiveInventingAttempts;
             toRandom -= 1;
         }
         if (inventedSomething == false)
-            Log(s+"Failed to invent anything.", LogType.INFO);
+            Log(s+"Failed to invent anything new.", LogType.INFO);
+    }
+    /// Tries to equip target invention.
+    void Equip(Invention inv)
+    {
+        if (inv.type == InventionType.Weapon)    // // Equip it.
+            equippedWeapon = inv;
+        if (inv.type == InventionType.Armor)
+            equippedArmor = inv;
+        if (inv.type == InventionType.Tool)
+            equippedTool = inv;
+        if (inv.type == InventionType.RangedWeapon)
+            equippedRangedWeapon = inv;
+    }
+    public float getInventionProgress(InventionType type, int subType)
+    {
+        float progress = 0;
+        for (int i = 0; i < inventions.size(); ++i)
+        {
+            Invention inv = inventions.get(i);
+            if (inv.type != type)
+                continue;
+            if (subType >= 0 && inv.Get(InventionStat.SubType) != subType)
+                continue;
+            progress +=  Math.pow(inv.Get(InventionStat.QualityLevel) + 1, 2) * inv.Get(InventionStat.TimesInvented); // Gives bonus for higher quality items, 1, 4, 9, 16, 25 for levels 1-5 respectively.
+        }
+        return progress;
     }
     Invention AttemptInvent(InventionType type, float relativeChance)
     {
-        float rMax = (1.f + 0.1f * Get(Skill.Inventing).Level()) * relativeChance;
+        Invention inv = new Invention(type);
+        int subType = inv.RandomizeSubType();
+        // 1.0 base, + 0.1 for each level in Inventing, +0.25 of the invention progress in the same category/main invention type and 1x subtype progress.
+        float bonusFromInventingBefore = 0.001f * getInventionProgress(type, -1) + 0.025f * getInventionProgress(type, subType);
+        float inventingLevel = Get(Skill.Inventing).Level();
+        float rMax = (1.f + 0.05f * inventingLevel + bonusFromInventingBefore) * relativeChance;
         float random = r.nextFloat() * rMax; // Random 0 to 1 + 0.1 max for each Inventing level, * relChance
-        System.out.println("random: "+random+" out of "+rMax);
-        if (random < 0.75f)
+        float successThreshold = 0.75f - successiveInventingAttempts * 0.03f - inventingLevel * 0.02f; // Increase success possibility with higher inventing skill, and for each attempt in succession.
+        System.out.println("randomed: "+random+" out of 0-"+rMax+", successThreshold: "+successThreshold+" bonusFromBefore: "+bonusFromInventingBefore);
+        if (random < successThreshold)
             return null;            // No success.
-        int levelSuccess = (int) ((random - 0.85f) / 0.1f); // HQ1@ 0.95, 2@ 1.05, 3@ 1.15, 4@ 1.25, etc.
+        // Determine high-quality ratio.
+        int levelSuccess = (int) ((random - 0.8f) / 0.2f); // HQ1@ 1, HQ2@ 1.2, HQ3@ 1.4, HQ4@ 1.6, HQ5@ 1.8, etc.
         if (levelSuccess < 0)
             levelSuccess = 0;
-        Invention inv = new Invention(type);
         inv.Set(InventionStat.QualityLevel, levelSuccess);
         inv.RandomizeDetails();
+        System.out.println("Level success: " + levelSuccess+" item name: "+inv.name);
+        for (int i = 0; i < inventions.size(); ++i)
+        {
+            Invention i2 = inventions.get(i);
+
+            if (i2.name.equals(inv.name))
+            {
+                // Save type of invention? Add progress to the invention we already had?
+                i2.Adjust(InventionStat.TimesInvented, 1);
+                Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
+                return null;
+            }
+        }
         inventions.add(inv);
-        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.INFO);
+        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.SUCCESS);
         return inv;
     }
 
@@ -782,5 +879,13 @@ public class Player extends Combatable
     {
         List<String> ll = new ArrayList<>();
         return ll;
+    }
+
+    public static Player NewAI(String name)
+    {
+        Player p =  new Player();
+        p.SetName(name);
+        p.isAI = true;
+        return p;
     }
 }

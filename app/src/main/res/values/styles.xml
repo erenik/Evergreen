@@ -6,25 +6,70 @@
         <!--        <item name="android:background">@color/mainButtonBackground</item>-->
     </style>
     <!-- Custom style, used for background with the nice gradient. -->
-    <style name="EvergreenBG">
-        <item name="android:background">@drawable/bg</item>
+    <style name="Evergreen.BG">
+        <item name="android:background">@drawable/bg3</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
     </style>
+    <style name="Evergreen.IconLayout">     <!-- The outer box -->
+<!--        <item name="android:background">@drawable/icon</item>-->
+        <item name="android:layout_width">0px</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">3</item>
+    </style>
+    <style name="Evergreen.IconInnerLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+    <style name="Evergreen.IconBG">
+        <item name="android:background">@drawable/icon</item>
+        <!-- <item name="android:src">@drawable/icon</item> -->
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+    <style name="Evergreen.IconText">
+        <item name="android:textColor">@color/iconTextColor</item>
+        <item name="android:text">10/10</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center|bottom</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:paddingBottom">8dp</item> <!-- Padding of 16 good if icons weight is 2 -->
+    </style>
+    <style name="Evergreen.IconTextTitle" parent="Evergreen.IconText">
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">12dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:paddingTop">8dp</item>
+    </style>
     <!-- Default for TextViews -->
-    <style name="EvergreenText">
+    <style name="Evergreen.Text">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/mainTextColor</item>
     </style>
-    <style name="EvergreenCheckbox">
+    <style name="Evergreen.Checkbox">
         <item name="android:layout_width">0px</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:textColor">@color/mainTextColor</item>
       <!--  <item name="android:buttonTint">@color/mainTextColor</item> -->
         <item name="android:layout_weight">3</item>
     </style>
-
+    <style name="Evergreen.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">45dp</item>
+        <item name="android:textColor">@color/mainButtonTextColor</item>
+        <item name="android:layout_weight">0.8</item>
+        <item name="android:layout_margin">@dimen/activity_vertical_margin_smaller</item>
+        <item name="android:background">@drawable/small_button</item>
+        <item name="android:textSize">18dp</item>
+    </style>
+    <style name="Evergreen.Button.Wide" parent="Evergreen.Button">
+        <item name="android:background">@drawable/wide_button</item>
+        <item name="android:textSize">24dp</item>
+    </style>
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">

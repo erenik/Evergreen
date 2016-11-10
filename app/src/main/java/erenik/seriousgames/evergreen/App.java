@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Point;
 import android.os.Bundle;
+import android.view.Display;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,13 @@ public class App {
 
     static List<Activity> runningActivities = new ArrayList<Activity>();
 
+    /// Utility method.
+    public static Point GetScreenSize(){
+        Display display = currentActivity.getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        return size;
+    }
     /// Go to game-over screen.
     public static void GameOver()
     {

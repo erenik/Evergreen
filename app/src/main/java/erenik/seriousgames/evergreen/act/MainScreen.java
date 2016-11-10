@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import erenik.seriousgames.evergreen.App;
+import erenik.seriousgames.evergreen.Simulator;
 import erenik.seriousgames.evergreen.logging.*;
 import erenik.seriousgames.evergreen.player.*;
 import erenik.seriousgames.evergreen.R;
@@ -22,6 +23,7 @@ import erenik.seriousgames.evergreen.R;
 public class MainScreen extends FragmentActivity //AppCompatActivity
 {
     Player player = Player.getSingleton();
+    Simulator simulator = Simulator.getSingleton();
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -84,9 +86,8 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
      * system UI. This is to prevent the jarring behavior of controls going away
      * while interacting with activity UI.
      */
-    private final View.OnClickListener selectActionSkill = new View.OnClickListener() {
-
-        @Override
+    private final View.OnClickListener selectActionSkill = new View.OnClickListener()
+    {   @Override
         public void onClick(View view)
         {
             if (HandleNextEvent())
@@ -103,15 +104,16 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
             startActivityForResult(i, selection);
         }
     };
-    View.OnClickListener nextDay = new View.OnClickListener() {
-        @Override
+    View.OnClickListener nextDay = new View.OnClickListener()
+    {   @Override
         public void onClick(View v) {
-            try {
-                NextDay();
-            } catch (NotAliveException e) {
-                e.printStackTrace();
-                System.exit(-2);
-            }
+            if (HandleNextEvent())
+                return;
+            simulator.NextDay();
+            // Update UI? lol
+            UpdateGUI();
+             /// Queues next event to be handled, if there are any.
+            HandleNextEvent();
         }
     };
     /// For the log...? Or open in a new activity? Since it's just readng?
@@ -123,21 +125,9 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
             Intent i = new Intent(getBaseContext(), logViewer.class);
             startActivity(i);
             System.out.println("Toggle fullscreen");
-//            fullScreen = !fullScreen;
         }
     };
 
-    /// o-o
-    void NextDay() throws NotAliveException
-    {
-        if (HandleNextEvent()) // Handle events if needed first.
-            return;
-        player.NextDay();
-        // Finally, update gui.
-        UpdateGUI();
-        /// Queues next event to be handled, if there are any.
-        HandleNextEvent();
-    }
     /// Returns true if there was an event to process. During the event, or right after, if the event was played - call this function again to query the next one.
     boolean HandleNextEvent()
     {
@@ -176,7 +166,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
 
     void UpdateGUI()
     {
-        SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.GetInt(Stat.MAX_HP));
+        SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
         SetText(R.id.textViewAttack, player.Attack()+"");

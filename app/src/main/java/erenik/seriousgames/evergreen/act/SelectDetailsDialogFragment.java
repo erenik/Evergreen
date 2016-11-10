@@ -54,6 +54,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
                 for (int i = 0; i < argumentViews.size(); ++i)
                 {
                     View v = argumentViews.get(i);
+                    System.out.println("View: "+v.toString());
                     if (v instanceof Spinner) {
                         Spinner s = (Spinner) v;
                         String t = s.getSelectedItem().toString();
@@ -63,8 +64,9 @@ public class SelectDetailsDialogFragment extends DialogFragment
                     else if (v instanceof EditText)
                     {
                         EditText et = (EditText) v;
-                        String s = et.toString();
+                        String s = et.getText().toString();
                         System.out.println("text: "+s);
+                        text += s;
                     }
                     if (i < argumentViews.size() - 1)
                         text += ", ";
@@ -86,13 +88,13 @@ public class SelectDetailsDialogFragment extends DialogFragment
         String header = "Action details:";
         switch(da)
         {
-            case AUGMENT_TRANSPORT: header = "Augment transport. Choose transport and upgrade type."; break;
+            case AugmentTransport: header = "Augment transport. Choose transport and upgrade type."; break;
             case Craft: header = "What to craft?"; break;
             case Invent: header = "What category of inventions do you want to try and invent?"; break;
-            case EXPEDITION: header = "Which stronghold do you want to attack?"; break;
-            case ATTACK_A_PLAYER: header = "Which player do you want to attack?"; break;
-            case STEAL: header = "Which player do you want to steal from?"; break;
-            case LOOK_FOR_PLAYER: header = "Enter the name of the player you are looking for"; break;
+            case Expedition: header = "Which stronghold do you want to attack?"; break;
+            case AttackAPlayer: header = "Which player do you want to attack?"; break;
+            case Steal: header = "Which player do you want to steal from?"; break;
+            case LookForPlayer: header = "Enter the name of the player you are looking for"; break;
             case Study: header = "Choose a skill to study further"; break;
             default:
                 header = "Set additional arguments";
@@ -134,14 +136,16 @@ public class SelectDetailsDialogFragment extends DialogFragment
                 case Player:
                     choices = player.KnownPlayerNames();
                     break;
-                case PlayerName:
-                    // Text input only.
-                    textInput = true;
-                    /*
+                case TextSearchType:
                     choices.add("Exactly");
                     choices.add("Contains");
                     choices.add("Starts with");
-                    */
+                    break;
+//                        ;; Contains, Exactly, StartsWith
+                case PlayerName:
+                    // Text input only.
+                    textInput = true;
+                    possible = true;
                     break;
                 case Stronghold:
                     // Known ones only?
@@ -206,7 +210,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             String text = "Unable to perform action.";
             switch(da)
             {
-                case AUGMENT_TRANSPORT:
+                case AugmentTransport:
                 case Craft:
                     text = "No craftable inventions found.";
                     break;

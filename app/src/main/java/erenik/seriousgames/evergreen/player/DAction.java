@@ -11,20 +11,20 @@ import java.util.List;
 // Daily Action
 public enum DAction
 {
-    FOOD("Gather berries", "Gather Food. Run out of food and you will soon be starving!"),
-    MATERIALS("Gather materials", "Gather Materials used for constructing defenses, inventing, crafting and augmenting things."),
-    SCOUT("Scout the area", "Search for food, materials, other's shelters, etc. Also carries risks of encountering enemies."),
-    RECOVER("Recover", "Recover lost HP."),
-    BUILD_DEF("Build defenses", "Consume Materials to strengthen defenses."),
-    AUGMENT_TRANSPORT("Augment transport", "Consume materials to improve various aspects of your transport of choice", ActionArgument.Transport, ActionArgument.TransportAugment),
-    LOOK_FOR_PLAYER("Look for player", "Attempt to look for a specific player, or just any player's shelter", ActionArgument.PlayerName),
-    EXPEDITION("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters.", ActionArgument.Stronghold),
+    GatherFood("Gather berries", "Gather Food. Run out of food and you will soon be starving!"),
+    GatherMaterials("Gather materials", "Gather Materials used for constructing defenses, inventing, crafting and augmenting things."),
+    Scout("Scout the area", "Search for food, materials, other's shelters, etc. Also carries risks of encountering enemies."),
+    Recover("Recover", "Recover lost HP."),
+    BuildDefenses("Build defenses", "Consume Materials to strengthen defenses."),
+    AugmentTransport("Augment transport", "Consume materials to improve various aspects of your transport of choice", ActionArgument.Transport, ActionArgument.TransportAugment),
+    LookForPlayer("Look for player", "Attempt to look for a specific player, or just any player's shelter", ActionArgument.TextSearchType, ActionArgument.PlayerName),
+    Expedition("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters.", ActionArgument.Stronghold),
     Invent("Invent", "Invent new weapons, armor, items or shelter additions", ActionArgument.InventionCategory),
     Craft("Craft", "Craft items which you have previously invented or obtained the blueprints for", ActionArgument.InventionToCraft),
-    STEAL("Steal", "Steal resources, items and/or blueprints from another player", ActionArgument.Player),
-    ATTACK_A_PLAYER("Attack a player", "Attack a target player's shelter.", ActionArgument.Player),
-    Study("Study", "Study a specific skill. Gain EXP towards that specific skill.", ActionArgument.SkillToStudy),
-    ;
+    Steal("Steal", "Steal resources, items and/or blueprints from another player", ActionArgument.Player),
+    AttackAPlayer("Attack a player", "Attack a target player's shelter.", ActionArgument.Player),
+    Study("Study", "Gain EXP towards skills you are currently training."),
+;
     DAction(String txt, String description)
     {
         this.text = txt;

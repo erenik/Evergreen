@@ -1,9 +1,13 @@
 package erenik.seriousgames.evergreen.act;
 
+import android.graphics.Point;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -15,6 +19,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.*;
 import erenik.seriousgames.evergreen.EvergreenButton;
 import erenik.seriousgames.evergreen.R;
@@ -29,6 +34,7 @@ public class SelectActivity extends FragmentActivity
     List<String> selected = new ArrayList<String>();
     List<Skill> selectedSkills = new ArrayList<Skill>();
     List<DAction> selectedDActions = new ArrayList<DAction>();
+    int buttonBgId = R.drawable.small_button;
 
     private final View.OnClickListener addItem = new View.OnClickListener()
     {
@@ -131,20 +137,23 @@ public class SelectActivity extends FragmentActivity
                 case 7: id = R.id.queueLayout7; break;
             }
             ll.setId(id);
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, App.GetScreenSize().y / 10);
             layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
             ll.setLayoutParams(layoutParams);
-            ll.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
+            ll.setBackgroundResource(buttonBgId);
             vg.addView(ll);
 
             // Make a button out of it.
-            EvergreenButton b = new EvergreenButton(getBaseContext());
+            Button b = new Button(getBaseContext());
             b.setText(selected.get(i));
+            // Screen div 10 height per element?
             layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
-//            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.activity_vertical_margin));
+            layoutParams.setMargins(5,0,5,0); // Margins left n right.
+            layoutParams.gravity = Gravity.CENTER;
             b.setLayoutParams(layoutParams);
- //           b.setGravity(2);
             b.setOnClickListener(itemClicked);
+            b.setBackgroundColor(0x00);
+            b.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.mainTextColor));
             ll.addView(b);
 
             // Add a button in the button to remove it.
@@ -231,8 +240,9 @@ public class SelectActivity extends FragmentActivity
             // Make a button out of it.
             EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(itemNames.get(i));
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins((int) getResources().getDimension(R.dimen.activity_horizontal_margin), 0, (int) getResources().getDimension(R.dimen.activity_horizontal_margin), (int) getResources().getDimension(R.dimen.listSelectionMargin));
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, App.GetScreenSize().y / 12);
+            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
+            b.setBackgroundResource(buttonBgId);
             b.setLayoutParams(layoutParams);
             vg.addView(b);
             b.setOnClickListener(addItem);

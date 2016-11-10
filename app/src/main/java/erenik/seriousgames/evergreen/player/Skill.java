@@ -8,31 +8,21 @@ import java.util.logging.Level;
  * Created by Emil on 2016-10-30.
  */
 public enum Skill {
-    Foraging("Foraging", new int [] {5,10,15,20}, "Increases food acquired while foraging. Increases chance to find good foraging spots."),
-    FleetRetreat("Fleet retreat", new int[] {5,9,13,17}, "Makes fleeing easier. Gains more EXP from encounters on successful retreats."),
-    Survival("Survival", new int[] {7,9,11,13,15}, "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
-    Architecting("Architecting", new int[]{10,20,30}, "Increases building speed when building shelter defenses and other structures"), // Add for Shelter additions later.
-    MaterialEfficiency("Material efficiency", new int[]{5,10,20,40}, "Adds a chance to retain some materials that would otherwise have been spent. Saved materials reduce emissions generated as well."),
-    Inventing("Inventing", new int[]{10,20,30}, "Improves success chance while inventing new items. Increases maximum bonuses that new inventions may have."), // Not added yet.
-    DefensiveTraining("Defensive training", new int[]{5,10,15,20,25}, "Increases overall defense during combat. Increases survivability"),
-    UnarmedCombat("Unarmed combat", new int[]{3,6,9,12,15,18}, "Increases attack, damage and amount of attacks while fighting unarmed."),
-    WeaponizedCombat("Weaponized combat", new int[]{3,6,9,12,15,18}, "Increases attack and damage of attacks while using weapons."),
-    Marksmanship("Marksmanship", new int[]{5,10,15,20,25,30}, "If you have a ranged weapon: Enables ranged attacks before melee combat starts. Increases ranged attack, damage and amount of attacks."), // Not added yet.
-    Parrying("Parrying", new int[]{2,7,12,17,22,29}, "Enables parrying of melee attacks. Increases probability at higher levels."), // Not added yet.
-    Thief("Thief", new int[]{5,10,15,20,25}, "Reduces risks and increases profits when stealing from other players"), // Not added yet.
-    GroupCombatTraining("Group combat training", new int[]{5,10,15,20,25}, "Increases attack and defense while fighting with an ally."), // Not added yet.
-    Studious("Studious", new int[]{20,30,40}, "Grants additional EXP each turn. Increases EXP gained when choosing the Study action"),
+    Foraging("Foraging", AddLinear(5,5,4), "Increases food acquired while foraging. Increases chance to find good foraging spots."),
+    FleetRetreat("Fleet retreat", AddLinearAccum(5, 4, 4), "Makes fleeing easier. Gains more EXP from encounters on successful retreats."),
+    Survival("Survival", AddLinearAccum(5,5,5), "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
+    Architecting("Architecting", AddLinear(10,10,6), "Increases building speed when building shelter defenses and other structures"), // Add for Shelter additions later.
+    MaterialEfficiency("Material efficiency",  Quadratic(5, 2, 5), "Adds a chance to retain some materials that would otherwise have been spent. Saved materials reduce emissions generated as well."),
+    Inventing("Inventing", AddLinear(10,10,8), "Improves success chance while inventing new items. Increases maximum bonuses that new inventions may have."), // Not added yet.
+    DefensiveTraining("Defensive training", AddLinearAccum(5,5,7), "Increases overall defense during combat. Increases survivability"),
+    UnarmedCombat("Unarmed combat", AddLinearAccum(3,2,9), "Increases attack, damage and amount of attacks while fighting unarmed."),
+    WeaponizedCombat("Weaponized combat", AddLinearAccum(3,1,6), "Increases attack and damage of attacks while using weapons."),
+    Marksmanship("Marksmanship", AddLinear(5,5,6), "If you have a ranged weapon: Enables ranged attacks before melee combat starts. Increases ranged attack, damage and amount of attacks."), // Not added yet.
+    Parrying("Parrying", AddLinearAccum(2, 5, 6), "Enables parrying of melee attacks. Increases probability at higher levels."), // Not added yet.
+    Thief("Thief", AddLinear(5, 5, 5), "Reduces risks and increases profits when stealing from other players"), // Not added yet.
+    GroupCombatTraining("Group combat training", AddLinear(5,5,5), "Increases attack and defense while fighting with an ally."), // Not added yet.
+    Studious("Studious", AddLinearAccum(20,10,5), "Grants additional EXP each turn. Increases EXP gained when choosing the Study action"),
 /*
-    <item>Survival</item>
-    <item>Architecting</item>
-    <item>Material efficiency</item>
-    <item>Inventing</item>
-    <item>Defensive training</item>
-    <item>Unarmed combat</item>
-    <item>Weaponized combat</item>
-    <item>Marksmanship</item>
-    <item>Parrying</item>
-    <item>Thievery</item>
 */
     ;
     Skill (String txt, int[] expRequired, String briefDescription)
@@ -40,6 +30,38 @@ public enum Skill {
         this.text = txt;
         this.expRequired = expRequired;
         this.briefDescription = briefDescription;
+    }
+    // E.g. 2,3,4 -> 2,5,8,11
+    static int[] AddLinear(int base, int plusEachLevel, int maxLevel)
+    {
+        int[] a = new int[maxLevel];
+        for (int i = 0; i < a.length; ++i)
+            a[i] = base + plusEachLevel * i;
+        return a;
+    }
+    // E.g. 2,3,4 -> 2,5,11,20              3,2,9 -> 3,5,9,15,23,33,45,59,75           2,5,6 -> 2,7,17,32,52,77
+    static int[] AddLinearAccum(int base, int plusEachLevel, int maxLevel)
+    {
+        int[] a = new int[maxLevel];
+        int previousPlusAccum = 0;
+        for (int i = 0; i < maxLevel; ++i)
+        {
+            a[i] = base + previousPlusAccum;
+            previousPlusAccum += plusEachLevel;
+        }
+        return a;
+    }
+    // E.g. 2,3,4 -> 2,6,18,54
+    static int[] Quadratic(int base, float multiplier, int maxLevel)
+    {
+        int[] a = new int[maxLevel];
+        int previous = 0;
+        a[0] = base;
+        for (int i = 1; i < maxLevel; ++i)
+        {
+            a[i] = (int) (a[i-1] * multiplier);
+        }
+        return a;
     }
     public String text = "text";
     String briefDescription = "Desc";

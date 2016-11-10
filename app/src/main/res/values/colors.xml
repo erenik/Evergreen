@@ -8,8 +8,9 @@
 
     <color name="black">#FF000000</color>
     <color name="info">#FFBBBBBB</color>
-    <color name="attacked">#FFf88000</color>
+    <color name="attacked">#FFfa4431</color>    <!-- Old attacked colors : f88000 -->
     <color name="event">#FFEEEECC</color>
+    <color name="success">#FFF0F0DD</color>
     <color name="progress">#FFAA8888</color>
     <color name="problemNotification">#FFFF8500</color>
     <color name="attackMiss">#FF999999</color>
@@ -20,6 +21,11 @@
     <color name="mainTextColor">#FFdedbcb</color>
     <color name="mainButtonTextColor">#FFDDDDDD</color>
     <color name="mainButtonBackground">#FF00a166</color>
+
+    <!-- New colors with the purple icons -->
+    <color name="mainTextNew">#fffff8d5</color>
+    <color name="iconTextColor">#ff89e850</color>
+
     <!-- Old values
     dedbcb
     <color name="mainTextColor">#FFBBBBBB</color>

@@ -1,5 +1,6 @@
 package erenik.seriousgames.evergreen.Invention;
 
+import java.util.List;
 import java.util.Random;
 
 import erenik.seriousgames.evergreen.util.Dice;
@@ -13,7 +14,7 @@ public class Invention
     /// Level of quality/ranking of the invented item. This will grant some bonuses. From 0 to 5ish?
     public String name = "NoName";
     public InventionType type;
-    int weaponType = -1; // Used for weapons only, to remember which type was generated?
+    int inventionSubType = -1; // Used for weapons only, to remember which type was generated? Used for the iterative/upgrade invention feature as well.
     int additionalEffect = -1; // Used for weapons only.
     int[] stats = new int[InventionStat.values().length];
 
@@ -27,9 +28,10 @@ public class Invention
 
     public Invention(InventionType type)
     {
+        SetDefaults();
         // Just copy type.
         this.type = type;
-        SetDefaults();
+        Set(InventionStat.Type, type.ordinal()); // Set this.
     }
     public Invention(Invention inv)
     {
@@ -64,15 +66,30 @@ public class Invention
     {
         stats[stat.ordinal()] = value;
     }
+
+    public int RandomizeSubType()
+    {
+        switch(this.type)
+        {
+            case Weapon:
+                Random r = new Random(System.nanoTime());
+                int rr = r.nextInt(WeaponType.values().length+1) % WeaponType.values().length; // Keep it within.
+                Set(InventionStat.SubType, rr);
+                break;
+        }
+        return Get(InventionStat.SubType);
+    }
+    /// Randomizes details based on current stats.
     public void RandomizeDetails()
     {
+        // Fetch all details from the array? Just quality level?
+        qualityLevel = Get(InventionStat.QualityLevel);
+        inventionSubType = Get(InventionStat.SubType);
+        type = InventionType.values()[Get(InventionStat.Type)];
         switch(this.type)
         {
             case Weapon: {
                 // Randomize weapon type? Stats vary with weapon type instead?
-                Random r = new Random(System.nanoTime());
-                int rr = r.nextInt(9);
-                Set(InventionStat.WeaponType, rr);
                 UpdateWeaponStats();
                 if (additionalEffect > 0)
                     Set(InventionStat.AdditionalEffect, Dice.RollD6(1));
@@ -102,11 +119,12 @@ public class Invention
                 }
                 break;
             case RangedWeapon:
+                // Add different ranged weapons later?
                 atkDmgDiceType = 3;
                 atkDmgDice = 2;// 2D3?
-                rangedAttackBonus += Dice.RollD3(2) + qualityLevel;
-                rangedAtkDmgBonus += Dice.RollD3(1) + qualityLevel;
-                name = rangedAttackBonus > 5? "Longbow" : "Bow";
+                name = "Bow";
+                rangedAttackBonus += 1 + qualityLevel;
+                rangedAtkDmgBonus += 1 + qualityLevel * 1.5;
                 break;
             case Tool:
                 int diceRoll = Dice.RollD6(1);
@@ -154,7 +172,7 @@ public class Invention
 
     public void UpdateWeaponStats()
     {
-        WeaponType wt = WeaponType.values()[Get(InventionStat.WeaponType)];
+        WeaponType wt = WeaponType.values()[Get(InventionStat.SubType)];
         switch (wt) {
             // Knives n daggers.
             case Knife:
@@ -177,13 +195,13 @@ public class Invention
                 name = "Gladius";
                 attackBonus += 5;
                 atkDmgBonus += 4;
-                parryBonus += 1;
+                parryBonus += 1 + qualityLevel / 2;
                 break;
             case Longsword:
                 name = "Longsword";
                 attackBonus += 4;
                 atkDmgBonus += 6;
-                parryBonus += 2;
+                parryBonus += 2 + qualityLevel / 5;
                 break;
             /// Club-type weapons.
             case Club:
@@ -240,18 +258,20 @@ public class Invention
                 additionalEffectDice = 1;
                 break;
             case 5:
-            default:
                 attackBonus += 3;
                 atkDmgBonus += 3;
                 additionalEffectDice = 1;
                 bonusAttacksPerTurn += 1;
             case 6:
+            default:
                 attackBonus += 4;
                 atkDmgBonus += 4;
                 additionalEffectDice = 1;
                 bonusAttacksPerTurn += 2;
                 break;
         }
+        if (atkDmgBonus < 0) // Minimum +0 bonus, no negatives.
+            atkDmgBonus = 1;
     }
     public void UpdateWeaponAdditionalEffect() {
         switch (Get(InventionStat.AdditionalEffect)) {
@@ -286,5 +306,10 @@ public class Invention
                 // Bad value, no additional effect.
                 break;
         }
+    }
+    // Adjuster.
+    public void Adjust(InventionStat stat, int val)
+    {
+        stats[stat.ordinal()] += val;
     }
 }

@@ -8,8 +8,13 @@ public enum InventionStat
     QualityLevel(0),
     MaterialCost(5),
     ProgressRequiredToCraft(5),
+    /** Once an invention has been invented, this number keeps track of iterated times the same item would have been invented. Upon reaching 10xQualityLevel, the next QualityLevel of the same item is invented.
+     *  This continues until all invention levels of the same item has been invented. :)
+     */
+    TimesInvented(0), //     public int timesInvented = 0;
     // Weapon stats
-    WeaponType(0),
+    Type(0), // Ordinal of InventionType
+    SubType(0), // For weapon, this means the WeaponType, for RangedWeapons it would mean the RangedWeaponType, etc.
     AdditionalEffect(-1),
     AttackBonus(0),
     AttackDamageDiceType(6), // Should be 3 or 6. Used for both traps and weapons.

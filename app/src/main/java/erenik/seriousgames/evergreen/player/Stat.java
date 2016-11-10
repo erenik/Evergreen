@@ -5,6 +5,7 @@ package erenik.seriousgames.evergreen.player;
  */
 public enum Stat
 {
+    TurnSurvived(0),
     HP(10), MAX_HP(10),
     FOOD(5), FoodHotspot(0),
     MATERIALS(3), MaterialDepot(0),

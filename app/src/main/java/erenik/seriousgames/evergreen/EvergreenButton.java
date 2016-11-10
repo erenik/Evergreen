@@ -44,7 +44,7 @@ public class EvergreenButton extends Button
     public EvergreenButton(Context context) {
         super(context);
         // Just set background color and text color automagically.
-        setBackgroundColor(BackgroundColor(context));
+        setBackgroundResource(R.drawable.small_button);
         setTextColor(ContextCompat.getColor(context, R.color.mainButtonTextColor));
     }
     LinearLayout.LayoutParams layoutParams;

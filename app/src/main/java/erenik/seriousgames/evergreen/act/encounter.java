@@ -27,7 +27,9 @@ public class encounter extends AppCompatActivity
 
     static Player player = Player.getSingleton();
     static boolean dead = false;
-    static int expGained = 0;
+    static int creepsKilled = 0, totalCreeps = 0, encounterExp = 0;
+    static int fleeExp = 0;
+    static int turn = -1;
 
     /// Clears old lists.
     static void NewEncounter(boolean inShelter)
@@ -37,14 +39,22 @@ public class encounter extends AppCompatActivity
         Player player = Player.getSingleton();
         player.PrepareForCombat(inShelter);
         dead = false;
-        expGained = 0;
+        fleeExp = 0;
+        creepsKilled = 0;
         player.consecutiveFleeAttempts = 0;
+        turn = player.Turn();
     }
+
+    private static void CalcEncounterEXP()
+    {
+        encounterExp = (int) player.Turn();
+    }
+
     static void Random(Dice dice)
     {
         isRandom = true;
         Player player = Player.getSingleton();
-        int level = player.turn / 16;
+        int level = player.Turn() / 16;
         List<EnemyType> typesPossible = new ArrayList<EnemyType>();
         for (int i = 0; i < EnemyType.values().length; ++i)
         {
@@ -63,6 +73,7 @@ public class encounter extends AppCompatActivity
             enemies.add(e);
         }
         Log("You encounter " + iAmount + " " + et.name + "s.", LogType.INFO);
+        CalcEncounterEXP();
     }
     /// Quick simulation
     static void Simulate()
@@ -85,13 +96,19 @@ public class encounter extends AppCompatActivity
         if (dead)
         {
             // Game over?
+            player.log.addAll(log); // Add current log there with all attack stuff.
             App.GameOver();
+            player.SaveLocally(); // Save stuffs?
+            return;
         }
         else
         {
             Log("You survive the encounter.", LogType.INFO);
-            Log("You gain "+expGained+" EXP.", LogType.EXP);
-            player.GainEXP(expGained);
+            int expToGain = (enemies.size() > 0? creepsKilled / totalCreeps  : 1 ) * encounterExp + fleeExp;
+            if (creepsKilled > 0) {
+                Log("You gain " + expToGain + " EXP.", LogType.EXP);
+            }
+            player.GainEXP(expToGain);
         }
         player.log.addAll(log); // Add current log there with all attack stuff.
         if (isRandom)
@@ -131,7 +148,7 @@ public class encounter extends AppCompatActivity
                 // Success?
                 Log("You run away.", LogType.INFO);
                 if (fleetRetreat > 0)
-                    expGained += Math.pow(2, fleetRetreat - 1);
+                    fleeExp = (int) Math.pow(2, fleetRetreat - 1);
                 enemies.clear();
                 return;
             }
@@ -144,10 +161,10 @@ public class encounter extends AppCompatActivity
         // Attack?
         Enemy e = enemies.get(0);
         player.Attack(e);
-        if (e.hp < 0) {
-            Log("The "+e.name+" dies.", LogType.INFO);
+        if (e.hp <= 0) {
+            Log("The " + e.Name() + " dies.", LogType.INFO);
             enemies.remove(e);
-            expGained += e.exp;
+            ++creepsKilled;
         }
     }
 
@@ -155,7 +172,6 @@ public class encounter extends AppCompatActivity
     {
         isAssaultOfTheEvergreen = true;
         Player player = Player.getSingleton();
-        int turn = player.turn;
         System.out.println("turn: "+turn);
         int level = turn / 16;
         List<EnemyType> typesPossible = new ArrayList<EnemyType>();
@@ -210,6 +226,7 @@ public class encounter extends AppCompatActivity
             enemies.add(e);
         }
         Log("Your shelter is attacked by " + iAmount + " " + et.name + "s!", LogType.INFO);
+        CalcEncounterEXP();
     }
 
     @Override

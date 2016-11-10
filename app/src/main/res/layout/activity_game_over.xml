@@ -5,7 +5,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    style="@style/EvergreenBG"
+    style="@style/Evergreen.BG"
     tools:context=".act.GameOver"
     >
 
@@ -15,18 +15,38 @@
         android:text="@string/gameOverText"
         android:textColor="@color/mainTextColor"
         android:id="@+id/textViewGameOver"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
-        android:textSize="38dp" />
+        android:layout_centerVertical="true"
+        android:textSize="38dp"
+        />
 
-    <Button
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/newGame"
-        android:id="@+id/buttonNewGame"
-        android:layout_marginTop="74dp"
-        android:background="@color/mainButtonBackground"
-        android:textColor="@color/mainButtonTextColor"
+        android:orientation="vertical"
+        android:layout_marginTop="14dp"
         android:layout_below="@+id/textViewGameOver"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Survived until turn ..."
+            android:textColor="@color/mainTextColor"
+            android:id="@+id/textViewTurnSurvived"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:textSize="18dp"
+            android:textAlignment="center"
+            />
+
+        <Button
+            style="@style/Evergreen.Button.Wide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/newGame"
+            android:id="@+id/buttonNewGame"
+            />
+    </LinearLayout>
 </RelativeLayout>

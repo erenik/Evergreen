@@ -13,7 +13,7 @@ public enum ActionArgument
     InventionCategory,
     InventionToCraft,
     SkillToStudy,
-    ;
+    TextSearchType; // Contains, Exactly, StartsWith
     /// Value passed by user when queueing.
     String value;
     // Settings.

@@ -2,12 +2,16 @@ package erenik.seriousgames.evergreen.act;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import erenik.seriousgames.evergreen.player.Player;
@@ -99,11 +103,13 @@ public class IntroScreen extends AppCompatActivity
     };
 
     int clicked = 0;
-    private final View.OnClickListener buttonClicked = new View.OnClickListener() {
+    private final View.OnClickListener buttonClicked = new View.OnClickListener()
+    {
         @Override
         public void onClick(View v)
         {
             System.out.println("ontouchListener view: "+v.toString());
+            ImageView iv = (ImageView) findViewById(R.id.imageViewIntroOverlay);
             int id = v.getId();
             if (id == R.id.nextButton)
             {
@@ -116,13 +122,18 @@ public class IntroScreen extends AppCompatActivity
                         break;
                     case 2:
                         textView.setText(getString(R.string.introText2));
+                        // Glass window!
+//                        Drawable d = ContextCompat.getDrawable(getBaseContext(), R.drawable.intro_glass_crash);
+                        iv.setBackgroundResource(R.drawable.intro_glass_crash);
                         break;
                     case 3:
+                        // Remove it?
+                        iv.setBackgroundColor(0x00);
                         textView.setText(getString(R.string.introText3));
                         break;
                     default: // Load next view.
                     {
-                        player.name = "TestNAme";
+                        player.SetName("TestNAme");
                         player.SaveLocally();
                         System.out.println("Starting new activity");
                         Intent i = new Intent(getBaseContext(), MainScreen.class);

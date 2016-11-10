@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/EvergreenBG"
+    style="@style/Evergreen.BG"
     android:orientation="vertical"
     tools:context="erenik.seriousgames.evergreen.act.logViewer"
     >
@@ -15,23 +15,23 @@
         android:layout_margin="@dimen/text_margin"
         >
         <TextView
-            style="@style/EvergreenText"
+            style="@style/Evergreen.Text"
             android:text="Filters"
             />
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             >
-            <erenik.seriousgames.evergreen.EvergreenCheckbox style="@style/EvergreenCheckbox" android:text="Missed\nattacks" android:id="@+id/checkboxMissedAttacks"
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Missed\nattacks" android:id="@+id/checkboxMissedAttacks"
                 android:button="@drawable/evergreen_checkbox"
                 />
-            <CheckBox style="@style/EvergreenCheckbox" android:text="Attacks" android:id="@+id/checkboxDamage"
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Attacks" android:id="@+id/checkboxDamage"
                 android:button="@drawable/evergreen_checkbox"
                 />
-            <CheckBox style="@style/EvergreenCheckbox" android:text="Filter3" android:id="@+id/checkbox3"
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Filter3" android:id="@+id/checkbox3"
                 android:button="@drawable/evergreen_checkbox"
                 />
-            <CheckBox style="@style/EvergreenCheckbox" android:text="Filter4" android:id="@+id/checkbox4"
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Filter4" android:id="@+id/checkbox4"
                 android:button="@drawable/evergreen_checkbox"
                 />
             <!-- android:button="@drawable/evergreen_checkbox"-->
@@ -42,7 +42,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="@dimen/text_margin"
-        >
+        android:id="@+id/scrollViewLog"
+        > <!-- Same ID as used in main screen -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -51,10 +52,10 @@
                 >
                 <!--    /// Just add all stuff here?-->
                 <TextView
-                    style="@style/EvergreenText"
+                    style="@style/Evergreen.Text"
                     android:text="Sample text to be removed" />
                 <TextView
-                    style="@style/EvergreenText"
+                    style="@style/Evergreen.Text"
                     android:text="Sample text to be removed" />
             </LinearLayout>
 

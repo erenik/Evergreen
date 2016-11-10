@@ -1,6 +1,6 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/EvergreenBG"
+    style="@style/Evergreen.BG"
     tools:context=".act.MainScreen">
     <!--    android:background="@color/backgroundMainGreen" -->
 
@@ -24,108 +24,63 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="1.5"
             android:layout_gravity="center_horizontal|top">
 
-            <!-- HP -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="match_parent"
-                android:id="@+id/imageViewHP" android:src="@drawable/hp"
-                android:contentDescription="A heart" />
-            <TextView android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewHP"
-                android:layout_gravity="center_vertical"
-                android:elegantTextHeight="false"
-                android:textSize="20dp" />
-
-            <!-- Food -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="fill_parent"
-                android:id="@+id/imageView2" android:src="@drawable/food" />
-            <TextView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewFood"
-                android:layout_gravity="center_vertical"
-                android:elegantTextHeight="false"
-                android:textSize="20dp" />
-
-            <!-- Materials -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="fill_parent"
-                android:id="@+id/imageViewMaterials" android:src="@drawable/materials" />
-            <TextView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewMaterials"
-                android:layout_gravity="center_vertical"
-                android:elegantTextHeight="false"
-                android:textSize="20dp" />
+            <!-- Stat Icons -->
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="HP" />
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewHP" />
+                </LinearLayout>
+            </FrameLayout>
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="Food" />
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewFood" />
+                </LinearLayout>
+            </FrameLayout>
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="Materials" />
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewMaterials" />
+                </LinearLayout>
+            </FrameLayout>
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="Emissions" />
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewEmissions" />
+                </LinearLayout>
+            </FrameLayout>
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="Attack" />
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewAttack" />
+                </LinearLayout>
+            </FrameLayout>
+            <FrameLayout style="@style/Evergreen.IconLayout">
+                <ImageView style="@style/Evergreen.IconBG" />
+                <LinearLayout style="@style/Evergreen.IconInnerLayout">
+                    <TextView style="@style/Evergreen.IconTextTitle" android:text="Defense"/>
+                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewDefense" />
+                </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
 
         <!-- /// Second Row of stats -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_gravity="center_horizontal|top">
 
             <!-- Attack -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="match_parent"
-                android:id="@+id/imageViewAttack" android:src="@drawable/attack"
-                android:contentDescription="A heart" />
-            <TextView android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewAttack"
-                android:layout_gravity="center_vertical"
-                android:textSize="20dp" />
-
-            <!-- Defense -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="fill_parent"
-                android:id="@+id/imageViewDef" android:src="@drawable/defense" />
-            <TextView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewDefense"
-                android:layout_gravity="center_vertical"
-                android:textSize="20dp" />
-
-            <!-- Emissions -->
-            <ImageView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="fill_parent"
-                android:id="@+id/imageView" android:src="@drawable/emissions" />
-            <TextView
-                android:layout_width="0px" android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainTextColor"
-                android:text="10/10" android:id="@+id/textViewEmissions"
-                android:layout_gravity="center_vertical"
-                android:textSize="20dp" />
-        </LinearLayout>
 
         <Button
-            style="?metaButtonBarButtonStyle"
+            style="@style/Evergreen.Button.Wide"
             android:id="@+id/buttonChooseActiveAction"
-            android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="0.8"
-            android:textColor="@color/mainButtonTextColor"
-            android:background="@color/mainButtonBackground"
             android:layout_marginTop="@dimen/activity_vertical_margin"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:text="Active actions"
@@ -134,25 +89,19 @@
 
         <Button
             android:id="@+id/buttonChooseAction"
-            style="?metaButtonBarButtonStyle"
-            android:layout_width="fill_parent"
+            style="@style/Evergreen.Button.Wide"
             android:layout_height="0dp"
             android:layout_weight="0.8"
-            android:textColor="@color/mainButtonTextColor"
-            android:background="@color/mainButtonBackground"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:text="Choose action"
             android:textSize="16dp" />
 
         <Button
             android:id="@+id/buttonChooseSkill"
-            style="?metaButtonBarButtonStyle"
-            android:layout_width="fill_parent"
+            style="@style/Evergreen.Button.Wide"
             android:layout_height="0dp"
             android:layout_weight="0.8"
-            android:textColor="@color/mainButtonTextColor"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:background="@color/mainButtonBackground"
             android:text="Choose skill"
             android:textSize="16dp" />
 
@@ -190,38 +139,26 @@
             android:orientation="horizontal">
 
             <Button
-                style="?metaButtonBarButtonStyle"
+                style="@style/Evergreen.Button"
                 android:id="@+id/button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
                 android:text="Help"
                 android:layout_margin="@dimen/activity_vertical_margin_smaller"
-                android:background="@color/mainButtonBackground"
                 android:textSize="16dp" />
 
             <Button
-                style="?metaButtonBarButtonStyle"
+                style="@style/Evergreen.Button"
                 android:id="@+id/nextDay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
                 android:layout_margin="@dimen/activity_vertical_margin_smaller"
-                android:background="@color/mainButtonBackground"
                 android:text="Next Day"
                 android:textSize="16dp" />
 
             <Button
-                style="?metaButtonBarButtonStyle"
+                style="@style/Evergreen.Button"
                 android:id="@+id/button3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/mainButtonTextColor"
                 android:layout_weight="0.8"
                 android:layout_margin="@dimen/activity_vertical_margin_smaller"
-                android:background="@color/mainButtonBackground"
                 android:text="Messages"
                 android:textSize="16dp" />
         </LinearLayout>

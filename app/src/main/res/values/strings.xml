@@ -10,10 +10,13 @@
     <string name="chooseAction">Choose action</string>
     <string name="chooseSkill">Choose skill</string>
     <!-- /// Intro texts -->
-    <string name="introText1">Once upon a time...</string>
-    <string name="introText2">ffff...</string>
-    <string name="introText3">Goooo!!!...</string>
-    <string name="introText4">Once upon a time...</string>
+    <string name="introText1">Once upon a time, people lived closer to nature than now.\nNowadays they walk between their different dwellings, not minding their surroundings as much.</string>
+    <string name="introText2"></string>
+    <string name="introText3">Glass and windows shattered, ceilings and walls caved in.
+        Screams could be heard as lives were cut short.
+        ...
+        Suddenly now, you are so few. Supplies are running short and every choice of action matters.
+    </string>
 
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">Hello\nworld</string>

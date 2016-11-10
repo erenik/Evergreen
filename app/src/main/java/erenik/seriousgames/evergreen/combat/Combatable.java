@@ -46,11 +46,26 @@ public class Combatable
                 attacker.InflictDamage(1, this);
         }
         damage *= receivedDamageMultiplier;
+        float php = hp;
         hp -= damage;
+        System.out.println("Damage taken: "+damage+" hp reduced from "+php+" to "+hp);
         if (hp <= 0) {
             hp = 0;
         }
         return damage;
+    }
+    public boolean SetName(String newName)
+    {
+        if (newName.contains(";"))
+            return false;
+        if (newName.contains("Any") || newName.contains("Contains"))
+            return false;
+        name = newName;
+        return true;
+    }
+    public String Name() {
+        return name;
+
     }
     // Current Defense value.
     int CurrentDefense()
@@ -101,7 +116,7 @@ public class Combatable
                 continue;
             }
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
-            encounter.Log(isPlayer? "You attack the "+target.name+" for "+damageDealt+" points of damage." : "The "+name+" attacks you and deals "+damageDealt+" points of damage.",
+            encounter.Log(isPlayer? "You attack the "+target.name+" for "+damageDealt+" point"+(damageDealt>1? "s" : "")+" of damage." : "The "+name+" attacks you and deals "+damageDealt+" point"+(damageDealt>1? "s" : "")+" of damage.",
                     isPlayer? LogType.ATTACK : LogType.ATTACKED);
             if (target.hp  < 0) // Killed player?
             {
@@ -111,7 +126,7 @@ public class Combatable
         return false;
     }
 
-    public String name = "NoName";
+    protected String name = "NoName";
     protected boolean isPlayer = false; // True for player.
     public int exp = 1;
     // Most of these are used mainly by enemies, but may also be used by some player weapons perhaps?
