@@ -18,6 +18,7 @@ import erenik.seriousgames.evergreen.util.Dice;
 public class EventDialogFragment extends DialogFragment
 {
     public Finding type = Finding.Nothing;
+    Encounter enc = new Encounter();
     @Override
     public Dialog onCreateDialog(final Bundle savedInstanceState)
     {
@@ -32,7 +33,9 @@ public class EventDialogFragment extends DialogFragment
         switch(type)
         {
             case AbandonedShelter:
+            case RandomPlayerShelter:
             {
+
                 skippable = true;
                 break;
             }
@@ -43,38 +46,49 @@ public class EventDialogFragment extends DialogFragment
             case MaterialsDepot:
                 units = Dice.RollD3(2)+1;
                 player.Adjust(Stat.MATERIALS, units);
-                encounter.Log("You find " + units + " of materials.", LogType.INFO);
+                enc.Log("You find " + units + " of materials.", LogType.INFO);
                 skippable = true;
                 break;
             case FoodHotSpot:
                 units = Dice.RollD3(2)+1;
                 player.Adjust(Stat.FOOD, units);
-                encounter.Log("You find "+units+" of food.", LogType.INFO);
+                enc.Log("You find " + units + " of food.", LogType.INFO);
                 skippable = true;
                 break;
         }
         builder.setMessage(type.GetEventText()+moreText)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        /// Set that the user clicked yes -> Offer next event after this one finishes.
+                        Player player = Player.getSingleton();
                         switch (type) {
                             case AttacksOfTheEvergreen:
                                 AttacksOfTheEvergreen();
                                 break;
                             case Encounter:
                                 RandomEncounter();
+                                break;
+                            case AbandonedShelter:
+                                enc.AbandonedShelter();
+                                break;
+                            case RandomPlayerShelter:
+                                enc.RandomPlayerShelter();
+                                break;
                         }
                         // Update GUI of main activity.
                         Activity act = getActivity();
                         if (act instanceof MainScreen) {
                             MainScreen ms = (MainScreen) act;
                             ms.UpdateGUI(); // Update GUI HP, log, etc.
-                            ms.HandleNextEvent(); // If there is any.
+                            ms.HandleNextEvent();
                         }
                     }
                 });
         builder.setNegativeButton("Later", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User cancelled the dialog
+                Player player = Player.getSingleton();
+                player.playEvents = false; // Flag that the player may be interested in seeing the next event being played when this one finishes.
             }
         });
         builder.setCancelable(!skippable); // Not cancelable?
@@ -84,16 +98,16 @@ public class EventDialogFragment extends DialogFragment
 
     private void AttacksOfTheEvergreen()
     {
-        encounter.NewEncounter(true);
-        encounter.AssaultsOfTheEvergreen();
-        encounter.Simulate();
+        enc.NewEncounter(true);
+        enc.AssaultsOfTheEvergreen();
+        enc.Simulate();
     }
 
     void RandomEncounter()
     {
         // Open new activity for this event?
-        encounter.NewEncounter(false);
-        encounter.Random(new Dice(3, 2, 0));
-        encounter.Simulate();
+        enc.NewEncounter(false);
+        enc.Random(new Dice(3, 2, 0));
+        enc.Simulate();
     }
 }

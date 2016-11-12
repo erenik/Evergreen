@@ -2,6 +2,7 @@ package erenik.seriousgames.evergreen.act;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
@@ -35,6 +36,14 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
      * user interaction before hiding the system UI.
      */
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UpdateGUI(); // Always update GUI upon resuming.
+        HandleNextEvent();
+    }
+
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -128,19 +137,19 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         }
     };
 
-    /// Returns true if there was an event to process. During the event, or right after, if the event was played - call this function again to query the next one.
+    // Returns true if it processed an event, false if not.
     boolean HandleNextEvent()
     {
-        if (player.AllMandatoryEventsHandled())
-            return false;
-        player.HandleGeneratedEvents(getSupportFragmentManager());
-        return true;
+        if (player.playEvents  // If playing all events, or
+                || !player.AllMandatoryEventsHandled()) // Not all mandatory events handled,
+            return player.HandleGeneratedEvents(getSupportFragmentManager()); // Do event.
+        return false;
     }
 
     /// Main init function
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
@@ -151,7 +160,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
 //        player.SaveLocally(); // Save copy? - Why?
         /// Update GUI.
         UpdateGUI();
-
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -169,15 +177,15 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
-        SetText(R.id.textViewAttack, player.Attack()+"");
-        SetText(R.id.textViewDefense, player.Defense()+"");
+        SetText(R.id.textViewAttack, player.BaseAttack()+"");
+        SetText(R.id.textViewDefense, player.BaseDefense()+"");
         SetText(R.id.textViewEmissions, player.GetInt(Stat.EMISSIONS) + "");
 
         UpdateActiveActionButton();
         UpdateDailyActionButton();
         UpdateSkillButton();
         // Update log.
-        Log.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50);
+        Log.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50, player.logTypesToShow);
     }
 
     void SetText(int viewID, String text)

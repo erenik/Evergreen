@@ -13,7 +13,13 @@ public enum ActionArgument
     InventionCategory,
     InventionToCraft,
     SkillToStudy,
-    TextSearchType; // Contains, Exactly, StartsWith
+    TextSearchType,
+    ResourceType,
+    ResourceQuantity,
+    Text, // Free-text.
+    TreatyType, // For treaties
+    ReceivedMessage, // Received messages -> Any type.
+    ; // Contains, Exactly, StartsWith
     /// Value passed by user when queueing.
     String value;
     // Settings.

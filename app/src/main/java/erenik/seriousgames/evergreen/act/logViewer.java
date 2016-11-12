@@ -1,5 +1,6 @@
 package erenik.seriousgames.evergreen.act;
 
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -81,7 +82,9 @@ public class logViewer extends AppCompatActivity
         return true;
     }
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_viewer);
         ///  Update checkboxes.
@@ -95,6 +98,7 @@ public class logViewer extends AppCompatActivity
         // Update initial contents.
         UpdateShownLog();
         findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
+        findViewById(R.id.layoutLog).setOnClickListener(toggleLogFullScreen);
     }
     void UpdateShownLog()
     {

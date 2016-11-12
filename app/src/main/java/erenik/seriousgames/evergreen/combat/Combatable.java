@@ -6,7 +6,7 @@ import java.util.Random;
 
 import erenik.seriousgames.evergreen.logging.*;
 import erenik.seriousgames.evergreen.util.Tuple;
-import erenik.seriousgames.evergreen.act.encounter;
+import erenik.seriousgames.evergreen.act.Encounter;
 import erenik.seriousgames.evergreen.util.Dice;
 
 /**
@@ -20,6 +20,7 @@ public class Combatable
     public int defense;
     static private Random r;
     public int consecutiveFleeAttempts = 0;
+    protected float emissionsWhenCreated = 0;
 
     /// Attempts to attack this unit, returns true if it hits.
     boolean Attack(int attack)
@@ -81,7 +82,7 @@ public class Combatable
         return a;
     }
     /// Apply poisons, regen, remove debuffs, etc.
-    void NewTurn()
+    void NewTurn(Encounter enc)
     {
         // Count down the snares/binds.
         for (int i = 0; i < ensnared.size(); ++i) {
@@ -96,13 +97,13 @@ public class Combatable
         // Multiply?
         if (multiplies > 0 && timesMultiplied < timesMultiply)
         {
-            Enemy e = new Enemy(enemyType);
-            encounter.enemies.add(e);
+            Enemy e = new Enemy(enemyType, emissionsWhenCreated);
+            enc.enemies.add(e);
         }
     }
     /// Check HP?
     /// Order this enemy to attack the player. Returns true if it kills the player.
-    public boolean Attack(Combatable target)
+    public boolean Attack(Combatable target, Encounter enc)
     {
         for (int i = 0; i < attacksPerTurn; ++i)
         {
@@ -111,13 +112,13 @@ public class Combatable
             ++hitsAttempted;
             if (!hit)
             {
-                encounter.Log(isPlayer? "You attack the "+target.name+" but miss." : "The "+name+" attacks you but misses.",
-                        isPlayer? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
+                enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.",
+                        isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
                 continue;
             }
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
-            encounter.Log(isPlayer? "You attack the "+target.name+" for "+damageDealt+" point"+(damageDealt>1? "s" : "")+" of damage." : "The "+name+" attacks you and deals "+damageDealt+" point"+(damageDealt>1? "s" : "")+" of damage.",
-                    isPlayer? LogType.ATTACK : LogType.ATTACKED);
+            enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",
+                    isPlayer ? LogType.ATTACK : LogType.ATTACKED);
             if (target.hp  < 0) // Killed player?
             {
                 return true;

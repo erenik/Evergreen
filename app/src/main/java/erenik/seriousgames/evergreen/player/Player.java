@@ -21,6 +21,8 @@ import erenik.seriousgames.evergreen.Event;
 import erenik.seriousgames.evergreen.logging.*;
 import erenik.seriousgames.evergreen.act.EventDialogFragment;
 import erenik.seriousgames.evergreen.combat.Combatable;
+import erenik.seriousgames.evergreen.transport.Transport;
+import erenik.seriousgames.evergreen.transport.TransportStat;
 import erenik.seriousgames.evergreen.util.Dice;
 
 /**
@@ -36,6 +38,8 @@ public class Player extends Combatable
     /// Used in main menu, and also saved.
     public List<String> dailyActions = new ArrayList<>();
     public int activeAction = -1;
+    private List<Transport> transports = new ArrayList<>();
+    public boolean playEvents = false;
     /// Increment every passing day. Stop once dying.
     public int Turn()
     {
@@ -81,6 +85,13 @@ public class Player extends Combatable
     private Player()
     {
         SetName("Parlais Haux Le'deur");
+        // Add default transports.
+        for (int i = 0; i < Transport.values().length; ++i)
+        {
+            Transport t = Transport.values()[i];
+            t.SetDefaults();
+            transports.add(t);
+        }
         SetDefaultStats();
     }
     public int MaxHP()
@@ -112,7 +123,7 @@ public class Player extends Combatable
             tot += equipped.get(i) != null? equipped.get(i).Get(stat) : 0;
         return tot;
     }
-    public int Attack()
+    public int BaseAttack()
     {
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
         att += UnarmedCombatBonus(); // Max +9 Attack
@@ -120,7 +131,23 @@ public class Player extends Combatable
         att += equippedWeapon != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
-    public int Defense()
+    public int OnTransportAttack()
+    {
+        return (int) (BaseAttack() + CurrentTransport().Get(TransportStat.SocialSupport));
+    }
+    public int ShelterAttack()
+    {
+        return BaseAttack();
+    }
+    public int ShelterDefense()
+    {
+        return BaseDefense() + GetInt(Stat.SHELTER_DEFENSE);
+    }
+    public int OnTransportDefense()
+    {
+        return (int) (BaseDefense() + CurrentTransport().Get(TransportStat.SocialSupport));
+    }
+    public int BaseDefense()
     {
         int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
         def += (UnarmedCombatBonus()-1) / 3;
@@ -141,10 +168,6 @@ public class Player extends Combatable
             System.out.println("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
         }
         return damage;
-    }
-    int ShelterDefense()
-    {
-        return Defense() + GetInt(Stat.SHELTER_DEFENSE);
     }
     public void SetDefaultStats()
     {
@@ -177,7 +200,7 @@ public class Player extends Combatable
     {
         return statArr[stat];
     }
-    float Get(Stat s)
+    public float Get(Stat s)
     {
         return statArr[s.ordinal()];
     }
@@ -271,6 +294,16 @@ public class Player extends Combatable
         log.add(new Log(text, t));
     }
 
+    public Transport CurrentTransport()
+    {
+        for (int i = 0; i < transports.size(); ++i)
+        {
+            Transport t = transports.get(i);
+            if (Get(Stat.CurrentTransport) == t.ordinal())
+                return t;
+        }
+        return null;
+    }
     /// Stuff to process at the start of every day, also NewGame.
     void NewDay()
     {
@@ -288,7 +321,15 @@ public class Player extends Combatable
         }
         NewDay();  // New day :3
         System.out.println("Yeah yeah");
-        Log("-- Day "+player.Turn()+" --", LogType.INFO);
+        Log("-- Day " + player.Turn() + " --", LogType.INFO);
+        Transport t = Transport.RandomOf(transports);
+        System.out.println("Randomed transport.. "+t.name());
+        Set(Stat.CurrentTransport, t.ordinal());
+        Log("Transport of the day is: "+CurrentTransport().name(), LogType.INFO);
+        float emissionsToGenerate = CurrentTransport().Get(TransportStat.EmissionsPerDay);
+        if (emissionsToGenerate > 0)
+            Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
+        Adjust(Stat.EMISSIONS, emissionsToGenerate);
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
@@ -298,10 +339,10 @@ public class Player extends Combatable
         else {
             float loss = Get(Stat.FOOD) / 5;
             Adjust(Stat.HP, loss);
-            Log("Starving, lost "+(-loss)+" HP.", LogType.ATTACKED);
+            Log("Starving, lost "+(-loss)+" HP.", LogType.OtherDamage);
             if (!IsAlive())
             {
-                Log("Died of starvation", LogType.ATTACKED);
+                Log("Died of starvation", LogType.OtherDamage);
                 return;
             }
         }
@@ -339,22 +380,29 @@ public class Player extends Combatable
     }
 
     // Present dialogue-box for handled events.
-    public void HandleGeneratedEvents(FragmentManager fragMan)
+    // Returns true if there was any event to process, false if not.
+    public boolean HandleGeneratedEvents(FragmentManager fragMan)
     {
         EventDialogFragment event = new EventDialogFragment();
         event.type = Finding.Nothing;
         // Check events to run.
         if (Get(Stat.ENCOUNTERS) > 0)
             event.type = Finding.Encounter;
+        else if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
+            event.type = Finding.AttacksOfTheEvergreen;
         else if (Get(Stat.ABANDONED_SHELTER) > 0)
             event.type = Finding.AbandonedShelter;
         else if (Get(Stat.RANDOM_PLAYERS_SHELTERS) > 0)
             event.type = Finding.RandomPlayerShelter;
-        else if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
-            event.type = Finding.AttacksOfTheEvergreen;
-        if (event.type != Finding.Nothing)
+        if (event.type != Finding.Nothing) {
+            System.out.println("HandleGeneratedEvents, type: "+event.type.name());
             event.show(fragMan, "event");
+            return true;
+        }
+        System.out.println("HandleGeneratedEvents: nothing");
+        return false;
     }
+    /// Returns true
     public boolean AllMandatoryEventsHandled()
     {
         if (Get(Stat.ENCOUNTERS) > 0)
@@ -371,7 +419,7 @@ public class Player extends Combatable
         float remainder = value - iValue;
         if (Math.abs(remainder) < 0.05f)
             return ""+iValue;
-        return String.format("%.2f", value);
+        return String.format("%.1f", value);
     }
     float hoursPerAction  = 1.f;
     float foodHarvested = 0.0f;
@@ -382,25 +430,25 @@ public class Player extends Combatable
         // Have this increase with some skill?
         float hoursSimulated = 6.f;
         int div = dailyActions.size();
+        final int MAX_ACTIONS = 8;
         switch(div) // Add waste time if many actions are scheduled.
         {
-            case 8: div += 4.f; break;
+            case MAX_ACTIONS: div += 4.f; break;
             case 7: div += 2.f; break;
             case 6: div += 1.f; break;
             case 5: div += 0.5f; break;
-            case 4: div += 0.25f; break;
         }
-        if (div > 8)
-            div += 5.f;
-        if (div > 6)
+        if (div > MAX_ACTIONS)
+            div += 6.f;
+        if (div > MAX_ACTIONS)
             Log("Having scheduled too much to do during the day, you manage to lose a lot of time between the actions you had intended to do. You are even forced to cancel entirely some of the actions you wanted to do.", LogType.PROBLEM_NOTIFICATION);
-        else if (dailyActions.size() > 3)
-            Log("During the day, you lose some time while changing tasks. Choose 3 or fewer actions per day for full efficiency.", LogType.PROBLEM_NOTIFICATION);
+        else if (dailyActions.size() > 4)
+            Log("During the day, you lose some time while changing tasks. Choose 4 or fewer actions per day for full efficiency.", LogType.PROBLEM_NOTIFICATION);
         hoursPerAction = hoursSimulated / div;
 //        System.out.println("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
         // Execute at most 8 actions per day, regardless of queue.
-        for (int i = 0; i < dailyActions.size() && i < 6; ++i)
+        for (int i = 0; i < dailyActions.size() && i < MAX_ACTIONS; ++i)
         {
             /// Parse actions and execute them.
             da = DAction.ParseFrom(dailyActions.get(i));
@@ -413,14 +461,18 @@ public class Player extends Combatable
         switch (da)
         {
             case GatherFood:
-                units = Dice.RollD3(2 + Get(Skill.Foraging).Level());  // r.nextInt(5) + 2;
+                units = Dice.RollD3(2);  // r.nextInt(5) + 2;
+                units += Get(Skill.Foraging).Level();
+                units += CurrentTransport().Get(TransportStat.ForagingBonus);
+                if (units < 1) units = 1;
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
                 Log(da.text + ": Found " + Stringify(units) + " units of food.", LogType.INFO);
                 break;
             case GatherMaterials:
-                units = r.nextInt(5) + 2;
+                units = Dice.RollD3(2);
+                units += CurrentTransport().Get(TransportStat.MaterialGatheringBonus);
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
@@ -434,27 +486,15 @@ public class Player extends Combatable
                 ClampHP();
                 Log(da.text + ": Recovered " + Stringify(units) + " HP.", LogType.INFO);
                 break;
-            case BuildDefenses:
-                BuildDefenses();
-                break;
-            case AugmentTransport:
-                Log("Not implemented yet", LogType.ATTACKED);
-                break;
-            case LookForPlayer:
-                LookForPlayer(da);
-                break;
+            case BuildDefenses: BuildDefenses(); break;
+            case AugmentTransport: AugmentTransport(); break;
+            case LookForPlayer: LookForPlayer(da); break;
             case Expedition:
                 Log("Not implemented yet", LogType.ATTACKED);
                 break;
-            case Invent:
-                Invent(da);
-                break;
-            case Craft:
-                Craft(da);
-                break;
-            case Steal:
-                Steal(da);
-                break;
+            case Invent: Invent(da); break;
+            case Craft: Craft(da); break;
+            case Steal: Steal(da); break;
             case AttackAPlayer:
                 Log("Not implemented yet", LogType.ATTACKED);
                 break;
@@ -469,6 +509,21 @@ public class Player extends Combatable
         }
     }
 
+    private void AugmentTransport() {
+        String name = da.requiredArguments.get(0).value;
+        Log(da.text+": Tinkering on the "+name+".", LogType.INFO);
+        Invention invention = null;
+        for (int i = 0; i < inventions.size(); ++i)
+        {
+            Invention inv = inventions.get(i);
+            if (inv.name.equals(name))
+                invention = inv;
+        }
+        if (invention == null) {
+            Log("Yo yo", LogType.PROBLEM_NOTIFICATION);
+        }
+        Log("Very inventive", LogType.INFO);
+    }
     private void Steal(DAction da)
     {
         String name = da.requiredArguments.get(0).value;
@@ -693,18 +748,24 @@ public class Player extends Combatable
     void Scout()
     {
         int speed = Speed();
+        speed += CurrentTransport().Get(TransportStat.SpeedBonus);
         // Randomize something each hour? Many things with speed?
-        float toRandom = 1 + speed * hoursPerAction;
+        float speedBonus = (float) Math.pow(speed, 0.5f);
+        System.out.println("Speed: "+speed+" bonus(pow-modified): "+speedBonus);
+        float toRandom = hoursPerAction * speedBonus;
         toRandom *= t_starvingModifier;
         String s = da.text+": While scouting the area, you ";
         Map<Finding, Integer> chances = new HashMap<Finding, Integer>();
-        chances.put(Finding.Encounter, 4);
-        chances.put(Finding.Nothing, 5);
-        chances.put(Finding.Food, 4);
-        chances.put(Finding.Materials, 3);
-        chances.put(Finding.AbandonedShelter, 2);
-        chances.put(Finding.RandomPlayerShelter, 1);
-        chances.put(Finding.EnemyStronghold, 1);
+        // Increase liklihood of encounters for each passing turn when scouting -> Scout early on is safer.
+        // There will however be more of other resources available later on. :D
+        int turn = (int) player.Get(Stat.TurnSurvived);
+        chances.put(Finding.Encounter, 5 + turn);
+        chances.put(Finding.Nothing, 50);
+        chances.put(Finding.Food, 15);
+        chances.put(Finding.Materials, 15);
+        chances.put(Finding.AbandonedShelter, 10 + turn);
+        chances.put(Finding.RandomPlayerShelter, 10);
+        chances.put(Finding.EnemyStronghold, 1+turn/3);
         int sumChances = 0;
         for (int i = 0; i < chances.size(); ++i)
         {
@@ -722,6 +783,7 @@ public class Player extends Combatable
                 chance -= step;
                 if (chance < 0) // Found it
                 {
+                    System.out.println("Found..! "+chances.keySet().toArray()[i]);
                     foundList.add((Finding)chances.keySet().toArray()[i]);
                 }
             }
@@ -738,14 +800,14 @@ public class Player extends Combatable
                 case Encounter: numEncounters  += 1; break;
                 case Food: numFoodStashes += 1; foodFound += 1 + r.nextFloat() * 2; break;
                 case Materials: numMatStashes += 1; matFound = 1 + r.nextFloat() * 2; break;
-                case AbandonedShelter: numAbShelters += 1; break;
-                case RandomPlayerShelter: numRPS += 1; break;
+                case AbandonedShelter: numAbShelters += 1; playEvents = true; break;
+                case RandomPlayerShelter: numRPS += 1; playEvents = true; break;
                 case EnemyStronghold: numEnStrong += 1; break;
                 default: s += "\n Not implemented: "+f.toString(); break;
             }
         }
         /// Check config for preferred display verbosity of the search results?
-        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
+        s += numEncounters == 1? "\n- Encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- Encounter "+numEncounters+" groups of monsters" : "";
         Adjust(Stat.ENCOUNTERS, numEncounters);
         s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
         Adjust(Stat.FOOD, foodFound);
@@ -773,7 +835,7 @@ public class Player extends Combatable
         progress *= hoursPerAction;
         Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
         float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
-        Log(da.text + ": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)) + " units out of " + requiredToNext + ".", LogType.INFO);
+        Log(da.text + ": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)) + " units out of " + Stringify(requiredToNext)+ ".", LogType.INFO);
         if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
         {
             Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
@@ -861,10 +923,10 @@ public class Player extends Combatable
     public void PrepareForCombat(boolean attacksOnShelter) {
         // Load data into the Combatable variables from the more persistant ones saved here.
         Combatable c = (Combatable) this;
-        c.attack = Attack();
-        c.defense = attacksOnShelter? ShelterDefense() : Defense();
+        c.attack = attacksOnShelter?  ShelterAttack() : OnTransportAttack();
+        c.defense = attacksOnShelter? ShelterDefense() : OnTransportDefense();
         c.hp = GetInt(Stat.HP);
-        c.maxHP = GetInt(Stat.MAX_HP);
+        c.maxHP = MaxHP();
         c.attackDamage = Damage();
         c.attacksPerTurn = AttacksPerTurn();
     }

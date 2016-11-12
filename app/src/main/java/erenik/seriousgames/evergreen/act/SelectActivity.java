@@ -1,12 +1,10 @@
 package erenik.seriousgames.evergreen.act;
 
-import android.graphics.Point;
+import android.content.pm.ActivityInfo;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +19,8 @@ import java.util.List;
 
 import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.*;
-import erenik.seriousgames.evergreen.EvergreenButton;
 import erenik.seriousgames.evergreen.R;
+import erenik.seriousgames.evergreen.ui.EvergreenButton;
 
 
 public class SelectActivity extends FragmentActivity
@@ -74,18 +72,23 @@ public class SelectActivity extends FragmentActivity
 
     private void clicked(CharSequence text) {
         // Find it.
-        String s = text.toString();
+        System.out.println("Clicked: "+text);
+        String s = text.toString().split(":")[0]; // First stuff before any eventual arguments.
         DAction action = DAction.GetFromString(s);
         if (action != null)
         {
-            dActionClicked(action);
+            dActionClicked(action, text.toString());
         }
     }
-
-    public void dActionClicked(DAction da)
+    // For displaying default title?
+    public void dActionClicked(DAction action)
+    {
+        dActionClicked(action, action.text);
+    }
+    public void dActionClicked(DAction da, String header)
     {
         TextView tvName = (TextView) findViewById(R.id.textViewItemName);
-        tvName.setText(da.text);
+        tvName.setText(header); // Show arguments here as well.
         TextView desc = (TextView) findViewById(R.id.textViewDescription);
         desc.setText(da.description);
     }
@@ -144,7 +147,7 @@ public class SelectActivity extends FragmentActivity
             vg.addView(ll);
 
             // Make a button out of it.
-            Button b = new Button(getBaseContext());
+            EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(selected.get(i));
             // Screen div 10 height per element?
             layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
@@ -208,6 +211,7 @@ public class SelectActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select);
 

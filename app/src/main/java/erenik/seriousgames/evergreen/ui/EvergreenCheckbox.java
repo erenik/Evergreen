@@ -1,4 +1,4 @@
-package erenik.seriousgames.evergreen;
+package erenik.seriousgames.evergreen.ui;
 
 import android.content.Context;
 import android.graphics.Rect;

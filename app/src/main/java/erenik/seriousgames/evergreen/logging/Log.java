@@ -48,7 +48,7 @@ public class Log
         int startIndex = player.log.size() - numDisplay;
         System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
-        for (int i = startIndex; i < player.log.size(); ++i)
+        for (int i = player.log.size() - 1; i >= 0; --i)
         {
             Log l = player.log.get(i);
             boolean show = false;
@@ -65,11 +65,13 @@ public class Log
             int hex = ContextCompat.getColor(context, l.type.GetResourceColor());
             // System.out.println("Colorizing: "+Integer.toHexString(hex));
             t.setTextColor(hex);
-            v.addView(t);
+            v.addView(t, 0); // Insert at index 0 always.
             t.setFocusable(true); // Focusable.
             t.setFocusableInTouchMode(true);
-            lastAdded = t;
+            if (v.getChildCount() >= maxLinesToDisplay)
+                break;
         }
+        lastAdded = v.getChildAt(v.getChildCount()-1);
         if (lastAdded != null)
             lastAdded.requestFocus(); // Request focus, make visible?
     }

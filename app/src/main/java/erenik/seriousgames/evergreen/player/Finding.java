@@ -11,8 +11,10 @@ public enum Finding {
     {
         switch(this)
         {
-            case Encounter: return "You encounter enemies during your activities which attack you.";
+            case Encounter: return "You Encounter enemies during your activities which attack you.";
             case AttacksOfTheEvergreen: return "As night falls the spawns of the Evegreen assault your shelter!";
+            case AbandonedShelter: return "You find a seemingly abandoned shelter.";
+            case RandomPlayerShelter: return "You find a seemingly inhabited shelter";
         }
         return "Not implemented: "+this.toString();
     }
@@ -20,10 +22,12 @@ public enum Finding {
     {
         switch(this)
         {
+
             case Encounter:
             case AttacksOfTheEvergreen:
                 return "\n\nDo you want to play the event now?";
             case AbandonedShelter:
+            case RandomPlayerShelter:
                 return "\n\nDo you want to explore it now?";
             default:
                 return "BadQuestion";

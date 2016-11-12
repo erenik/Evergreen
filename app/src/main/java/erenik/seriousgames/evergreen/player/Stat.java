@@ -20,7 +20,7 @@ public enum Stat
     RANDOM_PLAYERS_SHELTERS(0),  // Random player shelters to be randomly allocated shortly (ask server to whom it belongs?) or postpone until later.
     ENEMY_STRONGHOLDS(0), // Enemy strongholds that you've found.
     UNALLOCATED_EXP(20), // Free exp to be distributed among any skill when the player pleases.
-    ;
+    CurrentTransport(-1);
 
     Stat(float defaultValue)
     {

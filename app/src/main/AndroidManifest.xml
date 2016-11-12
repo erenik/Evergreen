@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".act.GameOver" />
-        <activity android:name=".act.encounter" />
+        <activity android:name=".act.Encounter" />
         <activity
             android:name=".act.logViewer"
             android:label="@string/title_activity_log_viewer">

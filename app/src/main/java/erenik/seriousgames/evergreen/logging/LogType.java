@@ -16,7 +16,7 @@ public enum LogType
     ATTACKED, // For when taking damage.
     EVENT,
     ATTACK_MISS, ATTACK, EXP, ATTACKED_MISS,
-    SUCCESS;
+    SUCCESS, OtherDamage;
     /*
     int HexColor()
     {
@@ -33,7 +33,7 @@ public enum LogType
             case SUCCESS: return R.color.success;
             case PROGRESS: return R.color.progress;
             case EXP: return R.color.exp;
-            case ATTACKED: return R.color.attacked;
+            case OtherDamage: case ATTACKED: return R.color.attacked;
             case EVENT: return R.color.event;
             case PROBLEM_NOTIFICATION: return R.color.problemNotification;
         }

@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -15,7 +16,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import erenik.seriousgames.evergreen.EvergreenButton;
 import erenik.seriousgames.evergreen.R;
 import erenik.seriousgames.evergreen.player.ActionArgument;
 import erenik.seriousgames.evergreen.player.DAction;
@@ -23,7 +23,8 @@ import erenik.seriousgames.evergreen.Invention.Invention;
 import erenik.seriousgames.evergreen.Invention.InventionType;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.player.Skill;
-import erenik.seriousgames.evergreen.player.Transport;
+import erenik.seriousgames.evergreen.transport.Transport;
+import erenik.seriousgames.evergreen.ui.EvergreenButton;
 
 import java.util.List;
 
@@ -114,7 +115,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         mainLayout.setOrientation(LinearLayout.HORIZONTAL);
         layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
-        mainLayout.setBackgroundColor(EvergreenButton.BackgroundColor(getContext()));
+        mainLayout.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.mainButtonBackground));
         boolean textInput = false;
         boolean possible = false;
         for (int ra = 0; ra < da.requiredArguments.size(); ++ra)
