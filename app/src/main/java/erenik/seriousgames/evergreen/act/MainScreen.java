@@ -23,7 +23,7 @@ import erenik.seriousgames.evergreen.R;
  */
 public class MainScreen extends FragmentActivity //AppCompatActivity
 {
-    Player player = Player.getSingleton();
+    Player player = App.GetPlayer();
     Simulator simulator = Simulator.getSingleton();
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -41,7 +41,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     protected void onResume() {
         super.onResume();
         UpdateGUI(); // Always update GUI upon resuming.
-        HandleNextEvent();
+        App.HandleNextEvent();
     }
 
 
@@ -99,7 +99,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     {   @Override
         public void onClick(View view)
         {
-            if (HandleNextEvent())
+            if (App.HandleNextEvent())
                 return;
             int selection = -1;
             switch(view.getId())
@@ -116,13 +116,13 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     View.OnClickListener nextDay = new View.OnClickListener()
     {   @Override
         public void onClick(View v) {
-            if (HandleNextEvent())
+            if (App.HandleNextEvent())
                 return;
             simulator.NextDay();
             // Update UI? lol
             UpdateGUI();
              /// Queues next event to be handled, if there are any.
-            HandleNextEvent();
+            App.HandleNextEvent();
         }
     };
     /// For the log...? Or open in a new activity? Since it's just readng?
@@ -137,15 +137,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         }
     };
 
-    // Returns true if it processed an event, false if not.
-    boolean HandleNextEvent()
-    {
-        if (player.playEvents  // If playing all events, or
-                || !player.AllMandatoryEventsHandled()) // Not all mandatory events handled,
-            return player.HandleGeneratedEvents(getSupportFragmentManager()); // Do event.
-        return false;
-    }
-
     /// Main init function
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,7 +147,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
 
         mVisible = true;
         // Load stuff as needed.
-        player.LoadLocally();
+        App.LoadLocally(getBaseContext());
 //        player.SaveLocally(); // Save copy? - Why?
         /// Update GUI.
         UpdateGUI();
@@ -185,7 +176,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         UpdateDailyActionButton();
         UpdateSkillButton();
         // Update log.
-        Log.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50, player.logTypesToShow);
+        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50, player.logTypesToShow);
     }
 
     void SetText(int viewID, String text)
@@ -223,7 +214,7 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
                 UpdateSkillButton();
                 break;
         }
-        player.SaveLocally(); // Save copy?
+        App.SaveLocally(getBaseContext()); // Save copy?
     }
     private void UpdateActiveActionButton() {
         int idBtn = R.id.buttonChooseActiveAction;

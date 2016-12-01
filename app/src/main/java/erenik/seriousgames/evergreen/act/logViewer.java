@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 
+import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.R;
 import erenik.seriousgames.evergreen.logging.Log;
 import erenik.seriousgames.evergreen.logging.LogType;
@@ -18,7 +19,7 @@ import erenik.seriousgames.evergreen.player.Player;
 public class logViewer extends AppCompatActivity
 {
 
-    Player player = Player.getSingleton();
+    Player player = App.GetPlayer();
     private View.OnClickListener toggleFilter = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -105,6 +106,6 @@ public class logViewer extends AppCompatActivity
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutLog);
         vg.removeAllViews();
         // Add children? Filter?
-        Log.UpdateLog(vg, getBaseContext(), 500, player.logTypesToShow);
+        App.UpdateLog(vg, getBaseContext(), 500, player.logTypesToShow);
     }
 }

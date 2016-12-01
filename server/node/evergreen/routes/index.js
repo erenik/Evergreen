@@ -10,4 +10,8 @@ router.get('/evergreen', function(req, res, next) {
   res.render('evergreen/index', { title: 'Evergreen' });
 });
 
+router.get('/json', function (req, res, next){
+	res.send('Yoyoyoy');
+});
+
 module.exports = router;

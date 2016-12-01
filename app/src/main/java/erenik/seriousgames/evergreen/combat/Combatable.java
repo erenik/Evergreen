@@ -12,7 +12,7 @@ import erenik.seriousgames.evergreen.util.Dice;
 /**
  * Created by Emil on 2016-10-30.
  */
-public class Combatable
+public class Combatable extends Object
 {
     public float hp;
     public float maxHP;

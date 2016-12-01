@@ -1,5 +1,8 @@
 package erenik.seriousgames.evergreen.player;
 
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -7,7 +10,8 @@ import java.util.logging.Level;
 /**
  * Created by Emil on 2016-10-30.
  */
-public enum Skill {
+public enum Skill implements Serializable
+{
     Foraging("Foraging", AddLinear(5,5,4), "Increases food acquired while foraging. Increases chance to find good foraging spots."),
     FleetRetreat("Fleet retreat", AddLinearAccum(5, 4, 4), "Makes fleeing easier. Gains more EXP from encounters on successful retreats."),
     Survival("Survival", AddLinearAccum(5,5,5), "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
@@ -31,6 +35,21 @@ public enum Skill {
         this.expRequired = expRequired;
         this.briefDescription = briefDescription;
     }
+    
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException
+    {
+        out.writeFloat(totalExp);
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    {
+        totalExp = in.readFloat();
+    }
+    private void readObjectNoData() throws ObjectStreamException
+    {
+
+    }
+
+    
     // E.g. 2,3,4 -> 2,5,8,11
     static int[] AddLinear(int base, int plusEachLevel, int maxLevel)
     {
@@ -122,6 +141,10 @@ public enum Skill {
         return -1;
     }
 
+    public int TotalExp()
+    {
+        return (int) totalExp;
+    }
     private float totalExp = 0;
     public void setTotalEXP(int toSet)
     {
@@ -139,7 +162,7 @@ public enum Skill {
         {
             total += expRequired[i];
         }
-        System.out.println("Exp to level "+level+" of skill "+text+": "+total);
+    //    System.out.println("Exp to level "+level+" of skill "+text+": "+total);
         return total;
     }
     // Current level in this skill.

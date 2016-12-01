@@ -26,7 +26,7 @@ public class Encounter extends AppCompatActivity
     boolean isRandom = false;
     boolean isAssaultOfTheEvergreen = false;
 
-    Player player = Player.getSingleton();
+    Player player = App.GetPlayer();
     boolean dead = false;
     int creepsKilled = 0, totalCreeps = 0, encounterExp = 0;
     int fleeExp = 0;
@@ -40,7 +40,6 @@ public class Encounter extends AppCompatActivity
     {
         enemies.clear();
         log.clear();
-        Player player = Player.getSingleton();
         playersInvolved.clear();
         playersInvolved.add(player);
         player.PrepareForCombat(inShelter);
@@ -60,7 +59,6 @@ public class Encounter extends AppCompatActivity
     void Random(Dice dice)
     {
         isRandom = true;
-        Player player = Player.getSingleton();
         int level = player.Turn() / 16;
         List<EnemyType> typesPossible = new ArrayList<EnemyType>();
         for (int i = 0; i < EnemyType.values().length; ++i)
@@ -110,7 +108,7 @@ public class Encounter extends AppCompatActivity
             // Game over?
             player.log.addAll(log); // Add current log there with all attack stuff.
             App.GameOver();
-            player.SaveLocally(); // Save stuffs?
+            App.SaveLocally(getBaseContext()); // Save stuffs?
             return;
         }
         else
@@ -133,7 +131,7 @@ public class Encounter extends AppCompatActivity
         }
         // Spam all log stuff to console?
         // Save?
-        player.SaveLocally();
+        App.SaveLocally(getApplicationContext());
     }
 
     private boolean PlayersDead()
@@ -196,7 +194,6 @@ public class Encounter extends AppCompatActivity
     void AssaultsOfTheEvergreen()
     {
         isAssaultOfTheEvergreen = true;
-        Player player = Player.getSingleton();
         System.out.println("turn: "+turn);
         int level = turn / 16;
         List<EnemyType> typesPossible = new ArrayList<EnemyType>();
@@ -285,8 +282,9 @@ public class Encounter extends AppCompatActivity
         player.Adjust(Stat.FOOD, 1);
     }
 
-    public void RandomPlayerShelter() {
-        player.Adjust(Stat.RANDOM_PLAYERS_SHELTERS, -1);
+    public void RandomPlayerShelter()
+    {
+        player.Adjust(Stat.RandomPlayerFound, -1);
         Log("Found some food", LogType.INFO);
         player.Adjust(Stat.FOOD, 1);
     }

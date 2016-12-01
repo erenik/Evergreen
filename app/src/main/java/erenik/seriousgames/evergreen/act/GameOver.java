@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.R;
 
@@ -19,9 +20,9 @@ public class GameOver extends AppCompatActivity {
         setContentView(R.layout.activity_game_over);
 
         // Overwrite/reset save.
-        Player player = Player.getSingleton();
+        Player player = App.GetPlayer();
         player.SetDefaultStats();
-        player.SaveLocally();
+        App.SaveLocally(getBaseContext());
         // Delayed move to main menu again?
 
         /*

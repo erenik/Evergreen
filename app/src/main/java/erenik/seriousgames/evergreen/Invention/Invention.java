@@ -1,15 +1,21 @@
 package erenik.seriousgames.evergreen.Invention;
 
+import erenik.seriousgames.evergreen.logging.Log;
+import erenik.seriousgames.evergreen.player.Skill;
+import erenik.seriousgames.evergreen.transport.Transport;
 import java.util.List;
 import java.util.Random;
 
 import erenik.seriousgames.evergreen.util.Dice;
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 
 
 /**
  * Created by Emil on 2016-11-01.
  */
-public class Invention
+public class Invention implements Serializable
 {
     /// Level of quality/ranking of the invented item. This will grant some bonuses. From 0 to 5ish?
     public String name = "NoName";
@@ -41,6 +47,23 @@ public class Invention
         for (int i = 0; i < InventionStat.values().length; ++i)
             stats[i] = inv.stats[i];
     }
+    
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException
+    {
+        out.writeObject(name);
+        out.writeObject(stats);
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    {
+        name = (String) in.readObject();
+        stats = (int[]) in.readObject();
+        type = InventionType.values()[Get(InventionStat.Type)]; // Assign type after reading from stream.
+    }
+    private void readObjectNoData() throws ObjectStreamException
+    {
+
+    }
+
     public boolean IsCraftable()
     {
         return type.IsCraftable();
@@ -52,7 +75,7 @@ public class Invention
             stats[i] = InventionStat.values()[i].defaultValue;
         }
     }
-    static Invention RandomWeapon(int bonus)
+    public static Invention RandomWeapon(int bonus)
     {
         Invention weap = new Invention(InventionType.Weapon);
         weap.RandomizeDetails();

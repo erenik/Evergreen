@@ -29,8 +29,8 @@ public class Simulator
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public void NextDay()
     {
-        if (!players.contains(Player.getSingleton()))
-            players.add(Player.getSingleton());
+        if (!players.contains(App.GetPlayer()))
+            players.add(App.GetPlayer());
         System.out.println("Simulator.NextDay");
         for (int i = 0; i < players.size(); ++i)
         {

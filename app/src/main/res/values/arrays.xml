@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="starting_bonus">
+        <item>Food supply</item>
+        <item>Materials supply</item>
+        <item>A eapon</item>
+        <item>A body armor</item>
+        <item>A tool</item>
+        <item>2 inventions</item>
+    </string-array>
+    <string-array name="firstNames">
+        <!-- A to E -->
+        <item>Albert</item>
+        <item>Alexandra</item>
+        <item>Bjarne</item>
+        <item>Birgit</item>
+        <item>Caroline</item>
+        <item>Christian</item>
+        <item>David</item>
+        <item>Danielle</item>
+        <item>Erik</item>
+        <item>Evelina</item>
+        <!-- F to O -->
+        <item>Fredrik</item>
+        <item>Freya</item>
+        <item>Gunnar</item>
+        <item>Gabriella</item>
+        <item>Harald</item>
+        <item>Henrietta</item>
+        <item>Ivar</item>
+        <item>Ingrid</item>
+        <item>Jacob</item>
+        <item>Julia</item>
+        <item>Karl</item>
+        <item>Katja</item>
+        <item>Lars</item>
+        <item>Lovisa</item>
+        <item>Mona</item>
+        <item>Marcus</item>
+        <item>Niklas</item>
+        <item>Natasha</item>
+        <item>Oscar</item>
+        <item>Olga</item>
+        <!-- P to W  -->
+        <item>Peter</item>
+        <item>Pia</item>
+        <item>Qasim</item>
+        <item>Quita</item>
+        <item>Rafael</item>
+        <item>Reidun</item>
+        <item>Simon</item>
+        <item>Sarah</item>
+        <item>Tor</item>
+        <item>Tea</item>
+        <item>Ulrik</item>
+        <item>Urula</item>
+        <item>Vilgot</item>
+        <item>Vera</item>
+        <item>Walter</item>
+        <item>Wandella</item>
+        <item>Xanto</item>
+        <item>Xarissa</item>
+        <item>Yrsa</item>
+        <item>Yngve</item>
+        <item>Zain</item>
+        <item>Zeinab</item>
+    </string-array>
+    <string-array name="surnames">
+        <item>Strongjaw</item><item>of the shaky teeth</item>
+        <item>the Explorer</item><item>Fewventured</item>
+        <item>Littlefoot</item><item>Bigfoot</item>
+        <item>Blueberrypockets</item><item>Bigmouth</item>
+        <item>Lumberer</item><item>Carpenter</item>
+        <item>Shiftyeyes</item><item>Hawkeye</item>
+        <item>the Sleepless</item><item>the Restless</item>
+        <item>Strifeborn</item><item>bringer of Peace</item>
+        <item></item><item></item>
+    </string-array>
+</resources>

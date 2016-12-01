@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.R;
 import erenik.seriousgames.evergreen.player.ActionArgument;
 import erenik.seriousgames.evergreen.player.DAction;
@@ -34,7 +35,7 @@ import java.util.List;
 public class SelectDetailsDialogFragment extends DialogFragment
 {
     DAction da = null;
-    Player player = Player.getSingleton();
+    Player player = App.GetPlayer();
     List<View> argumentViews = new ArrayList<>();
 
     // When confirming everything. Add the action?

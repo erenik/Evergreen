@@ -1,11 +1,61 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".act.IntroScreen"
     style="@style/Evergreen.BG"
-    tools:context=".act.Startup">
+    android:orientation="vertical"
+    >
 
-</RelativeLayout>
+    <ImageView
+        android:id="@+id/imageViewIntroOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/title"
+        />
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+    <TextView
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_weight="2"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:text=""
+        android:textColor="@color/mainTextColor"
+        android:textSize="50sp"
+        android:textStyle="bold" />
+    <!-- android:src="@drawable/intro_glass_crash"
+            android:background="@drawable/intro_glass_crash"
+    -->
+
+    <LinearLayout
+        android:id="@+id/introControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent"
+        >
+        <erenik.seriousgames.evergreen.ui.EvergreenButton
+            android:id="@+id/buttonNewGame"
+            style="@style/Evergreen.Button.Wide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/mainButtonTextColor"
+            android:text="New game" />
+
+        <erenik.seriousgames.evergreen.ui.EvergreenButton
+            android:id="@+id/buttonLoadGame"
+            style="@style/Evergreen.Button.Wide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/mainButtonTextColor"
+            android:text="Load game" />
+    </LinearLayout>
+
+</LinearLayout>

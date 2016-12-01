@@ -1,8 +1,6 @@
 package erenik.seriousgames.evergreen.player;
 
-import android.content.SharedPreferences;
-import android.support.v4.app.FragmentManager;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,11 +22,13 @@ import erenik.seriousgames.evergreen.combat.Combatable;
 import erenik.seriousgames.evergreen.transport.Transport;
 import erenik.seriousgames.evergreen.transport.TransportStat;
 import erenik.seriousgames.evergreen.util.Dice;
+import java.io.IOException;
+import java.io.ObjectStreamException;
 
 /**
  * Created by Emil on 2016-10-25.
  */
-public class Player extends Combatable
+public class Player extends Combatable implements Serializable
 {
     Simulator simulator = Simulator.getSingleton();
     static Random r = new Random(System.nanoTime());
@@ -50,19 +50,35 @@ public class Player extends Combatable
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
 
     /// Currently equipped weapon. Null if not equiped. Pointer to weapon in inventory if equipped.
-    Invention equippedWeapon = null, equippedArmor = null, equippedTool = null, equippedRangedWeapon = null;
+    List<Integer> equippedIndices = new ArrayList<>(); // Indices of which inventions are currently equipped.
+
+    Invention GetEquippedOfType(InventionType queryType)
+    {
+        List<Invention> equipped = GetEquippedInventions();
+        for (int i = 0; i < equipped.size(); ++i) {
+            Invention inv = equipped.get(i);
+            if (inv.type == queryType)
+                return inv;
+        }
+        return  null;
+    }
+    Invention EquippedWeapon() {
+        return GetEquippedOfType(InventionType.Weapon);
+    }
+    Invention EquippedArmor() {
+        return GetEquippedOfType(InventionType.Armor);
+    }
 
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
     List<Event> events = new ArrayList<Event>();
     /// Log of messages for this specific player.
     public List<Log> log = new ArrayList<Log>();
-
     /// Array of exp in each Skill.
     List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
     /// Queued skills to be leveled up.
     public List<String> skillTrainingQueue = new ArrayList<>();
     public List<Invention> inventions = new ArrayList<>(); // Blueprints, 1 of each.
-    List<Invention> inventory = new ArrayList<>(); // Inventory, may have duplicates of items that can be traded etc.
+    public List<Invention> inventory = new ArrayList<>(); // Inventory, may have duplicates of items that can be traded etc.
     /// To increase bonuses/chance of invention if failing a lot in series.
     int successiveInventingAttempts = 0;
     int successiveCraftingAttempts = 0;
@@ -74,15 +90,10 @@ public class Player extends Combatable
     public List<String> knownPlayerNames = new ArrayList<>();
 
     // Auto-created. Start-using whenever.
-    static private Player player = new Player();
     public List<LogType> logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
     public boolean isAI = false;
     /// Used for clients/single-simulator for self.
-    static public Player getSingleton()
-    {
-        return player;
-    }
-    private Player()
+    public Player()
     {
         SetName("Parlais Haux Le'deur");
         // Add default transports.
@@ -94,6 +105,48 @@ public class Player extends Combatable
         }
         SetDefaultStats();
     }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException
+    {
+        out.writeObject(name);
+        out.writeObject(statArr);
+        out.writeObject(skills);
+        out.writeObject(dailyActions);
+        out.writeObject(transports);
+        out.writeObject(equippedIndices);
+        out.writeObject(log);
+        out.writeObject(skillTrainingQueue);
+        out.writeObject(inventions);
+        out.writeObject(inventory);
+        out.writeObject(inventionCurrentlyBeingCrafted);
+        out.writeObject(knownStrongholds);
+        out.writeObject(knownPlayerNames);
+        out.writeObject(logTypesToShow);
+        out.writeBoolean(isAI);
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    {
+        name = (String) in.readObject();
+        statArr = (float[]) in.readObject();
+        skills = (List<Skill>) in.readObject();
+        dailyActions = (List<String>) in.readObject();
+        transports = (List<Transport>) in.readObject();
+        equippedIndices = (List<Integer>) in.readObject();
+        log = (List<Log>) in.readObject();
+        skillTrainingQueue = (List<String>) in.readObject();
+        inventions = (List<Invention>) in.readObject();
+        inventory = (List<Invention>) in.readObject();
+        inventionCurrentlyBeingCrafted = (Invention) in.readObject();
+        knownStrongholds = (List<String>) in.readObject();
+        knownPlayerNames = (List<String>) in.readObject();
+        logTypesToShow = (List<LogType>) in.readObject();
+        isAI = in.readBoolean();
+    }
+    private void readObjectNoData() throws ObjectStreamException
+    {
+
+    }
+
     public int MaxHP()
     {
         int maxHP = GetInt(Stat.MAX_HP);
@@ -111,13 +164,27 @@ public class Player extends Combatable
     }
     public int UnarmedCombatBonus()
     {
-        return equippedWeapon == null? Get(Skill.UnarmedCombat).Level() : 0;
+        return EquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
+    }
+    public List<Invention> GetEquippedInventions()
+    {
+        List<Invention> equipped = new ArrayList<>();
+        for (int i = 0; i < equippedIndices.size(); ++i) {
+            int index = equippedIndices.get(i);
+            if (index < 0 || index > inventory.size()) {
+                equippedIndices.remove(i);
+                --i;
+                continue;
+            }
+            Invention inv = inventory.get(equippedIndices.get(i));
+            equipped.add(inv);
+        }
+        return equipped;
     }
     /// Fetches total form all equipped gear.
     public int GetEquipped(InventionStat stat)
     {
-        List<Invention> equipped = new ArrayList<>();
-        equipped.add(equippedWeapon); equipped.add(equippedArmor); equipped.add(equippedTool); equipped.add(equippedRangedWeapon);
+        List<Invention> equipped = GetEquippedInventions();
         int tot = 0;
         for (int i = 0; i < equipped.size(); ++i)
             tot += equipped.get(i) != null? equipped.get(i).Get(stat) : 0;
@@ -128,7 +195,7 @@ public class Player extends Combatable
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
         att += UnarmedCombatBonus(); // Max +9 Attack
         att += GetEquipped(InventionStat.AttackBonus);
-        att += equippedWeapon != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
+        att += EquippedWeapon() != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
     public int OnTransportAttack()
@@ -160,10 +227,10 @@ public class Player extends Combatable
         // Base damage, 1D6, no bonuses.
         Dice damage = new Dice(6, 1, 0);
         damage.bonus += UnarmedCombatBonus()/2; // Max +4 damage
-        if (equippedWeapon != null) { // Weapon equipped.
-            damage.diceType = equippedWeapon.Get(InventionStat.AttackDamageDiceType);
-            damage.dice = equippedWeapon.Get(InventionStat.AttackDamageDice);
-            damage.bonus = equippedWeapon.Get(InventionStat.AttackDamageBonus);
+        if (EquippedWeapon() != null) { // Weapon equipped.
+            damage.diceType = EquippedWeapon().Get(InventionStat.AttackDamageDiceType);
+            damage.dice = EquippedWeapon().Get(InventionStat.AttackDamageDice);
+            damage.bonus = EquippedWeapon().Get(InventionStat.AttackDamageBonus);
             damage.bonus += Get(Skill.WeaponizedCombat).Level() / 2;
             System.out.println("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
         }
@@ -186,11 +253,8 @@ public class Player extends Combatable
         // Clear both queues.
         dailyActions.clear();
         skillTrainingQueue.clear();
-        // Save.
-        SaveLocally();
-        // Load.
-        LoadLocally();
     }
+    
     public void Adjust(Stat s, float amount)
     {
         statArr[s.ordinal()] += amount;
@@ -217,78 +281,6 @@ public class Player extends Combatable
         statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
-    public boolean SaveLocally()
-    {
-        SharedPreferences sp = App.GetPreferences();
-        SharedPreferences.Editor e = sp.edit();
-        // Put.
-        e.putString(Constants.NAME, Name());
-        e.putBoolean(Constants.SAVE_EXISTS, true);
-        // Stats
-        System.out.println("Saving stats");
-        for (int i = 0; i < Stat.values().length; ++i)
-        {
-            e.putFloat(Stat.values()[i].toString(), statArr[i]);
-        }
-        // Action
-        e.putInt(Constants.ACTIVE_ACTION, activeAction);
-        // Save daily actions as string?
-        String s = "";
-        s += StringUtils.join(dailyActions, ";");
-        e.putString(Constants.DAILY_ACTIONS, s);
-        s = "";
-        s += StringUtils.join(skillTrainingQueue, ";");
-        e.putString(Constants.SKILL_TRAINING_QUEUE, s);
-        // Save/commit.
-        boolean ok = e.commit();
-        System.out.println("Save OK: "+ok);
-        assert(ok);
-        return ok;
-    }
-    /// Loads from local "preferences".
-    public boolean LoadLocally()
-    {
-        SharedPreferences sp = App.GetPreferences();
-        boolean hasSave = sp.getBoolean(Constants.SAVE_EXISTS, false);
-        if (!hasSave) {
-            System.out.println("No save exists. New game needed.");
-            return false;
-        }
-        name = sp.getString(Constants.NAME, "BadSaveName");
-        // Stats
-        System.out.println("Loading stats");
-        for (int i = 0; i < Stat.values().length; ++i)
-        {
-            statArr[i] = sp.getFloat(Stat.values()[i].toString(), Stat.values()[i].defaultValue);
-        }
-        // Choices.
-        activeAction = sp.getInt(Constants.ACTIVE_ACTION, -1);
-        // Save daily actions as string?
-        String s = sp.getString(Constants.DAILY_ACTIONS, "");
-        String[] split = s.split(";", 8);
-        dailyActions.clear();
-        for (int i = 0; i < split.length; ++i)
-        {
-            String splitStr = split[i];
-            if (splitStr.length() < 3)
-                continue;
-            dailyActions.add(splitStr);
-        }
-        /// Load skill training queue.
-        skillTrainingQueue.clear();
-        s = sp.getString(Constants.SKILL_TRAINING_QUEUE, "");
-        split = s.split(";", 5);
-        for (int i = 0; i < split.length; ++i)
-        {
-            String skillStr = split[i];
-            if (skillStr.length() < 3)
-                continue;
-            skillTrainingQueue.add(skillStr);
-
-        }
-        return true;
-    }
-
     void Log(String text, LogType t)
     {
         log.add(new Log(text, t));
@@ -309,7 +301,7 @@ public class Player extends Combatable
     {
         // New day, assign transport?
         Adjust(Stat.TurnSurvived, 1);
-        System.out.println("Turn: " + player.Turn());
+        System.out.println("Turn: " + Turn());
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public void NextDay()
@@ -321,7 +313,7 @@ public class Player extends Combatable
         }
         NewDay();  // New day :3
         System.out.println("Yeah yeah");
-        Log("-- Day " + player.Turn() + " --", LogType.INFO);
+        Log("-- Day " + Turn() + " --", LogType.INFO);
         Transport t = Transport.RandomOf(transports);
         System.out.println("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.ordinal());
@@ -379,28 +371,24 @@ public class Player extends Combatable
         Set(Stat.HP, hp);
     }
 
-    // Present dialogue-box for handled events.
-    // Returns true if there was any event to process, false if not.
-    public boolean HandleGeneratedEvents(FragmentManager fragMan)
+    // Returns the finding/event-type to process next :)
+    public Finding NextEvent()
     {
-        EventDialogFragment event = new EventDialogFragment();
-        event.type = Finding.Nothing;
+        // Present dialogue-box for handled events.
+        Finding finding = Finding.Nothing;
         // Check events to run.
         if (Get(Stat.ENCOUNTERS) > 0)
-            event.type = Finding.Encounter;
+            finding = Finding.Encounter;
         else if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
-            event.type = Finding.AttacksOfTheEvergreen;
+            finding = Finding.AttacksOfTheEvergreen;
         else if (Get(Stat.ABANDONED_SHELTER) > 0)
-            event.type = Finding.AbandonedShelter;
+            finding = Finding.AbandonedShelter;
         else if (Get(Stat.RANDOM_PLAYERS_SHELTERS) > 0)
-            event.type = Finding.RandomPlayerShelter;
-        if (event.type != Finding.Nothing) {
-            System.out.println("HandleGeneratedEvents, type: "+event.type.name());
-            event.show(fragMan, "event");
-            return true;
+            finding = Finding.RandomPlayerShelter;
+        if (finding != Finding.Nothing) {
+            return finding;
         }
-        System.out.println("HandleGeneratedEvents: nothing");
-        return false;
+        return finding;
     }
     /// Returns true
     public boolean AllMandatoryEventsHandled()
@@ -685,14 +673,9 @@ public class Player extends Combatable
     /// Tries to equip target invention.
     void Equip(Invention inv)
     {
-        if (inv.type == InventionType.Weapon)    // // Equip it.
-            equippedWeapon = inv;
-        if (inv.type == InventionType.Armor)
-            equippedArmor = inv;
-        if (inv.type == InventionType.Tool)
-            equippedTool = inv;
-        if (inv.type == InventionType.RangedWeapon)
-            equippedRangedWeapon = inv;
+        Invention currentlyEquipped = GetEquippedOfType(inv.type);
+        equippedIndices.remove(inventory.indexOf(currentlyEquipped)); // Remove index of old gear of same sort - since max 1 weapon/armor/etc.
+        equippedIndices.add(inventory.indexOf(inv));
     }
     public float getInventionProgress(InventionType type, int subType)
     {
@@ -758,7 +741,7 @@ public class Player extends Combatable
         Map<Finding, Integer> chances = new HashMap<Finding, Integer>();
         // Increase liklihood of encounters for each passing turn when scouting -> Scout early on is safer.
         // There will however be more of other resources available later on. :D
-        int turn = (int) player.Get(Stat.TurnSurvived);
+        int turn = (int) Get(Stat.TurnSurvived);
         chances.put(Finding.Encounter, 5 + turn);
         chances.put(Finding.Nothing, 50);
         chances.put(Finding.Food, 15);
@@ -949,5 +932,32 @@ public class Player extends Combatable
         p.SetName(name);
         p.isAI = true;
         return p;
+    }
+
+    public void PrintAll() 
+    {
+        System.out.print("\nName: " + name +" stats:");
+        for (int i = 0; i < statArr.length; ++i)
+            System.out.print(" "+statArr[i]);
+        System.out.println("\n skills:");
+        for (int i = 0; i < skills.size(); ++i)
+        {
+            Skill s = skills.get(i);
+            if (s == null)
+                continue;
+            System.out.print(" "+s.text+":"+s.Level()+":"+s.TotalExp());
+        }
+        System.out.print("\n inventions:");
+        for (int i = 0; i < inventions.size(); ++i)
+        {
+            Invention inv = inventions.get(i);
+            System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
+        }
+        System.out.print("\n inventory:");
+        for (int i = 0; i < inventory.size(); ++i)
+        {
+            Invention inv = inventory.get(i);
+            System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
+        }
     }
 }

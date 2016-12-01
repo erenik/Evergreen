@@ -5,6 +5,7 @@
  */
 package server;
 
+import erenik.seriousgames.evergreen.auth.Auth;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +28,15 @@ public class TCPServer
     List<Socket> sockets = new ArrayList<Socket>(); 
 
     ServerSocket servSock;
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args) throws Exception
     {
+        
+        String s = "Hello world!";
+        Auth.UnitTest();
+        /// yeyeye.
+        
+        Players players = new Players();
+        players.RegisterDefaultPlayers();
         TCPServer serv = new TCPServer();
         serv.Host();
         /// Host server.

@@ -2,7 +2,7 @@ package erenik.seriousgames.evergreen.ui;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
-import android.text.Layout.Alignment;
+import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -12,9 +12,12 @@ import android.widget.TextView;
 
 import erenik.seriousgames.evergreen.R;
 
-public class EvergreenButton extends Button {
+/**
+ * Created by Emil on 2016-11-12.
+ */
+public class EvergreenTextView extends TextView {
     // Minimum text size for this text view
-    public static final float MIN_TEXT_SIZE = 16;
+    public static final float MIN_TEXT_SIZE = 20;
 
     // Interface for resize notifications
     public interface OnTextResizeListener {
@@ -49,21 +52,21 @@ public class EvergreenButton extends Button {
     private boolean mAddEllipsis = true;
 
     // Default constructor override
-    public EvergreenButton(Context context) {
+    public EvergreenTextView(Context context) {
         super(context);
         SetDefaults(context);
         mTextSize = getTextSize();
     }
 
     // Default constructor when inflating from XML file
-    public EvergreenButton(Context context, AttributeSet attrs) {
+    public EvergreenTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         SetDefaults(context);
         mTextSize = getTextSize();
     }
 
     // Default constructor override
-    public EvergreenButton(Context context, AttributeSet attrs, int defStyle) {
+    public EvergreenTextView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         SetDefaults(context);
         mTextSize = getTextSize();
@@ -71,10 +74,9 @@ public class EvergreenButton extends Button {
     void SetDefaults(Context context)
     {
         // Just set background color and text color automagically.
-        setBackgroundResource(R.drawable.small_button);
         setTextColor(ContextCompat.getColor(context, R.color.mainButtonTextColor));
     }
-     // When text changes, set the force resize flag to true and reset the text size.
+    // When text changes, set the force resize flag to true and reset the text size.
     @Override
     protected void onTextChanged(final CharSequence text, final int start, final int before, final int after) {
         super.onTextChanged(text, start, before, after);
@@ -95,7 +97,7 @@ public class EvergreenButton extends Button {
     }
 
     // Register listener to receive resize notifications
-     // @param listener
+    // @param listener
     public void setOnResizeListener(OnTextResizeListener listener) {
         mTextResizeListener = listener;
     }
@@ -122,8 +124,8 @@ public class EvergreenButton extends Button {
         mSpacingAdd = add;
     }
 
-     // Set the upper text size limit and invalidate the view
-     // @param maxTextSize
+    // Set the upper text size limit and invalidate the view
+    // @param maxTextSize
     public void setMaxTextSize(float maxTextSize) {
         mMaxTextSize = maxTextSize;
 
@@ -136,16 +138,16 @@ public class EvergreenButton extends Button {
     public float getMaxTextSize() {
         return mMaxTextSize;
     }
-     // Set the lower text size limit and invalidate the view
-     // @param minTextSize
+    // Set the lower text size limit and invalidate the view
+    // @param minTextSize
     public void setMinTextSize(float minTextSize) {
         mMinTextSize = minTextSize;
         requestLayout();
         invalidate();
     }
 
-     // Return lower text size limit
-     // @return
+    // Return lower text size limit
+    // @return
     public float getMinTextSize() {
         return mMinTextSize;
     }
@@ -157,8 +159,8 @@ public class EvergreenButton extends Button {
         mAddEllipsis = addEllipsis;
     }
 
-     // Return flag to add ellipsis to text that overflows at the smallest text size
-     // @return
+    // Return flag to add ellipsis to text that overflows at the smallest text size
+    // @return
     public boolean getAddEllipsis() {
         return mAddEllipsis;
     }
@@ -230,7 +232,7 @@ public class EvergreenButton extends Button {
             // modified: use a copy of TextPaint for measuring
             TextPaint paint = new TextPaint(textPaint);
             // Draw using a static layout <- does what?
-            StaticLayout layout = new StaticLayout(text, paint, width, Alignment.ALIGN_NORMAL, mSpacingMult, mSpacingAdd, false);
+            StaticLayout layout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_NORMAL, mSpacingMult, mSpacingAdd, false);
             // Check that we have a least one line of rendered text
             if (layout.getLineCount() > 0) {
                 // Since the line at the specific vertical position would be cut off,
@@ -279,7 +281,7 @@ public class EvergreenButton extends Button {
         // Update the text paint object
         paintCopy.setTextSize(textSize);
         // Measure using a static layout
-        StaticLayout layout = new StaticLayout(source, paintCopy, width, Alignment.ALIGN_NORMAL, mSpacingMult, mSpacingAdd, true);
+        StaticLayout layout = new StaticLayout(source, paintCopy, width, Layout.Alignment.ALIGN_NORMAL, mSpacingMult, mSpacingAdd, true);
         return layout.getHeight();
     }
 }

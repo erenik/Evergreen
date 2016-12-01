@@ -1,31 +1,41 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/backgroundMainGreen"
+    android:layout_height="wrap_content"
     tools:context=".act.IntroScreen"
     style="@style/Evergreen.BG"
+    android:orientation="vertical"
     >
 
-    <!-- The primary full-screen view. This can be replaced with whatever view
-         is needed to present your content, e.g. VideoView, SurfaceView,
-         TextureView, etc. -->
-    <TextView
-        android:id="@+id/fullscreen_content"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:keepScreenOn="true"
-        android:text="@string/dummy_content"
-        android:textColor="@color/mainTextColor"
-        android:textSize="50sp"
-        android:textStyle="bold" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        >
+        <ImageView
+            android:id="@+id/imageViewIntroOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+        <ImageView android:id="@+id/imageViewIntroOverlay2" android:layout_width="match_parent" android:layout_height="match_parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp"
+            >
+            <erenik.seriousgames.evergreen.ui.EvergreenTextView
+                android:id="@+id/fullscreen_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:keepScreenOn="true"
+                android:text="Introduction"
+                android:textColor="@color/mainTextColor"
+                android:textSize="50dp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/imageViewIntroOverlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
 
     <!-- android:src="@drawable/intro_glass_crash"
             android:background="@drawable/intro_glass_crash"
@@ -40,7 +50,7 @@
         android:orientation="horizontal"
         tools:ignore="UselessParent">
 
-        <Button
+        <erenik.seriousgames.evergreen.ui.EvergreenButton
             android:id="@+id/nextButton"
             style="@style/Evergreen.Button.Wide"
             android:layout_width="0dp"
@@ -48,28 +58,8 @@
             android:layout_weight="1"
             android:textColor="@color/mainButtonTextColor"
             android:text="@string/nextButton" />
-
     </LinearLayout>
-
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
-
-        <LinearLayout
-            android:id="@+id/fullscreen_content_controls"
-            style="?metaButtonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="@color/black_overlay"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent">
-
-        </LinearLayout>
-    </FrameLayout>
-
-</FrameLayout>
+</LinearLayout>

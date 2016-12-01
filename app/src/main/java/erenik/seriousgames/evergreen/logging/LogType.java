@@ -2,8 +2,6 @@ package erenik.seriousgames.evergreen.logging;
 
 import java.util.Date;
 
-import erenik.seriousgames.evergreen.R;
-
 /**
  * Created by Emil on 2016-10-31.
  */
@@ -22,24 +20,6 @@ public enum LogType
     {
         return getColor(getContext(), GetResourceColor());
     };*/ // Text font color for this message.
-    public int GetResourceColor()
-    {
-        switch(this)
-        {
-            case ATTACK: return R.color.attack;
-            case ATTACKED_MISS:
-            case ATTACK_MISS: return R.color.attackMiss;
-            case INFO: return R.color.info;
-            case SUCCESS: return R.color.success;
-            case PROGRESS: return R.color.progress;
-            case EXP: return R.color.exp;
-            case OtherDamage: case ATTACKED: return R.color.attacked;
-            case EVENT: return R.color.event;
-            case PROBLEM_NOTIFICATION: return R.color.problemNotification;
-        }
-        return R.color.black;
-
-    }
 };
 
 ;

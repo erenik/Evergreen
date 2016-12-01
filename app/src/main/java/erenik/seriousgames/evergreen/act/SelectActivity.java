@@ -175,7 +175,7 @@ public class SelectActivity extends FragmentActivity
         @Override
         public void onClick(View v)
         {
-            Player player = Player.getSingleton();
+            Player player = App.GetPlayer();
             // Check stuff in list at present. Catenate. Return result? Save into player?
             if (type == SELECT_DAILY_ACTION)
             {
@@ -252,7 +252,7 @@ public class SelectActivity extends FragmentActivity
             b.setOnClickListener(addItem);
         }
         // Load from player.
-        Player p = Player.getSingleton();
+        Player p = App.GetPlayer();
         if (type == SELECT_DAILY_ACTION) {
             for (int i = 0; i < p.dailyActions.size(); ++i)
                 selected.add(p.dailyActions.get(i));

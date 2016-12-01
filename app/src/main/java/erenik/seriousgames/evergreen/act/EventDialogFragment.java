@@ -2,11 +2,13 @@ package erenik.seriousgames.evergreen.act;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
+import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.Finding;
 import erenik.seriousgames.evergreen.logging.*;
 import erenik.seriousgames.evergreen.player.*;
@@ -25,7 +27,7 @@ public class EventDialogFragment extends DialogFragment
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         String moreText = "\n\nDo you want to play the event now?";
-        Player player = Player.getSingleton();
+        Player player = App.GetPlayer();
         boolean skippable = true;
         float units = 0.f;
         skippable = type.Skippable();
@@ -60,7 +62,7 @@ public class EventDialogFragment extends DialogFragment
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         /// Set that the user clicked yes -> Offer next event after this one finishes.
-                        Player player = Player.getSingleton();
+                        Player player = App.GetPlayer();
                         switch (type) {
                             case AttacksOfTheEvergreen:
                                 AttacksOfTheEvergreen();
@@ -80,14 +82,14 @@ public class EventDialogFragment extends DialogFragment
                         if (act instanceof MainScreen) {
                             MainScreen ms = (MainScreen) act;
                             ms.UpdateGUI(); // Update GUI HP, log, etc.
-                            ms.HandleNextEvent();
+                            App.HandleNextEvent();
                         }
                     }
                 });
         builder.setNegativeButton("Later", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User cancelled the dialog
-                Player player = Player.getSingleton();
+                Player player = App.GetPlayer();
                 player.playEvents = false; // Flag that the player may be interested in seeing the next event being played when this one finishes.
             }
         });
