@@ -32,7 +32,8 @@ public class TCPServer
     {
         
         String s = "Hello world!";
-        Auth.UnitTest();
+       // EGPacket.UnitTest();
+//        Auth.UnitTest();
         /// yeyeye.
         
         Players players = new Players();
