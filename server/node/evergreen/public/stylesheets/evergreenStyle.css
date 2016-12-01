@@ -1,12 +1,39 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  
   color: white;
-  background-color: #013220;
+  background-image: url("/img/background_fullsize.jpeg");
+  background-size: cover;
 }
 
 a {
   color: #00B7FF;
 }
 
+table, th, tr {
+  /*border: 1px solid black;*/
+}
+
+* {
+  text-align: center;
+}
+
+.screenshots {
+  width: 85%;
+  height: 50%;
+}
+
+.menubutton a {
+  font-family: "Verdana";
+  font-size: 18px;
+  color: white;
+  text-decoration: none;
+}
+
+#evergreen {
+  width: 35%;
+}
+
+#menu {
+
+}
