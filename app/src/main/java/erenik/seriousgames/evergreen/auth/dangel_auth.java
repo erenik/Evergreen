@@ -7,7 +7,8 @@ import java.util.Base64;
 
 public class dangel_auth {
 
-	public static String encrypt(String key, String initVector, String value) {
+    
+    public static String encrypt(String key, String initVector, String value) {
         try {
             // Initiate the objects that creates ciphering instance (IV and secret key)
             IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
@@ -26,7 +27,6 @@ public class dangel_auth {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
         return null;
     }
 
@@ -55,8 +55,9 @@ public class dangel_auth {
         String key = "Dangel12Dangel12"; // 128 bit key
         String initVector = "RandomInitVector"; // 16 bytes IV
         // Executes the code, hopefully works without errors (may need minor modification)
-        System.out.println("ENCRYPTED: " + encrypt(key, initVector, "Fear the Danglor"));
-        System.out.println("DECRYPTED: " + decrypt(key, initVector, encrypt(key, initVector, "Fear the Danglor")));
+        String encrypted = encrypt(key, initVector, "Fear the Danglor");
+        System.out.println("ENCRYPTED: " + encrypted);
+        System.out.println("DECRYPTED: " + decrypt(key, initVector, encrypted));
     }
 
 }

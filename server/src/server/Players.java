@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.player.Stat;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,6 +26,45 @@ import java.io.ObjectOutputStream;
 public class Players {
    
     List<Player> players = new ArrayList<Player>();
+    
+    static String playersDir = "players/";
+
+    /// o-o
+    public static final int NO_ERROR = 0,
+            DOES_NOT_EXIST = 1,
+            WRONG_PASSWORD = 2,
+            IO_ERROR = 3;
+    public static int lastError = 0;
+    // Save to its own file?
+    static boolean Save(Player player) 
+    {
+        // Make directory if not existing already.
+        new File(playersDir).mkdirs();
+        /// Load, check password matches, save it.
+        Player tryLoadPlayer = Load(player.name, player.password);
+        if (tryLoadPlayer == null && lastError == WRONG_PASSWORD){
+            return false;
+        }
+        boolean ok = writePlayerToFile(player, playersDir+player.Name());
+        if (ok)
+            return true;
+        lastError = IO_ERROR;
+        return false;
+    }
+    static Player Load(String playerName, String password)
+    {
+        Player player = readPlayerFromFile(playersDir+playerName);
+        if (player == null)
+        {
+            lastError = DOES_NOT_EXIST;
+            return null;
+        }
+        if (password.equals(player.password)){
+            return player;
+        }
+        lastError = WRONG_PASSWORD;
+        return null;
+    }
 
     void RegisterDefaultPlayers() 
     {
@@ -84,7 +124,7 @@ public class Players {
             // Do nothing
             return null;
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("IOException: "+e.toString());
             return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

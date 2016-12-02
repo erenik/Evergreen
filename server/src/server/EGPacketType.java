@@ -12,6 +12,7 @@ package server;
 public enum EGPacketType {
     Request("REQ"), 
     Response("RES"),
+    Error("ERR"),
     ;
     EGPacketType(String packetText)
     {

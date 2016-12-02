@@ -6,6 +6,7 @@
 package server;
 
 import erenik.seriousgames.evergreen.auth.Auth;
+import erenik.seriousgames.evergreen.player.Player;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +15,8 @@ import java.io.PrintWriter;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Emil
@@ -39,15 +42,21 @@ public class TCPServer
         Players players = new Players();
         players.RegisterDefaultPlayers();
         TCPServer serv = new TCPServer();
-        serv.Host();
+        serv.StartServer();
+    }
+    
+    void StartServer() throws IOException 
+    {
+        Host();
         /// Host server.
         while (true)
         {
-            serv.AcceptClients();
-            if (serv.sockets.size() > 0)
-                serv.ReadIncomingData();
+            AcceptClients();
+            if (sockets.size() > 0)
+                ReadIncomingData();
         }
     }
+    
     void Host() throws IOException
     {
         servSock = new ServerSocket(portN);
@@ -101,17 +110,17 @@ public class TCPServer
                 continue;
             int bytesRead = in.read(charBuffer, 0, BUF_LEN);
             String inText = String.copyValueOf(charBuffer, 0, bytesRead);
-            if (!inText.startsWith("Evergreen"))
+            EGPacket pack = EGPacket.packetFromString(inText);
+            if (pack == null)
             {
-                /// Reply?
-                PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
-                out.println("BadPacket");
-                out.flush();
-                System.out.println("Bad data received, sending BadPacket and closing socket");
-                // Close the socket.
-                sock.close();
+                Reply(sock, EGPacket.error(EGErrorType.BadRequest).build()); // Reply with error String.
+                sock.close(); // Close the socket.
+                sockets.remove(sock); // Remove it from the list.
                 continue;
             }
+            // Check requests and evaluate them.
+            if (pack.type == EGPacketType.Request)
+                EvaluateRequest(sock, pack);
             // Parse packets received?
             System.out.println("recv: "+inText);
             /// Reply?
@@ -121,5 +130,42 @@ public class TCPServer
         }
        // if (incData == false)
          //   System.out.println("?");
+    }
+    static void Reply(Socket sock, String packetContents)
+    {
+        PrintWriter out = null;
+        try {
+            out = new PrintWriter(sock.getOutputStream(), true);
+            out.println(packetContents);
+            out.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(TCPServer.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            out.close();
+        }
+    }
+
+    private void EvaluateRequest(Socket sock, EGPacket pack) {
+        switch(pack.reqt)
+        {
+            case Save: 
+                Player player = new Player();
+                boolean ok = player.fromByteArr(pack.body);
+                if (!ok)
+                {   
+                    Reply(sock, EGPacket.parseError().build());
+                    return;
+                }
+                boolean ok = Players.Save(player);
+                if (ok){
+                    Reply(sock, EGPacket.ok().build());
+                    return;
+                }
+                // Check cause of failure. Bad authentication? Name already exists?
+                Reply(sock, EGPacket.error(EGErrorType.BadPassword).build());
+                break;
+            case Load: 
+                break;
+        }
     }
 }

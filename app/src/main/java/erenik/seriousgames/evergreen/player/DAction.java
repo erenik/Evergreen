@@ -1,7 +1,5 @@
 package erenik.seriousgames.evergreen.player;
 
-import android.app.Notification;
-
 import java.util.ArrayList;
 import java.util.List;
 

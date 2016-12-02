@@ -127,7 +127,8 @@ public class Combatable extends Object
         return false;
     }
 
-    protected String name = "NoName";
+    public String name = "NoName";
+    public String password = "";
     protected boolean isPlayer = false; // True for player.
     public int exp = 1;
     // Most of these are used mainly by enemies, but may also be used by some player weapons perhaps?

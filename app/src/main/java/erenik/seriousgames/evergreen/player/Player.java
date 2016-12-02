@@ -22,8 +22,14 @@ import erenik.seriousgames.evergreen.combat.Combatable;
 import erenik.seriousgames.evergreen.transport.Transport;
 import erenik.seriousgames.evergreen.transport.TransportStat;
 import erenik.seriousgames.evergreen.util.Dice;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Emil on 2016-10-25.
@@ -105,10 +111,41 @@ public class Player extends Combatable implements Serializable
         }
         SetDefaultStats();
     }
-
+    // Delivers a String based on using ObjectOutputStream, then saving the bytes.
+    public byte[] toByteArr()
+    {
+        try { 
+            ObjectOutputStream oos = null;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            writeObject(oos);
+            oos.close();
+            return baos.toByteArray();
+        } catch (IOException ex) {
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+        return null;
+    }
+    public boolean fromByteArr(byte[] bytes)
+    {
+        try { 
+            ObjectInputStream ois = null;
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            ois = new ObjectInputStream(bais);
+            readObject(ois);
+            ois.close();
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) { 
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;        
+    }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException
     {
         out.writeObject(name);
+        out.writeObject(password);
         out.writeObject(statArr);
         out.writeObject(skills);
         out.writeObject(dailyActions);
@@ -127,6 +164,7 @@ public class Player extends Combatable implements Serializable
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
     {
         name = (String) in.readObject();
+        password = (String) in.readObject();
         statArr = (float[]) in.readObject();
         skills = (List<Skill>) in.readObject();
         dailyActions = (List<String>) in.readObject();
@@ -959,5 +997,6 @@ public class Player extends Combatable implements Serializable
             Invention inv = inventory.get(i);
             System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
         }
+        System.out.println();
     }
 }

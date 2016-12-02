@@ -5,11 +5,13 @@ import android.os.AsyncTask;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
+/*
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.client.WebTarget;
+*/
 
 import erenik.seriousgames.evergreen.R;
 
@@ -25,8 +27,8 @@ public class NetworkTask extends AsyncTask<Void, Void, Boolean>
     private final String mEmail;
     private final String mPassword;
     private ArrayList<NetworkTaskListener> listeners = new ArrayList<>();
-    private WebTarget target;
-    private Client client;
+  //  private WebTarget target;
+//    private Client client;
     public NetworkTask(String email, String password) {
         mEmail = email;
         mPassword = password;
@@ -40,15 +42,15 @@ public class NetworkTask extends AsyncTask<Void, Void, Boolean>
     public static final String serverURI = "http://www.erenik.com:8080/evergreen/";
     void SetTargetServer()
     {
-        client = ClientBuilder.newClient();
-        target = client.target(serverURI);
+   //     client = ClientBuilder.newClient();
+     //   target = client.target(serverURI);
     }
     /// Save character data to server.
     void SaveData()
     {
         // Send it.
         String playerJsonForm = "{\"name\":\"Erenik\"}";
-        Response r = target.path("players").request().post(Entity.json(playerJsonForm));
+     //   Response r = target.path("players").request().post(Entity.json(playerJsonForm));
     }
 
     /// Load character data from server.

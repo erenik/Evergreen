@@ -6,16 +6,17 @@
 package server;
 
 /**
- * EvergreenRequest
+ *
  * @author Emil
  */
-public class EGRequest extends EGPacket 
-{
-    public EGRequest(EGRequestType reqType, byte[] body)
+public enum EGErrorType {
+    BadRequest("BadRequest"),
+    ParseError("ParseError"),
+    BadPassword("BadPassword"),
+    ;    
+    EGErrorType(String errType)
     {
-        this.type = EGPacketType.Request;
-        this.reqt = reqType;
-        this.body = body;
+        text = errType;
     }
-
+    String text;
 }

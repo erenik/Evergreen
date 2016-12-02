@@ -11,25 +11,54 @@ package server;
  */
 public class EGPacket 
 {
+
     protected EGPacketType type = null;
     protected EGRequestType reqt = null;
     protected EGResponseType rest = null;
-    protected String body = ""; 
+    protected EGErrorType errType = null;
+    protected byte[] body = "".getBytes(); 
     protected int version = 0;
 
-    void EGPacket()
+    EGPacket()
     {
+    }    
+    EGPacket(EGResponseType resType)
+    {
+        type = EGPacketType.Response;
+        rest = resType;
+    }
+    EGPacket(EGRequestType reqType)
+    {
+        type = EGPacketType.Request;
+        reqt = reqType;
+    }
+    EGPacket(EGErrorType errorType)
+    {
+        type = EGPacketType.Error;
+        errType = errorType;
+    };
+    static EGPacket ok() {
+        return new EGPacket(EGResponseType.OK);
+    }
+    static EGPacket error(EGErrorType errorType) 
+    {
+        return new EGPacket(errorType);
+    }
+    static EGPacket parseError() {
+        return new EGPacket(EGErrorType.ParseError);
     }
     
-    /// Build final packet to send.
+    /// Build final packet contents to send.
     String build()
     {
         String built = "VER "+version+"\n"
                 +"PT "+type.text+"\n";
-        if (type == EGPacketType.Request)
-            built += "REQ "+reqt.text+"\n";
-        else if (type == EGPacketType.Response)
-            built += "RES "+rest.text+"\n";
+        switch(type)
+        {
+            case Error: built += "ERR "+errType.text+"\n"; return built;
+            case Request: built += "REQ "+reqt.text+"\n"; break;
+            case Response: built += "RES "+rest.text+"\n"; break;
+        }
         built += body;
         return built;
     }
@@ -60,7 +89,7 @@ public class EGPacket
                 ++argN;
                 if (argN >= 3)
                 {
-                    pack.body = str.substring(i+1);
+                    pack.body = str.substring(i+1).getBytes();
                     break;
                 }
             }
