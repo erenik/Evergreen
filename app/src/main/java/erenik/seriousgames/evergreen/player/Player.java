@@ -25,6 +25,7 @@ import erenik.seriousgames.evergreen.util.Dice;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
@@ -35,7 +36,7 @@ import java.util.logging.Logger;
  * Created by Emil on 2016-10-25.
  */
 public class Player extends Combatable implements Serializable
-{
+{            
     Simulator simulator = Simulator.getSingleton();
     static Random r = new Random(System.nanoTime());
     // Main stats.
@@ -58,6 +59,9 @@ public class Player extends Combatable implements Serializable
     /// Currently equipped weapon. Null if not equiped. Pointer to weapon in inventory if equipped.
     List<Integer> equippedIndices = new ArrayList<>(); // Indices of which inventions are currently equipped.
 
+    // Serialization version.
+    public static final long serialVersionUID = 1L;
+    
     Invention GetEquippedOfType(InventionType queryType)
     {
         List<Invention> equipped = GetEquippedInventions();
@@ -161,11 +165,12 @@ public class Player extends Combatable implements Serializable
         out.writeObject(logTypesToShow);
         out.writeBoolean(isAI);
     }
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException
     {
         name = (String) in.readObject();
         password = (String) in.readObject();
         statArr = (float[]) in.readObject();
+        System.out.println("name: "+name+" pw: "+password);
         skills = (List<Skill>) in.readObject();
         dailyActions = (List<String>) in.readObject();
         transports = (List<Transport>) in.readObject();

@@ -61,17 +61,21 @@ public class EGPacketTest {
         EGPacket pack = new EGPacket();
         pack.type = EGPacketType.Request;
         pack.reqt = reqType;
-        pack.body = "{\"name\":\"Emil\"}";
+        pack.body = "{\"name\":\"Emil\"}".getBytes();
+//        pack.PrintBody();
         String built = pack.build();
         System.out.println("Built: \n"+built);
         
         EGPacket pack2 = EGPacket.packetFromString(built);
+        assertNotEquals(pack2, null);
         System.out.println("Parsed: "+pack2
                 +"\nPT: "+pack2.type+" REQ: "+pack2.reqt+" RES: "+pack2.rest+" body: "+pack2.body
         );
         assertEquals(pack.reqt, pack2.reqt);
         assertEquals(pack.rest, pack2.rest);
-        assertEquals(pack.body, pack2.body);
+        pack.PrintBody();
+        pack2.PrintBody();            
+        assertArrayEquals(pack.body, pack2.body);
         
         // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");

@@ -29,6 +29,10 @@ public enum Skill implements Serializable
 /*
 */
     ;
+    Skill()
+    {
+        this.text = "textToReplace";
+    };
     Skill (String txt, int[] expRequired, String briefDescription)
     {
         this.text = txt;
@@ -36,6 +40,9 @@ public enum Skill implements Serializable
         this.briefDescription = briefDescription;
     }
     
+    // Serialization version.
+    public static final long serialVersionUID = 1L;
+ 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException
     {
         out.writeFloat(totalExp);
@@ -48,7 +55,6 @@ public enum Skill implements Serializable
     {
 
     }
-
     
     // E.g. 2,3,4 -> 2,5,8,11
     static int[] AddLinear(int base, int plusEachLevel, int maxLevel)

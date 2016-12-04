@@ -5,6 +5,8 @@
  */
 package server;
 
+import erenik.seriousgames.evergreen.player.Player;
+
 /**
  * EvergreenRequest
  * @author Emil
@@ -17,5 +19,14 @@ public class EGRequest extends EGPacket
         this.reqt = reqType;
         this.body = body;
     }
-
+    static EGRequest Load(Player player)
+    {
+        EGRequest eg = new EGRequest(EGRequestType.Load, player.toByteArr());
+        return eg;
+    };
+    static EGRequest Save(Player player)
+    {
+        EGRequest eg = new EGRequest(EGRequestType.Load, player.toByteArr());
+        return eg;
+    };
 }
