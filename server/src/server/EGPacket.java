@@ -153,7 +153,7 @@ public class EGPacket
         try {
             socketSentOn = new EGSocket(address, portN);
             out = socketSentOn.getPrintWriter();
-            out.println(total); // Print the string.
+            out.print(total); // Print the string.
             out.flush();
             EGPacketReceiver.NewPacketWaitingForResponse(this);
         } catch (IOException ex) {

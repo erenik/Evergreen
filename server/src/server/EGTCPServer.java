@@ -188,6 +188,17 @@ public class EGTCPServer extends Thread
                 System.out.println("Evaluate request: LOAD");
                 Player player = new Player();
                 try {
+                    System.out.println("EGTCPServer.EvaluateRequest: Body first 10 bytes:");
+                    for (int i = 0; i < 10; ++i)
+                    {
+                        System.out.print(" "+(int)pack.body[i]);
+                    }
+                    for (int i = pack.body.length - 10; i < pack.body.length; ++i)
+                    {
+                        System.out.print(" "+(int)pack.body[i]);
+                    }
+                    System.out.println();
+                    System.out.println("Bytes in body: "+pack.body.length);
                     boolean ok = player.fromByteArr(pack.body);
                 } catch (Exception e)
                 {

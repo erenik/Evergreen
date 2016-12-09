@@ -16,7 +16,7 @@ import erenik.seriousgames.evergreen.logging.Log;
 import erenik.seriousgames.evergreen.logging.LogType;
 import erenik.seriousgames.evergreen.player.Player;
 
-public class logViewer extends AppCompatActivity
+public class logViewer extends EvergreenActivity
 {
 
     Player player = App.GetPlayer();

@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
+import java.io.IOException;
+
 import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.Finding;
 import erenik.seriousgames.evergreen.logging.*;
@@ -63,6 +65,7 @@ public class EventDialogFragment extends DialogFragment
                     public void onClick(DialogInterface dialog, int id) {
                         /// Set that the user clicked yes -> Offer next event after this one finishes.
                         Player player = App.GetPlayer();
+                        System.out.println("event type: "+type.GetEventText());
                         switch (type) {
                             case AttacksOfTheEvergreen:
                                 AttacksOfTheEvergreen();
@@ -76,6 +79,8 @@ public class EventDialogFragment extends DialogFragment
                             case RandomPlayerShelter:
                                 enc.RandomPlayerShelter();
                                 break;
+                            default:
+                                throw new NullPointerException();
                         }
                         // Update GUI of main activity.
                         Activity act = getActivity();

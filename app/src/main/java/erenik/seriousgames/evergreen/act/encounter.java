@@ -17,7 +17,7 @@ import erenik.seriousgames.evergreen.transport.TransportStat;
 import erenik.seriousgames.evergreen.util.Dice;
 import erenik.seriousgames.evergreen.logging.LogType;
 
-public class Encounter extends AppCompatActivity
+public class Encounter extends EvergreenActivity
 {
     public List<Enemy> enemies = new ArrayList<Enemy>(); // List of 'em.
     List<Log> log = new ArrayList<Log>();
@@ -120,7 +120,6 @@ public class Encounter extends AppCompatActivity
             }
             player.GainEXP(expToGain);
         }
-        player.log.addAll(log); // Add current log there with all attack stuff.
         if (isRandom)
             player.Adjust(Stat.ENCOUNTERS, -1);
         else if (isAssaultOfTheEvergreen)
@@ -129,9 +128,13 @@ public class Encounter extends AppCompatActivity
             System.out.println("Dunno what to adjust after finishing Encounter. Fix this?");
             System.exit(14);
         }
-        // Spam all log stuff to console?
-        // Save?
-        App.SaveLocally(getApplicationContext());
+        OnEncounterEnded(); // Save, push logs, etc.
+    }
+
+    void OnEncounterEnded()
+    {
+        player.log.addAll(log); // Add current log there with all attack stuff.
+        SaveLocally();
     }
 
     private boolean PlayersDead()
@@ -261,6 +264,7 @@ public class Encounter extends AppCompatActivity
         // Hook up some GUI stuffs.
 
         // Update gui.
+        // ?
 
     }
     void UpdateGui()
@@ -277,15 +281,21 @@ public class Encounter extends AppCompatActivity
 
     public void AbandonedShelter()
     {
+        System.out.println("Abandoned shelters decrease from "+player.Get(Stat.ABANDONED_SHELTER));
         player.Adjust(Stat.ABANDONED_SHELTER, -1);;
         Log("Found some food", LogType.INFO);
         player.Adjust(Stat.FOOD, 1);
+        // TODO: Add more descriptions and the random results.
+        OnEncounterEnded(); // Save, push logs, etc.
     }
 
     public void RandomPlayerShelter()
     {
-        player.Adjust(Stat.RandomPlayerFound, -1);
+        player.Adjust(Stat.RANDOM_PLAYERS_SHELTERS, -1); // Decrease the events to spawn...
+        player.Adjust(Stat.RandomPlayerFound, 1); // Increase this. Will be sent to server to see who you found.
         Log("Found some food", LogType.INFO);
         player.Adjust(Stat.FOOD, 1);
+        // TODO: Perhaps add more actions later.
+        OnEncounterEnded(); // Save, push logs, etc.
     }
 }

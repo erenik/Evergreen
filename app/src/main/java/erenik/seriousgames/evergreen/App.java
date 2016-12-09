@@ -27,6 +27,7 @@ import java.util.List;
 
 import erenik.seriousgames.evergreen.act.EventDialogFragment;
 import erenik.seriousgames.evergreen.act.GameOver;
+import erenik.seriousgames.evergreen.act.Startup;
 import erenik.seriousgames.evergreen.logging.Log;
 import erenik.seriousgames.evergreen.logging.LogType;
 import erenik.seriousgames.evergreen.player.Constants;
@@ -113,10 +114,13 @@ public class App {
             return false;
         }
         SharedPreferences sp = App.GetPreferences();
+        if (sp == null) {
+            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
+            return false;
+        }
         SharedPreferences.Editor editor = sp.edit();
         editor.putBoolean(Constants.SAVE_EXISTS, true);
         editor.commit();
-
         ObjectOutputStream objectOut = null;
         try {
 
@@ -250,10 +254,19 @@ public class App {
         else if (ac == null && runningActivities.size() > 0)
             ac = runningActivities.get(0);
         System.out.println("currentActivity: "+currentActivity+" mainScreen: "+mainScreenActivity+" index 0: "+(runningActivities.size() > 0? runningActivities.get(0) : "no"));
-        return ac.getSharedPreferences(Constants.PREFERENCES, Activity.MODE_PRIVATE);
+        if (ac == null)
+            return null;
+        return GetPreferences(ac);
+    }
+    public static SharedPreferences GetPreferences(Activity forActivity)
+    {
+        return forActivity.getSharedPreferences(Constants.PREFERENCES, Activity.MODE_PRIVATE);
     }
     /// Makes a new singleton activity lc callback listener.
-    public static void NewActivityLifeCycleCallback() {
+    public static void NewActivityLifeCycleCallback(Activity activity)
+    {
+        if (actLCCallback != null) // Create it once only.
+            return;
         actLCCallback = new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityDestroyed(Activity activity) {
@@ -293,5 +306,12 @@ public class App {
             public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
             }
         };
+        App.currentActivity = activity; // Point it right.
+        activity.getApplication().registerActivityLifecycleCallbacks(App.actLCCallback); // Set lifecycle callback listener for the application/activity.
+    }
+
+    public static void OnActivityCreated(Activity activity)
+    {
+        App.NewActivityLifeCycleCallback(activity);
     }
 }

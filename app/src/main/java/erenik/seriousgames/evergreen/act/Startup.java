@@ -12,19 +12,13 @@ import erenik.seriousgames.evergreen.player.Constants;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.R;
 
-public class Startup extends Activity {
+public class Startup extends EvergreenActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_startup);
-
-        // Setup system callbacks.
-        App.NewActivityLifeCycleCallback();
-        getApplication().registerActivityLifecycleCallbacks(App.actLCCallback);
-        App.currentActivity = this; // Point it right.
-
         findViewById(R.id.buttonLoadGame).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -41,6 +35,7 @@ public class Startup extends Activity {
                 }
             }
         });
+
         findViewById(R.id.buttonNewGame).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)

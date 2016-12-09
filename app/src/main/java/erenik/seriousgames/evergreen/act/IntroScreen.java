@@ -23,7 +23,7 @@ import erenik.seriousgames.evergreen.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class IntroScreen extends AppCompatActivity
+public class IntroScreen extends EvergreenActivity
 {
     Player player = App.GetPlayer();
 

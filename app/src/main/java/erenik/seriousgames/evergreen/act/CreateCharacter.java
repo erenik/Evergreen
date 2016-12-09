@@ -47,7 +47,7 @@ import static android.Manifest.permission.READ_CONTACTS;
 /**
  * A login screen that offers login via email/password.
  */
-public class CreateCharacter extends Activity implements LoaderCallbacks<Cursor> {
+public class CreateCharacter extends EvergreenActivity implements LoaderCallbacks<Cursor> {
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -66,8 +66,10 @@ public class CreateCharacter extends Activity implements LoaderCallbacks<Cursor>
     private View mLoginFormView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_create_character);
 
         // Populate spinner for starting bonus
@@ -86,7 +88,7 @@ public class CreateCharacter extends Activity implements LoaderCallbacks<Cursor>
                 String[] firstNames = getResources().getStringArray(R.array.firstNames);
                 Random nameRand = new Random(System.nanoTime());
                 String[] lastNames = getResources().getStringArray(R.array.surnames);
-                String fullName = firstNames[nameRand.nextInt(firstNames.length)%firstNames.length] +
+                String fullName = firstNames[nameRand.nextInt(firstNames.length)%firstNames.length] + " " +
                         lastNames[nameRand.nextInt(lastNames.length) % lastNames.length];
                 et.setText(fullName);
             }
@@ -215,7 +217,7 @@ public class CreateCharacter extends Activity implements LoaderCallbacks<Cursor>
                 if (success) {
                     // finish();
                     // Go to main screen? Show success window first?
-
+                    GoToMainScreen();
                 } else {
                     mPasswordView.setError(getString(R.string.error_incorrect_password));
                     mPasswordView.requestFocus();

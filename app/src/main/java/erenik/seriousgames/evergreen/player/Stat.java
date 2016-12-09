@@ -9,8 +9,8 @@ public enum Stat
     HP(10), MAX_HP(10),
     FOOD(5), FoodHotspot(0),
     MATERIALS(3), MaterialDepot(0),
-    BASE_ATTACK(10), ATTACK_BONUS(0),
-    BASE_DEFENSE(10), DEFENSE_BONUS(0),
+    BASE_ATTACK(10), ATTACK_BONUS(0), // Attack and defense bonuses, based on? Permanent increases? Also later...?
+    BASE_DEFENSE(10), DEFENSE_BONUS(0), // Base defense, i.e. 10? Might vary in the future based on difficulty?
     SHELTER_DEFENSE(1), SHELTER_DEFENSE_PROGRESS(0), // Level and progress towards next level.
     SPEED(1),
     EMISSIONS(0),

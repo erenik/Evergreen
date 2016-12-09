@@ -23,7 +23,7 @@ import erenik.seriousgames.evergreen.R;
 import erenik.seriousgames.evergreen.ui.EvergreenButton;
 
 
-public class SelectActivity extends FragmentActivity
+public class SelectActivity extends EvergreenActivity
 {
     static final int SELECT_ACTIVE_ACTION = 2;
     static final int SELECT_DAILY_ACTION = 0;

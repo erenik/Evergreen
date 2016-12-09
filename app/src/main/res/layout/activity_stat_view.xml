@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Evergreen.BG"
+    tools:context=".act.StatViewActivity">
+
+        <!-- Status above -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            >
+            <!-- Icon with stat, text with stat -->
+            <!-- /// First Row of stats -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+                <ImageView
+                    android:background="@drawable/icon"
+                    android:src="@drawable/icon_food_alpha"
+                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    />
+                <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
+                    android:layout_width="0sp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textViewStatName"
+                    android:text="Stat"
+                    />
+                <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
+                    android:layout_width="0sp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/textViewStatQuantity"
+                    android:text="0"
+                    />
+            </LinearLayout>
+
+            <!-- General info. Click to read more? -->
+            <erenik.seriousgames.evergreen.ui.EvergreenTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textViewStatGeneralInfo"
+                android:text="Updating.."
+                />
+            <!-- Summary of recurring bonuses and penalties. -->
+            <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.TextBigger" android:text="Recurring bonuses/penalties" />
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="4"
+                android:layout_gravity="center_horizontal" >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/layoutStatRecurringBonuses"
+                    android:orientation="vertical">
+                    <erenik.seriousgames.evergreen.ui.EvergreenTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Equip Bladiblamba"/>
+                </LinearLayout>
+            </ScrollView>
+            <!-- Actions here -->
+            <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.TextBigger" android:text="Stat-oriented Actions" />
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="4"
+                android:layout_gravity="center_horizontal" >
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/statActionButtons"
+                    android:orientation="vertical">
+                    <erenik.seriousgames.evergreen.ui.EvergreenButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Equip Bladiblamba"/>
+                </LinearLayout>
+            </ScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <erenik.seriousgames.evergreen.ui.EvergreenButton style="@style/Evergreen.Button"
+                    android:id="@+id/previousStat"
+                    android:text="Previous"
+                    />
+
+                <Button
+                    style="@style/Evergreen.Button"
+                    android:id="@+id/button3"
+                    android:layout_margin="@dimen/activity_vertical_margin_smaller"
+                    android:text="Next" />
+            </LinearLayout>
+
+            <!-- Some empty space at the bottom for design purposes? -->
+
+        </LinearLayout>
+
+</LinearLayout>

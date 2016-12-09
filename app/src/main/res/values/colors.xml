@@ -17,8 +17,15 @@
     <color name="attack">#FFEEEEEE</color>
     <color name="exp">#FFDDDD55</color>
 
+    <color name="transparent">#00000000</color>
     <color name="backgroundMainGreen">#FF013220</color>
+
+    <!-- Text colors -->
     <color name="mainTextColor">#FFdedbcb</color>
+    <color name="textColor.Brighter">#FFe4e4e4</color>
+    <color name="textColor.Brightest">#FFf1f1f1</color>
+    <color name="textColor.Title">#FFf4f4f4</color>
+
     <color name="mainButtonTextColor">#FFDDDDDD</color>
     <color name="mainButtonBackground">#FF00a166</color>
 

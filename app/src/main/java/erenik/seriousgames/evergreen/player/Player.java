@@ -717,7 +717,9 @@ public class Player extends Combatable implements Serializable
     void Equip(Invention inv)
     {
         Invention currentlyEquipped = GetEquippedOfType(inv.type);
-        equippedIndices.remove(inventory.indexOf(currentlyEquipped)); // Remove index of old gear of same sort - since max 1 weapon/armor/etc.
+        int indexOfItem = inventory.indexOf(currentlyEquipped);
+        if (indexOfItem != -1)
+            equippedIndices.remove(inventory.indexOf(currentlyEquipped)); // Remove index of old gear of same sort - since max 1 weapon/armor/etc.
         equippedIndices.add(inventory.indexOf(inv));
     }
     public float getInventionProgress(InventionType type, int subType)

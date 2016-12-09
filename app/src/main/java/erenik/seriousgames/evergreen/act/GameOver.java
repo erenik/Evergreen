@@ -11,7 +11,7 @@ import erenik.seriousgames.evergreen.App;
 import erenik.seriousgames.evergreen.player.Player;
 import erenik.seriousgames.evergreen.R;
 
-public class GameOver extends AppCompatActivity {
+public class GameOver extends EvergreenActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState)

@@ -21,21 +21,10 @@ import erenik.seriousgames.evergreen.R;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainScreen extends FragmentActivity //AppCompatActivity
+public class MainScreen extends EvergreenActivity //AppCompatActivity
 {
     Player player = App.GetPlayer();
     Simulator simulator = Simulator.getSingleton();
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
-
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     @Override
     protected void onResume() {
@@ -43,52 +32,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         UpdateGUI(); // Always update GUI upon resuming.
         App.HandleNextEvent();
     }
-
-
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
-    private View mContentView;
-    private final Runnable mHidePart2Runnable = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            // Delayed removal of status and navigation bar
-
-            // Note that some of these constants are new as of API 16 (Jelly Bean)
-            // and API 19 (KitKat). It is safe to use them, as they are inlined
-            // at compile-time and do nothing on earlier devices.
-            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        }
-    };
-    private View mControlsView;
-    private final Runnable mShowPart2Runnable = new Runnable() {
-        @Override
-        public void run() {
-            // Delayed display of UI elements
-            /*
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.show();
-            }*/
-            mControlsView.setVisibility(View.VISIBLE);
-        }
-    };
-    private boolean mVisible;
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
 
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
@@ -139,13 +82,13 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
 
     /// Main init function
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
-        mVisible = true;
         // Load stuff as needed.
         App.LoadLocally(getBaseContext());
 //        player.SaveLocally(); // Save copy? - Why?
@@ -161,7 +104,32 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         findViewById(R.id.nextDay).setOnClickListener(nextDay);
         findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
         findViewById(R.id.layoutLog).setOnClickListener(toggleLogFullScreen);
+
+        /// Assign listeners for the icons.
+        int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
+        for (int i = 0; i < ids.length; ++i)
+            findViewById(ids[i]).setOnClickListener(viewStatDetails);
     }
+
+    private View.OnClickListener viewStatDetails = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            int statType = -1;
+            switch(view.getId())
+            {
+                case R.id.buttonIconAttack: statType = Stat.ATTACK_BONUS.ordinal(); break;
+                case R.id.buttonIconDefense: statType = Stat.DEFENSE_BONUS.ordinal(); break;
+                case R.id.buttonIconEmissions: statType = Stat.EMISSIONS.ordinal(); break;
+                case R.id.buttonIconFood: statType = Stat.FOOD.ordinal(); break;
+                case R.id.buttonIconMaterials: statType = Stat.MATERIALS.ordinal(); break;
+                case R.id.buttonIconHP: statType = Stat.HP.ordinal(); break;
+            }
+            Intent i = new Intent(getBaseContext(), StatViewActivity.class);
+            i.putExtra("Stat", statType);
+            startActivityForResult(i, statType);
+        }
+    };
+
 
     void UpdateGUI()
     {
@@ -187,11 +155,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-       // delayedHide(100);
     }
 
     @Override
@@ -240,42 +203,6 @@ public class MainScreen extends FragmentActivity //AppCompatActivity
         else
             tv.setText(R.string.chooseSkill);
     }
-    private void toggle() {
-        if (mVisible) {
-            hide();
-        } else {
-            show();
-        }
-    }
 
-    private void hide()
-    {
-        mControlsView.setVisibility(View.GONE);
-        mVisible = false;
 
-        // Schedule a runnable to remove the status and navigation bar after a delay
-        mHideHandler.removeCallbacks(mShowPart2Runnable);
-        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
-    }
-
-    @SuppressLint("InlinedApi")
-    private void show() {
-        // Show the system bar
-        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-        mVisible = true;
-
-        // Schedule a runnable to display UI elements after a delay
-        mHideHandler.removeCallbacks(mHidePart2Runnable);
-        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
-    }
-
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
-    }
 }
