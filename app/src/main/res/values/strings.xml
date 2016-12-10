@@ -134,4 +134,57 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+
+
+    <!-- Stat Names, Descriptions -->
+    <string name="HP.name">HP</string>
+    <string name="HP.desc">
+        "HP or Hit points are a measure of how wounded or whole, sick or healthy you are. "
+        "Once this reaches 0 you are knocked out and may be out of the game. "
+        "HP is by default recovered by 1 point per day, assuming you aren't starving. "
+        "Use the Recover action if you have been badly hurt. "
+    </string>
+    <string name="Food.name">Food</string>
+    <string name="Food.desc">
+        "The Food points represent how much food you have available. "
+        "Regular survival consumes 2 points of food per day. "
+        "For each missing point of food, you will start taking damage to your HP. "
+        "Make sure to gather enough food, as it is unwise to run out of it! "
+    </string>
+    <string name="Materials.name">Materials</string>
+    <string name="Materials.desc">
+        "Material points represent all resources that may want to use to build, craft, invent or otherwise augment objects. "
+        "Most actions that require materials do so implicitly. I.e., if the verbs sound like they require materials, they will require materials. "
+        "Consuming materials during some action will, in general, generate emissions. "
+        "It is therefore recommended to train the Material Efficiency skill"
+    </string>
+    <string name="Emissions.name">Emissions</string>
+    <string name="Emissions.desc">
+        "Emissions represent how much you are affecting the environment, both locally and overall. "
+        "Having more emission points is, in general, a bad thing and has two major consequences: "
+        "\n- it will attract more monsters of the Evergreen to your doorstep, and"
+        "\n- it will may make the monsters more organized to take you out"
+        "\n\nEmissions decrease by 1 unit per day, and are mainly gained from actions requiring materials, and even more so from using motorized transportation. "
+    </string>
+    <string name="Attack.name">Attack</string>
+    <string name="Attack.desc">
+        "The Attack points represent your ability to defend yourself. "
+        "By default, you start with 10 points, which may be increased by equipping weapons, training certain skills and current circumstances. "
+        "As Attack increases, so does your chances to land hits on enemies you fight. "
+        "I.e., it increases the accuracy of your attacks in battle. "
+        "\n\n"
+        "In addition to Attack, weapons and skills can also give stat bonuses to inflicted damage, the amount of attacks per round, etc. "
+        "Attack, Damage, and other attributes are presented below as needed. "
+    </string>
+    <string name="Defense.name">Defense</string>
+    <string name="Defense.desc">
+        "The Defense points represent your ability to defend yourself. "
+        "By default you start with 10 points, which may be increased by equipping armors, training certain skills and current circumstances. "
+        "As Defense increases, so does your chance to evade hits from attacking enemies that you fight. "
+        "I.e., as it increases your evasion in battle. "
+        "\n\n"
+        "In addition to Defense, weapons and skills can also give stat bonuses that in other ways help you survive easier. "
+        "For example Parry gives you a second roll of the dice to parry attacks that would otherwise have struck you. "
+    </string>
+
 </resources>

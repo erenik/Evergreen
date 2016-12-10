@@ -31,7 +31,7 @@
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconHP" android:src="@drawable/icon_health_alpha"
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconHP" android:src="@drawable/icon_hp"
 
                         />
 <!--                    <TextView style="@style/Evergreen.IconTextTitle" android:text="HP" />
@@ -41,7 +41,7 @@
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconFood" android:src="@drawable/icon_food_alpha"/>
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconFood" android:src="@drawable/icon_food"/>
         <!--            <TextView style="@style/Evergreen.IconTextTitle" android:text="Food" />
             -->        <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewFood" />
                 </RelativeLayout>
@@ -49,7 +49,7 @@
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconMaterials" android:src="@drawable/icon_health_alpha" />
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconMaterials" android:src="@drawable/icon_materials" />
      <!--               <TextView style="@style/Evergreen.IconTextTitle" android:text="Materials" />
         -->            <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewMaterials" />
                 </RelativeLayout>
@@ -57,21 +57,21 @@
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconEmissions" android:src="@drawable/icon_attack_alpha" />
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconEmissions" android:src="@drawable/icon_emissions" />
                     <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewEmissions" />
                 </RelativeLayout>
             </FrameLayout>
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconAttack" android:src="@drawable/icon_attack_alpha" />
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconAttack" android:src="@drawable/icon_attack" />
                     <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewAttack" />
                 </RelativeLayout>
             </FrameLayout>
             <FrameLayout style="@style/Evergreen.IconLayout">
                 <ImageView style="@style/Evergreen.IconBG" />
                 <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconDefense" android:src="@drawable/icon_defense_alpha" />
+                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconDefense" android:src="@drawable/icon_defense" />
                     <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewDefense" />
                 </RelativeLayout>
             </FrameLayout>

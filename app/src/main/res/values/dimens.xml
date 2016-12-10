@@ -1,4 +1,23 @@
 <resources>
+
+    <!-- Size values. sp recommended to use for text-size. -->
+    <dimen name="textSize">14sp</dimen>
+    <dimen name="textSize.Larger">18sp</dimen>
+    <dimen name="textSize.Largest">24sp</dimen>
+    <dimen name="textSize.Title">40sp</dimen>
+
+    <!-- Padding/Margin values dp for device-screen-density-independent size.-->
+    <!--  Padding is space inside the element to its content (bg visible)
+        Margin is distance to other elements (no bg, parent bg perhaps there)
+        http://stackoverflow.com/questions/4619899/difference-between-a-views-padding-and-margin#4619943
+    -->
+    <dimen name="textPadding">4dp</dimen>
+    <dimen name="textPadding.More">8dp</dimen>
+    <dimen name="textMargin">8dp</dimen>
+    <dimen name="textMargin.More">16dp</dimen>
+
+
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">8dp</dimen>
     <dimen name="activity_vertical_margin">8dp</dimen>
@@ -8,5 +27,4 @@
 
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
 </resources>

@@ -1,6 +1,7 @@
 package erenik.seriousgames.evergreen.act;
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
@@ -14,6 +15,7 @@ public class EvergreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Set default orientation - Portrait.
         // Store common shit here?
         App.OnActivityCreated(this);  // Setup system callbacks as/if needed.
     }

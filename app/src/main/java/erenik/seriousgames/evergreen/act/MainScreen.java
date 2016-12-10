@@ -117,8 +117,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             int statType = -1;
             switch(view.getId())
             {
-                case R.id.buttonIconAttack: statType = Stat.ATTACK_BONUS.ordinal(); break;
-                case R.id.buttonIconDefense: statType = Stat.DEFENSE_BONUS.ordinal(); break;
+                case R.id.buttonIconAttack: statType = Stat.BASE_ATTACK.ordinal(); break;
+                case R.id.buttonIconDefense: statType = Stat.BASE_DEFENSE.ordinal(); break;
                 case R.id.buttonIconEmissions: statType = Stat.EMISSIONS.ordinal(); break;
                 case R.id.buttonIconFood: statType = Stat.FOOD.ordinal(); break;
                 case R.id.buttonIconMaterials: statType = Stat.MATERIALS.ordinal(); break;

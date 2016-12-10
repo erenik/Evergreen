@@ -12,10 +12,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/layoutMenuAndLog"
         android:orientation="vertical"
-        android:layout_margin="@dimen/text_margin"
         >
-        <TextView
-            style="@style/Evergreen.Text"
+        <TextView style="@style/Evergreen.Text"
             android:text="Filters"
             />
         <LinearLayout
@@ -38,18 +36,11 @@
         </LinearLayout>
     </LinearLayout>
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="@dimen/text_margin"
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
         android:id="@+id/scrollViewLog"
         > <!-- Same ID as used in main screen -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:id="@+id/layoutLog"
-                >
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:id="@+id/layoutLog">
                 <!--    /// Just add all stuff here?-->
                 <TextView
                     style="@style/Evergreen.Text"
