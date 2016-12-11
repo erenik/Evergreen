@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".act.IntroScreen"
+    tools:context=".android.act.IntroScreen"
     style="@style/Evergreen.BG"
     android:orientation="vertical"
     >
@@ -23,7 +23,7 @@
             android:layout_height="match_parent"
             android:padding="20dp"
             >
-            <erenik.seriousgames.evergreen.ui.EvergreenTextView
+            <erenik.evergreen.android.ui.EvergreenTextView
                 android:id="@+id/fullscreen_content"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -50,7 +50,7 @@
         android:orientation="horizontal"
         tools:ignore="UselessParent">
 
-        <erenik.seriousgames.evergreen.ui.EvergreenButton
+        <erenik.evergreen.android.ui.EvergreenButton
             android:id="@+id/nextButton"
             style="@style/Evergreen.Button.Wide"
             android:layout_width="0dp"

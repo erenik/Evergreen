@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Evergreen.BG"
-    tools:context=".act.StatViewActivity">
+    tools:context=".android.act.StatViewActivity">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -24,7 +24,7 @@
                     android:layout_height="match_parent"
                     android:layout_width="wrap_content"
                     />
-                <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
+                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
                     android:layout_width="0sp"
                     android:layout_weight="2"
                     android:layout_height="match_parent"
@@ -32,7 +32,7 @@
                     android:id="@+id/textView.stat.name"
                     android:text="Stat"
                     />
-                <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
+                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:id="@+id/textView.stat.quantity"
@@ -41,7 +41,7 @@
             </LinearLayout>
 
             <!-- General info. Click to read more? -->
-            <erenik.seriousgames.evergreen.ui.EvergreenButton
+            <erenik.evergreen.android.ui.EvergreenButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Read detailed description"
@@ -61,7 +61,7 @@
                     android:orientation="vertical"
                     >
                     <!-- Summary of recurring bonuses and penalties. -->
-                    <erenik.seriousgames.evergreen.ui.EvergreenTextView style="@style/Evergreen.TextBigger" android:text="Recurring bonuses/penalties" />
+                    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.TextBigger" android:text="Recurring bonuses/penalties" />
                     <ScrollView
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
@@ -72,7 +72,7 @@
                             android:layout_height="wrap_content"
                             android:id="@+id/layoutStatRecurringBonuses"
                             android:orientation="vertical">
-                            <erenik.seriousgames.evergreen.ui.EvergreenTextView
+                            <erenik.evergreen.android.ui.EvergreenTextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Equip Bladiblamba"/>
@@ -90,7 +90,7 @@
                             android:layout_height="wrap_content"
                             android:id="@+id/statActionButtons"
                             android:orientation="vertical">
-                            <erenik.seriousgames.evergreen.ui.EvergreenButton
+                            <erenik.evergreen.android.ui.EvergreenButton
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="Equip Bladiblamba"/>
@@ -98,7 +98,7 @@
                     </ScrollView>
                 </LinearLayout>
                 <!-- Help text inside here Covers all the space if visible. -->
-                <erenik.seriousgames.evergreen.ui.EvergreenTextView
+                <erenik.evergreen.android.ui.EvergreenTextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/black"

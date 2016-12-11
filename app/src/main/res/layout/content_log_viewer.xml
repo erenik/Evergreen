@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Evergreen.BG"
     android:orientation="vertical"
-    tools:context="erenik.seriousgames.evergreen.act.logViewer"
+    tools:context=".android.act.logViewer"
     >
     <LinearLayout
         android:layout_width="match_parent"

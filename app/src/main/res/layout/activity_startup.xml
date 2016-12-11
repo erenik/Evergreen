@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".act.IntroScreen"
+    tools:context=".android.act.IntroScreen"
     style="@style/Evergreen.BG"
     android:orientation="vertical"
     >
@@ -39,7 +39,7 @@
         android:orientation="horizontal"
         tools:ignore="UselessParent"
         >
-        <erenik.seriousgames.evergreen.ui.EvergreenButton
+        <erenik.evergreen.android.ui.EvergreenButton
             android:id="@+id/buttonNewGame"
             style="@style/Evergreen.Button.Wide"
             android:layout_width="0dp"
@@ -48,7 +48,7 @@
             android:textColor="@color/mainButtonTextColor"
             android:text="New game" />
 
-        <erenik.seriousgames.evergreen.ui.EvergreenButton
+        <erenik.evergreen.android.ui.EvergreenButton
             android:id="@+id/buttonLoadGame"
             style="@style/Evergreen.Button.Wide"
             android:layout_width="0dp"

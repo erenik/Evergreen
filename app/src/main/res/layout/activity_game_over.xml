@@ -6,7 +6,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     style="@style/Evergreen.BG"
-    tools:context=".act.GameOver"
+    tools:context=".android.act.GameOver"
     >
 
     <TextView
