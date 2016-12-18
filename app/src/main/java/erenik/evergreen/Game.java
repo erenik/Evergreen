@@ -1,13 +1,12 @@
 package erenik.evergreen;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import erenik.evergreen.common.Player;
+import erenik.evergreen.util.Json;
+import erenik.evergreen.util.Tuple;
 
 // import erenik.evergreen.android.App;
 
@@ -128,13 +127,13 @@ public class Game
 
     public boolean parseFromJson(String line)
     {
-        try {
-            JSONObject json = new JSONObject(line);
-            Iterator<String> keys = json.keys();
-            while(keys.hasNext())
-            {
-                String key = keys.next();
-                Object value = json.get(key);
+       // try {
+            Json j = new Json();
+            j.Parse(line);
+            List<Tuple<String,String>> tuples = j.Tuples();
+            for (int i = 0; i < tuples.size(); ++i){
+                String key = tuples.get(i).x;
+                Object value = tuples.get(i).y;
                 if (key.equals("gameID"))
                     gameID = (int) value;
                 else if (key.equals("name"))
@@ -146,10 +145,11 @@ public class Game
                 else
                     System.out.println("Bad key-value pair: "+key+" value: "+value);
             }
-        } catch (JSONException e) {
+       /* }
+        catch (JSONException e) {
             e.printStackTrace();
             return false;
-        }
+        }*/
         return true;
     }
 }
