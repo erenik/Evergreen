@@ -187,4 +187,8 @@
         "For example Parry gives you a second roll of the dice to parry attacks that would otherwise have struck you. "
     </string>
 
+    <string name="title_activity_very_cool_to_be_copy_pasted_from_and_deleted">
+        VeryCoolToBeCopyPastedFromAndDeleted
+    </string>
+
 </resources>

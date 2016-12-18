@@ -4,14 +4,17 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
-import erenik.evergreen.logging.LogType;
-import erenik.evergreen.player.Finding;
-import erenik.evergreen.player.Stat;
+import erenik.evergreen.common.encounter.Encounter;
+import erenik.evergreen.common.encounter.EncounterListener;
+import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.player.Finding;
+import erenik.evergreen.common.player.Stat;
 import erenik.evergreen.util.Dice;
 
 /**
@@ -20,10 +23,28 @@ import erenik.evergreen.util.Dice;
 public class EventDialogFragment extends DialogFragment
 {
     public Finding type = Finding.Nothing;
-    Encounter enc = new Encounter();
+    EncounterActivity encounterActivity = new EncounterActivity();
+
+    Encounter enc = new Encounter(App.GetPlayer());
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        System.out.println("onCreate");
+    }
+
     @Override
     public Dialog onCreateDialog(final Bundle savedInstanceState)
     {
+
+        enc.listeners.add(new EncounterListener() {
+            @Override
+            public void OnEncounterEnded(Encounter enc) {
+                // TODO: Save or stuff?
+                App.Save();
+            }
+        });
+
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         String moreText = "\n\nDo you want to play the event now?";
@@ -37,7 +58,6 @@ public class EventDialogFragment extends DialogFragment
             case AbandonedShelter:
             case RandomPlayerShelter:
             {
-
                 skippable = true;
                 break;
             }

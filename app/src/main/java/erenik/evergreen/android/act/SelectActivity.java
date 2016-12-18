@@ -16,9 +16,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
-import erenik.evergreen.player.*;
+import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.evergreen.android.ui.EvergreenButton;
 

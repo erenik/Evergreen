@@ -5,12 +5,12 @@
  */
 package erenik.evergreen.server;
 
-import erenik.evergreen.Invention.Invention;
+import erenik.evergreen.common.Invention.Invention;
 
 import java.util.ArrayList;
 import java.util.List;
-import erenik.evergreen.Player;
-import erenik.evergreen.player.Stat;
+import erenik.evergreen.common.Player;
+import erenik.evergreen.common.player.Stat;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

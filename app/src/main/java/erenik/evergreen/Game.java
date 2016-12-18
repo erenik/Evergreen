@@ -3,7 +3,9 @@ package erenik.evergreen;
 import java.util.ArrayList;
 import java.util.List;
 
-import erenik.evergreen.android.App;
+import erenik.evergreen.common.Player;
+
+// import erenik.evergreen.android.App;
 
 /**
  * Handles a specific game. It may either be a local game, global with many players,
@@ -44,9 +46,11 @@ public class Game {
         players.add(Player.NewAI("Mad Marvin"));
     }
 
-    public void NextDay() {
-        if (!players.contains(App.GetPlayer()))
-            players.add(App.GetPlayer());
+    public void NextDay()
+    {
+        // TODO: Add default player as needed? Elsewhere?
+//        if (!players.contains(App.GetPlayer()))
+  //          players.add(App.GetPlayer());
         System.out.println("Simulator.NextDay");
         for (int i = 0; i < players.size(); ++i)
         {

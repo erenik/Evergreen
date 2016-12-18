@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.Button;
 
 import erenik.evergreen.android.App;
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 
 public class GameOver extends EvergreenActivity {

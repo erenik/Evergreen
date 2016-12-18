@@ -3,8 +3,8 @@ package erenik.evergreen;
 import java.util.ArrayList;
 import java.util.List;
 
-import erenik.evergreen.android.App;
-import erenik.evergreen.Player;
+// import erenik.evergreen.android.App;
+// import erenik.evergreen.common.Player;
 
 /**
  * Class for step-wise simulation of the game world, including players, transactions, strongholds, fights, etc. Between each step, actions, skills and choices should be submitted to the simulator for proper output?
@@ -40,7 +40,13 @@ public class Simulator
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public void NextDay()
     {
-
+        /// No games in? Add default game and default player.
+        if (games.size() == 0)
+        {
+            games.add(new Game());
+            // TODO: Add default player elsewhere.
+   //         games.get(0).players.add(App.GetPlayer());
+        }
         /// Check if the games are supposed to proceed to the next day.
         for (int i = 0; i < games.size(); ++i)
         {

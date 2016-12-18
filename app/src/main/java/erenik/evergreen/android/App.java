@@ -14,29 +14,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import erenik.evergreen.*;
 import erenik.evergreen.android.act.EventDialogFragment;
+import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
-import erenik.evergreen.logging.Log;
-import erenik.evergreen.logging.LogType;
-import erenik.evergreen.player.*;
-import erenik.evergreen.server.*;
+import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 
 /**
  * Created by Emil on 2016-10-26.
  */
 public class App {
+
+    static public String ip = "www.erenik.com";
+    static public int port = 4000;
+
     // Static reference. Updated from listener declared in Startup.
     public static Activity currentActivity;
     public static Activity mainScreenActivity;
@@ -57,6 +55,14 @@ public class App {
                 || !player.AllMandatoryEventsHandled()) // Not all mandatory events handled,
             return HandleGeneratedEvents(); // Do event.
         return false;
+    }
+
+    public static boolean Save()
+    {
+        EvergreenActivity ea = (EvergreenActivity)currentActivity;
+        if (ea == null)
+            return false;
+        return ea.Save();
     }
 
     public static boolean HandleGeneratedEvents()

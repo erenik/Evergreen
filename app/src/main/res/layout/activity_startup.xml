@@ -7,18 +7,17 @@
     android:orientation="vertical"
     >
 
-    <ImageView
+    <ImageView style="@style/Evergreen.Logo"
         android:id="@+id/imageViewIntroOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/title"
         />
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
     <TextView
-        android:id="@+id/fullscreen_content"
+        android:id="@+id/fullscreen_view"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_weight="2"

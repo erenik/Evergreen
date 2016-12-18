@@ -1,4 +1,5 @@
 <resources>
+
     <style name="Evergreen" parent="Theme.AppCompat">
         <item name="android:textColor">@color/mainTextColor</item>
         <item name="windowActionBar">false</item>
@@ -10,24 +11,33 @@
         <item name="android:background">@drawable/bg3</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
+        <item name="android:id">@id/fullscreen_view</item>
     </style>
+
+    <style name="Evergreen.Logo">
+        <item name="android:src">@drawable/logo_granar_2</item>
+    </style>
+
     <style name="Evergreen.IconLayout">     <!-- The outer box -->
-<!--        <item name="android:background">@drawable/icon</item>-->
+        <!--        <item name="android:background">@drawable/icon</item>-->
         <item name="android:layout_width">0px</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">3</item>
     </style>
+
     <style name="Evergreen.IconInnerLayout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:orientation">vertical</item>
     </style>
+
     <style name="Evergreen.IconBG">
         <item name="android:background">@drawable/icon</item>
         <!-- <item name="android:src">@drawable/icon</item> -->
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
     </style>
+
     <style name="Evergreen.IconButton">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
@@ -35,6 +45,7 @@
         <item name="android:background">@null</item>
         <item name="android:scaleType">fitStart</item>
     </style>
+
     <style name="Evergreen.IconText">
         <item name="android:textColor">@color/iconTextColor</item>
         <item name="android:text">10/10</item>
@@ -43,8 +54,10 @@
         <item name="android:layout_weight">1</item>
         <item name="android:gravity">center|bottom</item>
         <item name="android:textSize">18dp</item>
-        <item name="android:paddingBottom">8dp</item> <!-- Padding of 16 good if icons weight is 2 -->
+        <item name="android:paddingBottom">8dp
+        </item> <!-- Padding of 16 good if icons weight is 2 -->
     </style>
+
     <style name="Evergreen.IconTextTitle" parent="Evergreen.IconText">
         <item name="android:gravity">center</item>
         <item name="android:textSize">12dp</item>
@@ -60,28 +73,33 @@
         <item name="android:padding">@dimen/textPadding</item>
         <item name="android:layout_margin">@dimen/textMargin</item>
     </style>
+
     <style name="Evergreen.Text.Long" parent="Evergreen.Text">
         <item name="android:padding">@dimen/textPadding.More</item>
     </style>
+
     <style name="Evergreen.TextBigger" parent="Evergreen.Text">
         <item name="android:textSize">@dimen/textSize.Larger</item>
         <item name="android:textColor">@color/textColor.Brighter</item>
     </style>
+
     <style name="Evergreen.TextBiggest" parent="Evergreen.Text">
         <item name="android:textSize">@dimen/textSize.Largest</item>
         <item name="android:textColor">@color/textColor.Brightest</item>
     </style>
+
     <style name="Evergreen.Text.Title" parent="Evergreen.Text">
         <item name="android:textColor">@color/textColor.Title</item>
         <item name="android:textSize">@dimen/textSize.Title</item>
         <item name="android:padding">@dimen/textPadding.More</item>
         <item name="android:layout_margin">@dimen/textMargin.More</item>
     </style>
+
     <style name="Evergreen.Checkbox">
         <item name="android:layout_width">0px</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:textColor">@color/mainTextColor</item>
-      <!--  <item name="android:buttonTint">@color/mainTextColor</item> -->
+        <!--  <item name="android:buttonTint">@color/mainTextColor</item> -->
         <item name="android:layout_weight">3</item>
     </style>
     <!-- Buttons -->
@@ -94,6 +112,7 @@
         <item name="android:background">@drawable/small_button</item>
         <item name="android:textSize">@dimen/textSize.Larger</item>
     </style>
+
     <style name="Evergreen.Button.Wide" parent="Evergreen.Button">
         <item name="android:background">@drawable/wide_button</item>
         <item name="android:textSize">@dimen/textSize.Largest</item>

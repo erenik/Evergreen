@@ -18,13 +18,13 @@ import java.util.ArrayList;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
-import erenik.evergreen.player.ActionArgument;
-import erenik.evergreen.player.DAction;
-import erenik.evergreen.Invention.Invention;
-import erenik.evergreen.Invention.InventionType;
-import erenik.evergreen.Player;
-import erenik.evergreen.player.Skill;
-import erenik.evergreen.player.Transport;
+import erenik.evergreen.common.player.ActionArgument;
+import erenik.evergreen.common.player.DAction;
+import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.Invention.InventionType;
+import erenik.evergreen.common.Player;
+import erenik.evergreen.common.player.Skill;
+import erenik.evergreen.common.player.Transport;
 
 import java.util.List;
 

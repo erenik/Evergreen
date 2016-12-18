@@ -11,8 +11,8 @@ import java.util.List;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
-import erenik.evergreen.Player;
-import erenik.evergreen.player.Stat;
+import erenik.evergreen.common.Player;
+import erenik.evergreen.common.player.Stat;
 
 /**
  * Created by Emil on 2016-12-09.

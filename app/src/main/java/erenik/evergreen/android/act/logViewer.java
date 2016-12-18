@@ -8,8 +8,8 @@ import android.widget.CheckBox;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
-import erenik.evergreen.logging.LogType;
-import erenik.evergreen.Player;
+import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.Player;
 
 public class logViewer extends EvergreenActivity
 {

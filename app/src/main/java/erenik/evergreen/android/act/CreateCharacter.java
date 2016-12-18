@@ -37,7 +37,7 @@ import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.android.auth.NetworkTask;
 import erenik.evergreen.android.auth.NetworkTaskListener;
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 
 import static android.Manifest.permission.READ_CONTACTS;
 

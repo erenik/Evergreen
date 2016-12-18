@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import erenik.evergreen.android.App;
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 
 /**

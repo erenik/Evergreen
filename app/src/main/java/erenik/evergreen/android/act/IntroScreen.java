@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import erenik.evergreen.android.App;
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 
 /**
@@ -31,7 +31,7 @@ public class IntroScreen extends EvergreenActivity
             if (id == R.id.nextButton)
             {
                 // Update text?
-                TextView textView = (TextView) findViewById(R.id.fullscreen_content);
+                TextView textView = (TextView) findViewById(R.id.fullscreen_text);
                 ++clicked;
                 switch(clicked) {
                     case 1:

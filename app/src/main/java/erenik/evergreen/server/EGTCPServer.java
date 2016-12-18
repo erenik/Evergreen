@@ -5,17 +5,14 @@
  */
 package erenik.evergreen.server;
 
-import erenik.evergreen.Player;
-import erenik.evergreen.packet.EGErrorType;
-import erenik.evergreen.packet.EGPacket;
-import erenik.evergreen.packet.EGPacketType;
+import erenik.evergreen.common.Player;
+import erenik.evergreen.common.packet.EGErrorType;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketType;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;

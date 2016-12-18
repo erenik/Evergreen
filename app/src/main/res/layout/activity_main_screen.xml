@@ -14,11 +14,10 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         >
-        <ImageView
+        <ImageView style="@style/Evergreen.Logo"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_weight="1.5"
-            android:src="@drawable/title" />
+            android:layout_weight="1.5" />
         <!-- /// First Row of stats -->
         <LinearLayout
             android:orientation="horizontal"

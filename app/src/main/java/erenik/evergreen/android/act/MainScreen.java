@@ -7,11 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import erenik.evergreen.Player;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
-import erenik.evergreen.logging.*;
-import erenik.evergreen.player.*;
+import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 
 /**
@@ -58,6 +57,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         public void onClick(View v) {
             if (App.HandleNextEvent())
                 return;
+            System.out.println("Next day!");
             simulator.NextDay();
             // Update UI? lol
             UpdateGUI();
@@ -157,6 +157,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        super.onActivityResult(requestCode, resultCode, data);
         int type = requestCode;
         System.out.println("onActivityResult called, req: "+requestCode+" code: " + resultCode);
         if (resultCode < 0)

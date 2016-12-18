@@ -24,7 +24,7 @@
             android:padding="20dp"
             >
             <erenik.evergreen.android.ui.EvergreenTextView
-                android:id="@+id/fullscreen_content"
+                android:id="@+id/fullscreen_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
