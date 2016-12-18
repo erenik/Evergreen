@@ -11,6 +11,7 @@ package erenik.evergreen.common.packet;
  */
 public enum EGResponseType {
     OK("OK"),
+    GamesList("GamesList"),
     Failed("NO");
     EGResponseType(String displayText)
     {

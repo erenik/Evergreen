@@ -13,6 +13,12 @@ import erenik.evergreen.common.Player;
  */
 public class EGRequest extends EGPacket 
 {
+    /// Requests without body, such as pure GETs for info.
+    public EGRequest(EGRequestType reqType)
+    {
+        this.type = EGPacketType.Request;
+        this.reqt = reqType;
+    }
     public EGRequest(EGRequestType reqType, byte[] body)
     {
         this.type = EGPacketType.Request;
@@ -41,4 +47,9 @@ public class EGRequest extends EGPacket
         EGRequest eg = new EGRequest(EGRequestType.Load, player.toByteArr());
         return eg;
     };
+    public static EGRequest byType(EGRequestType type)
+    {
+        EGRequest eg = new EGRequest(type);
+        return eg;
+    }
 }

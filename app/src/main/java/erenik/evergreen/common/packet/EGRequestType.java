@@ -13,6 +13,7 @@ public enum EGRequestType {
     // Save character, also used for initial Creation requests.
     Save("SAVE"), // Save character, Body of message should be POJO-save-data of Player object to save.
     Load("LOAD"), // Load character, Body of message should be POJO-save-data of Player object to save.
+    GetGamesList("GetGamesList"),
     ;
     EGRequestType(String header)
     {

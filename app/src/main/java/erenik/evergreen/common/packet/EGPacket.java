@@ -7,9 +7,12 @@ package erenik.evergreen.common.packet;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import erenik.evergreen.Game;
 import erenik.evergreen.server.EGTCPServer;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -22,6 +25,10 @@ import java.nio.ByteBuffer;
  */
 public class EGPacket 
 {
+
+    static String defaultAddress = "www.erenik.com";
+    static  int defaultPort = 4000;
+
     protected EGPacketType type = null;
     protected EGRequestType reqt = null;
     protected EGResponseType rest = null;
@@ -35,6 +42,7 @@ public class EGPacket
     protected int timeWaitedForReply = 0;
     static EGPacketReceiver packetReceiver = null;
     EGErrorType lastError = EGErrorType.NoError; // Default no errors, right?
+    private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
 
     public EGErrorType LastError(){return lastError;};
     public EGPacket GetReply(){return reply;};
@@ -66,6 +74,11 @@ public class EGPacket
         type = EGPacketType.Error;
         errType = errorType;
     };
+    public void addReceiverListener(EGPacketReceiverListener eprl)
+    {
+        receiverListeners.add(eprl);
+    }
+
     @Override
     public String toString()
     {
@@ -333,6 +346,11 @@ public class EGPacket
             return;
         }
         reply = ReadFromSocket(socketSentOn);
+        if (reply != null)
+        {
+            for (int i = 0; i < receiverListeners.size(); ++i) // Notify listeners of the reply we received.
+                receiverListeners.get(i).OnReceivedReply(reply);
+        }
     }
 
     
@@ -368,5 +386,40 @@ public class EGPacket
             }
             msToWait -= 10;
         }
+    }
+
+    public static EGPacket gamesList(List<Game> games)
+    {
+        EGPacket pack = new EGPacket(EGResponseType.GamesList);
+        String bodyStr = "NumGames:"+games.size()+"\n";
+        for (int i = 0; i < games.size(); ++i)
+        {
+            Game g = games.get(i);
+            bodyStr += g.toJsonBrief() +"\n";
+        }
+        pack.body = bodyStr.getBytes();
+        return pack;
+    }
+    public List<Game> parseGamesList()
+    {
+        String bodyAsStr = new String(body);
+        System.out.println("bodyASStr: "+bodyAsStr);
+        String[] lines = bodyAsStr.split("\n");
+        List<Game> games = new ArrayList<>();
+        for (int i = 0; i < lines.length; ++i)
+        {
+            String line = lines[i];
+            Game g = new Game();
+            boolean ok = g.parseFromJson(line);
+            if (!ok)
+                continue;
+            games.add(g);
+        }
+        return games;
+    }
+
+    public void SendToServer()
+    {
+        Send(defaultAddress, defaultPort);
     }
 }

@@ -21,14 +21,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGPacketSender;
+import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.player.Constants;
 import erenik.evergreen.common.packet.EGPacketReceiver;
 import erenik.evergreen.common.packet.EGRequest;
+
 
 /**
  * Created by Emil on 2016-12-09.
@@ -78,6 +85,22 @@ public class EvergreenActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         hideControls();
+    }
+
+    static public List<Game> gameList = new ArrayList<>();
+
+    void GetGamesList()
+    {
+        System.out.println("Requesting games list from server...");
+        EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
+        pack.SendToServer(); // Send to default server.
+        pack.addReceiverListener(new EGPacketReceiverListener()
+        {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                gameList = reply.parseGamesList();
+            }
+        });
     }
 
     void setupFullscreenFlags()

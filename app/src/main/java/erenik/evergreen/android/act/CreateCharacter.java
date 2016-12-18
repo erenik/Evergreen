@@ -117,6 +117,9 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        /// Request games list, should maybe fetch it even earlier..?
+        GetGamesList();
     }
 
     private void populateAutoComplete() {

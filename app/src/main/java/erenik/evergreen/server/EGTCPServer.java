@@ -5,6 +5,7 @@
  */
 package erenik.evergreen.server;
 
+import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.packet.EGErrorType;
 import erenik.evergreen.common.packet.EGPacket;
@@ -31,8 +32,8 @@ public class EGTCPServer extends Thread
     public int packetsReceived = 0;
     public int GetPort(){return portN;};
     int millisecondsTimeout = 50;
-    List<Socket> sockets = new ArrayList<Socket>(); 
-
+    List<Socket> sockets = new ArrayList<Socket>();
+    List<Game> games = new ArrayList<>();
     ServerSocket servSock;
     public static void main(String[] args) throws Exception
     {        
@@ -55,6 +56,8 @@ public class EGTCPServer extends Thread
     
     void StartServer() throws IOException 
     {
+        // Create main game list.
+        games = Game.CreateDefaultGames();
         Host();
         /// Host server.
         while (stopHosting == false)
@@ -212,6 +215,17 @@ public class EGTCPServer extends Thread
                 }
                 // Check cause of failure. Bad authentication? Name already exists?
                 Reply(sock, EGPacket.error(EGErrorType.BadPassword).build());
+                break;
+            }
+            case GetGamesList: {
+                try {
+                    System.out.println("EGTCPServer.EvaluateRequest: Body first 10 bytes:");
+                    Reply(sock, EGPacket.gamesList(games).build());
+                    // Body irrelevant, just send back the games list.
+                } catch (Exception e)
+                {
+                    return;
+                }
                 break;
             }
             default:
