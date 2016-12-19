@@ -2,6 +2,9 @@ package erenik.evergreen.common.player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import erenik.evergreen.common.Player;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -45,6 +48,30 @@ public enum DAction
     public List<ActionArgument> requiredArguments = new ArrayList<ActionArgument>();
     public String text = "";
     public String description = "";
+
+    static Random randomAction = new Random(System.currentTimeMillis());
+    public static DAction RandomAction(Player forPlayer)
+    {
+        // Randomly select one.
+        DAction action = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
+        // Generate appropriate arguments based on the given player requesting them?
+        return action;
+    }
+
+    @Override
+    public String toString() {
+        if (requiredArguments.size() == 0)
+            return this.text;
+        String str = this.text+":";
+        for (int i = 0; i < requiredArguments.size(); ++i)
+        {
+            ActionArgument aarg = requiredArguments.get(i);
+            str += aarg.value;
+            if (i < requiredArguments.size() - 1)
+                str += ",";
+        }
+        return str;
+    }
 
     public static DAction ParseFrom(String s)
     {

@@ -16,9 +16,11 @@ import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Invention.WeaponType;
 //import erenik.evergreen.android.App;
 import erenik.evergreen.common.combat.Combatable;
+import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.event.Event;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.util.Dice;
 
@@ -37,6 +39,9 @@ import java.util.logging.Logger;
  */
 public class Player extends Combatable implements Serializable
 {
+    List<PlayerListener> listeners = new ArrayList<>();
+    // Adds a listener for state changes to the player.
+    public void addStateListener(PlayerListener listener){ listeners.add(listener);};
     /// Local simulator for proceeding to the next day. Isn't used for the multiplayer games.
     Simulator simulator = Simulator.getSingleton();
     /// The current game you are playing in.
@@ -46,7 +51,11 @@ public class Player extends Combatable implements Serializable
     // Main stats.
 //    float hp, food, materials, base_attack, base_defense, emissions;
     float[] statArr = new float[Stat.values().length];
-    /// Used in main menu, and also saved.
+    /**
+     * List of actions this player will take during the day/turn.
+     * List of names of actions, optionally with extra arguments after a colon?
+     *
+    */
     public List<String> dailyActions = new ArrayList<>();
     public int activeAction = -1;
     private List<Transport> transports = new ArrayList<>();
@@ -106,7 +115,7 @@ public class Player extends Combatable implements Serializable
      *  3-99 - Reserved.
      *  100-2000. Public game IDs. These games may have a password to join them.
     */
-    int gameID;
+    public int gameID = -1;
 
     public List<String> knownStrongholds = new ArrayList<>();
     public List<String> knownPlayerNames = new ArrayList<>();
@@ -160,6 +169,7 @@ public class Player extends Combatable implements Serializable
     }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException
     {
+        out.writeInt(gameID);
         out.writeObject(name);
         out.writeObject(password);
         out.writeObject(statArr);
@@ -179,10 +189,11 @@ public class Player extends Combatable implements Serializable
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException
     {
+        gameID = in.readInt();
         name = (String) in.readObject();
         password = (String) in.readObject();
         statArr = (float[]) in.readObject();
-        System.out.println("name: "+name+" pw: "+password);
+//        System.out.println("name: "+name+" pw: "+password);
         skills = (List<Skill>) in.readObject();
         dailyActions = (List<String>) in.readObject();
         transports = (List<Transport>) in.readObject();
@@ -313,6 +324,11 @@ public class Player extends Combatable implements Serializable
     public void Adjust(Stat s, float amount)
     {
         statArr[s.ordinal()] += amount;
+        if (s == Stat.HP && statArr[s.ordinal()] <= 0) {
+            System.out.println("Died, informing listeners");
+            for (int i = 0; i < listeners.size(); ++i)
+                listeners.get(i).OnPlayerDied(this);
+        }
     }
     // Getter for main stats.
     float Get(int stat)
@@ -368,10 +384,9 @@ public class Player extends Combatable implements Serializable
             return;
         }
         NewDay();  // New day :3
-        System.out.println("Yeah yeah");
         Log("-- Day " + Turn() + " --", LogType.INFO);
         Transport t = Transport.RandomOf(transports);
-        System.out.println("Randomed transport.. "+t.name());
+       // System.out.println("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.ordinal());
         Log("Transport of the day is: "+CurrentTransport().name(), LogType.INFO);
         float emissionsToGenerate = CurrentTransport().Get(TransportStat.EmissionsPerDay);
@@ -398,7 +413,7 @@ public class Player extends Combatable implements Serializable
         int expToGain = (int) (2 + Get(Skill.Studious).Level() + Get(Stat.UNALLOCATED_EXP));
         // Erase unallocated exp. It will be re-added later perhaps.
         Set(Stat.UNALLOCATED_EXP, 0);
-        System.out.println("Exp gained: "+expToGain);
+ //       System.out.println("Exp gained: "+expToGain);
         GainEXP(expToGain);
 
         // Analyze some chosen hours of activity. Generate events and stuff for each?
@@ -415,6 +430,8 @@ public class Player extends Combatable implements Serializable
                 Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, 1);
                 break;
         }
+        for (int i = 0; i < listeners.size(); ++i) // Inform listeners, new day is over.
+            listeners.get(i).OnPlayerNewDay(this);
     }
 
     public void ClampHP()
@@ -445,6 +462,12 @@ public class Player extends Combatable implements Serializable
             return finding;
         }
         return finding;
+    }
+    void PopEvent(Finding f) { // Pop NextEvent from queue.
+        switch (f) {
+            case Encounter: Adjust(Stat.ENCOUNTERS, -1); break;
+            case AttacksOfTheEvergreen: Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1); break;
+        }
     }
     /// Returns true
     public boolean AllMandatoryEventsHandled()
@@ -631,7 +654,7 @@ public class Player extends Combatable implements Serializable
                 toCraft = inv;
         }
         if (toCraft == null) {
-            System.exit(15);
+            Log("toCraft null, what did you wanna craft again?", LogType.Error);
             return;
         }
         int progressRequired = toCraft.Get(InventionStat.ProgressRequiredToCraft);
@@ -703,8 +726,10 @@ public class Player extends Combatable implements Serializable
   //              System.out.println("Typestr: "+typeStr);
                 type = InventionType.GetFromString(typeStr);
             }
-            if (type == null)
-                System.out.println("Bad invention type");
+            if (type == null) {
+                Log("Bad invention type", LogType.Error);
+                return;
+            }
             if (type == InventionType.Any)
             {
                 type = InventionType.RandomType();
@@ -1018,5 +1043,54 @@ public class Player extends Combatable implements Serializable
             System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
         }
         System.out.println();
+    }
+
+    public static Player fromByteArray(byte[] bytes) {
+        Player player = new Player();
+        boolean ok = player.fromByteArr(bytes);
+        if (ok)
+            return player;
+        return null;
+    }
+
+    public boolean CredentialsMatch(Player playerInSystem) {
+        if (name.equals(playerInSystem.name) == false)
+            return false;
+        if (password.equals(playerInSystem.password) == false)
+            return false;
+        return true;
+    }
+
+    public String DailyActionsAsString() {
+        String s = "";
+        for (int i = 0; i < dailyActions.size(); ++i)
+            s += dailyActions.get(i)+"; ";
+        return s;
+    }
+
+    public void SaveFromClient(Player player) {
+        dailyActions = player.dailyActions; // Copy over.
+        skillTrainingQueue = player.skillTrainingQueue;
+        // Other stuff? Equipment
+
+    }
+    /// Process mandatory events (findings).
+    public void ProcessMandatoryEvents() {
+        System.out.println("ProcessMandatoryEvents");
+        while (AllMandatoryEventsHandled() == false && IsAlive()) {
+            Finding f = NextEvent();
+            System.out.println("NextEvent: "+f.GetEventText());
+            Encounter enc = new Encounter(f, this); // Create encounter from the finding and this player.
+            enc.Simulate();
+        //    PopEvent(f);
+        }
+    }
+
+    public void InformListeners() {
+        for (int i = 0; i < listeners.size(); ++i) {
+            PlayerListener pl = listeners.get(i);
+            if (!IsAlive())
+                pl.OnPlayerDied(this);
+        }
     }
 }

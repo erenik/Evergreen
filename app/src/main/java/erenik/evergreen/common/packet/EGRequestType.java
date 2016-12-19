@@ -11,6 +11,7 @@ package erenik.evergreen.common.packet;
  */
 public enum EGRequestType {
     // Save character, also used for initial Creation requests.
+    CreatePlayer("CreatePlayer"), // Initial request to create player/register :)
     Save("SAVE"), // Save character, Body of message should be POJO-save-data of Player object to save.
     Load("LOAD"), // Load character, Body of message should be POJO-save-data of Player object to save.
     GetGamesList("GetGamesList"),
@@ -21,8 +22,7 @@ public enum EGRequestType {
     }
     static EGRequestType fromString(String fromString)
     {
-                System.out.println("EGRequestType.fromString");
-
+         //       System.out.println("EGRequestType.fromString");
         for (int i = 0; i < EGRequestType.values().length; ++i)
             if (EGRequestType.values()[i].text.equals(fromString))
                 return EGRequestType.values()[i];

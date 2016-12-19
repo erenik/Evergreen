@@ -55,7 +55,7 @@ public class Json {
                 --inArray;
                 if (inArray == 0) {
                     String value = str.substring(startValue, i+1);
-                    System.out.println("value: " + value);
+          //          System.out.println("value: " + value);
                     values.add(value);
                 }
             }
@@ -70,13 +70,13 @@ public class Json {
                 if (!inQuotes && !argTime) // Just finished a quote? And before argument? Is key.
                 {
                     String key = str.substring(startKey+1, i);
-                    System.out.println("key: "+key);
+        //            System.out.println("key: "+key);
                     keys.add(key);
                 }
                 else if (!inQuotes && argTime)
                 {
                     String value = str.substring(startKey+1, i);
-                    System.out.println("value: "+value);
+          //          System.out.println("value: "+value);
                     values.add(value);
                 }
                 startKey = i;

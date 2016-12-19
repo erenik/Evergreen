@@ -16,9 +16,10 @@ import java.util.logging.Logger;
  */
 public class EGPacketReceiver extends Thread
 {
-    private EGPacketReceiver()
+    public EGPacketReceiver()
     {
     }
+    /*
     public static void StartSingleton()
     {
         if (epr != null)
@@ -30,11 +31,12 @@ public class EGPacketReceiver extends Thread
     {
         epr.stop = true;
     }
-    static void NewPacketWaitingForResponse(EGPacket pack)
-    {
+    */
+    static void NewPacketWaitingForResponse(EGPacket pack) {
         packetsWaitingForReponses.add(pack);
-        StartSingleton(); // Start if not already started.
     }
+    public static boolean HasPacketsToReceive(){ return packetsWaitingForReponses.size() > 0; }
+
     boolean stop = false;
     static private EGPacketReceiver epr;
     static private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
@@ -50,6 +52,7 @@ public class EGPacketReceiver extends Thread
                 else
                 {
                     int sleepTime = EGPacketCommunicator.retryTimeMs * multiplier;
+                    ++multiplier;
                     System.out.println("EGPacketReceiver sleeping for "+sleepTime+"ms");
                     Thread.sleep(sleepTime);
                 }
@@ -60,23 +63,25 @@ public class EGPacketReceiver extends Thread
                     boolean remove = false;
                     // Reply received,
                     if (pack.reply != null){
-                        System.out.println("Got a reply?");
+               //         System.out.println("Got a reply?");
                         remove = true;
                     }
-                    if (pack.lastError != EGErrorType.NoError){
+                    if (pack.lastError != EGResponseType.NoError){
                         remove = true;
                         System.out.println("EGPacketReceiver.run: An error occurred: "+pack.lastError.text);
                     }
-                    pack.timeWaitedForReply += 10;
+                    long now = System.currentTimeMillis();
+                    long diff = now - pack.lastAttemptSystemMillis;
+                    pack.lastAttemptSystemMillis = System.currentTimeMillis();
+                    pack.timeWaitedForReplyMs += diff;
                     // Wait time out?
-                    //        System.out.println("pack.timeWaited "+pack.timeWaitedForReply+" timeout "+pack.replyTimeout);
-                    if (pack.timeWaitedForReply > pack.replyTimeout){
-                        pack.lastError = EGErrorType.ReplyTimeoutReached;
+//                    System.out.println("pack.timeWaited "+pack.timeWaitedForReplyMs+" timeout "+pack.replyTimeout);
+                    if (pack.timeWaitedForReplyMs > pack.replyTimeout){
+                        pack.lastError = EGResponseType.ReplyTimeoutReached;
                         remove = true;
                         System.out.println("Timeout reached. Remove packet from queue");
                     }
-                    if (remove)
-                    {
+                    if (remove) {
                         packetsWaitingForReponses.remove(pack); // Remove from receiving queue.
                         --i;
                         continue;

@@ -103,13 +103,13 @@ public enum Transport {
             total += transports.get(i).Get(TransportStat.RandomProbability);
         Random transportRandom = new Random();
         float r = transportRandom.nextFloat() * total;
-        System.out.println("Randomed " + r + " out of " + total);
+    //    System.out.println("Randomed " + r + " out of " + total);
         for (int i = 0; i < transports.size(); ++i) {
             Transport t = transports.get(i);
             r -= t.Get(TransportStat.RandomProbability);
-            System.out.println("Total " + total);
+      //      System.out.println("Total " + total);
             if (r < 0) {
-                System.out.println("Yo " + t.name());
+      //          System.out.println("Yo " + t.name());
                 return t;
             }
         }

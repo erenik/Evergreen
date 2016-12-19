@@ -40,8 +40,8 @@ import erenik.evergreen.common.packet.EGRequest;
 /**
  * Created by Emil on 2016-12-09.
  */
-public class EvergreenActivity extends AppCompatActivity {
-
+public class EvergreenActivity extends AppCompatActivity
+{
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -93,7 +93,6 @@ public class EvergreenActivity extends AppCompatActivity {
     {
         System.out.println("Requesting games list from server...");
         EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
-        pack.SendToServer(); // Send to default server.
         pack.addReceiverListener(new EGPacketReceiverListener()
         {
             @Override
@@ -101,6 +100,8 @@ public class EvergreenActivity extends AppCompatActivity {
                 gameList = reply.parseGamesList();
             }
         });
+        App.comm.Send(pack);
+//        pack.SendToServer(); // Send to default server.
     }
 
     void setupFullscreenFlags()
@@ -230,9 +231,9 @@ public class EvergreenActivity extends AppCompatActivity {
         Player player = App.GetPlayer();
         System.out.println("Saving to server.");
         // Connect to server.
-        EGPacketReceiver.StartSingleton();
+//        EGPacketReceiver.StartSingleton();
         EGRequest req = EGRequest.Save(player);
-        EGPacketSender.QueuePacket(req, App.ip, App.port);
+        App.comm.Send(req);
         req.WaitForResponse(1000);
         if (req.GetReply() == null)
         {
@@ -247,9 +248,8 @@ public class EvergreenActivity extends AppCompatActivity {
         Player player = App.GetPlayer();
         System.out.println("Loading from server.");
         // Send shit.
-        EGPacketReceiver.StartSingleton();
         EGRequest req = EGRequest.Load(player);
-        EGPacketSender.QueuePacket(req, App.ip, App.port);
+        App.comm.Send(req);
         req.WaitForResponse(1000);
         if (req.GetReply() == null)
         {

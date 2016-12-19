@@ -9,6 +9,7 @@ import erenik.evergreen.common.combat.Enemy;
 import erenik.evergreen.common.combat.EnemyType;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.player.Finding;
 import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.Stat;
 import erenik.evergreen.common.player.TransportStat;
@@ -39,6 +40,21 @@ public class Encounter
     public Encounter(Player mainPlayer)
     {
         player = mainPlayer;
+    }
+    public Encounter(Finding fromFinding, Player andMainPlayer)
+    {
+        player = andMainPlayer;
+        switch(fromFinding)
+        {
+            case AttacksOfTheEvergreen:
+                NewEncounter(true);
+                AssaultsOfTheEvergreen();
+                break;
+            case Encounter:
+                NewEncounter(false);
+                Random(new Dice(3, 2, 0));
+                break;
+        }
     }
 
     /// Clears old lists.
@@ -107,12 +123,11 @@ public class Encounter
             if (fled)
                 break;
         }
-        // Copy over relevant stats to the more persistant array of stats.
+        // Copy over relevant stats to the more persistent array of stats.
         player.Set(Stat.HP, player.hp);
         if (PlayersDead())
         {
             // Game over?
-            player.log.addAll(log); // Add current log there with all attack stuff.
             OnEncounterEnded();
             return;
         }
@@ -141,6 +156,8 @@ public class Encounter
         player.log.addAll(log); // Add current log there with all attack stuff.
         for (int i = 0; i < listeners.size(); ++i)
             listeners.get(i).OnEncounterEnded(this);
+        if (player.IsAlive() == false)
+            player.InformListeners();
     }
 
     private boolean PlayersDead()
@@ -264,6 +281,7 @@ public class Encounter
     public void Log(String s, LogType type)
     {
         // Add to log to present/update to ui?
+        System.out.println("Encounter log: "+s);
         Log l = new Log(s, type);
         log.add(l);
     }

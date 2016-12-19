@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import erenik.evergreen.Game;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.server.EGTCPServer;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -32,24 +33,25 @@ public class EGPacket
     protected EGPacketType type = null;
     protected EGRequestType reqt = null;
     protected EGResponseType rest = null;
-    protected EGErrorType errType = null;
-    protected byte[] body = "".getBytes(); 
+    protected byte[] body = "".getBytes();
     protected int version = 0;
     int headerLen, bodyLen, totalLen; // Calculated after calling .build()
     protected EGSocket socketSentOn; // When using EGPacketSender class to retrieve replies when available.
     protected EGPacket reply;
     protected int replyTimeout = 3000; // Default wait up to 3 seconds for a reply?
-    protected int timeWaitedForReply = 0;
-    static EGPacketReceiver packetReceiver = null;
-    EGErrorType lastError = EGErrorType.NoError; // Default no errors, right?
-    private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
+    protected int timeWaitedForReplyMs = 0;
 
-    public EGErrorType LastError(){return lastError;};
+    /// Receiver which should be added/set before sending packet.
+    EGResponseType lastError = EGResponseType.NoError; // Default no errors, right?
+    private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
+    public long lastAttemptSystemMillis = System.currentTimeMillis();
+
+    public EGResponseType LastError(){return lastError;};
     public EGPacket GetReply(){return reply;};
     public EGPacketType Type() {return type; };
     public EGRequestType ReqType() { return reqt; };
     public EGResponseType ResType() { return rest; };
-    public EGErrorType ErrType() { return errType; };
+    public EGResponseType ErrType() { return rest; };
     public byte[] GetBody() { return body; };
 
     /// If using Send() function, call .SetDest(ip, port) first.
@@ -69,11 +71,6 @@ public class EGPacket
         type = EGPacketType.Request;
         reqt = reqType;
     }
-    EGPacket(EGErrorType errorType)
-    {
-        type = EGPacketType.Error;
-        errType = errorType;
-    };
     public void addReceiverListener(EGPacketReceiverListener eprl)
     {
         receiverListeners.add(eprl);
@@ -86,7 +83,6 @@ public class EGPacket
         if (type != null) str += " type: "+type.text;
         if (reqt != null) str += " reqt: "+reqt.text;
         if (rest != null) str += " rest: "+rest.text;
-        if (errType != null) str += " errType: "+errType.text;
         if (headerLen > 0)
             str += " headerLen: "+headerLen;
         str += " body.length: "+body.length;
@@ -98,13 +94,19 @@ public class EGPacket
     public static EGPacket ok() {
         return new EGPacket(EGResponseType.OK);
     }
-    public static EGPacket error(EGErrorType errorType)
+    public static EGPacket error(EGResponseType errorType)
     {
         return new EGPacket(errorType);
     }
     public static EGPacket parseError() {
-        return new EGPacket(EGErrorType.ParseError);
+        return new EGPacket(EGResponseType.ParseError);
     }
+    public static EGPacket player(Player playerInSystem) { // Pack with info on 1 player. Sent as reply for Load packets.
+        EGPacket pack = new EGPacket(EGResponseType.Player);
+        pack.body = playerInSystem.toByteArr();
+        return pack;
+    }
+
     static byte[] bytePart(byte[] bytes, int startIndex, int stopIndex)
     {
         int len = stopIndex - startIndex;
@@ -135,7 +137,6 @@ public class EGPacket
                 +"PT "+type.text+"\n";
         switch(type)
         {
-            case Error: header += "ERR "+errType.text+"\n"; return header.getBytes();
             case Request: header += "REQ "+reqt.text+"\n"; break;
             case Response: header += "RES "+rest.text+"\n"; break;
         }
@@ -147,13 +148,13 @@ public class EGPacket
         mv(header.getBytes(), bytes, 0); // Copy in header.
         if (body != null)
             mv(body, bytes, header.getBytes().length); // And body.
-        System.out.print("Tail bytes: ");
-        tailBytes(bytes, 10);
+     //   System.out.print("Tail bytes: ");
+//        tailBytes(bytes, 10);
         return bytes;
     }
     public static EGPacket packetFromBytes(byte[] arr)
     {
-        System.out.println("packetFromBytes arrLen: "+arr.length);
+//        System.out.println("packetFromBytes arrLen: "+arr.length);
         EGPacket pack = new EGPacket();
         int argN = 0, 
             startIndexKey = 0, 
@@ -191,31 +192,26 @@ public class EGPacket
                     pack.rest = EGResponseType.fromString(val);
      //               System.out.println("RES "+pack.rest+" "+val);
                 }
-                if (key.equals("ERR"))
-                {
-   //                 System.out.println("ERR "+pack.errType+" "+val);
-                    pack.errType = EGErrorType.fromString(val);
-                }
                 if (key.equals("LEN"))
                 {
                     bodyLength = Integer.parseInt(val);
              //       System.out.println("bodyLength: "+bodyLength);
                 }
-                System.out.println("key: "+key+" value: "+val);
+//                System.out.println("key: "+key+" value: "+val);
                 ++argN;
                 if (argN >= 4)
                 {
                     if (bodyLength > 0){
                         int bodyStart = i + 1;
                         pack.body = bytePart(arr, bodyStart, bodyStart + bodyLength);
-                        System.out.print("Tail bytes of parsed body: ");
-                        tailBytes(pack.body, 10);
+     //                   System.out.print("Tail bytes of parsed body: ");
+       //                 tailBytes(pack.body, 10);
                     }
                     break;
                 }
             }
         }
-        System.out.println("argN found: "+argN);
+//        System.out.println("argN found: "+argN);
         if (pack.type != null)
             return pack;
         return null;        
@@ -257,10 +253,6 @@ public class EGPacket
                 if (key.equals("RES")) {
                     pack.rest = EGResponseType.fromString(val);
                 }
-                if (key.equals("ERR"))
-                {
-                    pack.errType = EGErrorType.fromString(val);
-                }
                 ++argN;
                 if (argN >= 3)
                 {
@@ -295,7 +287,6 @@ public class EGPacket
             OutputStream out = socketSentOn.getOutputStream();
             out.write(total); // Print the string.
             out.flush();
-            EGPacketReceiver.NewPacketWaitingForResponse(this);
             return true; // Success. Sent well.
         } catch (IOException ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, "Unable to connect to target address/port: "+address+":"+portN, ex);
@@ -307,12 +298,12 @@ public class EGPacket
     public EGPacket ReadFromSocket(EGSocket sock)
     {
         try {
-            System.out.println("Read from socket");
+//            System.out.println("Read from socket");
             // Wait for a reponse.
             if (sock.isClosed())
             {
                 System.out.println("Socket closed");
-                lastError = EGErrorType.SocketClosed;
+                lastError = EGResponseType.SocketClosed;
                 return null;
             }
             InputStream is = sock.getInputStream();

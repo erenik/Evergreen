@@ -24,6 +24,7 @@ import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.packet.EGPacketCommunicator;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 
@@ -44,6 +45,8 @@ public class App {
     static List<Activity> runningActivities = new ArrayList<Activity>();
     // Player
     static private Player player = new Player();
+    public static EGPacketCommunicator comm = new EGPacketCommunicator();
+
     static public Player GetPlayer()
     {
         return player;

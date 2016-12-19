@@ -12,7 +12,9 @@ public enum LogType
     ATTACKED, // For when taking damage.
     EVENT,
     ATTACK_MISS, ATTACK, EXP, ATTACKED_MISS,
-    SUCCESS, OtherDamage;
+    SUCCESS, OtherDamage,
+    Error;
+
     /*
     int HexColor()
     {

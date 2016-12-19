@@ -11,32 +11,25 @@ import java.util.logging.Logger;
 
 public class EGPacketSender extends Thread
 {
-    private EGPacketSender()
+    public EGPacketSender()
     {
     }
-    public static void StartSingleton()
-    {
-        if (eps != null)
-            return;
-        eps = new EGPacketSender();
-        eps.start();
-    }
-    static void StopSingleton()
-    {
-        eps.stop = true;
-    }
-    public static void QueuePacket(EGPacket pack, String ip, int port)
+    public void QueuePacket(EGPacket pack, String ip, int port)
     {
         pack.SetDest(ip, port); // Set dest.
         packetsToSend.add(pack); // Add to list.
-        StartSingleton(); // Start thread sender as needed.
+        // TODO: Make sure thread is started?
+        assert(threadStarted);
+    //    StartSingleton(); // Start thread sender as needed.
     }
 
     boolean stop = false;
+    boolean threadStarted = false;
     static private EGPacketSender eps;
     static private List<EGPacket> packetsToSend = new ArrayList<EGPacket>();
     public void run()
     {
+        threadStarted = true;
         System.out.println("EGPacketSender.run: Starting EGPacketSender thread.");
         int multiplier = 1;
         while(stop == false)

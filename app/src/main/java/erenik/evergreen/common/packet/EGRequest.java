@@ -44,12 +44,16 @@ public class EGRequest extends EGPacket
     };
     public static EGRequest Save(Player player)
     {
-        EGRequest eg = new EGRequest(EGRequestType.Load, player.toByteArr());
+        EGRequest eg = new EGRequest(EGRequestType.Save, player.toByteArr());
         return eg;
     };
     public static EGRequest byType(EGRequestType type)
     {
         EGRequest eg = new EGRequest(type);
         return eg;
+    }
+
+    public static EGPacket CreatePlayer(Player player) {
+        return new EGRequest(EGRequestType.CreatePlayer, player.toByteArr());
     }
 }
