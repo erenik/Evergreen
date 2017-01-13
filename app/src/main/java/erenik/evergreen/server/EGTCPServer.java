@@ -12,6 +12,7 @@ import erenik.evergreen.common.packet.EGPacketType;
 import erenik.evergreen.common.packet.EGResponseType;
 import erenik.evergreen.common.player.PlayerListener;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -321,7 +322,10 @@ public class EGTCPServer extends Thread
     /// Saves player log to file, within logs directory.
     void SavePlayerLog(Player player)
     {
-        String path = "logs/player_log_"+player.name+".txt";
+        // Create the folder if needed.
+        String folder = "logs";
+        new File(folder).mkdirs();
+        String path = folder+"/player_log_"+player.name+".txt";
         System.out.println("SavePlayerLog, dumping logs to file "+path);
         try {
             FileOutputStream file = new FileOutputStream(path);
