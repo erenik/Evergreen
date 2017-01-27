@@ -1,5 +1,8 @@
 package erenik.evergreen.common;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +48,10 @@ public class Player extends Combatable implements Serializable
     /// Local simulator for proceeding to the next day. Isn't used for the multiplayer games.
     Simulator simulator = Simulator.getSingleton();
     /// The current game you are playing in.
-    Game game = new Game();
+//    Game game = null; // Re-point it, or create locally as needed.
+
+    public long lastSaveTimeSystemMs = 0;
+    public long lastEditSystemMs = 0;
 
     static Random r = new Random(System.nanoTime());
     // Main stats.
@@ -375,7 +381,7 @@ public class Player extends Combatable implements Serializable
         System.out.println("Turn: " + Turn());
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
-    public void NextDay()
+    public void NextDay(Game game)
     {
         if (GetInt(Stat.HP) <= 0)
         {
@@ -417,7 +423,7 @@ public class Player extends Combatable implements Serializable
         GainEXP(expToGain);
 
         // Analyze some chosen hours of activity. Generate events and stuff for each?
-        EvaluateActions();
+        EvaluateActions(game);
         /// Force the player to play through the generated events before they proceed.
 //        HandleGeneratedEvents();
 
@@ -491,7 +497,7 @@ public class Player extends Combatable implements Serializable
     float hoursPerAction  = 1.f;
     float foodHarvested = 0.0f;
     DAction da;
-    void EvaluateActions()
+    void EvaluateActions(Game game)
     {
         t_starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
         // Have this increase with some skill?
@@ -519,10 +525,10 @@ public class Player extends Combatable implements Serializable
         {
             /// Parse actions and execute them.
             da = DAction.ParseFrom(dailyActions.get(i));
-            EvaluateAction(da);
+            EvaluateAction(da, game);
         }
     }
-    void EvaluateAction(DAction da)
+    void EvaluateAction(DAction da, Game game)
     {
         float units = 1;
         switch (da)
@@ -555,13 +561,13 @@ public class Player extends Combatable implements Serializable
                 break;
             case BuildDefenses: BuildDefenses(); break;
             case AugmentTransport: AugmentTransport(); break;
-            case LookForPlayer: LookForPlayer(da); break;
+            case LookForPlayer: LookForPlayer(da, game); break;
             case Expedition:
                 Log("Not implemented yet - Expedition", LogType.ATTACKED);
                 break;
             case Invent: Invent(da); break;
             case Craft: Craft(da); break;
-            case Steal: Steal(da); break;
+            case Steal: Steal(da, game); break;
             case AttackAPlayer: AttackAPlayer(da);
                 break;
             case Study:
@@ -596,7 +602,7 @@ public class Player extends Combatable implements Serializable
         }
         Log("TODO: Actual transport augmentation.", LogType.INFO);
     }
-    private void Steal(DAction da)
+    private void Steal(DAction da, Game game)
     {
         String name = da.requiredArguments.get(0).value;
         Player p = game.GetPlayer(name);
@@ -614,7 +620,7 @@ public class Player extends Combatable implements Serializable
         p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
 
-    void LookForPlayer(DAction da)
+    void LookForPlayer(DAction da, Game game)
     {
         // Determine chances.
         // Search query.
@@ -1115,6 +1121,24 @@ public class Player extends Combatable implements Serializable
             PlayerListener pl = listeners.get(i);
             if (!IsAlive())
                 pl.OnPlayerDied(this);
+        }
+    }
+
+    public void SaveLog() {
+        // Create the folder if needed.
+        String folder = "logs";
+        new File(folder).mkdirs();
+        String path = folder+"/"+gameID+"_player_log_"+name+".txt";
+        System.out.println("SavePlayerLog, dumping logs to file "+path);
+        try {
+            FileOutputStream file = new FileOutputStream(path);
+            for (int i = 0; i < log.size(); ++i)
+                file.write((log.get(i).text+"\n").getBytes());
+            file.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

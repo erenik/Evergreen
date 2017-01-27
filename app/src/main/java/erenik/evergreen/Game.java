@@ -121,8 +121,13 @@ public class Game
                 System.out.println(p.Name()+" next day..");
             p.Adjust(Stat.HP, -0.2f); // Everybody is dying.
             p.ProcessMandatoryEvents(); // Process all mandatory events, such as battles, assuming the player didn't do so already earlier. (i.e. with Mini-games, choose equipment before, et al)
-            p.NextDay();
-
+            p.NextDay(this);
+            p.lastEditSystemMs = System.currentTimeMillis();
+            // Save?
+            if (p.lastSaveTimeSystemMs < p.lastEditSystemMs) {
+                System.out.println("SAving again yow");
+                p.SaveLog();
+            }
         }
     }
 
@@ -258,8 +263,11 @@ public class Game
     // Returns null if all known player names are already known.
     public Player RandomPlayer(List<String> knownPlayerNames) {
         /// 10 random chances.
-        if (players.size() == 0)
+        if (players.size() == 0) {
+            System.out.println("Game has 0 players. WAT");
+            System.exit(444);
             return null;
+        }
         Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 10; ++i) {
             int playerIndex = r.nextInt(players.size());

@@ -307,6 +307,7 @@ public class EGTCPServer extends Thread
             return;
         }
         game.AddPlayer(player);        // Add player to game. Save game and player.
+//        player.gameID
         player.addStateListener(new PlayerListener() {
             @Override
             public void OnPlayerDied(Player player) {
@@ -323,21 +324,7 @@ public class EGTCPServer extends Thread
     /// Saves player log to file, within logs directory.
     void SavePlayerLog(Player player)
     {
-        // Create the folder if needed.
-        String folder = "logs";
-        new File(folder).mkdirs();
-        String path = folder+"/"+player.gameID+"_player_log_"+player.name+".txt";
-        System.out.println("SavePlayerLog, dumping logs to file "+path);
-        try {
-            FileOutputStream file = new FileOutputStream(path);
-            for (int i = 0; i < player.log.size(); ++i)
-                file.write((player.log.get(i).text+"\n").getBytes());
-            file.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        player.SaveLog();
     }
 
     private Player GetPlayerInSystem(Player player) {
