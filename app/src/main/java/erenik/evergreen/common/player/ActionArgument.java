@@ -10,9 +10,9 @@ public enum ActionArgument
     PlayerName, // Player name to look for.
     Player, // Player steal from, etc. From drop-down list of known names.
     Stronghold, //
-    InventionCategory,
-    InventionToCraft,
-    SkillToStudy,
+    InventionCategory, // String name of the InventionType?
+    InventionToCraft, // String name of the Invention?
+    SkillToStudy, // String name of Skill to study?
     TextSearchType,
     ResourceType,
     ResourceQuantity,

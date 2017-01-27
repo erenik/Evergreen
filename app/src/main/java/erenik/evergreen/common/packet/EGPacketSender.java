@@ -25,8 +25,8 @@ public class EGPacketSender extends Thread
 
     boolean stop = false;
     boolean threadStarted = false;
-    static private EGPacketSender eps;
-    static private List<EGPacket> packetsToSend = new ArrayList<EGPacket>();
+  //  private EGPacketSender eps;
+    private List<EGPacket> packetsToSend = new ArrayList<EGPacket>();
     public void run()
     {
         threadStarted = true;
@@ -64,7 +64,7 @@ public class EGPacketSender extends Thread
             }
         }
         System.out.println("Stopping EGPacketReceiver thread.");
-        eps = null; // Kill self. Allow restart of the thread.
+   //     eps = null; // Kill self. Allow restart of the thread.
     }
 };
 

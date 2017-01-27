@@ -11,7 +11,7 @@ public enum Finding {
     {
         switch(this)
         {
-            case Encounter: return "You EncounterActivity enemies during your activities which attack you.";
+            case Encounter: return "You encounter enemies during your activities which attack you.";
             case AttacksOfTheEvergreen: return "As night falls the spawns of the Evegreen assault your shelter!";
             case AbandonedShelter: return "You find a seemingly abandoned shelter.";
             case RandomPlayerShelter: return "You find a seemingly inhabited shelter";

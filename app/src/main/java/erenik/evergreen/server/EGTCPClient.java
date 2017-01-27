@@ -31,8 +31,15 @@ public class EGTCPClient extends Thread
     {}
     public static void main(String[] args)
     {
-        EGTCPClient client = new EGTCPClient();
-        client.start(); // Start thread.
+        LaunchClients(3);
+    }
+    public static void LaunchClients(int num) {
+        System.out.println("Launching "+num+" clients.");
+        for (int i = 0; i < num; ++i) {
+            /// By default, launch 2 clients?
+            EGTCPClient client = new EGTCPClient();
+            client.start(); // Start thread.
+        }
     }
     public void run()
     {

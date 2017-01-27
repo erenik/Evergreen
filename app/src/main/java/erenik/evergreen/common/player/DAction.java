@@ -1,9 +1,12 @@
 package erenik.evergreen.common.player;
 
+import android.app.Notification;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 
 /**
@@ -52,10 +55,83 @@ public enum DAction
     static Random randomAction = new Random(System.currentTimeMillis());
     public static DAction RandomAction(Player forPlayer)
     {
-        // Randomly select one.
-        DAction action = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
-        // Generate appropriate arguments based on the given player requesting them?
-        return action;
+        while (true) {
+            // Randomly select one.
+            DAction action = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
+            boolean ok = action.AddRandomArguments(forPlayer);
+            if (!ok)
+                continue;
+            // Check if the action has its requirements fulfilled?
+            if (!action.HasValidArguments())
+                continue;
+            // Generate appropriate arguments based on the given player requesting them?
+            return action;
+        }
+    }
+
+    private boolean AddRandomArguments(Player forPlayer) {
+        for (int i = 0; i < requiredArguments.size(); ++i) {
+            ActionArgument aa = requiredArguments.get(i);
+            int index;
+            switch(aa) {
+                case Player:
+                    if (forPlayer.knownPlayerNames.size() == 0) {
+                        System.out.println("Doesn't know any other players, skipping.");
+                        return false;
+                    }
+                    aa.value = forPlayer.knownPlayerNames.get(randomAction.nextInt(forPlayer.knownPlayerNames.size()));
+                    System.out.println("Random player added as target for action: "+name()+" "+aa.value);
+                    break;
+                case InventionCategory:
+                    index = randomAction.nextInt(InventionType.values().length);
+                    System.out.println("index: "+index+" tot: "+InventionType.values().length);
+                    aa.value = InventionType.values()[index].text();
+                    System.out.println("Random invention category added: "+aa.value);
+                    break;
+                case InventionToCraft:
+                    index = randomAction.nextInt(forPlayer.inventions.size());
+                    if (forPlayer.inventions.size() == 0) {
+                       System.out.println("Doesn't have any inventions, skipping");
+                        return false;
+                    }
+                    aa.value = forPlayer.inventions.get(index).name;
+                    break;
+            }
+        }
+        // Check what the player currently has available.
+        switch(this) {
+            case AttackAPlayer:
+            case Steal:
+            case Invent:
+        }
+        return true; // If e.g. it cannot add something, return false earlier.
+    }
+
+    private boolean HasValidArguments() {
+        for (int i = 0; i < requiredArguments.size(); ++i) {
+            ActionArgument aa = requiredArguments.get(i);
+            // TODO: Add actual requirements here, to satisfy e.g. random generation from above.
+        }
+        return true;
+    }
+
+    String firstArgument()
+    {
+        /*
+        String arg = "";
+        if (arg.size() > 0)
+            arg = requiredArguments.get(0);
+            */
+        return ""; //arg;
+    }
+    private boolean HasInventionTypeArgument() {
+//        if (InventionType.GetFromString(requiredArguments.get(0)) != null;
+        return true;
+    }
+
+    private boolean HasPlayerArgument() {
+        System.out.println("Lacking player argument for action "+this.name());
+        return false;
     }
 
     @Override

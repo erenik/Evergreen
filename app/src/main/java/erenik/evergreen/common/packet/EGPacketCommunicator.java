@@ -5,7 +5,7 @@ package erenik.evergreen.common.packet;
  */
 public class EGPacketCommunicator {
     public static int retryTimeMs = 50;
-    EGPacketReceiver receiver; // new EGPacketReceiver();
+    EGPacketReceiver receiver = null;
     EGPacketSender sender = new EGPacketSender();
 
     // Where to send stuff to.
@@ -21,14 +21,19 @@ public class EGPacketCommunicator {
     public void Send(EGPacket packet)
     {
         sender.QueuePacket(packet, ip, port);
-        if (sender.isAlive() == false)
+        if (sender.isAlive() == false) {
             sender.start();
+            System.out.println("Starting packetSender thread");
+        }
 
         // Start the receiver again as well.
-        EGPacketReceiver.NewPacketWaitingForResponse(packet);
+        if (receiver != null)
+            receiver.NewPacketWaitingForResponse(packet);
         if (receiver == null || receiver.isAlive() == false)
         {
+            System.out.println("Starting packet receiver thread");
             receiver = new EGPacketReceiver();
+            receiver.NewPacketWaitingForResponse(packet);
             receiver.start();
         }
     }

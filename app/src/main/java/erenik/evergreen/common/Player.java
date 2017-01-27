@@ -557,13 +557,12 @@ public class Player extends Combatable implements Serializable
             case AugmentTransport: AugmentTransport(); break;
             case LookForPlayer: LookForPlayer(da); break;
             case Expedition:
-                Log("Not implemented yet", LogType.ATTACKED);
+                Log("Not implemented yet - Expedition", LogType.ATTACKED);
                 break;
             case Invent: Invent(da); break;
             case Craft: Craft(da); break;
             case Steal: Steal(da); break;
-            case AttackAPlayer:
-                Log("Not implemented yet", LogType.ATTACKED);
+            case AttackAPlayer: AttackAPlayer(da);
                 break;
             case Study:
                 // Gain exp into current skill perhaps..?
@@ -576,20 +575,26 @@ public class Player extends Combatable implements Serializable
         }
     }
 
+    private void AttackAPlayer(DAction da) {
+        Log("Not implemented yet - AttackAPlayer", LogType.ATTACKED);
+    }
+
     private void AugmentTransport() {
+        // Arg 1 is Transport, Arg 2 is Transport Augment (an invention).
         String name = da.requiredArguments.get(0).value;
         Log(da.text+": Tinkering on the "+name+".", LogType.INFO);
         Invention invention = null;
-        for (int i = 0; i < inventions.size(); ++i)
-        {
+        String inventionName = da.requiredArguments.get(1).value;
+        for (int i = 0; i < inventions.size(); ++i) {
             Invention inv = inventions.get(i);
-            if (inv.name.equals(name))
+            if (inv.name.equals(inventionName))
                 invention = inv;
         }
         if (invention == null) {
-            Log("Yo yo", LogType.PROBLEM_NOTIFICATION);
+            Log("Could find no invention matching "+inventionName, LogType.PROBLEM_NOTIFICATION);
+            return;
         }
-        Log("Very inventive", LogType.INFO);
+        Log("TODO: Actual transport augmentation.", LogType.INFO);
     }
     private void Steal(DAction da)
     {
@@ -600,8 +605,13 @@ public class Player extends Combatable implements Serializable
             Log("No player found with that name.", LogType.ATTACK_MISS);
             return;
         }
+        // Steal food for now?
+        this.Adjust(Stat.FOOD, 3);
+        p.Adjust(Stat.FOOD, -3);
         // Calc success?
-        Log("Not implemented yet", LogType.ATTACKED);
+        String whatStolen = "3 units of food (placeholder)";
+        Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
+        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
 
     void LookForPlayer(DAction da)
@@ -624,8 +634,22 @@ public class Player extends Combatable implements Serializable
                 break;
         }
         if (player == null) {
-            Log("Unable to find a player with given name: "+name, LogType.ATTACK_MISS);
-            return;
+            Log("Despite searching, you were unable to find a player with given name: "+name, LogType.ATTACK_MISS);
+            // Add chance to find random other players?
+            if (r.nextInt(100) < 50) {
+                Player randomPlayer = game.RandomPlayer(knownPlayerNames);
+                if (randomPlayer == null)
+                    return;
+                String newPlayer = randomPlayer.name;
+                if (newPlayer != null && newPlayer != name) {
+                    Log("However, while searching, you stumbled upon another player!", LogType.SUCCESS);
+                    knownPlayerNames.add(newPlayer);
+                }
+                else // In-case you already know all the players in the game already.
+                    return;
+            }
+            else
+                return;
         }
         Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
         knownPlayerNames.add(name);
@@ -873,7 +897,7 @@ public class Player extends Combatable implements Serializable
             }
         }
         /// Check config for preferred display verbosity of the search results?
-        s += numEncounters == 1? "\n- EncounterActivity a group of monsters from the Evergreen" : numEncounters > 1? "\n- EncounterActivity "+numEncounters+" groups of monsters" : "";
+        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
         Adjust(Stat.ENCOUNTERS, numEncounters);
         s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
         Adjust(Stat.FOOD, foodFound);

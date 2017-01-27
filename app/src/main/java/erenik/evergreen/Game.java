@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
@@ -253,5 +254,25 @@ public class Game
             Save();
             gameTimeMs -= thresholdMs;
         }
+    }
+    // Returns null if all known player names are already known.
+    public Player RandomPlayer(List<String> knownPlayerNames) {
+        /// 10 random chances.
+        if (players.size() == 0)
+            return null;
+        Random r = new Random(System.currentTimeMillis());
+        for (int i = 0; i < 10; ++i) {
+            int playerIndex = r.nextInt(players.size());
+            System.out.println("player index: "+playerIndex);
+            Player randPlayer = players.get(playerIndex);
+            for (int j = 0; j < knownPlayerNames.size(); ++j)
+            {
+                if (randPlayer.name.equals(knownPlayerNames.get(j)))
+                    continue; // Already known, skip.
+                // Not known? Use it.
+                return randPlayer;
+            }
+        }
+        return null;
     }
 }

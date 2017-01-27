@@ -104,6 +104,7 @@ public class Auth {
             return encrypted;
         } catch ( Exception exception ) {
             exception.printStackTrace();
+            System.out.println("DTYING");
             System.exit( 1 );
         }
         return null;
@@ -130,6 +131,7 @@ public class Auth {
             System.out.println(ptLength);
         } catch ( Exception exception ) {
             exception.printStackTrace();
+            System.out.println("DTYI4242NG");
             System.exit( 1 );
         }
         return null;

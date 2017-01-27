@@ -101,7 +101,7 @@ public class Encounter
             Enemy e = new Enemy(et, player.Get(Stat.EMISSIONS));
             enemies.add(e);
         }
-        Log("You EncounterActivity " + iAmount + " " + et.name + "s.", LogType.INFO);
+        Log("You encounter " + iAmount + " " + et.name + "s.", LogType.INFO);
         CalcEncounterEXP();
         totalCreeps = enemies.size();
     }
@@ -133,7 +133,7 @@ public class Encounter
         }
         else
         {
-            Log("You survive the EncounterActivity.", LogType.INFO);
+            Log("You survive the encounter.", LogType.INFO);
             int expToGain = (enemies.size() > 0? creepsKilled / totalCreeps  : 1 ) * encounterExp + fleeExp;
             if (creepsKilled > 0) {
                 Log("You gain " + expToGain + " EXP.", LogType.EXP);
@@ -145,7 +145,7 @@ public class Encounter
         else if (isAssaultOfTheEvergreen)
             player.Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1);
         else {
-            System.out.println("Dunno what to adjust after finishing EncounterActivity. Fix this?");
+            System.out.println("Dunno what to adjust after finishing encounter. Fix this?");
             System.exit(14);
         }
         OnEncounterEnded(); // Save, push logs, etc.

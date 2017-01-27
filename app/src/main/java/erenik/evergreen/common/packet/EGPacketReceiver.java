@@ -32,14 +32,16 @@ public class EGPacketReceiver extends Thread
         epr.stop = true;
     }
     */
-    static void NewPacketWaitingForResponse(EGPacket pack) {
+    void NewPacketWaitingForResponse(EGPacket pack) {
         packetsWaitingForReponses.add(pack);
     }
-    public static boolean HasPacketsToReceive(){ return packetsWaitingForReponses.size() > 0; }
+//    public static boolean HasPacketsToReceive(){
+  //      return packetsWaitingForReponses.size() > 0;
+    //}
 
     boolean stop = false;
-    static private EGPacketReceiver epr;
-    static private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
+   // private EGPacketReceiver epr;
+    private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
     public void run()
     {
         System.out.println("EGPacketReceiver.run: Starting EGPacketReceiver thread.");
@@ -92,6 +94,6 @@ public class EGPacketReceiver extends Thread
             }
         }
         System.out.println("Stopping EGPacketSender thread.");
-        epr = null; // Kill self. Allow restart of the thread.
+ //       epr = null; // Kill self. Allow restart of the thread.
     }
 };

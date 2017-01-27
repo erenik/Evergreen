@@ -41,20 +41,21 @@ public class EGTCPServer extends Thread
     List<Game> games = new ArrayList<>();
     ServerSocket servSock;
     public static void main(String[] args) throws Exception
-    {        
+    {
+        EGTCPClient.LaunchClients(3); // TODO: Remove later, move to have as args for adding AI.
+
+        if (args.length > 2) {
+            if (args[0].equals("test")) {
+                // Launch some clients.
+                EGTCPClient client = new EGTCPClient();
+
+            }
+        }
+
 //        Players players = new Players();
   //      players.RegisterDefaultPlayers();
         EGTCPServer serv = new EGTCPServer();
-        serv.StartServer();
-
-        if (args.length > 2)
-        {
-            if (args[0].equals("test"))
-            {
-                // Launch some clients.
-                EGTCPClient client = new EGTCPClient();
-            }
-        }
+        serv.start(); // Start it.
     }
     boolean stopHosting = false;
     public void run() {
@@ -325,7 +326,7 @@ public class EGTCPServer extends Thread
         // Create the folder if needed.
         String folder = "logs";
         new File(folder).mkdirs();
-        String path = folder+"/player_log_"+player.name+".txt";
+        String path = folder+"/"+player.gameID+"_player_log_"+player.name+".txt";
         System.out.println("SavePlayerLog, dumping logs to file "+path);
         try {
             FileOutputStream file = new FileOutputStream(path);
