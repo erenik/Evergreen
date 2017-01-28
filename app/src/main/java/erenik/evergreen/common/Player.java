@@ -22,6 +22,7 @@ import erenik.evergreen.common.combat.Combatable;
 import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.event.Event;
 import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogListener;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.player.*;
@@ -43,6 +44,8 @@ import java.util.logging.Logger;
 public class Player extends Combatable implements Serializable
 {
     List<PlayerListener> listeners = new ArrayList<>();
+    List<LogListener> logListeners = new ArrayList<>();
+
     // Adds a listener for state changes to the player.
     public void addStateListener(PlayerListener listener){ listeners.add(listener);};
     /// Local simulator for proceeding to the next day. Isn't used for the multiplayer games.
@@ -358,15 +361,16 @@ public class Player extends Combatable implements Serializable
         statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
-    void Log(String text, LogType t)
-    {
+    void Log(String text, LogType t) {
         log.add(new Log(text, t));
+        for (int i = 0; i < logListeners.size(); ++i) {
+            LogListener ll = logListeners.get(i);
+            ll.OnLog(new Log(text, t), this);
+        }
     }
 
-    public Transport CurrentTransport()
-    {
-        for (int i = 0; i < transports.size(); ++i)
-        {
+    public Transport CurrentTransport() {
+        for (int i = 0; i < transports.size(); ++i) {
             Transport t = transports.get(i);
             if (Get(Stat.CurrentTransport) == t.ordinal())
                 return t;
@@ -614,8 +618,8 @@ public class Player extends Combatable implements Serializable
     }
     private void Steal(DAction da, Game game)
     {
-        String name = da.requiredArguments.get(0).value;
-        Player p = game.GetPlayer(name);
+        String targetPlayerName = da.requiredArguments.get(0).value;
+        Player p = game.GetPlayer(targetPlayerName);
         if (p == null)
         {
             Log("No player found with that name.", LogType.ATTACK_MISS);
@@ -634,7 +638,7 @@ public class Player extends Combatable implements Serializable
         */
         int roll = Dice.RollD6(2 + Get(Skill.Thief).Level());
         if (roll < 7) { // Failed and detected.
-            Log("While trying to steal from "+p.name+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
+            Log("While trying to steal from "+targetPlayerName+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
             p.Log(""+name+" tried to steal from you, but failed as he was detected!", LogType.ATTACKED);
             return;
         }
@@ -1172,10 +1176,7 @@ public class Player extends Combatable implements Serializable
         }
     }
 
-    public void SaveLog(List<LogType> filterToSkip) {
-        // Create the folder if needed.
-        String folder = "logs";
-        new File(folder).mkdirs();
+    public void SaveLog(List<LogType> filterToSkip, String folder) {
         String path = folder+"/"+gameID+"_player_log_"+name+".txt";
         System.out.println("SavePlayerLog, dumping logs to file "+path);
         try {
@@ -1197,5 +1198,9 @@ public class Player extends Combatable implements Serializable
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addLogListener(LogListener logListener) {
+        logListeners.add(logListener);
     }
 }

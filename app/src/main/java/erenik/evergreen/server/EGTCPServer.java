@@ -7,20 +7,27 @@ package erenik.evergreen.server;
 
 import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogListener;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketType;
 import erenik.evergreen.common.packet.EGResponseType;
 import erenik.evergreen.common.player.PlayerListener;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,8 +35,7 @@ import java.util.logging.Logger;
 /**
  * @author Emil
  */
-public class EGTCPServer extends Thread
-{
+public class EGTCPServer extends Thread {
     /**
      * @param args the command line arguments
      */
@@ -41,23 +47,67 @@ public class EGTCPServer extends Thread
     List<Socket> sockets = new ArrayList<Socket>();
     List<Game> games = new ArrayList<>();
     ServerSocket servSock;
-    public static void main(String[] args) throws Exception
-    {
+
+
+    // Create a log file based on the start time of this iteration?
+    static Date startTime = new Date();
+    static String folderString = "logs/"+new SimpleDateFormat("yyyyMMdd_HHmmss").format(startTime);
+    static void Log(String s){
+        AppendToServerLogFile(s);
+    }
+    static void Log(String s, String logType){
+        AppendToServerLogFile(s);
+        System.out.println(logType+": "+s);
+    }
+    static void AppendToServerLogFile(String s) {
+        // Create folder if needed?
+        String serverLogFile = "server";
+        System.out.println("logFile: "+serverLogFile);
+        AppendToFile(serverLogFile, s);
+    }
+    static void AppendToMergedFile(String s) {
+        String serverLogFile = "players_merged";
+        AppendToFile(serverLogFile, s);
+//        String serverLogFile = "server_"+ (new Date()).for "yyyy.MM.dd G 'at' HH:mm:ss z" (System.currentTimeMillis()/1000);
+    }
+    static void AppendToFile(String fileName, String s) {
+        new File(folderString).mkdirs();
+        try {
+            FileWriter fw = new FileWriter(folderString+"/"+fileName+".txt", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+            String dateStrNow = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+            out.println(dateStrNow+" "+s);
+            out.flush();
+            fw.close(); // Close it.
+        } catch (IOException e) {
+            //exception handling left as an exercise for the reader
+        }
+    }
+
+    LogListener logListener = new LogListener() {
+        @Override
+        public void OnLog(Log l, Player player) {
+            // Log onto a server-file for all player's actions?
+            // Append to file?
+            AppendToMergedFile(player.name+": "+l.text);
+        }
+    };
+
+    public static void main(String[] args) throws Exception {
+        Log("Launching server", "INFO");
         EGTCPClient.LaunchClients(5); // TODO: Remove later, move to have as args for adding AI.
 
         if (args.length > 2) {
             if (args[0].equals("test")) {
                 // Launch some clients.
-                EGTCPClient client = new EGTCPClient();
-
+                // EGTCPClient.LaunchClients(5); // TODO: Remove later, move to have as args for adding AI.
             }
         }
-
-//        Players players = new Players();
-  //      players.RegisterDefaultPlayers();
         EGTCPServer serv = new EGTCPServer();
         serv.start(); // Start it.
     }
+
     boolean stopHosting = false;
     public void run() {
         try {
@@ -65,12 +115,10 @@ public class EGTCPServer extends Thread
         } catch (IOException ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        log.add("Stopping");
-        System.out.println("Stopping server.");
+        Log("Stopping server, failed to start it", "ERROR");
     }
     
-    void StartServer() throws IOException 
-    {
+    void StartServer() throws IOException {
         // Create main game list.
         games = Game.CreateDefaultGames();
         Host();
@@ -89,15 +137,14 @@ public class EGTCPServer extends Thread
             lastUpdateMs = nowMs;
         }
         servSock.close();
-        log.add("Socket closed");
+        Log("Closed server socket", "INFO");
     }
     
     void Host() throws IOException
     {
         servSock = new ServerSocket(portN);
         servSock.setSoTimeout(millisecondsTimeout);
-        System.out.println("Launching tcp listener server on port: "+portN);
-        log.add("Hosting on port "+portN);
+        Log("Launching tcp server on port: "+portN,"INFO");
     }
     static int count = 0;
     int msLastClientConnected = 0;
@@ -117,8 +164,8 @@ public class EGTCPServer extends Thread
             Socket sock = sockets.get(i);
             if (sock.isClosed() || !sock.isConnected()) {
                 sockets.remove(sock);
-                System.out.println("EGTCPServer.AcceptClients: Client disconnected or socket closed");
-                System.out.println("EGTCPServer.AcceptClients: Num clients: "+sockets.size());
+                Log("EGTCPServer.AcceptClients: Client disconnected or socket closed");
+                Log("EGTCPServer.AcceptClients: Num active sockets/clients: "+sockets.size(), "INFO");
             }
         }
         while (true) {
@@ -130,19 +177,17 @@ public class EGTCPServer extends Thread
                 break; // No new client, just break the loop.
             }
             if (verbosityLevel > 1)
-                System.out.println("Incoming client, Num clients: "+sockets.size());
+                Log("Incoming client, Num clients: "+sockets.size(), "INFO");
         }
     }
+    /// Read incoming data from network sockets.
     static final int BUF_LEN = 40000;
     static byte[] readBuffer = new byte[BUF_LEN];
-    void ReadIncomingData() throws IOException 
-    {
+    void ReadIncomingData() throws IOException {
     //    System.out.print("Incoming data");
         boolean incData = false;
-        for (int i = 0; i < sockets.size(); ++i)
-        {
+        for (int i = 0; i < sockets.size(); ++i) {
             Socket sock = sockets.get(i);
-
             InputStream is = sock.getInputStream();
             int availableBytes = is.available();
             if (availableBytes <= 0)
@@ -150,9 +195,8 @@ public class EGTCPServer extends Thread
             int bytesRead = -1;
             try {
                 is.read(readBuffer);
-            } catch (IOException ioe)
-            {
-                System.out.println("Exception occurred, ditching socket. "+ioe.getMessage());
+            } catch (IOException ioe) {
+                Log("Exception occurred, ditching socket. "+ioe.getMessage(), "INFO");
                 sockets.remove(sock);
                 --i;
                 continue;
@@ -161,8 +205,7 @@ public class EGTCPServer extends Thread
   //          System.out.println("Packet received?");
             EGPacket pack = EGPacket.packetFromBytes(readBuffer);
     //        System.out.println("Packet received: "+pack);
-            if (pack == null)
-            {
+            if (pack == null) {
                 System.out.println("Packet null: ");
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build()); // Reply with error String.
                 sock.close(); // Close the socket.
@@ -175,8 +218,7 @@ public class EGTCPServer extends Thread
             if (pack.Type() == EGPacketType.Request) {
                 EvaluateRequest(sock, pack);
             }
-            else
-            {
+            else {
                 System.out.println("Received non-Request type packet. Replying BadRequest. Pack received: "+pack);
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build());
             }
@@ -193,8 +235,7 @@ public class EGTCPServer extends Thread
         } 
     }
 
-    private void EvaluateRequest(Socket sock, EGPacket pack) 
-    {
+    private void EvaluateRequest(Socket sock, EGPacket pack) {
         switch(pack.ReqType()) {
             case Save: { // Player as POJO in body
                 EvaluateSaveRequest(sock, pack);
@@ -220,31 +261,30 @@ public class EGTCPServer extends Thread
                 break;
             }
             default:
-                System.out.println("Send bad request reply o-o");
+                Log("Send bad request reply o-o");
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build());
-
         }
     }
 
     private void EvaluateSaveRequest(Socket sock, EGPacket pack) {
 //        Log("Save pack received: "+pack);
         Player player = new Player();
-        boolean ok = player.fromByteArr(pack.GetBody());
-        if (!ok) {
-            System.out.println("ParseError");
+        boolean ok = player.fromByteArr(pack.GetBody()); // Load from packet.
+        if (!ok) { // Check errors
+            Log("ParseError");
             Reply(sock, EGPacket.parseError().build());
             return;
         }
-        Player playerInSystem = GetPlayerInSystem(player);
+        Player playerInSystem = GetPlayerInSystem(player); // Does it equate an existing player?
         if (playerInSystem == null){
-            Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build());
+            Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build()); // No?
             return;
         }
-        if (player.CredentialsMatch(playerInSystem)) {
+        if (player.CredentialsMatch(playerInSystem)) { // Passwords etc. match?
             if (verbosityLevel > 1)
-                System.out.println("Load success, playerName: "+playerInSystem.name+", replying data to client");
+                Log("Load success, playerName: "+playerInSystem.name+", replying data to client");
             // Copy over stats from the system one from the one sent by the client.
-            playerInSystem.SaveFromClient(player);
+            playerInSystem.SaveFromClient(player); // Then save it.
             Reply(sock, EGPacket.player(playerInSystem).build());            // Reply the player in system.
             return;
         }
@@ -252,11 +292,11 @@ public class EGTCPServer extends Thread
 
         boolean saved = Players.Save(player);
         if (saved) {
-            log.add("Saved, replying OK");
+            Log("Saved, replying OK");
             Reply(sock, EGPacket.ok().build());
             return;
         }
-        log.add("BadPassword, replying error");
+        Log("BadPassword, replying error");
         // Check cause of failure. Bad authentication? Name already exists?
         Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());
     }
@@ -287,8 +327,7 @@ public class EGTCPServer extends Thread
         Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());        // Check cause of failure. Bad authentication? Name already exists?
     }
 
-    private void EvaluateCreateRequest(Socket sock, EGPacket pack)
-    {
+    private void EvaluateCreateRequest(Socket sock, EGPacket pack) {
         Player player = Player.fromByteArray(pack.GetBody());
         System.out.println("EvaluateCreateRequest: "+player.name);
         if (player == null)
@@ -309,12 +348,12 @@ public class EGTCPServer extends Thread
         }
         game.AddPlayer(player);        // Add player to game. Save game and player.
 //        player.gameID
+        player.addLogListener(logListener);
         player.addStateListener(new PlayerListener() {
             @Override
             public void OnPlayerDied(Player player) {
                 SavePlayerLog(player);
             }
-
             @Override
             public void OnPlayerNewDay(Player player) {
                 SavePlayerLog(player);
@@ -327,7 +366,7 @@ public class EGTCPServer extends Thread
         List<LogType> filter = new ArrayList<>();
         filter.add(LogType.ATTACK_MISS);
         filter.add(LogType.ATTACKED_MISS);
-        player.SaveLog(filter);
+        player.SaveLog(filter, folderString);
     }
 
     private Player GetPlayerInSystem(Player player) {
@@ -345,23 +384,6 @@ public class EGTCPServer extends Thread
                 return g;
         }
         return null;
-    }
-
-    List<String> log = new ArrayList<>();
-    /// Logs to array for printing to file later, and prints to console as well.
-    public void Log(String s)
-    {
-        log.add(s);
-        System.out.println(s);
-    }
-
-    public void PrintLog()
-    {
-        System.out.println("\nServer log:\n---------------");
-        for (int i = 0; i < log.size(); ++i)
-        {
-            System.out.println(log.get(i));
-        }
     }
 
     public void StopHosting() {
