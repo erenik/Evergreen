@@ -312,18 +312,18 @@ public class EGPacket
             {
                 return null;
             }
-            System.out.println("Reading from socket!!!!");
+        //    System.out.print("Read from socket");
             
             final int BUF_LEN = 40000;
             byte[] buff = new byte[BUF_LEN];
             int bytesRead = is.read(buff, 0, BUF_LEN);
-            System.out.println("Bytes avail: "+bytesAvail+" bytesRead: "+bytesRead);
+            System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
             if (bytesRead <= 0){
                 System.out.println("0 bytes read from stream.");
                 return null;
             }
             EGPacket pack = EGPacket.packetFromBytes(buff);
-            System.out.println("Got packet: "+pack);
+      //      System.out.println("Got packet: "+pack);
             return pack;
         } catch (IOException ex) {
             Logger.getLogger(EGPacket.class.getName()).log(Level.SEVERE, null, ex);

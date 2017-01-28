@@ -22,11 +22,11 @@ public enum DAction
     BuildDefenses("Build defenses", "Consume Materials to strengthen defenses."),
     AugmentTransport("Augment transport", "Consume materials to improve various aspects of your transport of choice", ActionArgument.Transport, ActionArgument.TransportAugment),
     LookForPlayer("Look for player", "Attempt to look for a specific player, or just any player's shelter", ActionArgument.TextSearchType, ActionArgument.PlayerName),
-    Expedition("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters.", ActionArgument.Stronghold),
+//    Expedition("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters.", ActionArgument.Stronghold),
     Invent("Invent", "Invent new weapons, armor, items or shelter additions", ActionArgument.InventionCategory),
     Craft("Craft", "Craft items which you have previously invented or obtained the blueprints for", ActionArgument.InventionToCraft),
-    Steal("Steal", "Steal resources, items and/or blueprints from another player", ActionArgument.Player),
-    AttackAPlayer("Attack a player", "Attack a target player's shelter.", ActionArgument.Player),
+    Steal("Steal", "Steal resources, items and/or blueprints from another player", ActionArgument.Player), // Name of player, yeah.
+    AttackAPlayer("Attack a player", "Attack a target player's shelter.", ActionArgument.Player), // Name of player, yeah.
     Study("Study", "Gain EXP towards skills you are currently training."),
 ;
     DAction(String txt, String description)
@@ -58,7 +58,7 @@ public enum DAction
         while (true) {
             // Randomly select one.
             DAction action = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
-            boolean ok = action.AddRandomArguments(forPlayer);
+            boolean ok = action.AddRandomArguments(forPlayer); // Retursn true if valid arguments could be added.
             if (!ok)
                 continue;
             // Check if the action has its requirements fulfilled?
@@ -68,12 +68,14 @@ public enum DAction
             return action;
         }
     }
-
+    /// Adds randomly generated arguments for this given action, based on what the player has and knows.
     private boolean AddRandomArguments(Player forPlayer) {
         for (int i = 0; i < requiredArguments.size(); ++i) {
             ActionArgument aa = requiredArguments.get(i);
             int index;
             switch(aa) {
+                case Transport:
+                    aa.value = Transport.values()[randomAction.nextInt(Transport.values().length)].name();
                 case Player:
                     if (forPlayer.knownPlayerNames.size() == 0) {
                         System.out.println("Doesn't know any other players, skipping.");

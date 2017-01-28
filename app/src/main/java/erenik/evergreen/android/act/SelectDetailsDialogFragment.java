@@ -92,7 +92,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             case AugmentTransport: header = "Augment transport. Choose transport and upgrade type."; break;
             case Craft: header = "What to craft?"; break;
             case Invent: header = "What category of inventions do you want to try and invent?"; break;
-            case Expedition: header = "Which stronghold do you want to attack?"; break;
+      //      case Expedition: header = "Which stronghold do you want to attack?"; break;
             case AttackAPlayer: header = "Which player do you want to attack?"; break;
             case Steal: header = "Which player do you want to steal from?"; break;
             case LookForPlayer: header = "Enter the name of the player you are looking for"; break;

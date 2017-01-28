@@ -21,6 +21,7 @@ import erenik.evergreen.util.Dice;
 public class Encounter
 {
     Player player = null; // App.GetPlayer(); // o-o
+    Player attackingPlayer = null; // For PvP.
     static List<Player> playersInvolved = new ArrayList<>();
     public List<Enemy> enemies = new ArrayList<Enemy>(); // List of 'em.
     List<Log> log = new ArrayList<Log>();
@@ -40,6 +41,14 @@ public class Encounter
     public Encounter(Player mainPlayer)
     {
         player = mainPlayer;
+    }
+    public Encounter(Player attacker, Player defender)
+    {
+        player = defender;
+        attackingPlayer = attacker;
+        NewEncounter(true);
+        // Prepare for combat for the attackingPlayer, the rest should be as usual.
+        attackingPlayer.PrepareForCombat(false); // Not in shelter, since attacking another's shelter.
     }
     public Encounter(Finding fromFinding, Player andMainPlayer)
     {
@@ -106,12 +115,11 @@ public class Encounter
         totalCreeps = enemies.size();
     }
     /// Quick simulation
-    public void Simulate()
-    {
+    public void Simulate() {
         /// Will vary based on EncounterActivity-type and equipped weapons etc.
         int playerFreeAttacks = 1;
         // Start it?
-        while(enemies.size() > 0 && player.IsAlive())
+        while(enemies.size() > 0  && player.IsAlive()) // PvE
         {
             if (playerFreeAttacks > 0)
                 --playerFreeAttacks;
@@ -123,6 +131,22 @@ public class Encounter
             if (fled)
                 break;
         }
+        /// PvP
+        while(attackingPlayer != null && player.IsAlive()) {
+            if (playerFreeAttacks > 0)
+                --playerFreeAttacks;
+            else
+                DoEnemyAttackRound();
+            if (PlayersDead())
+                break;
+            DoPlayerAttackRound();
+            if (fled)
+                break;
+            if (attackingPlayer.IsAlive() == false) // Attacking player died?
+                Log("The attacking player was defeated!", LogType.SUCCESS);
+            break;
+        }
+
         // Copy over relevant stats to the more persistent array of stats.
         player.Set(Stat.HP, player.hp);
         if (PlayersDead())
@@ -145,14 +169,14 @@ public class Encounter
         else if (isAssaultOfTheEvergreen)
             player.Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1);
         else {
-            System.out.println("Dunno what to adjust after finishing encounter. Fix this?");
-            System.exit(14);
+            System.out.println("Assume it was a PvP encounter.");
+//            System.out.println("Dunno what to adjust after finishing encounter. Fix this?");
+//            System.exit(14);
         }
         OnEncounterEnded(); // Save, push logs, etc.
     }
 
-    private void OnEncounterEnded()
-    {
+    private void OnEncounterEnded() {
         player.log.addAll(log); // Add current log there with all attack stuff.
         for (int i = 0; i < listeners.size(); ++i)
             listeners.get(i).OnEncounterEnded(this);
@@ -171,10 +195,10 @@ public class Encounter
         return true;
     }
 
-    void DoEnemyAttackRound()
-    {
-        for (int i = 0; i < 5 && i < enemies.size(); ++i)
-        {
+    void DoEnemyAttackRound() {
+        if (attackingPlayer != null) // Player attack, fairly simple.
+            attackingPlayer.Attack(player, this);
+        for (int i = 0; i < 5 && i < enemies.size(); ++i) {
             Enemy e = enemies.get(i);
             if (e.Attack(player, this))
             {
@@ -184,11 +208,9 @@ public class Encounter
             }
         }
     }
-    void DoPlayerAttackRound()
-    {
+    void DoPlayerAttackRound() {
         // Flee? Under 25%?
-        if (player.hp < player.maxHP * 0.3f && !isAssaultOfTheEvergreen)
-        {
+        if (player.hp < player.maxHP * 0.3f && !isAssaultOfTheEvergreen) {
             int fleetRetreat = player.Get(Skill.FleetRetreat).Level();
             int fleeCR = (enemies.size()-1) / 2 - fleetRetreat - player.consecutiveFleeAttempts;
             fleeCR -= player.CurrentTransport().Get(TransportStat.FleeBonus); // Decrease challenge rating with transport flee bonus.
@@ -201,20 +223,23 @@ public class Encounter
                 fled = true;
                 return;
             }
-            else
-            {
+            else {
                 Log("You try to run away, but fail", LogType.INFO);
                 ++player.consecutiveFleeAttempts;
             }
         }
         // Attack?
-        Enemy e = enemies.get(0);
-        player.Attack(e, this);
-        if (e.hp <= 0) {
-            Log("The " + e.Name() + " dies.", LogType.INFO);
-            enemies.remove(e);
-            ++creepsKilled;
+        if (enemies.size() > 0 ) {
+            Enemy e = enemies.get(0);
+            player.Attack(e, this);
+            if (e.hp <= 0) {
+                Log("The " + e.Name() + " dies.", LogType.INFO);
+                enemies.remove(e);
+                ++creepsKilled;
+            }
         }
+        else if (attackingPlayer != null)
+            player.Attack(attackingPlayer, this); // Should maybe do some check afterwards too, yah?
     }
 
     public void AssaultsOfTheEvergreen()

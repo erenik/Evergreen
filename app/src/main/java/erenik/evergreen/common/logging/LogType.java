@@ -12,6 +12,8 @@ public enum LogType
     ATTACKED, // For when taking damage.
     EVENT,
     ATTACK_MISS, ATTACK, EXP, ATTACKED_MISS,
+    ACTION_NO_PROGRESS, // Uses same color as Attack Miss, but will not be filtered the same way.
+    ACTION_FAILURE, // Uses same color as Attacked, but will not be filtered the same way.
     SUCCESS, OtherDamage,
     Error;
 

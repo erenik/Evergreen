@@ -124,7 +124,7 @@ public class Player extends Combatable implements Serializable
     public int gameID = -1;
 
     public List<String> knownStrongholds = new ArrayList<>();
-    public List<String> knownPlayerNames = new ArrayList<>();
+    public ArrayList<String> knownPlayerNames = new ArrayList<>();
 
     // Auto-created. Start-using whenever.
     public List<LogType> logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
@@ -210,7 +210,7 @@ public class Player extends Combatable implements Serializable
         inventory = (List<Invention>) in.readObject();
         inventionCurrentlyBeingCrafted = (Invention) in.readObject();
         knownStrongholds = (List<String>) in.readObject();
-        knownPlayerNames = (List<String>) in.readObject();
+        knownPlayerNames = (ArrayList<String>) in.readObject();
         logTypesToShow = (List<LogType>) in.readObject();
         isAI = in.readBoolean();
     }
@@ -492,7 +492,7 @@ public class Player extends Combatable implements Serializable
         float remainder = value - iValue;
         if (Math.abs(remainder) < 0.05f)
             return ""+iValue;
-        return String.format("%.1f", value);
+        return String.format("%.1f", value).replace(',', '.');
     }
     float hoursPerAction  = 1.f;
     float foodHarvested = 0.0f;
@@ -562,13 +562,11 @@ public class Player extends Combatable implements Serializable
             case BuildDefenses: BuildDefenses(); break;
             case AugmentTransport: AugmentTransport(); break;
             case LookForPlayer: LookForPlayer(da, game); break;
-            case Expedition:
-                Log("Not implemented yet - Expedition", LogType.ATTACKED);
-                break;
+//            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
             case Invent: Invent(da); break;
             case Craft: Craft(da); break;
             case Steal: Steal(da, game); break;
-            case AttackAPlayer: AttackAPlayer(da);
+            case AttackAPlayer: AttackAPlayer(da, game);
                 break;
             case Study:
                 // Gain exp into current skill perhaps..?
@@ -581,8 +579,20 @@ public class Player extends Combatable implements Serializable
         }
     }
 
-    private void AttackAPlayer(DAction da) {
-        Log("Not implemented yet - AttackAPlayer", LogType.ATTACKED);
+    private void AttackAPlayer(DAction da, Game game) {
+        // Check if a player was provided?
+        String targetName = da.requiredArguments.get(0).value;
+        Player p = game.GetPlayer(targetName);
+        if (p == null) {
+            Log("Unable to find player by name "+targetName, LogType.ACTION_FAILURE);
+            return;
+        }
+        Log("You attack "+targetName+".", LogType.ATTACK);
+        p.Log("You are attacked by "+name+"!", LogType.ATTACKED);
+        // Create a custom encounter for this.
+        Encounter enc = new Encounter(this, p);
+        enc.Simulate(); // Simulate it.
+
     }
 
     private void AugmentTransport() {
@@ -611,11 +621,39 @@ public class Player extends Combatable implements Serializable
             Log("No player found with that name.", LogType.ATTACK_MISS);
             return;
         }
+        /*
+        Spy/Steal: attempts to get information or resources from target enemy stronghold, NPC or player. Roll 2D6. GS: Roll another D6. BS: Roll 1 less D6.
+            18+, steal 6D3 food or 6D3 Materials, and 4 items or 2 inventions.
+            16~17, steal 5D3 food or 5D3 Materials, and 3 items or 1 invention.
+            14~15, steal 4D3 food or 4D3 Materials, and 2 items.
+            12~13, steal 3D3 food or 3D3 Materials, and 1 item.
+            10~11, steal 2D3 Food or 2D3 Materials.
+            9, steal 1D3,
+            7~8, failed, but not detected
+            2~6, failed & detected, player traps may activate, player may use ranged attacks on the spy, or stronghold defenders appear (1D6 severity, random type).
+        */
+        int roll = Dice.RollD6(2 + Get(Skill.Thief).Level());
+        if (roll < 7) { // Failed and detected.
+            Log("While trying to steal from "+p.name+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
+            p.Log(""+name+" tried to steal from you, but failed as he was detected!", LogType.ATTACKED);
+            return;
+        }
+        if (roll < 9) {
+            Log("While trying to steal from "+p.name+", you mistakenly caused attention, forcing you to retreat.", LogType.ATTACK_MISS);
+            p.Log("While walking in your shelter, you notice something grabbing your attention. You try to see what it was, but find nothing is amiss.", LogType.ATTACKED_MISS);
+            return;
+        }
+        int d3Stolen = (roll - 11)/2 + 2; // Food or materials.
+        boolean foodNotMats = r.nextBoolean();
+        Stat stolenStat = foodNotMats? Stat.FOOD : Stat.MATERIALS;
+        float quantity = Dice.RollD6(d3Stolen) * 0.5f;
+        if (quantity > p.Get(stolenStat))
+            quantity = (float) p.Get(stolenStat);
         // Steal food for now?
-        this.Adjust(Stat.FOOD, 3);
-        p.Adjust(Stat.FOOD, -3);
+        this.Adjust(stolenStat, quantity);
+        p.Adjust(stolenStat, -quantity);
         // Calc success?
-        String whatStolen = "3 units of food (placeholder)";
+        String whatStolen = quantity+" units of "+stolenStat.name();
         Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
         p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
@@ -640,16 +678,18 @@ public class Player extends Combatable implements Serializable
                 break;
         }
         if (player == null) {
-            Log("Despite searching, you were unable to find a player with given name: "+name, LogType.ATTACK_MISS);
+            int randInt = r.nextInt(100);
+            Log("Despite searching, you were unable to find a player called "+name+".", LogType.ACTION_FAILURE);
             // Add chance to find random other players?
-            if (r.nextInt(100) < 50) {
-                Player randomPlayer = game.RandomPlayer(knownPlayerNames);
+            if (randInt < 50) {
+                Player randomPlayer = game.RandomPlayer(KnownNamesSelfIncluded());
                 if (randomPlayer == null)
                     return;
                 String newPlayer = randomPlayer.name;
                 if (newPlayer != null && newPlayer != name) {
                     Log("However, while searching, you stumbled upon another player!", LogType.SUCCESS);
-                    knownPlayerNames.add(newPlayer);
+                    name = newPlayer;
+//                    knownPlayerNames.add(newPlayer);
                 }
                 else // In-case you already know all the players in the game already.
                     return;
@@ -659,7 +699,17 @@ public class Player extends Combatable implements Serializable
         }
         Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
         knownPlayerNames.add(name);
+        Log("knownNAmes: "+knownPlayerNames, LogType.INFO);
     }
+
+    private ArrayList<String> KnownNamesSelfIncluded() {
+        ArrayList<String> knownNames = new ArrayList<>();
+        for (int i = 0; i < knownPlayerNames.size(); ++i)
+            knownNames.add(knownPlayerNames.get(i));
+        knownNames.add(name);
+        return knownNames;
+    }
+
     private void Craft(DAction da)
     {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
@@ -863,27 +913,25 @@ public class Player extends Combatable implements Serializable
         chances.put(Finding.RandomPlayerShelter, 10);
         chances.put(Finding.EnemyStronghold, 1+turn/3);
         int sumChances = 0;
-        for (int i = 0; i < chances.size(); ++i)
-        {
+        for (int i = 0; i < chances.size(); ++i) {
             sumChances += (Integer) chances.values().toArray()[i];
         }
 //        System.out.println("Sum chances: "+sumChances);
         List<Finding> foundList = new ArrayList<Finding>();
-        while(toRandom > 0)
-        {
+        String foundStr = "Found: ";
+        while(toRandom > 0) {
             toRandom -= 1;
             float chance = r.nextFloat() * sumChances;
-            for (int i = 0; i < chances.size(); ++i)
-            {
+            for (int i = 0; i < chances.size(); ++i) {
                 int step = (Integer) chances.values().toArray()[i];
                 chance -= step;
-                if (chance < 0) // Found it
-                {
-                    System.out.println("Found..! "+chances.keySet().toArray()[i]);
+                if (chance < 0){ // Found it
+                    foundStr += chances.keySet().toArray()[i]+", ";
                     foundList.add((Finding)chances.keySet().toArray()[i]);
                 }
             }
         }
+        System.out.println(foundStr);
         float amount = 0;
         int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0;
         float foodFound = 0, matFound = 0;
@@ -1124,7 +1172,7 @@ public class Player extends Combatable implements Serializable
         }
     }
 
-    public void SaveLog() {
+    public void SaveLog(List<LogType> filterToSkip) {
         // Create the folder if needed.
         String folder = "logs";
         new File(folder).mkdirs();
@@ -1132,8 +1180,17 @@ public class Player extends Combatable implements Serializable
         System.out.println("SavePlayerLog, dumping logs to file "+path);
         try {
             FileOutputStream file = new FileOutputStream(path);
-            for (int i = 0; i < log.size(); ++i)
-                file.write((log.get(i).text+"\n").getBytes());
+            for (int i = 0; i < log.size(); ++i) {
+                Log l = log.get(i);
+                boolean skip = false;
+                for (int j = 0; j < filterToSkip.size(); ++j) {
+                    if (filterToSkip.get(j).ordinal() == l.type.ordinal())
+                        skip = true;
+                }
+                if (skip)
+                    continue;;
+                file.write((log.get(i).text + "\n").getBytes());
+            }
             file.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

@@ -7,6 +7,7 @@ package erenik.evergreen.server;
 
 import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketType;
 import erenik.evergreen.common.packet.EGResponseType;
@@ -42,7 +43,7 @@ public class EGTCPServer extends Thread
     ServerSocket servSock;
     public static void main(String[] args) throws Exception
     {
-        EGTCPClient.LaunchClients(3); // TODO: Remove later, move to have as args for adding AI.
+        EGTCPClient.LaunchClients(5); // TODO: Remove later, move to have as args for adding AI.
 
         if (args.length > 2) {
             if (args[0].equals("test")) {
@@ -322,9 +323,11 @@ public class EGTCPServer extends Thread
         Reply(sock, EGPacket.ok().build());        // Notify success.
     }
     /// Saves player log to file, within logs directory.
-    void SavePlayerLog(Player player)
-    {
-        player.SaveLog();
+    void SavePlayerLog(Player player) {
+        List<LogType> filter = new ArrayList<>();
+        filter.add(LogType.ATTACK_MISS);
+        filter.add(LogType.ATTACKED_MISS);
+        player.SaveLog(filter);
     }
 
     private Player GetPlayerInSystem(Player player) {

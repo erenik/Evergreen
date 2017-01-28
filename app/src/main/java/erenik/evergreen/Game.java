@@ -124,11 +124,11 @@ public class Game
             p.NextDay(this);
             p.lastEditSystemMs = System.currentTimeMillis();
             // Save?
-            if (p.lastSaveTimeSystemMs < p.lastEditSystemMs) {
+/*            if (p.lastSaveTimeSystemMs < p.lastEditSystemMs) {
                 System.out.println("SAving again yow");
                 p.SaveLog();
             }
-        }
+  */      }
     }
 
     private int ActivePlayers() {
@@ -176,7 +176,7 @@ public class Game
     {
         List<Game> games = new ArrayList<>();
         games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
-        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame_60Seconds, "60 seconds"));
+//        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame_60Seconds, "60 seconds"));
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
   //      games.add(Game.UpdatesEveryMinutes(60, GameID.GlobalGame_60Minutes, "60 minutes"));
         return games;
@@ -273,13 +273,20 @@ public class Game
             int playerIndex = r.nextInt(players.size());
             System.out.println("player index: "+playerIndex);
             Player randPlayer = players.get(playerIndex);
-            for (int j = 0; j < knownPlayerNames.size(); ++j)
-            {
-                if (randPlayer.name.equals(knownPlayerNames.get(j)))
-                    continue; // Already known, skip.
-                // Not known? Use it.
-                return randPlayer;
+            boolean alreadyKnown = false;
+            for (int j = 0; j < knownPlayerNames.size(); ++j) {
+                String name = randPlayer.name;
+                String name2 = knownPlayerNames.get(j);
+                System.out.println(name+" =? "+name2);
+                if (name.equals(name2)) {
+                    alreadyKnown = true;
+                    break;
+                }
             }
+            if (alreadyKnown)
+                continue;
+            // Not known? Use it.
+            return randPlayer;
         }
         return null;
     }

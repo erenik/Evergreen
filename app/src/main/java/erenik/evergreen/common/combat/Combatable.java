@@ -104,24 +104,29 @@ public class Combatable extends Object
     }
     /// Check HP?
     /// Order this enemy to attack the player. Returns true if it kills the player.
-    public boolean Attack(Combatable target, Encounter enc)
-    {
-        for (int i = 0; i < attacksPerTurn; ++i)
-        {
+    public boolean Attack(Combatable target, Encounter enc) {
+        for (int i = 0; i < attacksPerTurn; ++i) {
             // Attack it? Will have bonus first round (first attempt).
             boolean hit = target.Attack(CurrentAttack());
             ++hitsAttempted;
             if (!hit)
             {
-                enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.",
-                        isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
+                if (target.isPlayer && isPlayer) { // Both are players?
+                    enc.Log(name+" attacks "+target.name+" but misses.", LogType.ATTACK_MISS);
+                }
+                else
+                    enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.",
+                            isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
                 continue;
             }
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
-            enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",
-                    isPlayer ? LogType.ATTACK : LogType.ATTACKED);
-            if (target.hp  < 0) // Killed player?
-            {
+            if (target.isPlayer && isPlayer) {
+                enc.Log(name+" attacks "+target.name+" for "+damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage. Remaining HP: "+target.hp, LogType.ATTACK);
+            }
+            else
+                enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",
+                        isPlayer ? LogType.ATTACK : LogType.ATTACKED);
+            if (target.hp  < 0){ // Killed player?
                 return true;
             }
         }

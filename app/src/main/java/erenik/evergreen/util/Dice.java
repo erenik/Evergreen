@@ -36,7 +36,7 @@ public class Dice
         int total = 0;
         for (int i = 0; i < numDice; ++i)
             total += r.nextInt(6) + 1;
-        System.out.println(numDice+"D6 = "+total);
+  //      System.out.println(numDice+"D6 = "+total);
         return total;
     }
     static public int RollD3(int numDice)
@@ -44,7 +44,7 @@ public class Dice
         int total = 0;
         for (int i = 0; i < numDice; ++i)
             total += r.nextInt(3) + 1;
-        System.out.println(numDice+"D3 = "+total);
+//        System.out.println(numDice+"D3 = "+total);
         return total;
     }
 }

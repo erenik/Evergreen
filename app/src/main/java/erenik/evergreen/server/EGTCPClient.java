@@ -92,12 +92,13 @@ public class EGTCPClient extends Thread
         // Do some change.
         player.dailyActions.clear();
         // Generate some new actions.
-        for (int i = 0; i < 4; ++i)
-        {
+        String actionsStr = "Actions: ";
+        for (int i = 0; i < 4; ++i) {
             DAction action = DAction.RandomAction(player);
-            System.out.println("Action: "+action);
+            actionsStr += action;
             player.dailyActions.add(action.toString());
         }
+        System.out.println(actionsStr);
         player.DailyActionsAsString();
         // Save/send to server.
         comm.Send(EGRequest.Save(player));

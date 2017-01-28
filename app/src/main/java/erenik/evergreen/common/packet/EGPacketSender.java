@@ -35,14 +35,16 @@ public class EGPacketSender extends Thread
         while(stop == false)
         {
             try {
+                int packsSend = 0;
                 for (int i = 0; i < packetsToSend.size(); ++i)
                 {
                     EGPacket pack = packetsToSend.get(i);
                     boolean ok = pack.Send();
                     boolean remove = false;
                     if (ok) {
-                        System.out.println("Sent packet: "+pack);
+//                        System.out.print("Sent packet: "+pack);
                         remove = true;
+                        ++packsSend;
                     }
                     else
                     {
@@ -55,6 +57,8 @@ public class EGPacketSender extends Thread
                         continue;
                     }
                 }
+                if (packsSend > 0)
+                    System.out.println("sent "+packsSend+" packs");
                 if (packetsToSend.size() == 0)
                     Thread.sleep(1000);
                 else

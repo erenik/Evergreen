@@ -9,7 +9,7 @@ import java.util.Random;
  */
 public enum Transport {
     Walking(1),
-    Biking(1),
+    Bike(1),
     Bus(1),
     Tram(0), // Same as bus? Similar at least.
     Train(1),
@@ -32,7 +32,7 @@ public enum Transport {
                 Set(TransportStat.AmountEnemiesEncounteredRatio, 0.75f);
                 Set(TransportStat.EmissionsPerDay, -2);
                 break;
-            case Biking:
+            case Bike:
                 Set(TransportStat.ForagingBonus, 1);
                 Set(TransportStat.MaterialGatheringBonus, 1);
                 Set(TransportStat.SpeedBonus, 1);
