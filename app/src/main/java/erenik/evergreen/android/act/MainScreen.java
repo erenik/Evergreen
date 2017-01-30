@@ -79,8 +79,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
 
     /// Main init function
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
@@ -112,8 +111,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         @Override
         public void onClick(View view) {
             int statType = -1;
-            switch(view.getId())
-            {
+            switch(view.getId()) {
                 case R.id.buttonIconAttack: statType = Stat.BASE_ATTACK.ordinal(); break;
                 case R.id.buttonIconDefense: statType = Stat.BASE_DEFENSE.ordinal(); break;
                 case R.id.buttonIconEmissions: statType = Stat.EMISSIONS.ordinal(); break;
@@ -127,16 +125,14 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         }
     };
 
-
-    void UpdateGUI()
-    {
+    /// Updates all GUI, stats, logs, etc. Called after any change / returning to this activity from another one, pretty much.
+    void UpdateGUI() {
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
         SetText(R.id.textViewAttack, player.BaseAttack()+"");
         SetText(R.id.textViewDefense, player.BaseDefense()+"");
         SetText(R.id.textViewEmissions, player.GetInt(Stat.EMISSIONS) + "");
-
         UpdateActiveActionButton();
         UpdateDailyActionButton();
         UpdateSkillButton();
@@ -149,14 +145,15 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         ((TextView) findViewById(viewID)).setText(text);
     }
 
+    /// After everything has been created - i.e. GUI updated, perhaps logic should actually be placed here? Like saving, connecting to server, etc.?
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
     }
 
+    /// Checks any result from activities spawned from this one, and updates action if they were confirmed (e.g. hitting back should cancel/nullify any potential change).
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         int type = requestCode;
         System.out.println("onActivityResult called, req: "+requestCode+" code: " + resultCode);
@@ -177,6 +174,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         }
         Save();
     }
+
+    /// Upates the text of the active action button based on what is currently being done/selected by the player.
     private void UpdateActiveActionButton() {
         int idBtn = R.id.buttonChooseActiveAction;
         TextView tv = (TextView) findViewById(idBtn);
@@ -185,22 +184,21 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         else
             tv.setText("Active action");
     }
-    private void UpdateDailyActionButton()
-    {
+    /// Upates the text of the daily actions button based on what is currently being done/selected by the player.
+    private void UpdateDailyActionButton() {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
         if (player.dailyActions.size() >= 0)
             tv.setText("Change Action: "+player.dailyActions.size()+" queued.");
         else
             tv.setText(R.string.chooseAction);
     }
-    private void UpdateSkillButton()
-    {
+    /// Upates the text of the skill traning button based on what is currently being done/selected by the player.
+    private void UpdateSkillButton() {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
         if (player.skillTrainingQueue.size() >= 0)
             tv.setText("Change Skill: "+player.skillTrainingQueue.size()+" queued.");
         else
             tv.setText(R.string.chooseSkill);
     }
-
 
 }

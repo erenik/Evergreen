@@ -42,9 +42,13 @@ public class EGPacketReceiver extends Thread
     boolean stop = false;
    // private EGPacketReceiver epr;
     private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
+
+    void Log(String s) {
+        // Do nothing for the moment. Pass it onto a file or listener later perhaps.
+    }
     public void run()
     {
-        System.out.println("EGPacketReceiver.run: Starting EGPacketReceiver thread.");
+        Log("EGPacketReceiver.run: Starting EGPacketReceiver thread.");
         int multiplier = 1;
         while(stop == false)
         {
@@ -55,7 +59,7 @@ public class EGPacketReceiver extends Thread
                 {
                     int sleepTime = EGPacketCommunicator.retryTimeMs * multiplier;
                     ++multiplier;
-                    System.out.println("EGPacketReceiver sleeping for "+sleepTime+"ms");
+                    Log("EGPacketReceiver sleeping for "+sleepTime+"ms");
                     Thread.sleep(sleepTime);
                 }
                 for (int i = 0; i < packetsWaitingForReponses.size(); ++i)
@@ -70,7 +74,7 @@ public class EGPacketReceiver extends Thread
                     }
                     if (pack.lastError != EGResponseType.NoError){
                         remove = true;
-                        System.out.println("EGPacketReceiver.run: An error occurred: "+pack.lastError.text);
+                        Log("EGPacketReceiver.run: An error occurred: "+pack.lastError.text);
                     }
                     long now = System.currentTimeMillis();
                     long diff = now - pack.lastAttemptSystemMillis;
@@ -81,7 +85,7 @@ public class EGPacketReceiver extends Thread
                     if (pack.timeWaitedForReplyMs > pack.replyTimeout){
                         pack.lastError = EGResponseType.ReplyTimeoutReached;
                         remove = true;
-                        System.out.println("Timeout reached. Remove packet from queue");
+                        Log("Timeout reached. Remove packet from queue");
                     }
                     if (remove) {
                         packetsWaitingForReponses.remove(pack); // Remove from receiving queue.
@@ -93,7 +97,7 @@ public class EGPacketReceiver extends Thread
                 Logger.getLogger(EGPacketReceiver.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        System.out.println("Stopping EGPacketSender thread.");
+        Log("Stopping EGPacketSender thread.");
  //       epr = null; // Kill self. Allow restart of the thread.
     }
 };

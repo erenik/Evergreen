@@ -55,42 +55,33 @@ public class EvergreenActivity extends AppCompatActivity
 //        setSystemUiVisibility(SYSTEM_UI_FLAG_FULLSCREEN);
         // Store common shit here?
         App.OnActivityCreated(this);  // Setup system callbacks as/if needed.
-
-        setupFullscreenFlags();
-//        delayedHide(0); // Hide ASAP.
-        hideControls();
     }
     /* After creation, Cause hideControls of system controls after 500 ms? */
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        // Trigger the initial hideControls() shortly after the activity has been // created, to briefly hint to the user that UI controls // are available.
-//        delayedHide(100);
-        hideControls();
+        // Set up full-screen flags now that everything should be created (assuming sub-class loaded the views properly.
+        setupFullscreenFlags();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        hideControls();
+        setupFullscreenFlags();
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        hideControls();
-//        delayedHide(0);
-//        hideControls();
+        setupFullscreenFlags();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        hideControls();
     }
 
     static public List<Game> gameList = new ArrayList<>();
 
-    void GetGamesList()
-    {
+    void GetGamesList() {
         System.out.println("Requesting games list from server...");
         EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
         pack.addReceiverListener(new EGPacketReceiverListener()
@@ -104,8 +95,8 @@ public class EvergreenActivity extends AppCompatActivity
 //        pack.SendToServer(); // Send to default server.
     }
 
-    void setupFullscreenFlags()
-    {
+    void setupFullscreenFlags() {
+        // hideControls()?
         mVisible = true; // Default controls are visible.
         // Set up the user interaction to manually showControls or hideControls the system UI.
         mContentView = findViewById(R.id.fullscreen_view);
@@ -117,6 +108,11 @@ public class EvergreenActivity extends AppCompatActivity
                 }
             });
         }
+        /// Set up full-screen flags.
+        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE);
+
+
         /*
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         */
@@ -127,15 +123,13 @@ public class EvergreenActivity extends AppCompatActivity
     }
 
     /// General Save/Load. Will determine if it needs to perform it locally or remotely.
-    public boolean Save()
-    {
+    public boolean Save() {
         // For now, save locally and remotely, for testing purposes.
         SaveLocally();
         SaveToServer();
         return true;
     }
-    public boolean Load()
-    {
+    public boolean Load() {
         LoadLocally();
         LoadFromServer();
         return true;
@@ -226,21 +220,20 @@ public class EvergreenActivity extends AppCompatActivity
         return true;
     }
 
-    private boolean SaveToServer()
-    {
+    private boolean SaveToServer() {
         Player player = App.GetPlayer();
         System.out.println("Saving to server.");
         // Connect to server.
 //        EGPacketReceiver.StartSingleton();
         EGRequest req = EGRequest.Save(player);
         App.comm.Send(req);
-        req.WaitForResponse(1000);
-        if (req.GetReply() == null)
-        {
-            System.out.println("Failed to get a reply with current timeout.");
-            return false;
-        }
-        System.out.println("Got reply? : "+req.GetReply().toString());
+//        req.WaitForResponse(1000); // No waiting allowed. Use callbacks only!
+        req.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                System.out.println("Got reply? : "+reply.toString());
+            }
+        });
         return true;
     }
     public static boolean LoadFromServer() {
@@ -332,11 +325,13 @@ public class EvergreenActivity extends AppCompatActivity
     };
 
     private void toggle() {
+        /// Fuck the toggle.
+        /*
         if (mVisible) {
             hideControls();
         } else {
             showControls();
-        }
+        }*/
     }
 
     private void hideControls()

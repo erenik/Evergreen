@@ -62,7 +62,6 @@ public class EGTCPServer extends Thread {
     static void AppendToServerLogFile(String s) {
         // Create folder if needed?
         String serverLogFile = "server";
-        System.out.println("logFile: "+serverLogFile);
         AppendToFile(serverLogFile, s);
     }
     static void AppendToMergedFile(String s) {
@@ -206,7 +205,7 @@ public class EGTCPServer extends Thread {
             EGPacket pack = EGPacket.packetFromBytes(readBuffer);
     //        System.out.println("Packet received: "+pack);
             if (pack == null) {
-                System.out.println("Packet null: ");
+                Log("Packet null: ");
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build()); // Reply with error String.
                 sock.close(); // Close the socket.
                 sockets.remove(sock); // Remove it from the list.
@@ -219,7 +218,7 @@ public class EGTCPServer extends Thread {
                 EvaluateRequest(sock, pack);
             }
             else {
-                System.out.println("Received non-Request type packet. Replying BadRequest. Pack received: "+pack);
+                Log("Received non-Request type packet. Replying BadRequest. Pack received: "+pack);
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build());
             }
         }
@@ -251,7 +250,7 @@ public class EGTCPServer extends Thread {
             }
             case GetGamesList: {
                 try {
-                    System.out.println("EGTCPServer.EvaluateRequest: Body first 10 bytes:");
+                    Log("EGTCPServer.EvaluateRequest");
                     Reply(sock, EGPacket.gamesList(games).build());
                     // Body irrelevant, just send back the games list.
                 } catch (Exception e)
@@ -308,7 +307,7 @@ public class EGTCPServer extends Thread {
             /// Use bytes AFTER the header FFS....
             boolean ok = player.fromByteArr(pack.GetBody());
         } catch (Exception e) {
-            System.out.println("reply parse error");
+            Log("reply parse error");
             Reply(sock, EGPacket.error(EGResponseType.ParseError).build());
             return;
         }
@@ -320,7 +319,7 @@ public class EGTCPServer extends Thread {
         }
         if (player.CredentialsMatch(playerInSystem)) {
             if (verbosityLevel > 1)
-                System.out.println("Load success, playerName: "+playerInSystem.name+", replying data to client");
+                Log("Load success, playerName: "+playerInSystem.name+", replying data to client");
             Reply(sock, EGPacket.player(playerInSystem).build());            // Reply the player in system.
             return;
         }
@@ -329,7 +328,7 @@ public class EGTCPServer extends Thread {
 
     private void EvaluateCreateRequest(Socket sock, EGPacket pack) {
         Player player = Player.fromByteArray(pack.GetBody());
-        System.out.println("EvaluateCreateRequest: "+player.name);
+        Log("EvaluateCreateRequest: "+player.name);
         if (player == null)
         {
             Reply(sock, EGPacket.parseError().build());
@@ -377,8 +376,7 @@ public class EGTCPServer extends Thread {
     }
 
     private Game GetGameById(int gameID) {
-        for (int i = 0; i < games.size(); ++i)
-        {
+        for (int i = 0; i < games.size(); ++i) {
             Game g = games.get(i);
             if (g.GameID() == gameID)
                 return g;

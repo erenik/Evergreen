@@ -43,6 +43,7 @@ public class EGPacket
 
     /// Receiver which should be added/set before sending packet.
     EGResponseType lastError = EGResponseType.NoError; // Default no errors, right?
+    /// List of receiving listeners, to interpret any response that is received..?
     private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
     public long lastAttemptSystemMillis = System.currentTimeMillis();
 
@@ -71,8 +72,7 @@ public class EGPacket
         type = EGPacketType.Request;
         reqt = reqType;
     }
-    public void addReceiverListener(EGPacketReceiverListener eprl)
-    {
+    public void addReceiverListener(EGPacketReceiverListener eprl) {
         receiverListeners.add(eprl);
     }
 
@@ -273,8 +273,7 @@ public class EGPacket
         this.port = port;
     }
     /// Sends this packet without waiting for a reponse. The response will be set later in the EGPacket reponse variable, or errors in lastError if responses don't arrive.
-    public boolean Send()
-    {
+    public boolean Send() {
         return Send(ip, port);
     }
 

@@ -1,5 +1,8 @@
 package erenik.evergreen.android.act;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -54,7 +57,7 @@ public class SelectActivity extends EvergreenActivity
                     sdf.show(fragMan, "selectDactionDetails");
                     return;
                 }
-            }
+                }
             selected.add(text);
             clicked(b.getText());
             updateQueue(); // Update queue gui.

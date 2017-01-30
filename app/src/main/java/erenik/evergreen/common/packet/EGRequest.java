@@ -37,18 +37,15 @@ public class EGRequest extends EGPacket
             }
         }
     }
-    public static EGRequest Load(Player player)
-    {
+    public static EGRequest Load(Player player) {
         EGRequest eg = new EGRequest(EGRequestType.Load, player.toByteArr());
         return eg;
     };
-    public static EGRequest Save(Player player)
-    {
+    public static EGRequest Save(Player player) {
         EGRequest eg = new EGRequest(EGRequestType.Save, player.toByteArr());
         return eg;
     };
-    public static EGRequest byType(EGRequestType type)
-    {
+    public static EGRequest byType(EGRequestType type) {
         EGRequest eg = new EGRequest(type);
         return eg;
     }

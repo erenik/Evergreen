@@ -48,6 +48,8 @@ public class SelectDetailsDialogFragment extends DialogFragment
             {
                 // Update GUI of main activity.
                 SelectActivity sa = (SelectActivity) act;
+                // Hide system buttons?
+                sa.setupFullscreenFlags(); // Remove stuff?
                 String text = da.text;
                 // Fetch arguments as set in the ui?
                 if (argumentViews.size() > 0)
@@ -112,6 +114,8 @@ public class SelectDetailsDialogFragment extends DialogFragment
 
         // Adda  scroll-layout?
         LinearLayout mainLayout = new LinearLayout(getContext());
+        mainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN); // Hide the back/home/change app buttons still...!
+
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         mainLayout.setOrientation(LinearLayout.HORIZONTAL);
         layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
@@ -192,8 +196,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
                 mainLayout.addView(spinner);
                 argumentViews.add(spinner);
             }
-            if (textInput)
-            {
+            if (textInput) {
                 // Name ?
                 EditText et = new EditText(getContext());
                 et.setId(R.id.nameInput);
@@ -204,8 +207,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
         }
         if (possible)
             builder.setPositiveButton("OK", onClickOK);
-        else
-        {
+        else {
             // Add error messages?
             TextView tv = new TextView(getContext());
             String text = "Unable to perform action.";
@@ -221,7 +223,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
         }
 
         builder.setView(mainLayout);
-        Dialog d = builder.show();
+        AlertDialog d = builder.show();
         // Create the AlertDialog object and return it
         return d;// builder.create();
     }

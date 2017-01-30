@@ -52,6 +52,13 @@ public class StatViewActivity extends EvergreenActivity {
                 UpdateUI();
             }
         });
+        findViewById(R.id.buttonHome).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Stop this activity, assume it goes back to the correct previous one?
+                finish();
+            }
+        });
         findViewById(R.id.buttonToggleDetailedDescription).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

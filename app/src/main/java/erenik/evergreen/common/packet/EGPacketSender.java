@@ -9,13 +9,12 @@ import java.util.logging.Logger;
  * Created by Emil on 2016-12-11.
  */
 
-public class EGPacketSender extends Thread
-{
+public class EGPacketSender extends Thread {
+
     public EGPacketSender()
     {
     }
-    public void QueuePacket(EGPacket pack, String ip, int port)
-    {
+    public void QueuePacket(EGPacket pack, String ip, int port) {
         pack.SetDest(ip, port); // Set dest.
         packetsToSend.add(pack); // Add to list.
         // TODO: Make sure thread is started?
@@ -27,10 +26,14 @@ public class EGPacketSender extends Thread
     boolean threadStarted = false;
   //  private EGPacketSender eps;
     private List<EGPacket> packetsToSend = new ArrayList<EGPacket>();
+    void Log(String s) {
+        // Do nothing, later do stuff maybe?
+    }
+
     public void run()
     {
         threadStarted = true;
-        System.out.println("EGPacketSender.run: Starting EGPacketSender thread.");
+        Log("EGPacketSender.run: Starting EGPacketSender thread.");
         int multiplier = 1;
         while(stop == false)
         {
@@ -58,7 +61,7 @@ public class EGPacketSender extends Thread
                     }
                 }
                 if (packsSend > 0)
-                    System.out.println("sent "+packsSend+" packs");
+                    Log("sent "+packsSend+" packs");
                 if (packetsToSend.size() == 0)
                     Thread.sleep(1000);
                 else
@@ -67,7 +70,7 @@ public class EGPacketSender extends Thread
                 Logger.getLogger(EGPacketReceiver.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        System.out.println("Stopping EGPacketReceiver thread.");
+        Log("Stopping EGPacketReceiver thread.");
    //     eps = null; // Kill self. Allow restart of the thread.
     }
 };

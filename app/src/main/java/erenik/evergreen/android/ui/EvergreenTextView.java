@@ -75,6 +75,11 @@ public class EvergreenTextView extends TextView {
         // Just set background color and text color automagically.
         setTextColor(ContextCompat.getColor(context, R.color.mainButtonTextColor));
     }
+//    @Override
+    public void setValues(float[] values){
+        // Do stuff calculating
+        System.out.println("wat");
+    }
     // When text changes, set the force resize flag to true and reset the text size.
     @Override
     protected void onTextChanged(final CharSequence text, final int start, final int before, final int after) {

@@ -17,8 +17,7 @@ import java.net.Socket;
  */
 public class EGSocket {
 
-    EGSocket(String ip, int port) throws IOException
-    {
+    EGSocket(String ip, int port) throws IOException {
         sock = new Socket(ip, port);
     }
     
