@@ -202,5 +202,6 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="survivedUntilTurn">Survived until turn</string>
+    <string name="relevantGear">Relevant items</string>
 
 </resources>

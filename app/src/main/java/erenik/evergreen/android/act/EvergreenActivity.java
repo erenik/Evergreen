@@ -11,11 +11,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.FileInputStream;
@@ -28,6 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import erenik.evergreen.Game;
+import erenik.evergreen.android.ui.EvergreenButton;
+import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
@@ -466,4 +474,64 @@ public class EvergreenActivity extends AppCompatActivity
         if (lastAdded != null && focusLastLogMessageUponUpdate)
             lastAdded.requestFocus(); // Request focus, make visible?
     }
+
+    protected void UpdateItemList(ViewGroup vg, InventionType type) {
+        // Clear it.
+        vg.removeAllViews();
+        Player player = App.GetPlayer();
+        for (int i = 0; i < player.inventory.size(); ++i)
+        {
+            Invention item = player.inventory.get(i);
+            if (item.type != type)
+                continue;
+            /// First add a LinearLayout (horizontal)
+            LinearLayout ll = new LinearLayout(getBaseContext());
+            // Give it an ID? Skip?
+            int id  = 0;
+            switch(i) {
+                case 0: id = R.id.queueLayout0; break; case 1: id = R.id.queueLayout1; break;case 2: id = R.id.queueLayout2; break;case 3: id = R.id.queueLayout3; break;case 4: id = R.id.queueLayout4; break;case 5: id = R.id.queueLayout5; break;case 6: id = R.id.queueLayout6; break;case 7: id = R.id.queueLayout7; break;
+            }
+            ll.setId(id); // ID for .. idk.
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, App.GetScreenSize().y / 10);
+            layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
+            ll.setLayoutParams(layoutParams);
+            ll.setBackgroundResource(R.drawable.small_button);
+            vg.addView(ll);
+
+            // Make a button out of it.
+            EvergreenButton b = new EvergreenButton(getBaseContext());
+            b.setText(item.name);
+            // Screen div 10 height per element?
+            layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
+            layoutParams.setMargins(5,0,5,0); // Margins left n right.
+            layoutParams.gravity = Gravity.CENTER;
+            b.setLayoutParams(layoutParams);
+            b.setOnClickListener(itemClicked);
+            b.setBackgroundColor(0x00);
+            b.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.mainTextColor));
+            ll.addView(b);
+
+            // Add a button in the button to remove it.
+            ImageButton removeButton = new ImageButton(getBaseContext());
+            removeButton.setBackgroundColor(0x00); // SEe-through?
+//            removeButton.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
+            removeButton.setImageResource(R.drawable.remove);
+            removeButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
+//            removeButton.setOnClickListener(removeParentFromQueue);
+            removeButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 4.0f)); // Weight at the end?
+            ll.addView(removeButton);
+        }
+
+    }
+    private final View.OnClickListener itemClicked = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            Button b = (Button)v;
+           // clicked(b.getText());
+        }
+    };
+
+
 }

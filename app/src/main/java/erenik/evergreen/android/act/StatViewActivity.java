@@ -2,6 +2,7 @@ package erenik.evergreen.android.act;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
+import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
 
@@ -94,10 +96,12 @@ public class StatViewActivity extends EvergreenActivity {
 
         // Update current bonuses, etc.
 
-        // Update action buttons.
+        // Update relevant gear.
+        UpdateItemList((ViewGroup)(findViewById(R.id.layoutRelevantItems)), InventionType.Weapon);
 
     }
-        /// Populate the available items.
+
+    /// Populate the available items.
         /*
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutItems);
         for (int i = 0; i < itemNames.size(); ++i)
