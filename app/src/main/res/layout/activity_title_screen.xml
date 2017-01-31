@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".android.act.IntroScreen"
+    style="@style/Evergreen.BG"
+    android:orientation="vertical">
+
+    <ImageView style="@style/Evergreen.Logo"
+        android:id="@+id/imageViewIntroOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+    <TextView
+        android:id="@+id/fullscreen_view"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        />
+    <!-- android:src="@drawable/intro_glass_crash"
+            android:background="@drawable/intro_glass_crash"
+    -->
+    <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_singleplayer" style="@style/Evergreen.MainButtons" android:text="@string/singleplayer"  />
+    <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_multiplayer" style="@style/Evergreen.MainButtons" android:text="@string/multiplayer" />
+
+</LinearLayout>

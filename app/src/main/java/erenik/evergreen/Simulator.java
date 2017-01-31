@@ -3,6 +3,9 @@ package erenik.evergreen;
 import java.util.ArrayList;
 import java.util.List;
 
+import erenik.evergreen.android.App;
+import erenik.evergreen.common.Player;
+
 // import erenik.evergreen.android.App;
 // import erenik.evergreen.common.Player;
 
@@ -20,6 +23,9 @@ public class Simulator
     }
 
     List<Game> games = new ArrayList<>();
+    // Local game for singleplayer. Default has some NPCs, or no?
+    Game localGame = new Game();
+
     private Simulator()
     {
 //        game.AddDefaultAI();
@@ -38,11 +44,20 @@ public class Simulator
     }
 
     /// Adjusts stats, generates events based on chosen actions to be played, logged
-    public void NextDay()
-    {
+    public boolean RequestNextDay(Player requestingPlayer) {
+        /// Local game?
+        if (App.isLocalGame){
+            // Simulate it?
+            if (localGame.players.indexOf(requestingPlayer) == -1)
+                localGame.players.add(requestingPlayer);
+            localGame.NextDay(); // Yeah.
+            return true;
+        }
+        /// Multiplayer, send data to server, request an update.
+
+
         /// No games in? Add default game and default player.
-        if (games.size() == 0)
-        {
+        if (games.size() == 0) {
             games.add(new Game());
             // TODO: Add default player elsewhere.
    //         games.get(0).players.add(App.GetPlayer());
@@ -53,6 +68,7 @@ public class Simulator
             Game game = games.get(i);
             game.NextDay();
         }
+        return true;
     }
 
 }

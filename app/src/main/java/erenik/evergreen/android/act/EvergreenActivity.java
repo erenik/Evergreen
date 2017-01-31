@@ -9,11 +9,14 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,12 +31,11 @@ import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
+import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
-import erenik.evergreen.common.packet.EGPacketSender;
 import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.player.Constants;
-import erenik.evergreen.common.packet.EGPacketReceiver;
 import erenik.evergreen.common.packet.EGRequest;
 
 
@@ -42,6 +44,10 @@ import erenik.evergreen.common.packet.EGRequest;
  */
 public class EvergreenActivity extends AppCompatActivity
 {
+    View scrollViewLog = null, layoutLog = null;
+    protected int maxLogLinesInEventLog = 50; // Default, change if the activity should show more.
+    boolean focusLastLogMessageUponUpdate = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -55,6 +61,7 @@ public class EvergreenActivity extends AppCompatActivity
 //        setSystemUiVisibility(SYSTEM_UI_FLAG_FULLSCREEN);
         // Store common shit here?
         App.OnActivityCreated(this);  // Setup system callbacks as/if needed.
+
     }
     /* After creation, Cause hideControls of system controls after 500 ms? */
     @Override
@@ -62,6 +69,19 @@ public class EvergreenActivity extends AppCompatActivity
         super.onPostCreate(savedInstanceState);
         // Set up full-screen flags now that everything should be created (assuming sub-class loaded the views properly.
         setupFullscreenFlags();
+
+        /// Find views after they have been loaded earlier in the sub-class' onCreate method.
+        scrollViewLog = findViewById(R.id.scrollViewLog);
+        layoutLog = findViewById(R.id.layoutLog);
+        if (scrollViewLog != null) {
+            System.out.println("Event log found.");
+            scrollViewLog.setOnClickListener(toggleLogFullScreen);
+        }
+        if (layoutLog != null) {
+            System.out.println("Layout for Event log found.");
+            layoutLog.setOnClickListener(toggleLogFullScreen);
+        }
+        UpdateLog(); // Update log after subclass has adjusted how it should be presented.
     }
 
     @Override
@@ -126,12 +146,15 @@ public class EvergreenActivity extends AppCompatActivity
     public boolean Save() {
         // For now, save locally and remotely, for testing purposes.
         SaveLocally();
-        SaveToServer();
+        if (App.isMultiplayerGame)
+            SaveToServer();
         return true;
     }
+    /// Ease of use method, just loads..?
     public boolean Load() {
         LoadLocally();
-        LoadFromServer();
+        if (App.isMultiplayerGame)
+            LoadFromServer();
         return true;
     }
 
@@ -382,4 +405,65 @@ public class EvergreenActivity extends AppCompatActivity
     }
 
 
+    /// For log-management, if it is present somewhere in the activity (it may be).
+    /// For the log...? Or open in a new activity? Since it's just readng?
+    boolean logFullScreen;
+    View.OnClickListener toggleLogFullScreen = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // Check current activity, if this is the LogViewer, then end it just.
+            if (App.currentActivity.getClass() == EventLogViewer.class) {
+                finish();
+                return;
+            }
+            Intent i = new Intent(getBaseContext(), EventLogViewer.class);
+            startActivity(i);
+            System.out.println("Toggle fullscreen");
+        }
+    };
+
+    // Update log with relevant filters.
+    void UpdateLog() {
+        if (layoutLog == null)
+            return;
+        Player player = App.GetPlayer();
+//        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), maxLogLinesInEventLog, player.logTypesToShow);
+
+        System.out.println("Log.UpdateLog");
+        ViewGroup v = (ViewGroup) layoutLog;
+        // Remove children.
+        v.removeAllViews();
+        // Add new ones?
+        int numDisplay = player.log.size();
+        numDisplay = numDisplay > maxLogLinesInEventLog ? maxLogLinesInEventLog : numDisplay;
+        int startIndex = player.log.size() - numDisplay;
+        System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
+        View lastAdded = null;
+        for (int i = player.log.size() - 1; i >= 0; --i)
+        {
+            Log l = player.log.get(i);
+            boolean show = false;
+            for (int j = 0; j < player.logTypesToShow.size(); ++j)
+            {
+                if (l.type.ordinal() == player.logTypesToShow.get(j).ordinal())
+                    show = true;
+            }
+            if (!show)
+                continue;
+            String s = l.text;
+            TextView t = new TextView(getBaseContext());
+            t.setText(s);
+            int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
+            // System.out.println("Colorizing: "+Integer.toHexString(hex));
+            t.setTextColor(hex);
+            v.addView(t, 0); // Insert at index 0 always.
+            t.setFocusable(true); // Focusable.
+            t.setFocusableInTouchMode(true);
+            if (v.getChildCount() >= maxLogLinesInEventLog)
+                break;
+        }
+        lastAdded = v.getChildAt(v.getChildCount()-1);
+        if (lastAdded != null && focusLastLogMessageUponUpdate)
+            lastAdded.requestFocus(); // Request focus, make visible?
+    }
 }

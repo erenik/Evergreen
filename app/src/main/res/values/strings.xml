@@ -8,7 +8,6 @@
     <string name="newGame">Press to start new game</string>
 
     <string name="chooseAction">Choose action</string>
-    <string name="chooseSkill">Choose skill</string>
     <!-- /// Intro texts -->
     <string name="introText1">Once upon a time, people lived closer to nature than now.
         \n\n
@@ -190,5 +189,18 @@
     <string name="title_activity_very_cool_to_be_copy_pasted_from_and_deleted">
         VeryCoolToBeCopyPastedFromAndDeleted
     </string>
+
+    <string name="ActiveAction">Active actions</string>
+    <string name="DailyActions">Daily actions</string>
+    <string name="SkillTraining">Skill training</string>
+    <string name="log"><u>Event log</u></string>
+    <string name="new_game">New game</string>
+    <string name="load_game">Load game</string>
+    <string name="singleplayer">Singleplayer</string>
+    <string name="multiplayer">Multiplayer</string>
+    <string name="clear">Clear</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="survivedUntilTurn">Survived until turn</string>
 
 </resources>

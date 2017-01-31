@@ -46,6 +46,7 @@ public class App {
     // Player
     static private Player player = new Player();
     public static EGPacketCommunicator comm = new EGPacketCommunicator();
+    public static boolean isLocalGame = false, isMultiplayerGame = false; // Set upon start.
 
     static public Player GetPlayer()
     {
@@ -54,6 +55,7 @@ public class App {
 
     // Returns true if it processed an event, false if not.
     public static boolean HandleNextEvent() {
+        if (true) return false; // Skip until mini-games are implemented later.
         if (player.playEvents  // If playing all events, or
                 || !player.AllMandatoryEventsHandled()) // Not all mandatory events handled,
             return HandleGeneratedEvents(); // Do event.
@@ -80,6 +82,13 @@ public class App {
         }
         System.out.println("HandleGeneratedEvents, type: " + event.type.name());
 
+
+        /// For now, just skip the event, act as if it was already handled.
+        player.PopEvent(event.type);
+        if (true)
+            return true; // Mark that all have been completed now.
+
+        /// Old code for initiating a fragment activity, requesting the user to do something. Will use later.
         if (currentActivity instanceof android.support.v4.app.FragmentActivity)
         {
             FragmentActivity fa = (FragmentActivity) currentActivity;
@@ -119,43 +128,7 @@ public class App {
     // Specify filter.
     public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay, List<LogType> typesToShow)
     {
-        System.out.println("Log.UpdateLog");
-        Player player = App.GetPlayer();
-        ViewGroup v = vg;
-        // Remove children.
-        v.removeAllViews();
-        // Add new ones?
-        int numDisplay = player.log.size();
-        numDisplay = numDisplay > maxLinesToDisplay ? maxLinesToDisplay : numDisplay;
-        int startIndex = player.log.size() - numDisplay;
-        System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
-        View lastAdded = null;
-        for (int i = player.log.size() - 1; i >= 0; --i)
-        {
-            Log l = player.log.get(i);
-            boolean show = false;
-            for (int j = 0; j < typesToShow.size(); ++j)
-            {
-                if (l.type.ordinal() == typesToShow.get(j).ordinal())
-                    show = true;
-            }
-            if (!show)
-                continue;
-            String s = l.text;
-            TextView t = new TextView(context);
-            t.setText(s);
-            int hex = ContextCompat.getColor(context, GetColorForLogType(l.type));
-            // System.out.println("Colorizing: "+Integer.toHexString(hex));
-            t.setTextColor(hex);
-            v.addView(t, 0); // Insert at index 0 always.
-            t.setFocusable(true); // Focusable.
-            t.setFocusableInTouchMode(true);
-            if (v.getChildCount() >= maxLinesToDisplay)
-                break;
-        }
-        lastAdded = v.getChildAt(v.getChildCount()-1);
-        if (lastAdded != null)
-            lastAdded.requestFocus(); // Request focus, make visible?
+
     }
 
 
@@ -167,8 +140,7 @@ public class App {
         return size;
     }
     /// Go to game-over screen.
-    public static void GameOver()
-    {
+    public static void GameOver() {
         System.out.println("GaME OVER!!!");
         Intent i = new Intent(currentActivity.getBaseContext(), GameOver.class);
         currentActivity.startActivity(i);

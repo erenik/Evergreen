@@ -202,7 +202,7 @@ public class Encounter
             Enemy e = enemies.get(i);
             if (e.Attack(player, this))
             {
-                Log("You die.", LogType.INFO);
+                player.Log("You die.", LogType.INFO);
                 dead = true;
                 break;
             }
@@ -217,14 +217,14 @@ public class Encounter
             int roll = Dice.RollD6(4); // 4-24, 14 mid, +/- 10
             if (roll > 14 + fleeCR) {
                 // Success?
-                Log("You run away.", LogType.INFO);
+                player.Log("You run away.", LogType.INFO);
                 if (fleetRetreat > 0)
                     fleeExp = (int) Math.pow(2, fleetRetreat - 1);
                 fled = true;
                 return;
             }
             else {
-                Log("You try to run away, but fail", LogType.INFO);
+                player.Log("You try to run away, but fail", LogType.INFO);
                 ++player.consecutiveFleeAttempts;
             }
         }

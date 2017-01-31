@@ -32,9 +32,9 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Survived until turn ..."
+            android:text="@string/survivedUntilTurn"
             android:textColor="@color/mainTextColor"
-            android:id="@+id/textViewTurnSurvived"
+            android:id="@+id/textView_TurnSurvived"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"
             android:textSize="18dp"
@@ -48,5 +48,7 @@
             android:text="@string/newGame"
             android:id="@+id/buttonNewGame"
             />
+
+        <include layout="@layout/event_log"/>
     </LinearLayout>
 </RelativeLayout>

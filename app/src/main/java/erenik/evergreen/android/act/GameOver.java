@@ -4,10 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
+import erenik.evergreen.common.player.Stat;
 
 public class GameOver extends EvergreenActivity {
 
@@ -17,12 +19,7 @@ public class GameOver extends EvergreenActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_over);
 
-        // Overwrite/reset save.
         Player player = App.GetPlayer();
-        player.SetDefaultStats();
-        Save();
-    // Delayed move to main menu again?
-
         /*
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -32,6 +29,9 @@ public class GameOver extends EvergreenActivity {
         }, 5000); // 5000ms delay
         */
 
+        TextView tv = (TextView) findViewById(R.id.textView_TurnSurvived);
+        tv.setText(getString(R.string.survivedUntilTurn)+" "+(int)(player.Get(Stat.TurnSurvived)));
+
         Button b = (Button) findViewById(R.id.buttonNewGame);
         View.OnClickListener click = new View.OnClickListener()
         {
@@ -39,6 +39,11 @@ public class GameOver extends EvergreenActivity {
             public void onClick(View v) {
                 Intent i = new Intent(getBaseContext(), MainScreen.class);
                 startActivity(i);
+
+                // Overwrite/reset save.
+                Player player = App.GetPlayer();
+                player.SetDefaultStats();
+                Save();
             }
         };
         b.setOnClickListener(click);

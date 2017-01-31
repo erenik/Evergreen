@@ -1,7 +1,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Evergreen.BG"
-    tools:context=".android.act.MainScreen">
+    tools:context=".android.act.MainScreen"
+    android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+    >
     <!--    android:background="@color/backgroundMainGreen" -->
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -9,137 +11,57 @@
          TextureView, etc. -->
 
     <!-- Status above -->
+    <!-- Linear layout for most things? -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:padding="@dimen/mainLayoutPadding"
         >
-        <ImageView style="@style/Evergreen.Logo"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1.5" />
-        <!-- /// First Row of stats -->
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1.5"
-            android:layout_gravity="center_horizontal|top">
 
-            <!-- Stat Icons -->
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconHP" android:src="@drawable/icon_hp"
 
-                        />
-<!--                    <TextView style="@style/Evergreen.IconTextTitle" android:text="HP" />
-    -->                <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewHP" />
-                </RelativeLayout>
-            </FrameLayout>
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconFood" android:src="@drawable/icon_food"/>
-        <!--            <TextView style="@style/Evergreen.IconTextTitle" android:text="Food" />
-            -->        <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewFood" />
-                </RelativeLayout>
-            </FrameLayout>
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconMaterials" android:src="@drawable/icon_materials" />
-     <!--               <TextView style="@style/Evergreen.IconTextTitle" android:text="Materials" />
-        -->            <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewMaterials" />
-                </RelativeLayout>
-            </FrameLayout>
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconEmissions" android:src="@drawable/icon_emissions" />
-                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewEmissions" />
-                </RelativeLayout>
-            </FrameLayout>
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconAttack" android:src="@drawable/icon_attack" />
-                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewAttack" />
-                </RelativeLayout>
-            </FrameLayout>
-            <FrameLayout style="@style/Evergreen.IconLayout">
-                <ImageView style="@style/Evergreen.IconBG" />
-                <RelativeLayout style="@style/Evergreen.IconInnerLayout">
-                    <ImageButton style="@style/Evergreen.IconButton" android:id="@+id/buttonIconDefense" android:src="@drawable/icon_defense" />
-                    <TextView style="@style/Evergreen.IconText" android:id="@+id/textViewDefense" />
-                </RelativeLayout>
-            </FrameLayout>
-        </LinearLayout>
+        <!-- Scrollview for all main content, may contain several different small screens inside? -->
+        <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
 
-        <!-- /// Second Row of stats -->
+            <!-- All content except the last 3 buttons. -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
 
-            <!-- Attack -->
+                <ImageView style="@style/Evergreen.Logo" android:layout_width="match_parent" android:layout_height="100sp" />
 
-        <Button
-            style="@style/Evergreen.Button.Wide"
-            android:id="@+id/buttonChooseActiveAction"
-            android:layout_height="0dp"
-            android:layout_weight="0.8"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:text="Active actions"
-            android:textSize="16dp"
-            android:layout_gravity="center_horizontal" />
+                <!-- /// First Row of stats -->
+                <include layout="@layout/row_of_main_stat_icons"/>
 
-        <Button
-            android:id="@+id/buttonChooseAction"
-            style="@style/Evergreen.Button.Wide"
-            android:layout_height="0dp"
-            android:layout_weight="0.8"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:text="Choose action"
-            android:textSize="16dp" />
+                <!-- Frame layout for the rendering of the shelter/defense/home and all additions -->
+                <FrameLayout android:layout_width="match_parent" android:layout_height="190sp" android:padding="3sp">
+                    <ImageView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:id="@+id/imageView_defenseLevel" android:src="@drawable/def_level_3" />
+                </FrameLayout>
 
-        <Button
-            android:id="@+id/buttonChooseSkill"
-            style="@style/Evergreen.Button.Wide"
-            android:layout_height="0dp"
-            android:layout_weight="0.8"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:text="Choose skill"
-            android:textSize="16dp" />
+                <!-- /// Second Row of stats -->
+                    <!-- Attack -->
 
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="4"
-            android:id="@+id/scrollViewLog"
-            android:layout_gravity="center_horizontal" >
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/layoutLog"
-                android:orientation="vertical">
-                <TextView
+                <!-- Main buttons -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="New Text\ntetet\"
-                    android:textColor="@color/mainTextColor"
-                    android:id="@+id/textViewLog" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Yo vafan."
-                    android:id="@+id/textViewLog2"
-                    android:textColor="@color/attacked" />
+                    android:orientation="horizontal">
+                    <Button style="@style/Evergreen.MainButtons.AdaptiveWidth" android:id="@+id/buttonChooseActiveAction" android:text="@string/ActiveAction"/>
+                    <Button style="@style/Evergreen.MainButtons.AdaptiveWidth" android:id="@+id/buttonChooseAction" android:text="@string/DailyActions" />
+                </LinearLayout>
+                <Button style="@style/Evergreen.MainButtons" android:id="@+id/buttonChooseSkill" android:text="@string/SkillTraining" />
+
+                <!-- Event Log for all past happenings. -->
+                <include layout="@layout/event_log"/>
+
+                <!-- Some empty space at the bottom for design purposes? -->
+
             </LinearLayout>
         </ScrollView>
 
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <Button
@@ -166,9 +88,6 @@
                 android:text="Messages"
                 android:textSize="16dp" />
         </LinearLayout>
-
-        <!-- Some empty space at the bottom for design purposes? -->
-
     </LinearLayout>
 
 </FrameLayout>

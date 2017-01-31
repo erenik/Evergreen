@@ -153,18 +153,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             >
-            <Button
-                android:text="Cancel"
-                style="@style/Evergreen.Button"
-                android:id="@+id/buttonCancel" />
-            <Button
-                style="@style/Evergreen.Button"
-                android:text="Clear"
-                android:id="@+id/buttonClear" />
-            <Button
-                style="@style/Evergreen.Button"
-                android:text="Confirm"
-                android:id="@+id/buttonConfirm" />
+            <Button android:text="@string/cancel" style="@style/Evergreen.Button.AdaptiveWidth" android:id="@+id/buttonCancel" />
+            <Button style="@style/Evergreen.Button.AdaptiveWidth" android:text="@string/clear" android:id="@+id/buttonClear" />
+            <Button style="@style/Evergreen.Button.AdaptiveWidth" android:text="@string/confirm" android:id="@+id/buttonConfirm" />
         </LinearLayout>
 
 

@@ -361,7 +361,7 @@ public class Player extends Combatable implements Serializable
         statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
-    void Log(String text, LogType t) {
+    public void Log(String text, LogType t) {
         log.add(new Log(text, t));
         for (int i = 0; i < logListeners.size(); ++i) {
             LogListener ll = logListeners.get(i);
@@ -473,10 +473,12 @@ public class Player extends Combatable implements Serializable
         }
         return finding;
     }
-    void PopEvent(Finding f) { // Pop NextEvent from queue.
+    public void PopEvent(Finding f) { // Pop NextEvent from queue.
         switch (f) {
             case Encounter: Adjust(Stat.ENCOUNTERS, -1); break;
             case AttacksOfTheEvergreen: Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1); break;
+            case AbandonedShelter: Adjust(Stat.ABANDONED_SHELTER, -1); break;
+            case RandomPlayerShelter: Adjust(Stat.RANDOM_PLAYERS_SHELTERS, -1); break;
         }
     }
     /// Returns true

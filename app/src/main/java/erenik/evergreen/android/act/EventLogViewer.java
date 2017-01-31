@@ -11,8 +11,7 @@ import erenik.evergreen.R;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.Player;
 
-public class logViewer extends EvergreenActivity
-{
+public class EventLogViewer extends EvergreenActivity {
 
     Player player = App.GetPlayer();
     private View.OnClickListener toggleFilter = new View.OnClickListener() {
@@ -30,16 +29,7 @@ public class logViewer extends EvergreenActivity
                     SetFilter(LogType.ATTACKED, cb.isChecked());
                     break;
             }
-            UpdateShownLog();
-        }
-    };
-    private View.OnClickListener toggleLogFullScreen = new View.OnClickListener()
-    {
-        @Override
-        public void onClick(View v) {
-            System.out.println("yo.");
-            finish(); // Finish it just.
-            System.out.println("Toggle fullscreen");
+            UpdateLog();
         }
     };
 
@@ -90,17 +80,8 @@ public class logViewer extends EvergreenActivity
         CheckBox checkboxDamage = (CheckBox) findViewById(R.id.checkboxDamage);
         checkboxDamage.setChecked(IsFiltered(LogType.ATTACK));
         checkboxDamage.setOnClickListener(toggleFilter);
-//        CheckBox
+
         // Update initial contents.
-        UpdateShownLog();
-        findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
-        findViewById(R.id.layoutLog).setOnClickListener(toggleLogFullScreen);
-    }
-    void UpdateShownLog()
-    {
-        ViewGroup vg = (ViewGroup) findViewById(R.id.layoutLog);
-        vg.removeAllViews();
-        // Add children? Filter?
-        App.UpdateLog(vg, getBaseContext(), 500, player.logTypesToShow);
+        maxLogLinesInEventLog = 500;
     }
 }

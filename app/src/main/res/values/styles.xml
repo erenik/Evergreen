@@ -66,6 +66,7 @@
     </style>
     <!-- Default for TextViews -->
     <style name="Evergreen.Text">
+        <item name="android:textAlignment">center</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/mainTextColor</item>
@@ -105,17 +106,39 @@
     <!-- Buttons -->
     <style name="Evergreen.Button">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">45dp</item>
+        <item name="android:layout_height">45sp</item>
         <item name="android:textColor">@color/mainButtonTextColor</item>
-        <item name="android:layout_weight">0.8</item>
         <item name="android:layout_margin">@dimen/activity_vertical_margin_smaller</item>
         <item name="android:background">@drawable/small_button</item>
         <item name="android:textSize">@dimen/textSize.Larger</item>
     </style>
 
+    <style name="Evergreen.Button.AdaptiveWidth" parent="Evergreen.Button">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+    </style>
+
+
     <style name="Evergreen.Button.Wide" parent="Evergreen.Button">
         <item name="android:background">@drawable/wide_button</item>
         <item name="android:textSize">@dimen/textSize.Largest</item>
+    </style>
+    <style name="Evergreen.MainButtons" parent="Evergreen.Button.Wide">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">50sp</item>
+        <item name="android:textSize">@dimen/textSize.Larger</item>
+        <item name="android:textColor">@color/mainButtonTextColor</item>
+    </style>
+    <style name="Evergreen.MainButtons.AdaptiveWidth" parent="Evergreen.MainButtons">
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+    </style>
+    <style name="Evergreen.MainButtonsLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/textSize.Largest</item>
+        <item name="android:padding">3sp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
     </style>
 
     <!-- Base application theme. -->

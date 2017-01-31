@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import erenik.evergreen.common.Player;
@@ -55,25 +56,28 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     View.OnClickListener nextDay = new View.OnClickListener()
     {   @Override
         public void onClick(View v) {
-            if (App.HandleNextEvent())
-                return;
+
+            /// Use this HandleNextEvent only later when mini-games are actually required (maybe they will never be implemented now.)
+        //    if (App.HandleNextEvent())
+          //      return;
+
             System.out.println("Next day!");
-            simulator.NextDay();
+            boolean ok = simulator.RequestNextDay(player);
+            focusLastLogMessageUponUpdate = false;
+            if (!ok) // If not a new day, no need to update GUI, etc.
+                return;
+            if (!player.IsAlive())
+            {
+                App.GameOver();
+                finish(); // Finish this activity.
+                return;
+            }
             // Update UI? lol
+            focusLastLogMessageUponUpdate = true;
             UpdateGUI();
+            focusLastLogMessageUponUpdate = false;
              /// Queues next event to be handled, if there are any.
             App.HandleNextEvent();
-        }
-    };
-    /// For the log...? Or open in a new activity? Since it's just readng?
-    boolean fullScreen;
-    View.OnClickListener toggleLogFullScreen = new View.OnClickListener() {
-        @Override
-        public void onClick(View v)
-        {
-            Intent i = new Intent(getBaseContext(), logViewer.class);
-            startActivity(i);
-            System.out.println("Toggle fullscreen");
         }
     };
 
@@ -98,8 +102,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
         findViewById(R.id.nextDay).setOnClickListener(nextDay);
-        findViewById(R.id.scrollViewLog).setOnClickListener(toggleLogFullScreen);
-        findViewById(R.id.layoutLog).setOnClickListener(toggleLogFullScreen);
 
         /// Assign listeners for the icons.
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
@@ -136,8 +138,22 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         UpdateActiveActionButton();
         UpdateDailyActionButton();
         UpdateSkillButton();
-        // Update log.
-        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), 50, player.logTypesToShow);
+        UpdateShelterRepresentation();
+        UpdateLog();
+    }
+
+    private void UpdateShelterRepresentation() {
+        int resourceID = 0;
+        switch(player.GetInt(Stat.SHELTER_DEFENSE)) {
+            case 1: resourceID = R.drawable.def_level_1; break;
+            case 2: resourceID = R.drawable.def_level_2; break;
+            case 3: resourceID = R.drawable.def_level_3; break;
+            case 4: resourceID = R.drawable.def_level_4; break;
+            case 5: resourceID = R.drawable.def_level_5; break;
+            default: return;
+        }
+        ImageView iv = (ImageView) findViewById(R.id.imageView_defenseLevel);
+        iv.setImageResource(resourceID);
     }
 
     void SetText(int viewID, String text)
@@ -179,26 +195,26 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     private void UpdateActiveActionButton() {
         int idBtn = R.id.buttonChooseActiveAction;
         TextView tv = (TextView) findViewById(idBtn);
-        if (player.activeAction >= 0)
-            tv.setText("Change Active Action: " + getResources().getStringArray(R.array.activeActions)[player.activeAction]);
+        if (player.activeAction > 0)
+            tv.setText(getString(R.string.ActiveAction)+" (" +player.activeAction+")");
         else
-            tv.setText("Active action");
+            tv.setText(getString(R.string.ActiveAction));
     }
     /// Upates the text of the daily actions button based on what is currently being done/selected by the player.
     private void UpdateDailyActionButton() {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
-        if (player.dailyActions.size() >= 0)
-            tv.setText("Change Action: "+player.dailyActions.size()+" queued.");
+        if (player.dailyActions.size() > 0)
+            tv.setText(getString(R.string.DailyActions)+" ("+player.dailyActions.size()+")");
         else
-            tv.setText(R.string.chooseAction);
+            tv.setText(getString(R.string.DailyActions));
     }
     /// Upates the text of the skill traning button based on what is currently being done/selected by the player.
     private void UpdateSkillButton() {
         TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
-        if (player.skillTrainingQueue.size() >= 0)
-            tv.setText("Change Skill: "+player.skillTrainingQueue.size()+" queued.");
+        if (player.skillTrainingQueue.size() > 0)
+            tv.setText(getString(R.string.SkillTraining)+" ("+player.skillTrainingQueue.size()+")");
         else
-            tv.setText(R.string.chooseSkill);
+            tv.setText(getString(R.string.SkillTraining));
     }
 
 }

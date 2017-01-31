@@ -18,7 +18,7 @@
             android:name=".android.act.EvergreenActivity"
             android:exported="true" />
         <activity
-            android:name=".android.act.Startup"
+            android:name=".android.act.TitleScreen"
             android:label="@string/app_name"> <!-- Main start-up activity when launching the app. Performs checks and then auto-loads or shows initial menus. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,7 +37,7 @@
         <activity android:name=".android.act.GameOver" />
         <activity android:name=".android.act.EncounterActivity" />
         <activity
-            android:name=".android.act.logViewer"
+            android:name=".android.act.EventLogViewer"
             android:label="@string/title_activity_log_viewer" />
         <activity
             android:name=".android.act.CreateCharacter"
