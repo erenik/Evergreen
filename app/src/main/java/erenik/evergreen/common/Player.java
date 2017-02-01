@@ -84,7 +84,7 @@ public class Player extends Combatable implements Serializable
     // Serialization version.
     public static final long serialVersionUID = 1L;
     
-    Invention GetEquippedOfType(InventionType queryType)
+    Invention GetEquipped(InventionType queryType)
     {
         List<Invention> equipped = GetEquippedInventions();
         for (int i = 0; i < equipped.size(); ++i) {
@@ -94,11 +94,11 @@ public class Player extends Combatable implements Serializable
         }
         return  null;
     }
-    Invention EquippedWeapon() {
-        return GetEquippedOfType(InventionType.Weapon);
+    public Invention GetEquippedWeapon() {
+        return GetEquipped(InventionType.Weapon);
     }
-    Invention EquippedArmor() {
-        return GetEquippedOfType(InventionType.Armor);
+    public Invention GetEquippedArmor() {
+        return GetEquipped(InventionType.Armor);
     }
 
     /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
@@ -239,20 +239,15 @@ public class Player extends Combatable implements Serializable
     }
     public int UnarmedCombatBonus()
     {
-        return EquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
+        return GetEquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
     }
-    public List<Invention> GetEquippedInventions()
-    {
+    public List<Invention> GetEquippedInventions() {
         List<Invention> equipped = new ArrayList<>();
-        for (int i = 0; i < equippedIndices.size(); ++i) {
-            int index = equippedIndices.get(i);
-            if (index < 0 || index > inventory.size()) {
-                equippedIndices.remove(i);
-                --i;
-                continue;
+        for (int i = 0; i < inventory.size(); ++i) {
+            Invention item = inventory.get(i);
+            if (item.Get(InventionStat.Equipped) >= 0) {
+                equipped.add(item);
             }
-            Invention inv = inventory.get(equippedIndices.get(i));
-            equipped.add(inv);
         }
         return equipped;
     }
@@ -270,19 +265,18 @@ public class Player extends Combatable implements Serializable
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
         att += UnarmedCombatBonus(); // Max +9 Attack
         att += GetEquipped(InventionStat.AttackBonus);
-        att += EquippedWeapon() != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
+        att += GetEquippedWeapon() != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
     public int OnTransportAttack()
     {
         return (int) (BaseAttack() + CurrentTransport().Get(TransportStat.SocialSupport));
     }
-    public int ShelterAttack()
-    {
-        return BaseAttack();
+    /// Attack when in shelter? + shelter bonus, yo? or? D:
+    public int ShelterAttack() {
+        return BaseAttack() + GetInt(Stat.SHELTER_DEFENSE);
     }
-    public int ShelterDefense()
-    {
+    public int ShelterDefense() {
         return BaseDefense() + GetInt(Stat.SHELTER_DEFENSE);
     }
     public int OnTransportDefense()
@@ -302,10 +296,11 @@ public class Player extends Combatable implements Serializable
         // Base damage, 1D6, no bonuses.
         Dice damage = new Dice(6, 1, 0);
         damage.bonus += UnarmedCombatBonus()/2; // Max +4 damage
-        if (EquippedWeapon() != null) { // Weapon equipped.
-            damage.diceType = EquippedWeapon().Get(InventionStat.AttackDamageDiceType);
-            damage.dice = EquippedWeapon().Get(InventionStat.AttackDamageDice);
-            damage.bonus = EquippedWeapon().Get(InventionStat.AttackDamageBonus);
+        Invention weapon = GetEquippedWeapon();
+        if (weapon != null) { // Weapon equipped.
+            damage.diceType = weapon.Get(InventionStat.AttackDamageDiceType);
+            damage.dice = weapon.Get(InventionStat.AttackDamageDice);
+            damage.bonus = weapon.Get(InventionStat.AttackDamageBonus);
             damage.bonus += Get(Skill.WeaponizedCombat).Level() / 2;
             System.out.println("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
         }
@@ -829,7 +824,8 @@ public class Player extends Combatable implements Serializable
                 inventedSomething = true;
                 // Add it to inventory too.
                 inventory.add(new Invention(inv));
-                Equip(inv);
+                // Don't auto-equip... Present dialog for it.
+             //   Equip(inv);
             }
             ++successiveInventingAttempts;
             toRandom -= 1;
@@ -838,14 +834,13 @@ public class Player extends Combatable implements Serializable
             Log(s+"Failed to invent anything new.", LogType.INFO);
     }
     /// Tries to equip target invention.
-    void Equip(Invention inv)
-    {
-        Invention currentlyEquipped = GetEquippedOfType(inv.type);
-        int indexOfItem = inventory.indexOf(currentlyEquipped);
-        if (indexOfItem != -1)
-            equippedIndices.remove(inventory.indexOf(currentlyEquipped)); // Remove index of old gear of same sort - since max 1 weapon/armor/etc.
-        equippedIndices.add(inventory.indexOf(inv));
+    public void Equip(Invention inv) {
+        Invention currentlyEquipped = GetEquipped(inv.type);
+        if (currentlyEquipped != null)
+            currentlyEquipped.Set(InventionStat.Equipped, -1); // Set as not equipped.
+        inv.Set(InventionStat.Equipped, (int) Get(Stat.ID));
     }
+
     public float getInventionProgress(InventionType type, int subType)
     {
         float progress = 0;
@@ -880,12 +875,9 @@ public class Player extends Combatable implements Serializable
         inv.Set(InventionStat.QualityLevel, levelSuccess);
         inv.RandomizeDetails();
         System.out.println("Level success: " + levelSuccess+" item name: "+inv.name);
-        for (int i = 0; i < inventions.size(); ++i)
-        {
+        for (int i = 0; i < inventions.size(); ++i) {
             Invention i2 = inventions.get(i);
-
-            if (i2.name.equals(inv.name))
-            {
+            if (i2.name.equals(inv.name)) {
                 // Save type of invention? Add progress to the invention we already had?
                 i2.Adjust(InventionStat.TimesInvented, 1);
                 Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
@@ -1083,7 +1075,9 @@ public class Player extends Combatable implements Serializable
     private int AttacksPerTurn()
     {
         int attacks = 1;
-        attacks += (UnarmedCombatBonus()-1) / 2;
+        attacks += (UnarmedCombatBonus() - 1) / 2;
+        if (GetEquippedWeapon() != null)
+            attacks += GetEquippedWeapon().Get(InventionStat.BonusAttacks);
         return attacks;
     }
 
@@ -1204,5 +1198,9 @@ public class Player extends Combatable implements Serializable
 
     public void addLogListener(LogListener logListener) {
         logListeners.add(logListener);
+    }
+
+    public float AggregateAttackBonus() {
+        return BaseAttack() * (1 + 0.12f * (Damage().Average() - 3.5f)) * (1 + 0.5f * (AttacksPerTurn() - 1));
     }
 }

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
+import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
@@ -71,7 +73,7 @@ public class StatViewActivity extends EvergreenActivity {
         UpdateUI();        // Update UI.
     }
     /// MAIN UI Updater
-    void UpdateUI() {
+    public void UpdateUI() {
         int[] strIds;
         switch (statType) {
             default:
@@ -89,10 +91,46 @@ public class StatViewActivity extends EvergreenActivity {
         tv.setText(getString(strIds[1]));
         tv = (TextView) findViewById(R.id.textView_stat_quantity);
         Player player = App.GetPlayer();
-        tv.setText(""+player.Get(statType));
-
+        switch(statType) {
+            case ATTACK_BONUS: case BASE_ATTACK:
+                tv.setText(""+player.AggregateAttackBonus());
+                break;
+            default:
+                tv.setText("" + player.Get(statType));
+        }
         ImageView iv = (ImageView) findViewById(R.id.icon_image);
         iv.setImageResource(strIds[2]);
+
+        // Make visible relevant details parts.
+        int idmv = 0; // id to make visible.
+        int[] ids = new int[]{R.id.layoutAttackDetails, R.id.layoutDefenseDetails, R.id.layoutFoodDetails};
+        for (int i = 0; i < ids.length; ++i)
+            findViewById(ids[i]).setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0)); // 0 height to make invisible.
+        switch(statType)
+        {
+            case ATTACK_BONUS: case BASE_ATTACK:
+                Invention weapon = player.GetEquippedWeapon();
+                idmv = R.id.layoutAttackDetails;
+                ((TextView)findViewById(R.id.tvEquippedMainWeapon)).setText(weapon != null? weapon.name : getString(R.string.unarmed));
+                ((TextView)findViewById(R.id.tvAttackDamage)).setText(player.Damage().Min()+"-"+player.Damage().Max());
+                ((TextView)findViewById(R.id.tvAttackWhenOut)).setText(""+player.BaseAttack());
+                ((TextView)findViewById(R.id.tvAttackWhenInShelter)).setText(""+player.ShelterAttack());
+                ((TextView)findViewById(R.id.tvAttacksPerRound)).setText(""+player.attacksPerTurn);
+                break;
+            case DEFENSE_BONUS: case BASE_DEFENSE:
+                idmv = R.id.layoutAttackDetails;
+                ((TextView)findViewById(R.id.tvDefenseWhenOut)).setText(""+player.BaseDefense());
+                ((TextView)findViewById(R.id.tvDefenseWhenInShelter)).setText(""+player.ShelterDefense());
+//                ((TextView)findViewById(R.id.tvAttackDamage)).setText
+                break;
+            case FOOD:
+                idmv = R.id.layoutFoodDetails;
+                break;
+        }
+        View detailView = findViewById(idmv);
+        if (detailView != null)
+            detailView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)); // 0 height to make invisible.
+
 
         // Update current bonuses, etc.
 

@@ -45,6 +45,7 @@ public class Simulator
 
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public boolean RequestNextDay(Player requestingPlayer) {
+        System.out.println("Simulator.RequestNextDay: Requesting player: "+requestingPlayer);
         /// Local game?
         if (App.isLocalGame){
             // Simulate it?

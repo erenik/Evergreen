@@ -15,6 +15,7 @@ public enum InventionStat
     // Weapon stats
     Type(0), // Ordinal of InventionType
     SubType(0), // For weapon, this means the WeaponType, for RangedWeapons it would mean the RangedWeaponType, etc.
+    Equipped(-1), // non-negative to signify which player has it equipped. 0 for localhost player, 1+ for multiplayer player games.
     AdditionalEffect(-1),
     AttackBonus(0),
     AttackDamageDiceType(6), // Should be 3 or 6. Used for both traps and weapons.

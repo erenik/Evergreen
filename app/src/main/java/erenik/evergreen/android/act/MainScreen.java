@@ -132,7 +132,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
-        SetText(R.id.textViewAttack, player.BaseAttack()+"");
+        SetText(R.id.textViewAttack, player.AggregateAttackBonus()+"");
         SetText(R.id.textViewDefense, player.BaseDefense()+"");
         SetText(R.id.textViewEmissions, player.GetInt(Stat.EMISSIONS) + "");
         UpdateActiveActionButton();

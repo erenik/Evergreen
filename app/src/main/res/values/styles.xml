@@ -169,4 +169,29 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="Evergreen.ImageView">
+        <item name="android:layout_width">40sp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+    <style name="Evergreen.ImageView.StatDetailIcon">
+        <item name="android:layout_width">40sp</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="Evergreen.TextView">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingLeft">3sp</item>
+    </style>
+
+    <style name="Evergreen.Layout">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="Evergreen.Layout.Row" parent="Evergreen.Layout">
+        <item name="android:layout_height">40sp</item>
+    </style>
 </resources>

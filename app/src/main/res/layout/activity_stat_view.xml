@@ -41,13 +41,8 @@
             </LinearLayout>
 
             <!-- General info. Click to read more? -->
-            <erenik.evergreen.android.ui.EvergreenButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Read detailed description"
-                android:id="@+id/buttonToggleDetailedDescription"
-                android:layout_gravity="center"
-                />
+            <erenik.evergreen.android.ui.EvergreenButton android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Read detailed description" android:id="@+id/buttonToggleDetailedDescription" android:layout_gravity="center" />
             <!-- Frame with main content below, weight 1 to cover all area -->
             <FrameLayout
                 android:layout_width="match_parent"
@@ -61,15 +56,47 @@
                     android:orientation="vertical"
                     >
                     <!-- Summary of recurring bonuses and penalties. -->
-                    <ScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:layout_weight="1"
-                        android:layout_gravity="center_horizontal"
-                        android:id="@+id/scrollView_statMoreInfo"
-                        >
+                    <ScrollView android:layout_width="match_parent" android:layout_height="20dp" android:layout_weight="1" android:layout_gravity="center_horizontal" android:id="@+id/scrollView_statMoreInfo">
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutStatRecurringBonuses" android:orientation="vertical">
-                            <erenik.evergreen.android.ui.EvergreenTextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Equip Bladiblamba"/>
+                            <!-- Food-related content, set height to 0 when you want it invisible/not to take any space. -->
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:id="@+id/layoutFoodDetails" android:orientation="vertical">
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                    android:text="@string/dailyFoodConsumption" android:id="@+id/tvDailyFoodConsumption"/>
+                            </LinearLayout>
+                            <!-- Attack -->
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutAttackDetails" android:orientation="vertical">
+                                <LinearLayout style="@style/Evergreen.Layout.Row">
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/equippedMainWeapon" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvEquippedMainWeapon" android:text="Very cool"/>
+                                </LinearLayout>
+                                <LinearLayout style="@style/Evergreen.Layout.Row" >
+                                    <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/weapon_accuracy" android:layout_height="30sp"/>
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/attackOutside" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvAttackWhenOut" android:text="10"/>
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/inShelter" android:paddingLeft="8sp" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvAttackWhenInShelter" android:text="11"/>
+                                </LinearLayout>
+                                <!-- Potential damage -->
+                                <LinearLayout style="@style/Evergreen.Layout.Row" >
+                                    <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/weapon_damage" android:layout_height="30sp"/>
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/attackDamage" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvAttackDamage" android:text="2-4"/>
+                                </LinearLayout>
+                                <!-- # of Attacks -->
+                                <LinearLayout style="@style/Evergreen.Layout.Row">
+                                    <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/weapon_attacks" android:layout_height="30sp"/>
+                                    <TextView style="@style/Evergreen.TextView"
+                                        android:text="@string/attacksPerRound" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvAttacksPerRound"   android:text="1"/>
+                                </LinearLayout>
+                            </LinearLayout>
+                            <!-- Defense -->
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutDefenseDetails" android:orientation="vertical">
+                                <TextView style="@style/Evergreen.TextView" android:text="@string/defenseOutside" />
+                                <TextView style="@style/Evergreen.TextView" android:id="@+id/tvDefenseWhenOut" />
+                                <TextView style="@style/Evergreen.TextView" android:paddingLeft="8sp" android:text="@string/inShelter" />
+                                <TextView style="@style/Evergreen.TextView" android:id="@+id/tvDefenseWhenInShelter" />
+                            </LinearLayout>
                         </LinearLayout>
                     </ScrollView>
                     <!-- Actions here -->
@@ -77,13 +104,30 @@
                     <ScrollView
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="4"
+                        android:layout_weight="2"
                         android:layout_gravity="center_horizontal" >
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutRelevantItems" android:orientation="vertical">
-                            <erenik.evergreen.android.ui.EvergreenButton
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Equip Bladiblamba"/>
+                            <!-- An example entry in the list -->
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="50sp"
+                                android:background="@drawable/small_button">
+                                <erenik.evergreen.android.ui.EvergreenButton android:layout_width="wrap_content"
+                                    android:background="@color/transparent" android:layout_gravity="left"
+                                    android:layout_height="wrap_content" android:text="Equip Bladiblamba"/>
+                                <ImageButton style="@style/Evergreen.ImageView.StatDetailIcon"
+                                    android:layout_width="65sp"
+                                    android:layout_height="match_parent"
+                                    android:scaleType="fitCenter"
+                                    android:src="@drawable/weapon_accuracy"
+                                    />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:text="5-8"
+                                    android:textSize="20sp"
+                                    android:textAlignment="center"
+                                    android:gravity="center"
+                                    />
+                            </LinearLayout>
                         </LinearLayout>
                     </ScrollView>
                 </LinearLayout>

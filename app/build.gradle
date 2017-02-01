@@ -1,13 +1,19 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'EvergreenKey'
+            keyPassword '891103axel'
+            storeFile file('D:/Dropbox/Android/keyStore.jks')
+            storePassword '891103axel'
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "24.0.1"
-
     dexOptions {
         preDexLibraries = false
     }
-
     defaultConfig {
         applicationId "erenik.evergreen"
         minSdkVersion 19
@@ -21,6 +27,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        // To flag to ignore errors, use checkReleaseBuilds false
+        // Continue even if there are errors.
+        abortOnError false
+    }
 }
 
 repositories {
@@ -29,18 +40,15 @@ repositories {
 
 dependencies {
     // Web-server shit.
-//    compile('javax.ws.rs:jsr311-api:1.1.1')
-//    compile('org.glassfish.jersey.core:jersey-client:2.24.1')
-
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //    compile('javax.ws.rs:jsr311-api:1.1.1')
+    //    compile('org.glassfish.jersey.core:jersey-client:2.24.1')
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
     compile 'com.android.support:design:23.0.1'
-
-//    androidTestCompile 'com.android.support:support-annotations:23.1.1'
+    //    androidTestCompile 'com.android.support:support-annotations:23.1.1'
     androidTestCompile 'com.android.support.test:runner:0.4.1'
     androidTestCompile 'com.android.support.test:rules:0.4.1'
-
     testCompile 'junit:junit:4.12'
     compile 'junit:junit:4.12'
 }

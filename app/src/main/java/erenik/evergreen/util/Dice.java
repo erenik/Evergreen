@@ -47,4 +47,15 @@ public class Dice
 //        System.out.println(numDice+"D3 = "+total);
         return total;
     }
+
+    public int Min() {
+        return dice * 1 + bonus;
+    }
+    public int Max() {
+        return dice * diceType + bonus;
+    }
+
+    public float Average() {
+        return (Min() + Max()) * 0.5f;
+    }
 }

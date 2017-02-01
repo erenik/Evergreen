@@ -203,5 +203,13 @@
     <string name="cancel">Cancel</string>
     <string name="survivedUntilTurn">Survived until turn</string>
     <string name="relevantGear">Relevant items</string>
+    <string name="dailyFoodConsumption">Daily food consumption:</string>
+    <string name="equippedMainWeapon">Equipped main weapon:</string>
+    <string name="attackDamage">Attack damage:</string>
+    <string name="attacksPerRound">Attacks per round:</string>
+    <string name="attackOutside">Attack outside: </string>
+    <string name="inShelter">in shelter:</string>
+    <string name="defenseOutside">Defense outside: </string>
+    <string name="unarmed">Unarmed</string>
 
 </resources>

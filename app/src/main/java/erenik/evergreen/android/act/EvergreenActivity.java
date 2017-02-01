@@ -34,8 +34,11 @@ import java.util.List;
 
 import erenik.evergreen.Game;
 import erenik.evergreen.android.ui.EvergreenButton;
+import erenik.evergreen.android.ui.EvergreenTextView;
 import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
+import erenik.evergreen.common.Invention.WeaponType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
@@ -479,8 +482,7 @@ public class EvergreenActivity extends AppCompatActivity
         // Clear it.
         vg.removeAllViews();
         Player player = App.GetPlayer();
-        for (int i = 0; i < player.inventory.size(); ++i)
-        {
+        for (int i = 0; i < player.inventory.size(); ++i) { // List all items of specific type.
             Invention item = player.inventory.get(i);
             if (item.type != type)
                 continue;
@@ -496,42 +498,94 @@ public class EvergreenActivity extends AppCompatActivity
             layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
             ll.setLayoutParams(layoutParams);
             ll.setBackgroundResource(R.drawable.small_button);
+            int padding = 35;
+            ll.setPadding(padding,0,padding,0);
             vg.addView(ll);
 
             // Make a button out of it.
             EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(item.name);
             // Screen div 10 height per element?
-            layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
-            layoutParams.setMargins(5,0,5,0); // Margins left n right.
-            layoutParams.gravity = Gravity.CENTER;
+            layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT, 0.1f);
+            layoutParams.gravity = Gravity.LEFT;
             b.setLayoutParams(layoutParams);
             b.setOnClickListener(itemClicked);
             b.setBackgroundColor(0x00);
             b.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.mainTextColor));
             ll.addView(b);
 
-            // Add a button in the button to remove it.
-            ImageButton removeButton = new ImageButton(getBaseContext());
-            removeButton.setBackgroundColor(0x00); // SEe-through?
-//            removeButton.setBackgroundColor(EvergreenButton.BackgroundColor(getBaseContext()));
-            removeButton.setImageResource(R.drawable.remove);
-            removeButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
-//            removeButton.setOnClickListener(removeParentFromQueue);
-            removeButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 4.0f)); // Weight at the end?
-            ll.addView(removeButton);
+            // Add some image views of the stats, depending on the item?
+            if (item.type == InventionType.RangedWeapon || item.type == InventionType.Weapon) {
+                AddIconAndBonus(InventionStat.AttackBonus, item, ll);
+                AddIconAndBonus(InventionStat.AttackDamageBonus, item, ll);
+                AddIconAndBonus(InventionStat.BonusAttacks, item, ll);
+            }
         }
 
     }
+
+    private void AddIconAndBonus(InventionStat stat, Invention item, LinearLayout ll) {
+        // Add a button in the button to remove it.
+        ImageButton statImageButton = new ImageButton(getBaseContext());
+        statImageButton.setBackgroundColor(0x00); // SEe-through?
+        int did = 0; // Drawable ID.
+        String num = "";
+        switch(stat) {
+            case AttackBonus: did = R.drawable.weapon_accuracy; num = ""+item.Get(InventionStat.AttackBonus); break;
+            case AttackDamageBonus: did = R.drawable.weapon_damage; num = ""+item.MinimumDamage()+"-"+item.MaximumDamage(); break;
+            case BonusAttacks: did = R.drawable.weapon_attacks; num = ""+(1+item.Get(InventionStat.BonusAttacks)); break;
+        }
+        statImageButton.setImageResource(did);
+//        statImageButton.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 4.0f)); // Weight at the end?
+        LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(0, 0);
+//        lllp.weight = 0.5f;
+        lllp.width = App.GetScreenSize().x / 8;
+        lllp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+        lllp.gravity = Gravity.CENTER;
+        statImageButton.setLayoutParams(lllp);
+        statImageButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
+//        layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT, 2.f);
+
+        ll.addView(statImageButton);
+        // Add text next to it.
+        EvergreenTextView tv = new EvergreenTextView(getBaseContext());
+        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, 0.1f)); // Weight at the end?
+        tv.setText(num);
+        tv.setGravity(Gravity.CENTER_VERTICAL);
+        tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        tv.setTextSize(14);
+        ll.addView(tv);
+    }
+
     private final View.OnClickListener itemClicked = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
             Button b = (Button)v;
+            String itemName = (String) b.getText();
+            System.out.println("Item clicked: "+itemName);
+            // Equip it?
+            Player player = App.GetPlayer();
+            for (int i = 0; i < player.inventory.size(); ++i) {
+                Invention item = player.inventory.get(i);
+                if (item.name.equals(itemName))
+                {
+                    // Equip it?
+                    System.out.println("Found the item.");
+                    player.Equip(item);
+                    System.out.println("Equipped it.");
+                    UpdateUI();
+                }
+            }
+
            // clicked(b.getText());
         }
     };
 
+    public void UpdateUI() {
+        // Should be subclassed?
+        System.out.println("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
+    };
 
 }

@@ -332,4 +332,20 @@ public class Invention implements Serializable
     {
         stats[stat.ordinal()] += val;
     }
+
+    void FetchStatsFromArray() {
+        atkDmgDice = Get(InventionStat.AttackDamageDice);
+        atkDmgDiceType = Get(InventionStat.AttackDamageDiceType);
+        atkDmgBonus = Get(InventionStat.AttackDamageBonus);
+    }
+
+    /// From one hit.
+    public int MinimumDamage() {
+        FetchStatsFromArray();
+        return atkDmgDice * 1 + atkDmgBonus;
+    }
+    public int MaximumDamage() {
+        FetchStatsFromArray();
+        return atkDmgDice * atkDmgDiceType + atkDmgBonus;
+    }
 }
