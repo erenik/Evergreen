@@ -14,6 +14,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +29,7 @@ import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacketCommunicator;
 import erenik.evergreen.common.player.*;
@@ -43,8 +50,11 @@ public class App {
     public static Application.ActivityLifecycleCallbacks actLCCallback;
 
     static List<Activity> runningActivities = new ArrayList<Activity>();
-    // Player
-    static private Player player = new Player();
+
+    /// List of players.
+    static private List<Player> players = new ArrayList<>();
+    // Player, should be put or created into the list of players, based on what was loaded upon start-up.
+    static private Player player = null;
     public static EGPacketCommunicator comm = new EGPacketCommunicator();
     public static boolean isLocalGame = false, isMultiplayerGame = false; // Set upon start.
 
@@ -62,16 +72,14 @@ public class App {
         return false;
     }
 
-    public static boolean Save()
-    {
+    public static boolean Save() {
         EvergreenActivity ea = (EvergreenActivity)currentActivity;
         if (ea == null)
             return false;
         return ea.Save();
     }
 
-    public static boolean HandleGeneratedEvents()
-    {
+    public static boolean HandleGeneratedEvents() {
         // Returns true if there was any event to process, false if not.
         EventDialogFragment event = new EventDialogFragment();
         event.type = player.NextEvent();
@@ -81,7 +89,6 @@ public class App {
             return false;
         }
         System.out.println("HandleGeneratedEvents, type: " + event.type.name());
-
 
         /// For now, just skip the event, act as if it was already handled.
         player.PopEvent(event.type);
@@ -130,7 +137,6 @@ public class App {
     {
 
     }
-
 
     /// Utility method.
     public static Point GetScreenSize(){
@@ -214,4 +220,174 @@ public class App {
         App.NewActivityLifeCycleCallback(activity);
     }
 
+    public static String GetLogText(LogTextID logTextID, List<String> args) {
+        int id = -1; // id on android.
+        String s = "";
+        switch(logTextID) {
+            case reduceEmissionsSuccessful: id = R.string.reduceEmissionsSuccessful; break;
+            case reduceEmissionsMostlySuccessful: id = R.string.reduceEmissionsMostlySuccessful; break;
+            case reduceEmissionsNotSoSuccessful: id = R.string.reduceEmissionsNotSoSuccessful; break;
+            case reduceEmissionsFailed: id = R.string.reduceEmissionsFailed; break;
+            case scoutingSuccess: id = R.string.scoutingSuccess; break;
+            case scoutingFailure: id = R.string.scoutingFailure; break;
+            default:
+                s = logTextID.name(); break;
+        }
+        if (id != -1)
+            s = currentActivity.getString(id);
+        // Replace args as needed.
+        int replaced = 0;
+        while(s.contains("(arg)"))
+            s = s.replaceFirst("(arg)", args.get(replaced++));
+        for (int i = replaced; i < args.size(); ++i) {
+            s += ", Unused arg: "+args.get(i);
+        }
+        return s;
+    }
+    /// Saves locally, using default preferences location.
+    public static final String localFileSaveName = "Evergreen.sav";
+    public static boolean SaveLocally() {
+        if (currentActivity == null) {
+            System.out.println("Couldn't save, no current activity D:");
+            return false;
+        }
+        System.out.println("SaveLocally");
+        Context context = currentActivity.getBaseContext();
+        Player player = App.GetPlayer(); // Fetch current player to save.
+        if (context == null) {
+            System.out.println("Context null. Aborting");
+            return false;
+        }
+        SharedPreferences sp = App.GetPreferences();
+        if (sp == null) {
+            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
+            return false;
+        }
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putBoolean(Constants.SAVE_EXISTS, true);
+        editor.putInt(Constants.NUM_PLAYERS, players.size());
+        editor.apply();
+        ObjectOutputStream objectOut = null;
+        try {
+            FileOutputStream fileOut = null;
+            try {
+                fileOut = context.openFileOutput(localFileSaveName, Activity.MODE_PRIVATE);
+            } catch (FileNotFoundException e1) {
+                e1.printStackTrace();
+            }
+            objectOut = new ObjectOutputStream(fileOut);
+            // Write # of players?
+            for (int i = 0; i < players.size(); ++i) {
+                Player p = players.get(i);
+                objectOut.writeObject(p);
+            }
+            fileOut.getFD().sync();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (objectOut != null) {
+                try {
+                    objectOut.close();
+                } catch (IOException e2) {
+                    // do nowt
+                    System.out.println("Failed to save");
+                    return false;
+                }
+            }
+        };
+        editor.apply();
+        System.out.println("Saved");
+        return true;
+    }
+
+    /// Loads data from shared preferences to see if there is character data.
+    public static boolean LoadLocally() {
+        System.out.println("LoadLocally");
+        Context context = currentActivity.getBaseContext();
+        SharedPreferences sp = App.GetPreferences();
+        if (sp == null) {
+            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
+            return false;
+        }
+        boolean saveExists = sp.getBoolean(Constants.SAVE_EXISTS, false);
+        if (saveExists == false) {
+            System.out.println("No save exists in saved preferences. Returning.");
+            return false;
+        }
+        int numPlayersSaved = sp.getInt(Constants.NUM_PLAYERS, 0);
+        if (numPlayersSaved == 0) {
+            System.out.println("Save exists, but 0 players..?");
+            return true;
+        }
+        String activePlayerName = player != null? player.name : "";
+        // Clear old players in list.
+        players.clear();
+        player = null; // reset pointer
+        ObjectInputStream objectIn = null;
+        Object object = null;
+        try {
+            FileInputStream fileIn = context.getApplicationContext().openFileInput(localFileSaveName);
+            objectIn = new ObjectInputStream(fileIn);
+            for (int i = 0; i < numPlayersSaved; ++i) {
+                Player p = (Player) objectIn.readObject();
+                players.add(p);
+                if (p.name.equals(activePlayerName)) // Retain active player if loading while still playing.
+                    player = p;
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No file found with name "+localFileSaveName);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (objectIn != null) {
+                try {
+                    objectIn.close();
+                } catch (IOException e) {
+                    // do nowt
+                    return false;
+                }
+            }
+        }
+        System.out.println("Loaded "+numPlayersSaved+" player characters successfully.");
+        return true;
+    }
+
+    // Check all saves, return the players.
+    public static List<Player> GetPlayers() {
+        return players;
+    }
+    /// Adds a player to the list of players.
+    public static void RegisterPlayer(Player player) {
+        players.add(player);
+        SaveLocally();
+    }
+
+    /// Makes the player active, and changes app config to enable swift handling of its associated game, locality, etc.
+    public static void MakeActivePlayer(Player playerToBecomeActive) {
+        App.player = playerToBecomeActive;
+        System.out.println("GameID: "+playerToBecomeActive.gameID);
+        if (playerToBecomeActive.gameID <= 0){
+            App.isLocalGame = true;
+        }
+        else
+            App.isLocalGame = false;
+        App.isMultiplayerGame = !App.isLocalGame;
+    }
+
+    public static Player GetMostRecentlyEditedPlayer() {
+        Player mostRecent = players.get(0);
+        for (int i = 1; i < players.size(); ++i) {
+            Player p = players.get(i);
+            if (p.lastEditSystemMs > mostRecent.lastEditSystemMs)
+                mostRecent = p;
+        }
+        return mostRecent;
+    }
 }

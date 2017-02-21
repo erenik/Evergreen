@@ -61,40 +61,42 @@
                     android:text="Generate random name"/>
             </LinearLayout>
 
-            <AutoCompleteTextView
-                android:id="@+id/email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/prompt_email"
-                android:inputType="textEmailAddress"
-                android:maxLines="1"
-                android:imeOptions="actionNext"
-                />
+            <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutEmailPassword">
+                <AutoCompleteTextView
+                    android:id="@+id/email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/prompt_email"
+                    android:inputType="textEmailAddress"
+                    android:maxLines="1"
+                    android:imeOptions="actionNext"
+                    />
 
-            <EditText
-                android:id="@+id/password" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:hint="@string/prompt_password"
-                android:inputType="textPassword"
-                android:imeOptions="actionNext"
-                android:maxLines="1" />
-            <!--
-                android:nextFocusDown="@+id/password"
-                android:nextFocusForward="@+id/password"
+                <EditText
+                    android:id="@+id/password" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="@string/prompt_password"
+                    android:inputType="textPassword"
+                    android:imeOptions="actionNext"
+                    android:maxLines="1" />
+                <!--
+                    android:nextFocusDown="@+id/password"
+                    android:nextFocusForward="@+id/password"
 
-                android:imeActionId="@+id/login"
-                android:imeActionLabel="@string/action_sign_in_short"
-                android:imeOptions="actionUnspecified"
+                    android:imeActionId="@+id/login"
+                    android:imeActionLabel="@string/action_sign_in_short"
+                    android:imeOptions="actionUnspecified"
 
-                android:imeActionId="@+id/login"
-                android:imeActionLabel="@string/action_sign_in_short"
-                android:imeOptions="actionUnspecified"
-            -->
-            <EditText
-                android:id="@+id/passwordAgain" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:hint="@string/password_again"
-                android:inputType="textPassword"
-                android:imeActionId="@+id/login"
-                android:maxLines="1"/>
+                    android:imeActionId="@+id/login"
+                    android:imeActionLabel="@string/action_sign_in_short"
+                    android:imeOptions="actionUnspecified"
+                -->
+                <EditText
+                    android:id="@+id/passwordAgain" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="@string/password_again"
+                    android:inputType="textPassword"
+                    android:imeActionId="@+id/login"
+                    android:maxLines="1"/>
+            </LinearLayout>
 
             <TextView
                 android:layout_marginTop="32dp"

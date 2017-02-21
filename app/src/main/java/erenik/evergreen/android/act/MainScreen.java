@@ -20,7 +20,6 @@ import erenik.evergreen.R;
  */
 public class MainScreen extends EvergreenActivity //AppCompatActivity
 {
-    Player player = App.GetPlayer();
     Simulator simulator = Simulator.getSingleton();
 
     @Override
@@ -56,16 +55,20 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     View.OnClickListener nextDay = new View.OnClickListener()
     {   @Override
         public void onClick(View v) {
-
-            /// Use this HandleNextEvent only later when mini-games are actually required (maybe they will never be implemented now.)
-        //    if (App.HandleNextEvent())
-          //      return;
-
+            Player player = App.GetPlayer();
             System.out.println("Next day!");
-            boolean ok = simulator.RequestNextDay(player);
-            focusLastLogMessageUponUpdate = false;
-            if (!ok) // If not a new day, no need to update GUI, etc.
-                return;
+            // Local game? less to think about.
+            if (App.isLocalGame) {
+                System.out.println("Requesting player: "+player.name);
+                int playersSimulated = simulator.RequestNextDay(player);
+                focusLastLogMessageUponUpdate = false;
+                if (playersSimulated <= 0) { // If not a new day, no need to update GUI, etc.
+                    Toast("Simulator encountering some issues.. D:");
+                    return;
+                }
+                // Save progress locally?
+                App.SaveLocally();
+            }
             if (!player.IsAlive())
             {
                 App.GameOver();
@@ -89,8 +92,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
-        // Load stuff as needed.
         Load();
+
 //        player.SaveLocally(); // Save copy? - Why?
         /// Update GUI.
         UpdateGUI();
@@ -102,6 +105,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
         findViewById(R.id.nextDay).setOnClickListener(nextDay);
+        findViewById(R.id.buttonMenu).setOnClickListener(openMenu);
 
         /// Assign listeners for the icons.
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
@@ -129,6 +133,11 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
 
     /// Updates all GUI, stats, logs, etc. Called after any change / returning to this activity from another one, pretty much.
     void UpdateGUI() {
+        Player player = App.GetPlayer();
+        if (player == null){
+            Toast("Trying to update gui with null player D:");
+            return;
+        }
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
@@ -143,6 +152,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     }
 
     private void UpdateShelterRepresentation() {
+        Player player = App.GetPlayer();
         int resourceID = 0;
         switch(player.GetInt(Stat.SHELTER_DEFENSE)) {
             case 1: resourceID = R.drawable.def_level_1; break;
@@ -171,6 +181,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Player player = App.GetPlayer();
         int type = requestCode;
         System.out.println("onActivityResult called, req: "+requestCode+" code: " + resultCode);
         if (resultCode < 0)
@@ -193,6 +204,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
 
     /// Upates the text of the active action button based on what is currently being done/selected by the player.
     private void UpdateActiveActionButton() {
+        Player player = App.GetPlayer();
         int idBtn = R.id.buttonChooseActiveAction;
         TextView tv = (TextView) findViewById(idBtn);
         if (player.activeAction > 0)
@@ -202,6 +214,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     }
     /// Upates the text of the daily actions button based on what is currently being done/selected by the player.
     private void UpdateDailyActionButton() {
+        Player player = App.GetPlayer();
         TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
         if (player.dailyActions.size() > 0)
             tv.setText(getString(R.string.DailyActions)+" ("+player.dailyActions.size()+")");
@@ -210,6 +223,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     }
     /// Upates the text of the skill traning button based on what is currently being done/selected by the player.
     private void UpdateSkillButton() {
+        Player player = App.GetPlayer();
         TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
         if (player.skillTrainingQueue.size() > 0)
             tv.setText(getString(R.string.SkillTraining)+" ("+player.skillTrainingQueue.size()+")");

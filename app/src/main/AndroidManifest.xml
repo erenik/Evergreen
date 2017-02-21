@@ -33,6 +33,7 @@
             android:name=".android.act.MainScreen"
             android:exported="true"
             android:label="@string/title_activity_main_screen" />
+        <activity android:name=".android.act.MenuActivity" />
         <activity android:name=".android.act.SelectActivity" />
         <activity android:name=".android.act.GameOver" />
         <activity android:name=".android.act.EncounterActivity" />

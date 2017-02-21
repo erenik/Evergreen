@@ -1,8 +1,14 @@
 package erenik.evergreen.common.player;
 
+import java.io.IOException;
+import java.io.InvalidClassException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogType;
 
 /**
  * Created by Emil on 2016-11-11.
@@ -14,17 +20,27 @@ public enum Transport {
     Tram(0), // Same as bus? Similar at least.
     Train(1),
     Car(2), // Higher chance, typical commuter?
-    Plane(0); // Only triggerable by user analysis,
+    Plane(0); // Only triggerable by user analysis?
 
-    float probability = 1;
-    Transport(float probability) {
-        this.probability = probability;
+    public float Probability() { return Get(TransportStat.RandomProbability);};
+    public float defaultProbability = 0;
+    float[] stats = new float[TransportStat.values().length];
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        out.writeObject(stats);
     }
-    public void SetDefaults()
-    {
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+        stats = (float[]) in.readObject();
+    }
+
+    Transport(float defProb) {
+        defaultProbability = defProb;
+    }
+    /// CAll after creation of an instance of a transport.
+    public void SetDefaults() {
         for (int i = 0; i < TransportStat.values().length; ++i)
             stats[i] = TransportStat.values()[i].DefaultValue();
-        Set(TransportStat.RandomProbability, probability);
+        Set(TransportStat.RandomProbability, defaultProbability);
         switch (this)
         {
             case Walking:
@@ -73,7 +89,6 @@ public enum Transport {
                 break;
         }
     }
-    float[] stats = new float[TransportStat.values().length];
 
     public void Set(TransportStat s, float value)
     {
@@ -87,8 +102,7 @@ public enum Transport {
     {
         stats[s.ordinal()] += adjustment;
     }
-    public static List<String> GetStrings()
-    {
+    public static List<String> GetStrings() {
         List<String> list = new ArrayList<String>();
         for (int i = 0; i < values().length; ++i)
         {

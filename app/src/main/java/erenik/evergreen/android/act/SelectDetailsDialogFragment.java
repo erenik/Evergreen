@@ -91,7 +91,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
         String header = "Action details:";
         switch(da)
         {
-            case AugmentTransport: header = "Augment transport. Choose transport and upgrade type."; break;
+            //case AugmentTransport: header = "Augment transport. Choose transport and upgrade type."; break;
             case Craft: header = "What to craft?"; break;
             case Invent: header = "What category of inventions do you want to try and invent?"; break;
       //      case Expedition: header = "Which stronghold do you want to attack?"; break;
@@ -213,7 +213,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             String text = "Unable to perform action.";
             switch(da)
             {
-                case AugmentTransport:
+//                case AugmentTransport:
                 case Craft:
                     text = "No craftable inventions found.";
                     break;

@@ -23,6 +23,7 @@ import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.event.Event;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogListener;
+import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.player.*;
@@ -41,10 +42,21 @@ import java.util.logging.Logger;
 /**
  * Created by Emil on 2016-10-25.
  */
-public class Player extends Combatable implements Serializable
-{
-    List<PlayerListener> listeners = new ArrayList<>();
-    List<LogListener> logListeners = new ArrayList<>();
+public class Player extends Combatable implements Serializable {
+    List<PlayerListener> listeners = null;
+    List<LogListener> logListeners = null;
+
+    /// Creates stuff not added automatically - after creation, or after loading from file via e.g. readObject.
+    void Init() {
+        statArr = new float[Stat.values().length];
+        transportProbabilityArr = new float[Transport.values().length]; // Only variable we care about for transports as far as configurability is concerned.
+        listeners = new ArrayList<>();
+        logListeners = new ArrayList<>();
+        transports = new ArrayList<>();
+        skills = new ArrayList<Skill>(Arrays.asList(Skill.values()));
+        dailyActions = new ArrayList<>();
+        skillTrainingQueue = new ArrayList<>();
+    }
 
     // Adds a listener for state changes to the player.
     public void addStateListener(PlayerListener listener){ listeners.add(listener);};
@@ -59,15 +71,16 @@ public class Player extends Combatable implements Serializable
     static Random r = new Random(System.nanoTime());
     // Main stats.
 //    float hp, food, materials, base_attack, base_defense, emissions;
-    float[] statArr = new float[Stat.values().length];
+    float[] statArr = null;
+    float[] transportProbabilityArr = null; // Only variable we care about for transports as far as configurability is concerned.
     /**
      * List of actions this player will take during the day/turn.
      * List of names of actions, optionally with extra arguments after a colon?
      *
     */
-    public List<String> dailyActions = new ArrayList<>();
+    public List<String> dailyActions = null;
     public int activeAction = -1;
-    private List<Transport> transports = new ArrayList<>();
+    private List<Transport> transports = null;
     public boolean playEvents = false;
     /// Increment every passing day. Stop once dying.
     public int Turn()
@@ -106,7 +119,7 @@ public class Player extends Combatable implements Serializable
     /// Log of messages for this specific player.
     public List<Log> log = new ArrayList<Log>();
     /// Array of exp in each Skill.
-    List<Skill> skills =  new ArrayList<Skill>(Arrays.asList(Skill.values()));
+    List<Skill> skills =  null;
     /// Queued skills to be leveled up.
     public List<String> skillTrainingQueue = new ArrayList<>();
     public List<Invention> inventions = new ArrayList<>(); // Blueprints, 1 of each.
@@ -133,21 +146,13 @@ public class Player extends Combatable implements Serializable
     public List<LogType> logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
     public boolean isAI = false;
     /// Used for clients/single-simulator for self.
-    public Player()
-    {
+    public Player() {
+        Init();
         SetName("Parlais Haux Le'deur");
-        // Add default transports.
-        for (int i = 0; i < Transport.values().length; ++i)
-        {
-            Transport t = Transport.values()[i];
-            t.SetDefaults();
-            transports.add(t);
-        }
         SetDefaultStats();
     }
     // Delivers a String based on using ObjectOutputStream, then saving the bytes.
-    public byte[] toByteArr()
-    {
+    public byte[] toByteArr() {
         try { 
             ObjectOutputStream oos = null;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -160,8 +165,7 @@ public class Player extends Combatable implements Serializable
         } 
         return null;
     }
-    public boolean fromByteArr(byte[] bytes)
-    {
+    public boolean fromByteArr(byte[] bytes) {
         try { 
             ObjectInputStream ois = null;
             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
@@ -176,15 +180,18 @@ public class Player extends Combatable implements Serializable
         }
         return false;        
     }
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException
-    {
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeInt(gameID);
         out.writeObject(name);
+        System.out.println("name: "+name);
         out.writeObject(password);
         out.writeObject(statArr);
+        out.writeObject(transportProbabilityArr);
+        for (int i = 0; i < transportProbabilityArr.length; ++i) {
+            System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
+        }
         out.writeObject(skills);
         out.writeObject(dailyActions);
-        out.writeObject(transports);
         out.writeObject(equippedIndices);
         out.writeObject(log);
         out.writeObject(skillTrainingQueue);
@@ -196,16 +203,24 @@ public class Player extends Combatable implements Serializable
         out.writeObject(logTypesToShow);
         out.writeBoolean(isAI);
     }
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException
-    {
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+        Init();
+        SetDefaultStats();
+        // Actually load here
         gameID = in.readInt();
         name = (String) in.readObject();
+        System.out.println("name: "+name);
         password = (String) in.readObject();
         statArr = (float[]) in.readObject();
+        transportProbabilityArr = (float[]) in.readObject();
+        DefaultTransports();
+        for (int i = 0; i < transportProbabilityArr.length; ++i) {
+            System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
+            transports.get(i).Set(TransportStat.RandomProbability, transportProbabilityArr[i]);
+        }
 //        System.out.println("name: "+name+" pw: "+password);
         skills = (List<Skill>) in.readObject();
         dailyActions = (List<String>) in.readObject();
-        transports = (List<Transport>) in.readObject();
         equippedIndices = (List<Integer>) in.readObject();
         log = (List<Log>) in.readObject();
         skillTrainingQueue = (List<String>) in.readObject();
@@ -216,14 +231,15 @@ public class Player extends Combatable implements Serializable
         knownPlayerNames = (ArrayList<String>) in.readObject();
         logTypesToShow = (List<LogType>) in.readObject();
         isAI = in.readBoolean();
+        System.out.println("Init from readOBject!");
+
     }
     private void readObjectNoData() throws ObjectStreamException
     {
 
     }
 
-    public int MaxHP()
-    {
+    public int MaxHP() {
         int maxHP = GetInt(Stat.MAX_HP);
         for (int i = 0; i < Get(Skill.Survival).Level(); ++i)
             maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
@@ -237,8 +253,7 @@ public class Player extends Combatable implements Serializable
     {
         return GetInt(Stat.SPEED);
     }
-    public int UnarmedCombatBonus()
-    {
+    public int UnarmedCombatBonus() {
         return GetEquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
     }
     public List<Invention> GetEquippedInventions() {
@@ -252,24 +267,21 @@ public class Player extends Combatable implements Serializable
         return equipped;
     }
     /// Fetches total form all equipped gear.
-    public int GetEquipped(InventionStat stat)
-    {
+    public int GetEquipped(InventionStat stat) {
         List<Invention> equipped = GetEquippedInventions();
         int tot = 0;
         for (int i = 0; i < equipped.size(); ++i)
             tot += equipped.get(i) != null? equipped.get(i).Get(stat) : 0;
         return tot;
     }
-    public int BaseAttack()
-    {
+    public int BaseAttack() {
         int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
         att += UnarmedCombatBonus(); // Max +9 Attack
         att += GetEquipped(InventionStat.AttackBonus);
         att += GetEquippedWeapon() != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
-    public int OnTransportAttack()
-    {
+    public int OnTransportAttack() {
         return (int) (BaseAttack() + CurrentTransport().Get(TransportStat.SocialSupport));
     }
     /// Attack when in shelter? + shelter bonus, yo? or? D:
@@ -279,12 +291,10 @@ public class Player extends Combatable implements Serializable
     public int ShelterDefense() {
         return BaseDefense() + GetInt(Stat.SHELTER_DEFENSE);
     }
-    public int OnTransportDefense()
-    {
+    public int OnTransportDefense() {
         return (int) (BaseDefense() + CurrentTransport().Get(TransportStat.SocialSupport));
     }
-    public int BaseDefense()
-    {
+    public int BaseDefense() {
         int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
         def += (UnarmedCombatBonus()-1) / 3;
         def += GetEquipped(InventionStat.DefenseBonus);
@@ -312,17 +322,27 @@ public class Player extends Combatable implements Serializable
         // Default stats?
         for (int i = 0; i < Stat.values().length; ++i)
             statArr[i] = Stat.values()[i].defaultValue;
+        for (int i = 0; i < Transport.values().length; ++i)
+            transportProbabilityArr[i] = Transport.values()[i].defaultProbability;
         for (int i = 0; i < skills.size(); ++i) // Reset EXP in each skill?
             skills.get(i).setTotalEXP(0);
-        inventions.clear();
-        /// Give a default invention.
-        Invention inv = new Invention(InventionType.Weapon);
-        inv.Set(InventionStat.SubType, WeaponType.Club.ordinal());
-        inv.UpdateWeaponStats();
-        inventions.add(inv);
+        if (inventions != null)
+            inventions.clear();
+        DefaultTransports();
         // Clear both queues.
         dailyActions.clear();
         skillTrainingQueue.clear();
+    }
+    void DefaultTransports() {
+        // Add default transports.
+        if (transports != null)
+            transports.clear();
+        transports = new ArrayList<>();
+        for (int i = 0; i < Transport.values().length; ++i) {
+            Transport t = Transport.values()[i];
+            t.SetDefaults();
+            transports.add(t);
+        }
     }
     
     public void Adjust(Stat s, float amount)
@@ -356,6 +376,13 @@ public class Player extends Combatable implements Serializable
         statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
+    public void Log(Log l) {
+        log.add(l);
+        for (int i = 0; i < logListeners.size(); ++i) {
+            LogListener ll = logListeners.get(i);
+            ll.OnLog(l, this);
+        }
+    }
     public void Log(String text, LogType t) {
         log.add(new Log(text, t));
         for (int i = 0; i < logListeners.size(); ++i) {
@@ -561,7 +588,7 @@ public class Player extends Combatable implements Serializable
                 Log(da.text + ": Recovered " + Stringify(units) + " HP.", LogType.INFO);
                 break;
             case BuildDefenses: BuildDefenses(); break;
-            case AugmentTransport: AugmentTransport(); break;
+//            case AugmentTransport: AugmentTransport(); break;
             case LookForPlayer: LookForPlayer(da, game); break;
 //            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
             case Invent: Invent(da); break;
@@ -575,8 +602,30 @@ public class Player extends Combatable implements Serializable
                 Log("Studies grant you "+toGain+" experience points.", LogType.PROGRESS);
                 GainEXP(toGain);
                 break;
+            case ReduceEmissions: ReduceEmissions(); break;
             default:
-                System.out.println("Nooo");
+                System.out.println("Uncoded daily action");
+                System.exit(15);
+        }
+    }
+
+    private void ReduceEmissions() {
+        int successful = 0;
+        for (int i = 0; i < hoursPerAction; ++i) {
+            if (r.nextInt(100) > 50)
+                ++successful;
+        }
+        if (successful > hoursPerAction * 0.75)
+            Log(new Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, successful+""));
+        else if (successful > hoursPerAction * 0.5)
+            Log(new Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, successful+""));
+        else if (successful > hoursPerAction * 0.25)
+            Log(new Log(LogTextID.reduceEmissionsNotSoSuccessful, LogType.SUCCESS, successful+""));
+        else
+            Log(new Log(LogTextID.reduceEmissionsFailed, LogType.SUCCESS, successful+""));
+        Adjust(Stat.EMISSIONS, -successful);
+        if (Get(Stat.EMISSIONS) < 0) {
+            Set(Stat.EMISSIONS, 0);
         }
     }
 
@@ -898,7 +947,6 @@ public class Player extends Combatable implements Serializable
         System.out.println("Speed: "+speed+" bonus(pow-modified): "+speedBonus);
         float toRandom = hoursPerAction * speedBonus;
         toRandom *= t_starvingModifier;
-        String s = da.text+": While scouting the area, you ";
         Map<Finding, Integer> chances = new HashMap<Finding, Integer>();
         // Increase liklihood of encounters for each passing turn when scouting -> Scout early on is safer.
         // There will however be more of other resources available later on. :D
@@ -929,10 +977,12 @@ public class Player extends Combatable implements Serializable
                 }
             }
         }
+
         System.out.println(foundStr);
         float amount = 0;
         int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0;
         float foodFound = 0, matFound = 0;
+        String s = da.text+": While scouting the area, you ";
         for (int i = 0; i < foundList.size(); ++i)
         {
             Finding f = foundList.get(i);
@@ -948,6 +998,11 @@ public class Player extends Combatable implements Serializable
                 default: s += "\n Not implemented: "+f.toString(); break;
             }
         }
+        if (foundList.size() == 0)
+            Log(new Log(LogTextID.scoutingFailure, LogType.INFO));
+        else
+            Log(new Log(LogTextID.scoutingSuccess, LogType.INFO));
+
         /// Check config for preferred display verbosity of the search results?
         s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
         Adjust(Stat.ENCOUNTERS, numEncounters);
@@ -965,6 +1020,7 @@ public class Player extends Combatable implements Serializable
         Adjust(Stat.ENEMY_STRONGHOLDS, numEnStrong >= 1? 1 : 0);
 
         Log(s, LogType.INFO);
+
     }
     void BuildDefenses()
     {
@@ -1095,8 +1151,7 @@ public class Player extends Combatable implements Serializable
         return p;
     }
 
-    public void PrintAll() 
-    {
+    public void PrintAll() {
         System.out.print("\nName: " + name +" stats:");
         for (int i = 0; i < statArr.length; ++i)
             System.out.print(" "+statArr[i]);

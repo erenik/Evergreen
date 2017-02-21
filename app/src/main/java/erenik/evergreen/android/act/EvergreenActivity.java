@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -58,6 +59,28 @@ public class EvergreenActivity extends AppCompatActivity
     View scrollViewLog = null, layoutLog = null;
     protected int maxLogLinesInEventLog = 50; // Default, change if the activity should show more.
     boolean focusLastLogMessageUponUpdate = false;
+
+    /// Displays a toast-style message briefly (i.e. 3 second notification in the bottom of the screen).
+    protected void NotImplemented() {
+        Toast("Not implemented yet");
+    }
+    protected void ToastLong(String text) {
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_LONG;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+    protected void Toast(String text) {
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+    void GoToMainScreen() {
+        System.out.println("Starting new activity");
+        Intent i = new Intent(getBaseContext(), MainScreen.class);
+        startActivity(i);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -153,104 +176,30 @@ public class EvergreenActivity extends AppCompatActivity
 //        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
     }
 
+    protected View.OnClickListener openMenu = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            // Go to menu activity.
+            Intent i = new Intent(getBaseContext(), MenuActivity.class);
+            startActivity(i);
+        }
+    };
+
+
+
     /// General Save/Load. Will determine if it needs to perform it locally or remotely.
     public boolean Save() {
         // For now, save locally and remotely, for testing purposes.
-        SaveLocally();
+        App.SaveLocally();
         if (App.isMultiplayerGame)
             SaveToServer();
         return true;
     }
     /// Ease of use method, just loads..?
     public boolean Load() {
-        LoadLocally();
+        App.LoadLocally();
         if (App.isMultiplayerGame)
             LoadFromServer();
-        return true;
-    }
-
-    /// Saves locally, using default preferences location.
-    public static final String localFileSaveName = "Evergreen.sav";
-    private boolean SaveLocally()
-    {
-        System.out.println("SaveLocally");
-        Context context = getBaseContext();
-        Player player = App.GetPlayer(); // Fetch current player to save.
-        if (context == null) // Fetch current one?
-            context = getApplicationContext();
-        if (context == null)
-        {
-            System.out.println("Context null. Aborting");
-            return false;
-        }
-        SharedPreferences sp = App.GetPreferences();
-        if (sp == null) {
-            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
-            return false;
-        }
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putBoolean(Constants.SAVE_EXISTS, true);
-        editor.commit();
-        ObjectOutputStream objectOut = null;
-        try {
-
-            FileOutputStream fileOut = null;
-            try {
-                fileOut = context.openFileOutput(localFileSaveName, Activity.MODE_PRIVATE);
-            } catch (FileNotFoundException e1) {
-                e1.printStackTrace();
-            }
-            objectOut = new ObjectOutputStream(fileOut);
-            objectOut.writeObject(player);
-            fileOut.getFD().sync();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (objectOut != null) {
-                try {
-                    objectOut.close();
-                } catch (IOException e2) {
-                    // do nowt
-                    System.out.println("Failed to save");
-                    return false;
-                }
-            }
-        };
-        System.out.println("Saved");
-        return true;
-    }
-    private boolean LoadLocally() {
-        System.out.println("LoadLocally");
-        Context context = getBaseContext();
-        ObjectInputStream objectIn = null;
-        Object object = null;
-        try {
-
-            FileInputStream fileIn = context.getApplicationContext().openFileInput(localFileSaveName);
-            objectIn = new ObjectInputStream(fileIn);
-            object = objectIn.readObject();
-
-        } catch (FileNotFoundException e) {
-            // Do nothing
-            return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (objectIn != null) {
-                try {
-                    objectIn.close();
-                } catch (IOException e) {
-                    // do nowt
-                    return false;
-                }
-            }
-        }
         return true;
     }
 
@@ -435,11 +384,16 @@ public class EvergreenActivity extends AppCompatActivity
 
     // Update log with relevant filters.
     void UpdateLog() {
-        if (layoutLog == null)
+        if (layoutLog == null) {
+          //  Toast("Nooo looog!");
             return;
+        }
         Player player = App.GetPlayer();
+        if (player == null) {
+            Toast("Nooo playereer!");
+            return;
+        }
 //        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), maxLogLinesInEventLog, player.logTypesToShow);
-
         System.out.println("Log.UpdateLog");
         ViewGroup v = (ViewGroup) layoutLog;
         // Remove children.
@@ -450,18 +404,18 @@ public class EvergreenActivity extends AppCompatActivity
         int startIndex = player.log.size() - numDisplay;
         System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
-        for (int i = player.log.size() - 1; i >= 0; --i)
-        {
+        for (int i = player.log.size() - 1; i >= 0; --i) {
             Log l = player.log.get(i);
             boolean show = false;
-            for (int j = 0; j < player.logTypesToShow.size(); ++j)
-            {
+            for (int j = 0; j < player.logTypesToShow.size(); ++j) {
                 if (l.type.ordinal() == player.logTypesToShow.get(j).ordinal())
                     show = true;
             }
             if (!show)
                 continue;
             String s = l.text;
+            if (l.BasicStringVersion() == false)
+                s = App.GetLogText(l.TextID(), l.Args());
             TextView t = new TextView(getBaseContext());
             t.setText(s);
             int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));

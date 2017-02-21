@@ -55,6 +55,7 @@ public class IntroScreen extends EvergreenActivity
                         System.out.println("Starting new activity");
                         Intent i = new Intent(getBaseContext(), CreateCharacter.class);
                         startActivity(i);
+                        finish();
                         break;
                     }
                 }

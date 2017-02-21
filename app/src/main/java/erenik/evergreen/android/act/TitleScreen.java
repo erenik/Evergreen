@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
@@ -41,8 +42,28 @@ public class TitleScreen extends EvergreenActivity {
         SharedPreferences sp = App.GetPreferences();
     }
 
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // After creating successfully, try and load the most recently played character automatically?
+        boolean ok = App.LoadLocally();
+        if (App.GetPlayers().size() > 0) {
+            // Auto-load the first-index one for now?
+            Player p = App.GetMostRecentlyEditedPlayer();
+            Toast("Auto-loading: "+p.name);
+            System.out.println("Auto-loading player: "+p.name);
+            App.MakeActivePlayer(p);
+            GoToMainScreen();
+            finish();
+            return;
+        }
+        else
+            ToastLong("New player, eh? Welcome aboard! Choose singleplayer if you want want a brief tutorial.");
+
+    }
+
     private void TryLoadOrNewGame() {
-        if (Load()) {
+        if (App.GetPlayers().size() > 0) {
             System.out.println("Load succeeded. Opening main-screen.");
             // Actually load into the singleton.
             Player player = App.GetPlayer();

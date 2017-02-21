@@ -212,4 +212,20 @@
     <string name="defenseOutside">Defense outside: </string>
     <string name="unarmed">Unarmed</string>
 
+    <!-- Log messages with arguments -->
+    <string name="reduceEmissionsSuccessful">Your attempt at reducing emissions was successful. Emissions decreased by (arg) points.</string>
+    <string name="reduceEmissionsMostlySuccessful">Your attempt at reducing emissions was mostly successful. Emissions decreased by (arg) points.</string>
+    <string name="reduceEmissionsNotSoSuccessful">Your attempt at reducing emissions didn\'t go too well. Emissions decreased by (arg) points.</string>
+    <string name="reduceEmissionsFailed">Your attempt at reducing emissions failed. Emissions decreased by (arg) points.</string>
+    <string name="menu">Menu</string>
+    <string name="nextDay">Next day</string>
+    <string name="messages">Messages</string>
+    <string name="changeCharacter">Change character</string>
+    <string name="back">Back</string>
+    <string name="quitGame">Quit game</string>
+    <string name="options">Options</string>
+    <string name="help">Help</string>
+    <string name="scoutingSuccess">While out scouting, you managed to find some things.</string>
+    <string name="scoutingFailure">While out scouting, you didn\'t find much worth noting.</string>
+
 </resources>

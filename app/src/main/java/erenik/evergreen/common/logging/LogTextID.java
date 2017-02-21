@@ -5,5 +5,11 @@ package erenik.evergreen.common.logging;
  */
 
 public enum LogTextID {
+    reduceEmissionsSuccessful,
+    reduceEmissionsMostlySuccessful,
+    reduceEmissionsNotSoSuccessful,
+    reduceEmissionsFailed,
+    scoutingSuccess,
+    scoutingFailure,
 
 }

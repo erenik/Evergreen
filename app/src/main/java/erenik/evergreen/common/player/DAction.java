@@ -13,14 +13,13 @@ import erenik.evergreen.common.Player;
  * Created by Emil on 2016-10-30.
  */
 // Daily Action
-public enum DAction
-{
+public enum DAction {
     GatherFood("Gather berries", "Gather Food. Run out of food and you will soon be starving!"),
     GatherMaterials("Gather materials", "Gather Materials used for constructing defenses, inventing, crafting and augmenting things."),
     Scout("Scout the area", "Search for food, materials, other's shelters, etc. Also carries risks of encountering enemies."),
     Recover("Recover", "Recover lost HP."),
     BuildDefenses("Build defenses", "Consume Materials to strengthen defenses."),
-    AugmentTransport("Augment transport", "Consume materials to improve various aspects of your transport of choice", ActionArgument.Transport, ActionArgument.TransportAugment),
+//    AugmentTransport("Augment transport", "Consume materials to improve various aspects of your transport of choice", ActionArgument.Transport, ActionArgument.TransportAugment),
     LookForPlayer("Look for player", "Attempt to look for a specific player, or just any player's shelter", ActionArgument.TextSearchType, ActionArgument.PlayerName),
 //    Expedition("Expedition", "Go on an expedition to try and vanquish a stronghold of Evergreen monsters.", ActionArgument.Stronghold),
     Invent("Invent", "Invent new weapons, armor, items or shelter additions", ActionArgument.InventionCategory),
@@ -28,6 +27,7 @@ public enum DAction
     Steal("Steal", "Steal resources, items and/or blueprints from another player", ActionArgument.Player), // Name of player, yeah.
     AttackAPlayer("Attack a player", "Attack a target player's shelter.", ActionArgument.Player), // Name of player, yeah.
     Study("Study", "Gain EXP towards skills you are currently training."),
+    ReduceEmissions("Reduce emissions", "Collect and process waste, plant trees and other actions to reduce your total emission footprint."),
 ;
     DAction(String txt, String description)
     {

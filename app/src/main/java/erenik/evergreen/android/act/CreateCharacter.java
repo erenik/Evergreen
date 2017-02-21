@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.Snackbar;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -21,11 +22,13 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -69,6 +72,31 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
         setContentView(R.layout.activity_create_character);
 
+        /// If local game, hide the e-mail and password annoying shits.
+        if (App.isLocalGame) {
+            ViewGroup vg = (ViewGroup) findViewById(R.id.layoutEmailPassword);
+            vg.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+            vg.setVisibility(View.INVISIBLE);
+        }
+        // Online-specific actions.
+        else {
+            // Set up the login form.
+            mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+            populateAutoComplete();
+
+            mPasswordView = (EditText) findViewById(R.id.password);
+            mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                    if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                        registerCharacter();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
+
         // Populate spinner for starting bonus
         Spinner spinner = (Spinner) findViewById(R.id.startingBonus);
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -91,27 +119,12 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             }
         });
 
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
-
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
-                }
-                return false;
-            }
-        });
 
         Button registerButton = (Button) findViewById(R.id.registerButton);
         registerButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+                registerCharacter();
             }
         });
 
@@ -166,8 +179,19 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
     }
 
     // Attempts to sign in or register the account specified by the login form. * If there are form errors (invalid email, missing fields, etc.), the * errors are presented and no actual login attempt is made.
-    private void attemptLogin()
-    {
+    private void registerCharacter() {
+        Player player = new Player();
+        EditText et  = (EditText) findViewById(R.id.textEditName);
+        player.SetName(et.getText().toString());
+        if (App.isLocalGame) {
+            /// Just make a player using the chosen config on this screen and go to the main menu without waiting.
+            App.RegisterPlayer(player);
+            App.MakeActivePlayer(player);
+            GoToMainScreen();
+            finish(); // Finish this activity.
+            return;
+        }
+
         if (mAuthTask != null)
             return;
         // Reset errors.
@@ -332,16 +356,6 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
-    }
-
-    void GoToMainScreen()
-    {
-        Player player = App.GetPlayer();
-        player.SetName("TestNAme");
-        Save();
-        System.out.println("Starting new activity");
-        Intent i = new Intent(getBaseContext(), MainScreen.class);
-        startActivity(i);
     }
 }
 

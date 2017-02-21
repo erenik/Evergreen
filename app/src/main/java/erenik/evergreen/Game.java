@@ -99,17 +99,18 @@ public class Game
         players.add(Player.NewAI("Mad Marvin"));
     }
 
-    public void NextDay()
-    {
+    /// returns num of player characters simulated.
+    public int NextDay() {
         // TODO: Add default player as needed? Elsewhere?
 //        if (!players.contains(App.GetPlayer()))
   //          players.add(App.GetPlayer());
         if (players.size() == 0) {
             System.out.println("Game.NextDay: No players, doing nothing");
-            return;
+            return 0;
         }
         int activePlayers = ActivePlayers();
         System.out.println("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
+        int numSimulated = 0;
         for (int i = 0; i < players.size(); ++i)
         {
             Player p = players.get(i);
@@ -119,6 +120,7 @@ public class Game
                 continue;
             if (activePlayers < 3)
                 System.out.println(p.Name()+" next day..");
+            ++numSimulated;
             p.Adjust(Stat.HP, -0.2f); // Everybody is dying.
             p.ProcessMandatoryEvents(); // Process all mandatory events, such as battles, assuming the player didn't do so already earlier. (i.e. with Mini-games, choose equipment before, et al)
             p.NextDay(this);
@@ -129,6 +131,7 @@ public class Game
                 p.SaveLog();
             }
   */      }
+        return numSimulated;
     }
 
     private int ActivePlayers() {

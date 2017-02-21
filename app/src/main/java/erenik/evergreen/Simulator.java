@@ -43,8 +43,8 @@ public class Simulator
 
     }
 
-    /// Adjusts stats, generates events based on chosen actions to be played, logged
-    public boolean RequestNextDay(Player requestingPlayer) {
+    /// Adjusts stats, generates events based on chosen actions to be played, logged. Returns amount of player characters simulated.
+    public int RequestNextDay(Player requestingPlayer) {
         System.out.println("Simulator.RequestNextDay: Requesting player: "+requestingPlayer);
         /// Local game?
         if (App.isLocalGame){
@@ -52,7 +52,7 @@ public class Simulator
             if (localGame.players.indexOf(requestingPlayer) == -1)
                 localGame.players.add(requestingPlayer);
             localGame.NextDay(); // Yeah.
-            return true;
+            return 1;
         }
         /// Multiplayer, send data to server, request an update.
 
@@ -64,12 +64,12 @@ public class Simulator
    //         games.get(0).players.add(App.GetPlayer());
         }
         /// Check if the games are supposed to proceed to the next day.
-        for (int i = 0; i < games.size(); ++i)
-        {
+        int total = 0;
+        for (int i = 0; i < games.size(); ++i) {
             Game game = games.get(i);
-            game.NextDay();
+            total += game.NextDay();
         }
-        return true;
+        return total;
     }
 
 }

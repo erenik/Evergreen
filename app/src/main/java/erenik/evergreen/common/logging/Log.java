@@ -18,6 +18,7 @@ public class Log implements Serializable {
      * and language chosen by the end-user.
     */
     boolean stringBasicVersion = true;
+    public boolean BasicStringVersion() { return stringBasicVersion;};
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(String s, LogType t) {
         text = s;
@@ -25,11 +26,26 @@ public class Log implements Serializable {
         date = new Date();
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
+    public Log(LogTextID ltid, LogType t) {
+        this.ltid = ltid;
+        this.type = t;
+        date = new Date();
+        stringBasicVersion = false;
+    }
+    /// String and Type, type determines varous filtering and color-coding schemes.
+    public Log(LogTextID ltid, LogType t, String arg1) {
+        this.ltid = ltid;
+        this.type = t;
+        date = new Date();
+        this.args.add(arg1);
+        stringBasicVersion = false;
+    }
     public Log(LogTextID ltid, LogType t, ArrayList<String> args) {
         this.ltid = ltid;
         this.type = t;
         date = new Date();
         this.args = args;
+        stringBasicVersion = false;
     }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(date);
@@ -37,6 +53,7 @@ public class Log implements Serializable {
         out.writeObject(type);
         out.writeObject(ltid);
         out.writeObject(args);
+        out.writeBoolean(stringBasicVersion);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         date = (Date) in.readObject();
@@ -44,11 +61,17 @@ public class Log implements Serializable {
         type = (LogType) in.readObject();
         ltid = (LogTextID) in.readObject();
         args = (ArrayList<String>) in.readObject();
+        stringBasicVersion = (Boolean) in.readBoolean();
     }
     private void readObjectNoData() throws ObjectStreamException
     {
 
     }
+    /// Text-ID on the android-platform for cross-language performance.
+    public LogTextID TextID() {
+        return ltid;
+    }
+    public List<String> Args(){return args;};
     /// New vars added for better cross-platform, cross-language logging.
     LogTextID ltid;
     ArrayList<String> args = new ArrayList<>();

@@ -112,6 +112,11 @@
         <item name="android:background">@drawable/small_button</item>
         <item name="android:textSize">@dimen/textSize.Larger</item>
     </style>
+    <style name="Evergreen.Button.MainScreenBottom" parent="Evergreen.Button">
+        <item name="android:layout_weight">0.8</item>
+        <item name="android:layout_margin">@dimen/activity_vertical_margin_smaller</item>
+        <item name="android:textSize">16dp</item>
+    </style>
 
     <style name="Evergreen.Button.AdaptiveWidth" parent="Evergreen.Button">
         <item name="android:layout_weight">1</item>
@@ -194,4 +199,10 @@
     <style name="Evergreen.Layout.Row" parent="Evergreen.Layout">
         <item name="android:layout_height">40sp</item>
     </style>
+
+    <style name="Evergreen.Layout.Vertical" parent="Evergreen.Layout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
 </resources>
