@@ -26,7 +26,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     protected void onResume() {
         super.onResume();
         UpdateGUI(); // Always update GUI upon resuming.
-        App.HandleNextEvent();
     }
 
     /**
@@ -38,8 +37,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     {   @Override
         public void onClick(View view)
         {
-            if (App.HandleNextEvent())
-                return;
             int selection = -1;
             switch(view.getId())
             {
@@ -79,8 +76,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             focusLastLogMessageUponUpdate = true;
             UpdateGUI();
             focusLastLogMessageUponUpdate = false;
-             /// Queues next event to be handled, if there are any.
-            App.HandleNextEvent();
         }
     };
 
@@ -138,6 +133,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             Toast("Trying to update gui with null player D:");
             return;
         }
+        SetText(R.id.textViewName, player.name);
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");

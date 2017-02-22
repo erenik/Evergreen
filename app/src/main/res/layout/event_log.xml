@@ -4,8 +4,8 @@
     android:layout_height="match_parent">
 
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/log" />
-    <ScrollView android:layout_width="match_parent" android:layout_height="300dp" android:id="@+id/scrollViewLog" android:layout_gravity="center_horizontal" >
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutLog" android:orientation="vertical">
+    <ScrollView style="@style/Evergreen.ScrollViewLog" android:layout_height="300dp" android:id="@+id/scrollViewLog" android:layout_gravity="center_horizontal" >
+        <LinearLayout style="@style/Evergreen.Layout.Log" android:layout_height="wrap_content" android:id="@+id/layoutLog" android:orientation="vertical">
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="New Text\ntetet\" android:textColor="@color/mainTextColor" android:id="@+id/textViewLog" />
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Yo vafan." android:textColor="@color/attacked" />
         </LinearLayout>

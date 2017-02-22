@@ -11,5 +11,14 @@ public enum LogTextID {
     reduceEmissionsFailed,
     scoutingSuccess,
     scoutingFailure,
+    fledFromCombat,  // 1 arg, name of the fleer.
+    playerFledFromCombat,
+    playerTriedToFlee, // 1 arg, name of fleer
+    triedToFlee,
+    // 2 args, quantity and name of attacking monster type.
+    shelterAttacked,
+    // Max 1 encounter per scouting sessions? Number determines strength?
+    scoutRandomEncounter,
+    playerPlayerAttack, playerMonsterAttack, monsterPlayerAttack, playerPlayerAttackMiss, monsterPlayerAttackMiss, playerMonsterAttackMiss, playerVanquishedMonster, monsterKnockedOutPlayer,
 
 }

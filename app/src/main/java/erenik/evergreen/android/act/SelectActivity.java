@@ -78,11 +78,22 @@ public class SelectActivity extends EvergreenActivity
         System.out.println("Clicked: "+text);
         String s = text.toString().split(":")[0]; // First stuff before any eventual arguments.
         DAction action = DAction.GetFromString(s);
-        if (action != null)
-        {
+        if (action != null) {
             dActionClicked(action, text.toString());
         }
+        Skill skill = Skill.GetFromString(s);
+        if (skill != null){
+            skillClicked(skill, text.toString());
+        }
     }
+
+    private void skillClicked(Skill skill, String header) {
+        TextView tvName = (TextView) findViewById(R.id.textViewItemName);
+        tvName.setText(header); // Show arguments here as well.
+        TextView desc = (TextView) findViewById(R.id.textViewDescription);
+        desc.setText(skill.briefDescription);
+    }
+
     // For displaying default title?
     public void dActionClicked(DAction action)
     {
@@ -222,16 +233,19 @@ public class SelectActivity extends EvergreenActivity
 
         int arrayId = -1;
         String itemsHeaderName = "Possible items";
+        String header = "heeeee";
         List<String> itemNames = new ArrayList<String>();
         switch(type)
         {
             case SELECT_DAILY_ACTION:
                 arrayId = R.array.dailyActions;
+                header = "Select Daily Action";
                 itemsHeaderName = "Daily actions";
                 itemNames = DAction.Names();
                 break;
             case SELECT_ACTIVE_ACTION: arrayId = R.array.activeActions; break;
             case SELECT_SKILL:
+                header = "Select skill to train";
                 arrayId = R.array.skills;
                 itemsHeaderName = "Trainable Skills";
                 itemNames = Skill.Names();
@@ -239,6 +253,8 @@ public class SelectActivity extends EvergreenActivity
         }
         TextView tv = (TextView) findViewById(R.id.textViewPossibleItems);
         tv.setText(itemsHeaderName);
+        tv = (TextView) findViewById(R.id.textViewSelectTitle);
+        tv.setText(header);
 
         /// Populate the available items.
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutItems);

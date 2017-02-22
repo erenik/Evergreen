@@ -88,7 +88,7 @@ public enum Skill implements Serializable
         return a;
     }
     public String text = "text";
-    String briefDescription = "Desc";
+    public String briefDescription = "Desc";
     // Exp aquired in this skill towards the next level?
     public int EXPToNext()
     {

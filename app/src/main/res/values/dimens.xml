@@ -5,6 +5,8 @@
     <dimen name="textSize.Larger">18sp</dimen>
     <dimen name="textSize.Largest">24sp</dimen>
     <dimen name="textSize.Title">40sp</dimen>
+    <dimen name="textSize.Title.Smaller">30sp</dimen>
+
 
     <!-- Padding/Margin values dp for device-screen-density-independent size.-->
     <!--  Padding is space inside the element to its content (bg visible)

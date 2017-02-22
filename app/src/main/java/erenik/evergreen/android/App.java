@@ -63,15 +63,6 @@ public class App {
         return player;
     }
 
-    // Returns true if it processed an event, false if not.
-    public static boolean HandleNextEvent() {
-        if (true) return false; // Skip until mini-games are implemented later.
-        if (player.playEvents  // If playing all events, or
-                || !player.AllMandatoryEventsHandled()) // Not all mandatory events handled,
-            return HandleGeneratedEvents(); // Do event.
-        return false;
-    }
-
     public static boolean Save() {
         EvergreenActivity ea = (EvergreenActivity)currentActivity;
         if (ea == null)
@@ -80,6 +71,8 @@ public class App {
     }
 
     public static boolean HandleGeneratedEvents() {
+        if (true) return true;
+        /*
         // Returns true if there was any event to process, false if not.
         EventDialogFragment event = new EventDialogFragment();
         event.type = player.NextEvent();
@@ -105,7 +98,7 @@ public class App {
         }
         else {
             System.out.println("Activity not instance of fragmentAcitvity: "+currentActivity.getLocalClassName());
-        }
+        }*/
         return false;
     };
 
@@ -115,12 +108,18 @@ public class App {
         {
             case ATTACK: return R.color.attack;
             case ATTACKED_MISS:
+            case ACTION_FAILURE:
             case ATTACK_MISS: return R.color.attackMiss;
             case INFO: return R.color.info;
+            case DEFEATED_ENEMY:
             case SUCCESS: return R.color.success;
             case PROGRESS: return R.color.progress;
             case EXP: return R.color.exp;
-            case OtherDamage: case ATTACKED: return R.color.attacked;
+            case DEFEATED:
+                return R.color.defeated;
+            case OtherDamage:
+            case ATTACKED:
+                return R.color.attacked;
             case EVENT: return R.color.event;
             case PROBLEM_NOTIFICATION: return R.color.problemNotification;
         }
@@ -221,29 +220,9 @@ public class App {
     }
 
     public static String GetLogText(LogTextID logTextID, List<String> args) {
-        int id = -1; // id on android.
-        String s = "";
-        switch(logTextID) {
-            case reduceEmissionsSuccessful: id = R.string.reduceEmissionsSuccessful; break;
-            case reduceEmissionsMostlySuccessful: id = R.string.reduceEmissionsMostlySuccessful; break;
-            case reduceEmissionsNotSoSuccessful: id = R.string.reduceEmissionsNotSoSuccessful; break;
-            case reduceEmissionsFailed: id = R.string.reduceEmissionsFailed; break;
-            case scoutingSuccess: id = R.string.scoutingSuccess; break;
-            case scoutingFailure: id = R.string.scoutingFailure; break;
-            default:
-                s = logTextID.name(); break;
-        }
-        if (id != -1)
-            s = currentActivity.getString(id);
-        // Replace args as needed.
-        int replaced = 0;
-        while(s.contains("(arg)"))
-            s = s.replaceFirst("(arg)", args.get(replaced++));
-        for (int i = replaced; i < args.size(); ++i) {
-            s += ", Unused arg: "+args.get(i);
-        }
-        return s;
+        return EString.GetLogText(logTextID, args);
     }
+
     /// Saves locally, using default preferences location.
     public static final String localFileSaveName = "Evergreen.sav";
     public static boolean SaveLocally() {
@@ -389,5 +368,10 @@ public class App {
                 mostRecent = p;
         }
         return mostRecent;
+    }
+    /// Deletes all player characters and saves locally.
+    public static void DeletePlayers() {
+        players.clear();
+        SaveLocally();
     }
 }

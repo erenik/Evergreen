@@ -25,7 +25,7 @@ public class EventDialogFragment extends DialogFragment
     public Finding type = Finding.Nothing;
     EncounterActivity encounterActivity = new EncounterActivity();
 
-    Encounter enc = new Encounter(App.GetPlayer());
+    Encounter enc = new Encounter();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -34,9 +34,7 @@ public class EventDialogFragment extends DialogFragment
     }
 
     @Override
-    public Dialog onCreateDialog(final Bundle savedInstanceState)
-    {
-
+    public Dialog onCreateDialog(final Bundle savedInstanceState) {
         enc.listeners.add(new EncounterListener() {
             @Override
             public void OnEncounterEnded(Encounter enc) {
@@ -55,16 +53,7 @@ public class EventDialogFragment extends DialogFragment
         moreText = type.Question();
         switch(type)
         {
-            case AbandonedShelter:
-            case RandomPlayerShelter:
-            {
-                skippable = true;
-                break;
-            }
-            case AttacksOfTheEvergreen:
-            case Encounter:
-                skippable = false;
-                break;
+            /*
             case MaterialsDepot:
                 units = Dice.RollD3(2)+1;
                 player.Adjust(Stat.MATERIALS, units);
@@ -77,6 +66,7 @@ public class EventDialogFragment extends DialogFragment
                 enc.Log("You find " + units + " of food.", LogType.INFO);
                 skippable = true;
                 break;
+                */
         }
         builder.setMessage(type.GetEventText()+moreText)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -88,8 +78,8 @@ public class EventDialogFragment extends DialogFragment
                             case AttacksOfTheEvergreen:
                                 AttacksOfTheEvergreen();
                                 break;
-                            case Encounter:
-                                RandomEncounter();
+                            case RandomEncounter:
+                                RandomEncounter(player);
                                 break;
                             case AbandonedShelter:
                                 enc.AbandonedShelter();
@@ -105,7 +95,6 @@ public class EventDialogFragment extends DialogFragment
                         if (act instanceof MainScreen) {
                             MainScreen ms = (MainScreen) act;
                             ms.UpdateGUI(); // Update GUI HP, log, etc.
-                            App.HandleNextEvent();
                         }
                     }
                 });
@@ -123,16 +112,16 @@ public class EventDialogFragment extends DialogFragment
 
     private void AttacksOfTheEvergreen()
     {
-        enc.NewEncounter(true);
-        enc.AssaultsOfTheEvergreen();
-        enc.Simulate();
+      //  enc.NewEncounter(true);
+        //enc.AssaultsOfTheEvergreen();
+        //enc.Simulate();
     }
 
-    void RandomEncounter()
+    void RandomEncounter(Player attackedPlayer)
     {
         // Open new activity for this event?
-        enc.NewEncounter(false);
-        enc.Random(new Dice(3, 2, 0));
-        enc.Simulate();
+//        enc.NewEncounter(false);
+  //      enc.RandomMonsterEncounter(new Dice(3, 2, 0), attackedPlayer);
+    //    enc.Simulate();
     }
 }

@@ -15,7 +15,9 @@ public enum LogType
     ACTION_NO_PROGRESS, // Uses same color as Attack Miss, but will not be filtered the same way.
     ACTION_FAILURE, // Uses same color as Attacked, but will not be filtered the same way.
     SUCCESS, OtherDamage,
-    Error;
+    Error,
+    PLAYER_ATTACK, PLAYER_ATTACK_MISS,
+    DEFEATED_ENEMY, DEFEATED;
 
     /*
     int HexColor()

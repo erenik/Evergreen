@@ -6,6 +6,8 @@ import java.util.Random;
 
 // import erenik.evergreen.android.act.EncounterActivity;
 import erenik.evergreen.common.encounter.Encounter;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.util.Dice;
 import erenik.evergreen.util.Tuple;
@@ -22,6 +24,15 @@ public class Combatable extends Object
     static private Random r;
     public int consecutiveFleeAttempts = 0;
     protected float emissionsWhenCreated = 0;
+    public boolean isAttacker = false; // Flag booleans that should be set upon entering a specific encounter. If not attacker, is defender.
+    public boolean ranAway = false;
+    public boolean runsAway = false; // IF true, will try to run away.
+    public float runAwayAtHPPercentage = 0.25f; // IF a flee-er, default to run at 25%?
+    public int fleeSkill = 0;
+    public float fleeBonusFromTransport = 0;
+
+    public void PrepareForCombat(boolean defendingShelter) {
+    }
 
     /// Attempts to attack this unit, returns true if it hits.
     boolean Attack(int attack)
@@ -99,7 +110,8 @@ public class Combatable extends Object
         if (multiplies > 0 && timesMultiplied < timesMultiply)
         {
             Enemy e = new Enemy(enemyType, emissionsWhenCreated);
-            enc.enemies.add(e);
+            e.isAttacker = isAttacker;
+            enc.AddCombatant(e);
         }
     }
     /// Check HP?
@@ -112,21 +124,24 @@ public class Combatable extends Object
             if (!hit)
             {
                 if (target.isPlayer && isPlayer) { // Both are players?
-                    enc.Log(name+" attacks "+target.name+" but misses.", LogType.ATTACK_MISS);
+                    enc.LogEnc(new Log(LogTextID.playerPlayerAttackMiss, LogType.PLAYER_ATTACK_MISS, name, target.name));
+//                    enc.Log(name+" attacks "+target.name+" but misses.", LogType.ATTACK_MISS);
                 }
                 else
-                    enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.",
-                            isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
+                    enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttackMiss : LogTextID.monsterPlayerAttackMiss, isPlayer? LogType.ATTACK_MISS : LogType.ATTACKED_MISS, name, target.name));
+//                    enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.", isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
                 continue;
             }
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
             if (target.isPlayer && isPlayer) {
-                enc.Log(name+" attacks "+target.name+" for "+damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage. Remaining HP: "+target.hp, LogType.ATTACK);
+                enc.LogEnc(new Log(LogTextID.playerPlayerAttack, LogType.PLAYER_ATTACK, name, target.name, damageDealt+""));
+//                enc.Log(name+" attacks "+target.name+" for "+damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage. Remaining HP: "+target.hp, LogType.ATTACK);
             }
             else
-                enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",
-                        isPlayer ? LogType.ATTACK : LogType.ATTACKED);
+                enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
+//                enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",isPlayer ? LogType.ATTACK : LogType.ATTACKED);
             if (target.hp  < 0){ // Killed player?
+                enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
                 return true;
             }
         }

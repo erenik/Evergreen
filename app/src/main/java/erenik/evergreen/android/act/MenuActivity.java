@@ -1,5 +1,6 @@
 package erenik.evergreen.android.act;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
@@ -32,6 +33,24 @@ public class MenuActivity extends EvergreenActivity {
         /// Update GUI.
 //        UpdateGUI();
 
+        findViewById(R.id.buttonNewCharacter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
+                startActivity(i);
+                finish();
+            }
+        });
+        findViewById(R.id.buttonDeleteAllCharacters).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                App.DeletePlayers();
+                App.SaveLocally();
+                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
+                startActivity(i);
+                finish();
+            }
+        });
         findViewById(R.id.buttonChangeCharacter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

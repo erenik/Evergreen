@@ -404,6 +404,7 @@ public class EvergreenActivity extends AppCompatActivity
         int startIndex = player.log.size() - numDisplay;
         System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
+        boolean alternate = true;
         for (int i = player.log.size() - 1; i >= 0; --i) {
             Log l = player.log.get(i);
             boolean show = false;
@@ -421,6 +422,11 @@ public class EvergreenActivity extends AppCompatActivity
             int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
             // System.out.println("Colorizing: "+Integer.toHexString(hex));
             t.setTextColor(hex);
+            alternate = !alternate;
+            int colorID = alternate? R.color.logColor1 : R.color.logColor2;
+            int bgHex = ContextCompat.getColor(getBaseContext(), colorID);
+            t.setBackgroundColor(bgHex);
+//            t.setBackgroundResource(R.drawable.chatlogbg);
             v.addView(t, 0); // Insert at index 0 always.
             t.setFocusable(true); // Focusable.
             t.setFocusableInTouchMode(true);

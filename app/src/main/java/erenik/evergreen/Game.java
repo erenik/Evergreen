@@ -122,7 +122,6 @@ public class Game
                 System.out.println(p.Name()+" next day..");
             ++numSimulated;
             p.Adjust(Stat.HP, -0.2f); // Everybody is dying.
-            p.ProcessMandatoryEvents(); // Process all mandatory events, such as battles, assuming the player didn't do so already earlier. (i.e. with Mini-games, choose equipment before, et al)
             p.NextDay(this);
             p.lastEditSystemMs = System.currentTimeMillis();
             // Save?

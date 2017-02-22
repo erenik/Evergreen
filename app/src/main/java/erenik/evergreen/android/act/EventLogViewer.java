@@ -33,8 +33,7 @@ public class EventLogViewer extends EvergreenActivity {
         }
     };
 
-    void SetFilter(LogType lt, boolean filterIt)
-    {
+    void SetFilter(LogType lt, boolean filterIt) {
         // Filter it -> Remove it from types to show.
         if (filterIt)
         {
@@ -83,5 +82,12 @@ public class EventLogViewer extends EvergreenActivity {
 
         // Update initial contents.
         maxLogLinesInEventLog = 500;
+        focusLastLogMessageUponUpdate = true; // Scroll to the bottom.
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Scroll to the last message in the log?
     }
 }

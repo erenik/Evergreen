@@ -47,6 +47,8 @@ public class GameOver extends EvergreenActivity {
             }
         };
         b.setOnClickListener(click);
+
+        focusLastLogMessageUponUpdate = true;
     }
     // Delayed, make buttons visible?
 }

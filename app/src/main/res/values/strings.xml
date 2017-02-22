@@ -227,5 +227,20 @@
     <string name="help">Help</string>
     <string name="scoutingSuccess">While out scouting, you managed to find some things.</string>
     <string name="scoutingFailure">While out scouting, you didn\'t find much worth noting.</string>
+    <string name="fledFromCombat">The (arg) ran away.</string>
+    <string name="playerFledFromCombat">(arg) ran away.</string>
+    <string name="playerTriedToFlee">(arg) tried to run away, but failed.</string>
+    <string name="triedToFlee">The (arg) tried to run away, but failed.</string>
+    <string name="shelterAttacked">Your shelter is attacked by (arg) (arg)(s).</string> <!-- Your shelter is attacked by " + iAmount + " " + et.name + "s!" -->
+    <string name="scoutRandomEncounter">While out scouting, you encounter (arg) group(s) of monsters from the Evergreen!</string>
+
+    <string name="newCharacter">New Character</string>
+    <string name="deleteAllCharacters">Delete all characters</string>
+    <string name="playerPlayerAttack">(arg) attacks (arg) for (arg) point(s) of damage.</string>
+    <string name="playerMonsterAttack">(arg) attacks the (arg) for (arg) point(s) of damage.</string>
+    <string name="monsterPlayerAttack">The (arg) attacks (arg) for (arg) point(s) of damage.</string>
+    <string name="playerPlayerAttackMiss">(arg) tries to attack (arg), but misses.</string>
+    <string name="monsterPlayerAttackMiss">The (arg) tries to attack (arg), but misses.</string>
+    <string name="playerMonsterAttackMiss">(arg) tries to attack the (arg), but misses.</string>
 
 </resources>

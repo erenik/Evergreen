@@ -40,6 +40,25 @@ public class Log implements Serializable {
         this.args.add(arg1);
         stringBasicVersion = false;
     }
+    /// String and Type, type determines varous filtering and color-coding schemes.
+    public Log(LogTextID ltid, LogType t, String arg1, String arg2) {
+        this.ltid = ltid;
+        this.type = t;
+        date = new Date();
+        this.args.add(arg1);
+        this.args.add(arg2);
+        stringBasicVersion = false;
+    }
+    /// String and Type, type determines varous filtering and color-coding schemes.
+    public Log(LogTextID ltid, LogType t, String arg1, String arg2, String arg3) {
+        this.ltid = ltid;
+        this.type = t;
+        date = new Date();
+        this.args.add(arg1);
+        this.args.add(arg2);
+        this.args.add(arg3);
+        stringBasicVersion = false;
+    }
     public Log(LogTextID ltid, LogType t, ArrayList<String> args) {
         this.ltid = ltid;
         this.type = t;

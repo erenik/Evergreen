@@ -8,14 +8,18 @@
 
     <color name="black">#FF000000</color>
     <color name="info">#FFBBBBBB</color>
+    <color name="defeated">#FFaa1401</color>
     <color name="attacked">#FFfa4431</color>    <!-- Old attacked colors : f88000 -->
     <color name="event">#FFEEEECC</color>
     <color name="success">#FFF0F0DD</color>
     <color name="progress">#FFAA8888</color>
     <color name="problemNotification">#FFFF8500</color>
-    <color name="attackMiss">#FF999999</color>
+    <color name="attackMiss">#FFAAAAAA</color>
     <color name="attack">#FFEEEEEE</color>
     <color name="exp">#FFDDDD55</color>
+
+    <color name="logColor1">#AA41534a</color>
+    <color name="logColor2">#AA1f333a</color>
 
     <color name="transparent">#00000000</color>
     <color name="backgroundMainGreen">#FF013220</color>

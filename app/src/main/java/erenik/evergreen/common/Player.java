@@ -45,9 +45,11 @@ import java.util.logging.Logger;
 public class Player extends Combatable implements Serializable {
     List<PlayerListener> listeners = null;
     List<LogListener> logListeners = null;
+    List<Encounter> encountersToProcess = null;
 
     /// Creates stuff not added automatically - after creation, or after loading from file via e.g. readObject.
     void Init() {
+        encountersToProcess = new ArrayList<>();
         statArr = new float[Stat.values().length];
         transportProbabilityArr = new float[Transport.values().length]; // Only variable we care about for transports as far as configurability is concerned.
         listeners = new ArrayList<>();
@@ -83,8 +85,7 @@ public class Player extends Combatable implements Serializable {
     private List<Transport> transports = null;
     public boolean playEvents = false;
     /// Increment every passing day. Stop once dying.
-    public int Turn()
-    {
+    public int TurnsSurvived() {
         return (int) Math.round(Get(Stat.TurnSurvived));
     };
     /// Temporary/chaning starving modifier, changes each turn. Default 1, lower when starving.
@@ -400,23 +401,22 @@ public class Player extends Combatable implements Serializable {
         return null;
     }
     /// Stuff to process at the start of every day, also NewGame.
-    void NewDay()
-    {
+    void NewDay() {
         // New day, assign transport?
+        encountersToProcess.clear();
+        Adjust(Stat.TurnPlayed, 1);
         Adjust(Stat.TurnSurvived, 1);
-        System.out.println("Turn: " + Turn());
+        System.out.println("Turn: " + Get(Stat.TurnPlayed));
     }
     /// Adjusts stats, generates events based on chosen actions to be played, logged
-    public void NextDay(Game game)
-    {
-        if (GetInt(Stat.HP) <= 0)
-        {
+    public void NextDay(Game game) {
+        if (GetInt(Stat.HP) <= 0) {
             // TODO: Add a listener-callback mechanism for when the player dies.
             //            App.GameOver();
             return;
         }
         NewDay();  // New day :3
-        Log("-- Day " + Turn() + " --", LogType.INFO);
+        Log("-- Day " + (int) Get(Stat.TurnPlayed) + " --", LogType.INFO);
         Transport t = Transport.RandomOf(transports);
        // System.out.println("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.ordinal());
@@ -454,14 +454,19 @@ public class Player extends Combatable implements Serializable {
 //        HandleGeneratedEvents();
 
         // Attacks of the evergreen?
-        int everGreenTurn = (int) (Turn()) % 16;
-        switch(everGreenTurn)
-        {
+        int everGreenTurn = (int) (TurnsSurvived()) % 16;
+        switch(everGreenTurn) {
             default: break;
             case 0: case 6:case 10:case 13: case 15: // The pattern repeats every 16 turns.
-                Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, 1);
+                encountersToProcess.add(new Encounter(Finding.AttacksOfTheEvergreen, this));
                 break;
         }
+        /// Process encounters that were stored up.
+        for (int i = 0; i < encountersToProcess.size(); ++i){
+            Encounter enc = encountersToProcess.get(i);
+            enc.Simulate();
+        }
+
         for (int i = 0; i < listeners.size(); ++i) // Inform listeners, new day is over.
             listeners.get(i).OnPlayerNewDay(this);
     }
@@ -474,43 +479,6 @@ public class Player extends Combatable implements Serializable {
         else if (hp < 0)
             hp = 0;
         Set(Stat.HP, hp);
-    }
-
-    // Returns the finding/event-type to process next :)
-    public Finding NextEvent()
-    {
-        // Present dialogue-box for handled events.
-        Finding finding = Finding.Nothing;
-        // Check events to run.
-        if (Get(Stat.ENCOUNTERS) > 0)
-            finding = Finding.Encounter;
-        else if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
-            finding = Finding.AttacksOfTheEvergreen;
-        else if (Get(Stat.ABANDONED_SHELTER) > 0)
-            finding = Finding.AbandonedShelter;
-        else if (Get(Stat.RANDOM_PLAYERS_SHELTERS) > 0)
-            finding = Finding.RandomPlayerShelter;
-        if (finding != Finding.Nothing) {
-            return finding;
-        }
-        return finding;
-    }
-    public void PopEvent(Finding f) { // Pop NextEvent from queue.
-        switch (f) {
-            case Encounter: Adjust(Stat.ENCOUNTERS, -1); break;
-            case AttacksOfTheEvergreen: Adjust(Stat.ATTACKS_OF_THE_EVERGREEN, -1); break;
-            case AbandonedShelter: Adjust(Stat.ABANDONED_SHELTER, -1); break;
-            case RandomPlayerShelter: Adjust(Stat.RANDOM_PLAYERS_SHELTERS, -1); break;
-        }
-    }
-    /// Returns true
-    public boolean AllMandatoryEventsHandled()
-    {
-        if (Get(Stat.ENCOUNTERS) > 0)
-            return false;
-        if (Get(Stat.ATTACKS_OF_THE_EVERGREEN) > 0)
-            return false;
-        return true;
     }
 
     String Stringify(float value)
@@ -951,7 +919,7 @@ public class Player extends Combatable implements Serializable {
         // Increase liklihood of encounters for each passing turn when scouting -> Scout early on is safer.
         // There will however be more of other resources available later on. :D
         int turn = (int) Get(Stat.TurnSurvived);
-        chances.put(Finding.Encounter, 5 + turn);
+        chances.put(Finding.RandomEncounter, 5 + turn); // Increase chance of combat for each survived turn.
         chances.put(Finding.Nothing, 50);
         chances.put(Finding.Food, 15);
         chances.put(Finding.Materials, 15);
@@ -989,7 +957,7 @@ public class Player extends Combatable implements Serializable {
             switch(f)            // Evaluate it.
             {
                 case Nothing: break;
-                case Encounter: numEncounters  += 1; break;
+                case RandomEncounter: numEncounters  += 1; break;
                 case Food: numFoodStashes += 1; foodFound += 1 + r.nextFloat() * 2; break;
                 case Materials: numMatStashes += 1; matFound = 1 + r.nextFloat() * 2; break;
                 case AbandonedShelter: numAbShelters += 1; playEvents = true; break;
@@ -1004,8 +972,12 @@ public class Player extends Combatable implements Serializable {
             Log(new Log(LogTextID.scoutingSuccess, LogType.INFO));
 
         /// Check config for preferred display verbosity of the search results?
+        Log(new Log(LogTextID.scoutRandomEncounter, LogType.INFO, numEncounters+""));
         s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
-        Adjust(Stat.ENCOUNTERS, numEncounters);
+        for (int i = 0; i < numEncounters; ++i) {
+            Encounter enc = new Encounter(Finding.RandomEncounter, this);
+            encountersToProcess.add(enc);
+        }
         s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
         Adjust(Stat.FOOD, foodFound);
         s += numMatStashes > 1? "\n- find "+numMatStashes+" stashes of materials, totalling at "+Stringify(matFound)+" units" : numMatStashes == 1? "\n a stash of materials: "+Stringify(matFound)+" units" : "";
@@ -1118,15 +1090,19 @@ public class Player extends Combatable implements Serializable {
         Adjust(Stat.UNALLOCATED_EXP, xp);
     }
 
-    public void PrepareForCombat(boolean attacksOnShelter) {
+    public void PrepareForCombat(boolean defendingShelter) {
         // Load data into the Combatable variables from the more persistant ones saved here.
         Combatable c = (Combatable) this;
-        c.attack = attacksOnShelter?  ShelterAttack() : OnTransportAttack();
-        c.defense = attacksOnShelter? ShelterDefense() : OnTransportDefense();
+        c.attack = defendingShelter?  ShelterAttack() : OnTransportAttack();
+        c.defense = defendingShelter? ShelterDefense() : OnTransportDefense();
         c.hp = GetInt(Stat.HP);
         c.maxHP = MaxHP();
         c.attackDamage = Damage();
         c.attacksPerTurn = AttacksPerTurn();
+        c.fleeSkill = Get(Skill.FleetRetreat).Level();
+        c.fleeBonusFromTransport = CurrentTransport().Get(TransportStat.FleeBonus);
+        c.ranAway = false; // Reset temporary variables such as fleeing.
+        consecutiveFleeAttempts = 0;
     }
     private int AttacksPerTurn()
     {
@@ -1206,17 +1182,6 @@ public class Player extends Combatable implements Serializable {
         skillTrainingQueue = player.skillTrainingQueue;
         // Other stuff? Equipment
 
-    }
-    /// Process mandatory events (findings).
-    public void ProcessMandatoryEvents() {
-        System.out.println("ProcessMandatoryEvents");
-        while (AllMandatoryEventsHandled() == false && IsAlive()) {
-            Finding f = NextEvent();
-            System.out.println("NextEvent: "+f.GetEventText());
-            Encounter enc = new Encounter(f, this); // Create encounter from the finding and this player.
-            enc.Simulate();
-        //    PopEvent(f);
-        }
     }
 
     public void InformListeners() {

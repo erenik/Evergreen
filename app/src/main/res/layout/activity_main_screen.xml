@@ -26,7 +26,17 @@
             <!-- All content except the last 3 buttons. -->
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
 
+
                 <ImageView style="@style/Evergreen.Logo" android:layout_width="match_parent" android:layout_height="100sp" />
+                <LinearLayout style="@style/Evergreen.Layout">
+                    <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content"  android:layout_marginLeft="6sp" >
+                        <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/icon" android:layout_height="80sp" android:layout_width="80sp" />
+                        <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/av_lumberjack" android:padding="1sp" android:scaleType="fitCenter" android:layout_height="65sp"
+                            android:layout_width="65sp" android:layout_gravity="center" android:layout_marginBottom="2sp" />
+                    </FrameLayout>
+                    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.TextBiggest" android:text="Placeholder" android:layout_gravity="center"
+                        android:id="@+id/textViewName"/>
+                </LinearLayout>
 
                 <!-- /// First Row of stats -->
                 <include layout="@layout/row_of_main_stat_icons"/>

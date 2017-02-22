@@ -95,6 +95,9 @@
         <item name="android:padding">@dimen/textPadding.More</item>
         <item name="android:layout_margin">@dimen/textMargin.More</item>
     </style>
+    <style name="Evergreen.Text.Title.Smaller">
+        <item name="android:textSize">@dimen/textSize.Title.Smaller</item>
+    </style>
 
     <style name="Evergreen.Checkbox">
         <item name="android:layout_width">0px</item>
@@ -205,4 +208,11 @@
         <item name="android:orientation">vertical</item>
     </style>
 
+    <style name="Evergreen.Layout.Log">
+        <item name="android:layout_width">match_parent</item>
+    </style>
+    <style name="Evergreen.ScrollViewLog">
+<!--        <item name="android:background">@drawable/chatlogbg</item>-->
+        <item name="android:layout_width">match_parent</item>
+    </style>
 </resources>

@@ -14,80 +14,36 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
+        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller" android:text="Placeholder" android:id="@+id/textViewSelectTitle"
+            android:textAlignment="center" android:layout_width="match_parent" />
+        <!-- Main upper part with lists -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:layout_weight="0.25"
+            android:layout_weight="0.55"
             >
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="3"
-                >
-                <!-- First a scroll-view with the selectable skills or actions -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Possible items"
-                    android:textColor="@color/mainTextColor"
-                    android:id="@+id/textViewPossibleItems"
+            <LinearLayout style="@style/Evergreen.Layout.Vertical" android:layout_weight="3" >
+                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text"
+                    android:text="Possible items" android:id="@+id/textViewPossibleItems"
                     />
                 <!--android:layout_weight="wrap_content" -->
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="0px"
-                    android:layout_weight="3"
-                    >
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/layoutItems"
-                        android:orientation="vertical">
-
+                <!-- First a scroll-view with the selectable skills or actions -->
+                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3">
+                    <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutItems">
                     </LinearLayout>
                 </ScrollView>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="3"
-                >
+            <LinearLayout style="@style/Evergreen.Layout.Vertical" android:layout_weight="3">
                 <!-- Then the scroll-view with skills that we have added/queued to perform -->
-                <TextView
-                    style="@style/Evergreen.Text"
-                    android:text="Current Queue"
-                    android:id="@+id/textViewHeader2"
-                    />
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="0px"
-                    android:layout_weight="3"
-                    >
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/layoutQueue"
-                        android:orientation="vertical"
-                        >
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-                            <TextView
-                                style="@style/Evergreen.Text"
-                                android:layout_width="match_parent"
-                                android:text = "Yo"
-                                android:layout_weight="10"
-                                />
-                            <ImageView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:src="@drawable/remove"
-                                android:layout_weight="10"
-                                />
+                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Current Queue" android:id="@+id/textViewHeader2" />
+
+                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3">
+                    <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutQueue">
+                        <LinearLayout style="@style/Evergreen.Layout">
+                            <TextView style="@style/Evergreen.Text" android:layout_width="match_parent" android:text = "Yo" android:layout_weight="10" />
+                            <ImageView android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/remove" android:layout_weight="10" />
                         </LinearLayout>
                     </LinearLayout>
                 </ScrollView>
@@ -105,20 +61,12 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/spinnerSelect" />
         -->
-        <TextView
-            style="@style/Evergreen.Text"
-            android:text="Name"
-            android:id="@+id/textViewItemName"
-            android:layout_gravity="center_horizontal"
-            />
+        <erenik.evergreen.android.ui.EvergreenTextView android:layout_width="match_parent" style="@style/Evergreen.Text"
+            android:text="Name" android:id="@+id/textViewItemName" android:textAlignment="center" android:textSize="@dimen/textSize.Larger" />
 
         <!-- Scroll view for all details below! -->
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:id="@+id/scrollView2"
-            android:layout_gravity="center_horizontal" >
+        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
+            android:layout_weight="1" android:id="@+id/scrollView2" android:layout_gravity="center_horizontal" >
 
             <LinearLayout
                 android:orientation="vertical"

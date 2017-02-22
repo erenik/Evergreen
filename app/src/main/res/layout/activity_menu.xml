@@ -40,6 +40,8 @@
                         <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:text="Cloud - Local"/>
                         <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:text="Tifa - Multiplayer"/>
                     </LinearLayout>
+                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonNewCharacter" android:text="@string/newCharacter" />
+                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonDeleteAllCharacters" android:text="@string/deleteAllCharacters" />
                     <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonBackFromCharacters" android:text="@string/back" />
                 </LinearLayout>
 
