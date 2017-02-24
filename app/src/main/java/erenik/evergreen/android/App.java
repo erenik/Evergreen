@@ -374,4 +374,18 @@ public class App {
         players.clear();
         SaveLocally();
     }
+
+    public static int GetDrawableForAvatarID(int i) {
+        switch (i){
+            case 0: return R.drawable.av_00;
+            case 1: return R.drawable.av_01;
+            case 2: return R.drawable.av_02;
+            case 3: return R.drawable.av_03;
+            case 4: return R.drawable.av_04;
+            case 5: return R.drawable.av_05;
+            case 6: return R.drawable.av_06;
+            case 7: return R.drawable.av_07;
+        }
+        return R.drawable.icon;
+    }
 }

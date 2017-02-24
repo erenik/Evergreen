@@ -8,7 +8,7 @@
 
     <color name="black">#FF000000</color>
     <color name="info">#FFBBBBBB</color>
-    <color name="defeated">#FFaa1401</color>
+    <color name="defeated">#FFda1401</color>
     <color name="attacked">#FFfa4431</color>    <!-- Old attacked colors : f88000 -->
     <color name="event">#FFEEEECC</color>
     <color name="success">#FFF0F0DD</color>

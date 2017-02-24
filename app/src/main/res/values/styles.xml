@@ -94,6 +94,7 @@
         <item name="android:textSize">@dimen/textSize.Title</item>
         <item name="android:padding">@dimen/textPadding.More</item>
         <item name="android:layout_margin">@dimen/textMargin.More</item>
+        <item name="android:layout_gravity">center</item>
     </style>
     <style name="Evergreen.Text.Title.Smaller">
         <item name="android:textSize">@dimen/textSize.Title.Smaller</item>
@@ -196,7 +197,7 @@
     </style>
 
     <style name="Evergreen.Layout">
-        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
     </style>
     <style name="Evergreen.Layout.Row" parent="Evergreen.Layout">

@@ -32,6 +32,9 @@ public class EString {
             case playerPlayerAttackMiss: id = R.string.playerPlayerAttackMiss; break;
             case monsterPlayerAttackMiss: id = R.string.monsterPlayerAttackMiss; break;
             case playerMonsterAttackMiss: id = R.string.playerMonsterAttackMiss; break;
+            case playerVanquishedMonster: id = R.string.playerVanquishedMonster; break;
+            case monsterKnockedOutPlayer: id = R.string.monsterKnockedOutPlayer; break;
+            case secondLife: id = R.string.secondLife; break;
 
 
             default:

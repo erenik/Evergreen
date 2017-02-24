@@ -27,12 +27,12 @@ public enum InventionStat
     /// Ranged attacks.
     RangedAttackBonus(0), RangedDamageBonus(0),
     /// Tool stats
-    HarvestBonus(0),
-    ScavengingBonus(0),
-    RecoveryBonus(0),
-    ConstructionBonus(0),
-    InventingBonus(0),
-    ScoutingBonus(0),
+    HarvestBonus(0), // +food per Foraging,
+    ScavengingBonus(0), // +Material per Material search,
+    RecoveryBonus(0), // + HP per turn?
+    ConstructionBonus(0), // + building progress.
+    InventingBonus(0), // + inventing bonus.
+    ScoutingBonus(0), // + scouting.
     /// Shelter addition stats.
     GreenhouseProductivity(0),
     EscapePath(0),

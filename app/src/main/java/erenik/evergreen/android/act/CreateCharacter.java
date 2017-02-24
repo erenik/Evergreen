@@ -6,7 +6,6 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.Snackbar;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -24,10 +23,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -40,7 +41,10 @@ import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.android.auth.NetworkTask;
 import erenik.evergreen.android.auth.NetworkTaskListener;
+import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.player.Stat;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -64,13 +68,44 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    int avatarID = 0;
+    String bonus = "";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_create_character);
+
+        Spinner spinnerStartingBonus = (Spinner) findViewById(R.id.spinnerStartingBonus);
+        spinnerStartingBonus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TextView b = (TextView) view;
+                System.out.println("Bonus selected: "+b.getText());
+                bonus = (String) b.getText();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        // Populate spinner for starting bonus
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.starting_bonus, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerStartingBonus.setAdapter(adapter);
+
+        ImageButton ib = (ImageButton) findViewById(R.id.buttonSelectAvatar);
+        ib.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), SelectAvatar.class);
+                startActivityForResult(intent, SELECT_AVATAR);
+                return;
+            }
+        });
 
         /// If local game, hide the e-mail and password annoying shits.
         if (App.isLocalGame) {
@@ -96,15 +131,6 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
                 }
             });
         }
-
-        // Populate spinner for starting bonus
-        Spinner spinner = (Spinner) findViewById(R.id.startingBonus);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.starting_bonus, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
 
         findViewById(R.id.buttonGenerateName).setOnClickListener(new OnClickListener() {
             @Override
@@ -133,6 +159,20 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
         /// Request games list, should maybe fetch it even earlier..?
         GetGamesList();
+    }
+
+    int SELECT_AVATAR = 314;
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == SELECT_AVATAR) {
+            if (resultCode > 0) {
+                avatarID = resultCode;
+                // Update the profile pic?
+                ImageButton ib = (ImageButton) findViewById(R.id.buttonSelectAvatar);
+                ib.setImageResource(App.GetDrawableForAvatarID(avatarID));
+            }
+        }
     }
 
     private void populateAutoComplete() {
@@ -180,9 +220,47 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
     // Attempts to sign in or register the account specified by the login form. * If there are form errors (invalid email, missing fields, etc.), the * errors are presented and no actual login attempt is made.
     private void registerCharacter() {
-        Player player = new Player();
         EditText et  = (EditText) findViewById(R.id.textEditName);
+        if (et.getText().toString().length() < 1) {
+            Toast("Please give your character at least 1 letter... Poor thing.");
+            return;
+        }
+        Player player = new Player();
         player.SetName(et.getText().toString());
+        player.Set(Stat.Avatar, avatarID);
+        // Check the requested starting item.
+        if (bonus.equals("Food supply")){
+            player.Log("You find "+20+" units of food in the vicinity.", LogType.INFO);
+            player.Adjust(Stat.FOOD, 20);
+        }
+        else if (bonus.equals("Materials supply")){
+            player.Log("You find "+10+" units of materials in the vicinity.", LogType.INFO);
+            player.Adjust(Stat.MATERIALS, 10);
+        }
+        else if (bonus.equals("A weapon")) {
+            Invention randomWeapon = Invention.RandomWeapon(0);
+            player.Log("You find a "+randomWeapon.name+" in the vicinity.", LogType.INFO);
+            player.inventory.add(randomWeapon);
+            player.Equip(randomWeapon); // Equip it from start?
+        }
+        else if (bonus.equals("A body armor")){
+            Invention armor = Invention.RandomArmor(0);
+            player.Log("You find a "+armor.name+" in the vicinity.", LogType.INFO);
+            player.inventory.add(armor);
+            player.Equip(armor); // Equip it from start?
+        }
+        else if (bonus.equals("A tool")){
+            Invention tool = Invention.RandomTool(0);
+            player.Log("You find a "+tool.name+" in the vicinity.", LogType.INFO);
+            player.inventory.add(tool);
+            player.Equip(tool);
+        }
+        else if (bonus.equals("2 inventions")){
+            player.Log("You find 2 invention blueprints in the vicinity.", LogType.INFO);
+            player.inventions.add(Invention.Random(0));
+            player.inventions.add(Invention.Random(0));
+        }
+
         if (App.isLocalGame) {
             /// Just make a player using the chosen config on this screen and go to the main menu without waiting.
             App.RegisterPlayer(player);

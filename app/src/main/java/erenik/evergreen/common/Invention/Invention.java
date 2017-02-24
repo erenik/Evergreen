@@ -72,12 +72,35 @@ public class Invention implements Serializable
             stats[i] = InventionStat.values()[i].defaultValue;
         }
     }
-    public static Invention RandomWeapon(int bonus)
-    {
+    public static Invention Random(int qualityLevel) {
+        int roll = Dice.RollD3(1);
+        switch (roll){
+            case 0: return RandomWeapon(qualityLevel);
+            case 1: return RandomArmor(qualityLevel);
+            case 2: return RandomTool(qualityLevel);
+        }
+        return null;
+    }
+
+    public static Invention RandomWeapon(int qualityLevel) {
         Invention weap = new Invention(InventionType.Weapon);
+        weap.Set(InventionStat.QualityLevel, qualityLevel);
         weap.RandomizeDetails();
         return weap;
     }
+    public static Invention RandomArmor(int qualityLevel) {
+        Invention armor = new Invention(InventionType.Armor);
+        armor.Set(InventionStat.QualityLevel, qualityLevel);
+        armor.RandomizeDetails();
+        return armor;
+    }
+    public static Invention RandomTool(int qualityLevel) {
+        Invention tool = new Invention(InventionType.Tool);
+        tool.Set(InventionStat.QualityLevel, qualityLevel);
+        tool.RandomizeDetails();
+        return tool;
+    }
+
     public int Get(InventionStat stat)
     {
         return stats[stat.ordinal()];
@@ -100,8 +123,7 @@ public class Invention implements Serializable
         return Get(InventionStat.SubType);
     }
     /// Randomizes details based on current stats.
-    public void RandomizeDetails()
-    {
+    public void RandomizeDetails() {
         // Fetch all details from the array? Just quality level?
         qualityLevel = Get(InventionStat.QualityLevel);
         inventionSubType = Get(InventionStat.SubType);
@@ -147,13 +169,32 @@ public class Invention implements Serializable
                 rangedAtkDmgBonus += 1 + qualityLevel * 1.5;
                 break;
             case Tool:
-                int diceRoll = Dice.RollD6(1);
-                switch(diceRoll)
-                {
+                int diceRoll = Dice.RollD6(1) - 1;
+                switch(diceRoll) {
                     default:
                     case 0:
-                        harvestBonus += Dice.RollD3(1) + qualityLevel;
+                        harvestBonus += 2 + qualityLevel;
                         name = "Harvester kit";
+                        break;
+                    case 1:
+                        scavBonus += 2 + qualityLevel;
+                        name = "Scavenging kit";
+                        break;
+                    case 2:
+                        recoBonus += 2 + qualityLevel;
+                        name = "First aid kit";
+                        break;
+                    case 3:
+                        constBonus += 2 + qualityLevel;
+                        name = "Construction tools kit";
+                        break;
+                    case 4:
+                        inventBonus += 2 + qualityLevel;
+                        name = "Inventor's kit";
+                        break;
+                    case 5:
+                        scoutBonus += 2 + qualityLevel;
+                        name = "Scout's kit";
                         break;
                 }
                 break;
@@ -188,6 +229,12 @@ public class Invention implements Serializable
         Set(InventionStat.RangedDamageBonus, rangedAtkDmgBonus);
         // Tools stats
         Set(InventionStat.HarvestBonus, harvestBonus);
+        Set(InventionStat.ScavengingBonus, scavBonus); // Material searching
+        Set(InventionStat.RecoveryBonus, recoBonus);
+        Set(InventionStat.ConstructionBonus, constBonus);
+        Set(InventionStat.InventingBonus, inventBonus);
+        Set(InventionStat.ScoutingBonus, scoutBonus);
+
     }
 
     public void UpdateWeaponStats()
@@ -348,4 +395,5 @@ public class Invention implements Serializable
         FetchStatsFromArray();
         return atkDmgDice * atkDmgDiceType + atkDmgBonus;
     }
+
 }

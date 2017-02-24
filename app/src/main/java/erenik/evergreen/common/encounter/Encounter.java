@@ -122,6 +122,8 @@ public class Encounter {
     /// Step-wise iterative Simulation
     public void Simulate() {
         PrepareForCombat(); // Prepare before simulation. Should make all prepared...
+        if (PlayersDead())
+            return; // Skip simulation if players already dead previously?
         System.out.println("Simulating encounter");
         /// Will vary based on EncounterActivity-type and equipped weapons etc.
         int defenderFreeAttacks = 1;
@@ -238,7 +240,8 @@ public class Encounter {
     void DoCombatRound(List<Combatable> activeCombatants, List<Combatable> opposingCombatants){
         for (int i = 0; i < activeCombatants.size(); ++i) {
             Combatable c = activeCombatants.get(i);
-
+            if (c.hp <= 0 || c.ranAway) // Skip those not relevant anymore - i.e. dead or ran away.
+                continue;
             // Flee? Under 25%?
             if (c.runsAway && (c.hp / c.maxHP) <  c.runAwayAtHPPercentage) {
                 System.out.println("Trying to run away!");

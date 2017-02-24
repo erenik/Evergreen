@@ -20,5 +20,6 @@ public enum LogTextID {
     // Max 1 encounter per scouting sessions? Number determines strength?
     scoutRandomEncounter,
     playerPlayerAttack, playerMonsterAttack, monsterPlayerAttack, playerPlayerAttackMiss, monsterPlayerAttackMiss, playerMonsterAttackMiss, playerVanquishedMonster, monsterKnockedOutPlayer,
+    secondLife,
 
 }

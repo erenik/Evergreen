@@ -9,6 +9,7 @@ public enum Stat {
     TurnSurvived(0),
     /// Config stats.
     Difficulty(0), // 0 - Easiest, 10% progress lost upon death (all stats n skills). 1 - Easy, 20%, 2 - Medium, 35% loss, 3 - Hard, 50% loss, 4 - Unforgiving, 75% loss. 5 - Wipeout, 100%, hardcore
+    Avatar(0), // The profile picture they choose on character creation.
     RunAway(0.25f), // Default HP-percentage when the player wants to run for his/her life to survive combats (if applicable).
     /// Current stats.
     Lives(5), // Lives, depends on difficulty. Counts down on each KO.

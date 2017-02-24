@@ -39,6 +39,8 @@ import java.io.ObjectStreamException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static erenik.evergreen.common.Invention.InventionStat.InventingBonus;
+
 /**
  * Created by Emil on 2016-10-25.
  */
@@ -203,6 +205,7 @@ public class Player extends Combatable implements Serializable {
         out.writeObject(knownPlayerNames);
         out.writeObject(logTypesToShow);
         out.writeBoolean(isAI);
+        out.writeLong(lastEditSystemMs);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
         Init();
@@ -232,6 +235,7 @@ public class Player extends Combatable implements Serializable {
         knownPlayerNames = (ArrayList<String>) in.readObject();
         logTypesToShow = (List<LogType>) in.readObject();
         isAI = in.readBoolean();
+        lastEditSystemMs = in.readLong();
         System.out.println("Init from readOBject!");
 
     }
@@ -250,8 +254,7 @@ public class Player extends Combatable implements Serializable {
     {
         return GetInt(Stat.HP) > 0;
     }
-    int Speed()
-    {
+    int Speed() {
         return GetInt(Stat.SPEED);
     }
     public int UnarmedCombatBonus() {
@@ -466,9 +469,24 @@ public class Player extends Combatable implements Serializable {
             Encounter enc = encountersToProcess.get(i);
             enc.Simulate();
         }
+        if (IsAlive() == false)
+            KnockOut();
 
         for (int i = 0; i < listeners.size(); ++i) // Inform listeners, new day is over.
             listeners.get(i).OnPlayerNewDay(this);
+    }
+
+    private void KnockOut() {
+        System.out.println("Knocking out...!");
+        Adjust(Stat.Lives, -1);
+        if (Get(Stat.Lives) <= 0){ // Fully dead?
+            return;
+        }
+        Set(Stat.HP, Get(Stat.MAX_HP) / 2); // Reset HP to 25% of max.
+        Adjust(Stat.FOOD, Get(Stat.FOOD) * -0.75f); // Reduce food.
+        Adjust(Stat.MATERIALS, Get(Stat.MATERIALS) * -0.75f); // Reduce food.
+        // Reduce other stuff?
+        Log(new Log(LogTextID.secondLife, LogType.INFO));
     }
 
     public void ClampHP()
@@ -530,9 +548,10 @@ public class Player extends Combatable implements Serializable {
         switch (da)
         {
             case GatherFood:
-                units = Dice.RollD3(2);  // r.nextInt(5) + 2;
+                units = Dice.RollD3(2);  // 2 to 6 base.
                 units += Get(Skill.Foraging).Level();
                 units += CurrentTransport().Get(TransportStat.ForagingBonus);
+                units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
                 if (units < 1) units = 1;
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
@@ -540,16 +559,21 @@ public class Player extends Combatable implements Serializable {
                 Log(da.text + ": Found " + Stringify(units) + " units of food.", LogType.INFO);
                 break;
             case GatherMaterials:
-                units = Dice.RollD3(2);
+                units = Dice.RollD3(2); // 2 to 6 base.
                 units += CurrentTransport().Get(TransportStat.MaterialGatheringBonus);
+                units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
                 Adjust(Stat.MATERIALS, units);
                 break;
-            case Scout: Scout(); break;
+            case Scout:
+                Scout();
+                break;
             case Recover:
-                units = 0.5f * hoursPerAction * (1 + 0.5f * Get(Skill.Survival).Level()); // Recovery +50/100/150/200/250%
+                units = (1 + 0.5f * Get(Skill.Survival).Level()); // 1 + 0.5 for each survival skill.
+                units += GetEquipped(InventionStat.RecoveryBonus); // +2 for First aid kit, for example.
+                units *= 0.5f * hoursPerAction; // Recovery +50/100/150/200/250%
                 units *= t_starvingModifier;
                 Adjust(Stat.HP, units);
                 ClampHP();
@@ -880,6 +904,7 @@ public class Player extends Combatable implements Serializable {
         float bonusFromInventingBefore = 0.001f * getInventionProgress(type, -1) + 0.025f * getInventionProgress(type, subType);
         float inventingLevel = Get(Skill.Inventing).Level();
         float rMax = (1.f + 0.05f * inventingLevel + bonusFromInventingBefore) * relativeChance;
+        rMax += 0.07f * GetEquipped(InventingBonus);  /// Random max increases by +0.07 (7%) for each point in inventing gear.
         float random = r.nextFloat() * rMax; // Random 0 to 1 + 0.1 max for each Inventing level, * relChance
         float successThreshold = 0.75f - successiveInventingAttempts * 0.03f - inventingLevel * 0.02f; // Increase success possibility with higher inventing skill, and for each attempt in succession.
         System.out.println("randomed: "+random+" out of 0-"+rMax+", successThreshold: "+successThreshold+" bonusFromBefore: "+bonusFromInventingBefore);
@@ -906,12 +931,12 @@ public class Player extends Combatable implements Serializable {
         return inv;
     }
 
-    void Scout()
-    {
-        int speed = Speed();
-        speed += CurrentTransport().Get(TransportStat.SpeedBonus);
+    void Scout() {
+        int speed = Speed(); //  1 base.
+        speed += CurrentTransport().Get(TransportStat.SpeedBonus); // + based on transport.
+        speed += GetEquipped(InventionStat.ScoutingBonus); // Add scouting bonus from gear. e.g. +2
         // Randomize something each hour? Many things with speed?
-        float speedBonus = (float) Math.pow(speed, 0.5f);
+        float speedBonus = (float) Math.pow(speed, 0.5f); // Square root we made earlier.
         System.out.println("Speed: "+speed+" bonus(pow-modified): "+speedBonus);
         float toRandom = hoursPerAction * speedBonus;
         toRandom *= t_starvingModifier;
@@ -994,10 +1019,10 @@ public class Player extends Combatable implements Serializable {
         Log(s, LogType.INFO);
 
     }
-    void BuildDefenses()
-    {
+    void BuildDefenses() {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
-        float progress = Dice.RollD3(2 + Get(Skill.Architecting).Level());
+        float progress = Dice.RollD3(2 + Get(Skill.Architecting).Level()); // 2 to 6, increases by 1D3 for each skill in architecting.
+        progress *= 1 + 0.25f * GetEquipped(InventionStat.ConstructionBonus); // + Construction bonus from gear, in percentage., e.g. + 50% for a basic construction kit.
         progress /= Get(Stat.SHELTER_DEFENSE);
         progress *= t_starvingModifier;
         CalcMaterialModifier();

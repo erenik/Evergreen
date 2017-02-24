@@ -22,38 +22,20 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
+    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller" android:text="So, who are you?" />
+
     <ScrollView
         android:id="@+id/login_form"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
-            android:id="@+id/email_login_form"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+        <LinearLayout android:id="@+id/email_login_form" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="So, who are you?"
-                android:textSize="24dp"
-                android:textStyle="bold"
-                android:layout_gravity="center"
-                />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="16dp"
-                >
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="Name:" />
-                <EditText android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/textEditName"
+            <LinearLayout style="@style/Evergreen.Layout">
+                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Name:" />
+                <EditText android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/textEditName"
                     android:inputType="textPersonName" android:layout_weight="1"
-                    android:imeOptions="actionNext"
-                    />
+                    android:imeOptions="actionNext" />
                 <erenik.evergreen.android.ui.EvergreenButton
                     android:id="@+id/buttonGenerateName"
                     android:layout_width="125dp"
@@ -111,13 +93,10 @@
                 android:layout_marginTop="32dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-                <erenik.evergreen.android.ui.EvergreenTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="Avatar" android:layout_gravity="center"/>
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="64dp"
-                    android:src="@drawable/icon"/>
+                <erenik.evergreen.android.ui.EvergreenTextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="Choose Avatar" android:layout_gravity="center"/>
+                <ImageButton android:layout_width="80dp" android:layout_height="80dp"
+                    android:src="@drawable/av_00" android:padding="10dp" android:scaleType="fitCenter" android:background="@drawable/icon" android:id="@+id/buttonSelectAvatar" />
 
             </LinearLayout>
 
@@ -128,12 +107,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" android:text="Starting item"
                     />
-                <Spinner
-                    android:id="@+id/startingBonus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    >
-                </Spinner>
+                <Spinner android:id="@+id/spinnerStartingBonus" android:layout_width="match_parent" android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <View android:layout_width="match_parent"

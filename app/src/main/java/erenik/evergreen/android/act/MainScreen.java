@@ -53,6 +53,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     {   @Override
         public void onClick(View v) {
             Player player = App.GetPlayer();
+            player.lastEditSystemMs = System.currentTimeMillis(); // Update so auto-loaded works for the most recently-played player-character. :)
             System.out.println("Next day!");
             // Local game? less to think about.
             if (App.isLocalGame) {
@@ -133,6 +134,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             Toast("Trying to update gui with null player D:");
             return;
         }
+        ((ImageView) findViewById(R.id.imageView_avatar)).setImageResource(App.GetDrawableForAvatarID((int) player.Get(Stat.Avatar)));
         SetText(R.id.textViewName, player.name);
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");

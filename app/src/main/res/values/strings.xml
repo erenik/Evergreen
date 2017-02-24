@@ -242,5 +242,8 @@
     <string name="playerPlayerAttackMiss">(arg) tries to attack (arg), but misses.</string>
     <string name="monsterPlayerAttackMiss">The (arg) tries to attack (arg), but misses.</string>
     <string name="playerMonsterAttackMiss">(arg) tries to attack the (arg), but misses.</string>
+    <string name="secondLife">For some miraculous reason you are still alive. Prepare yourself, or suffer a worse fate soon...</string>
+    <string name="monsterKnockedOutPlayer">The (arg) knocked (arg) unconscious.</string>
+    <string name="playerVanquishedMonster">(arg) vanquished the (arg).</string>
 
 </resources>

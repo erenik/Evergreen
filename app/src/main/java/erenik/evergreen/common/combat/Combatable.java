@@ -140,7 +140,7 @@ public class Combatable extends Object
             else
                 enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
 //                enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",isPlayer ? LogType.ATTACK : LogType.ATTACKED);
-            if (target.hp  < 0){ // Killed player?
+            if (target.hp  <= 0){ // Killed player?
                 enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
                 return true;
             }
