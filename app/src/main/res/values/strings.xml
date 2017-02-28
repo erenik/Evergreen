@@ -245,5 +245,9 @@
     <string name="secondLife">For some miraculous reason you are still alive. Prepare yourself, or suffer a worse fate soon...</string>
     <string name="monsterKnockedOutPlayer">The (arg) knocked (arg) unconscious.</string>
     <string name="playerVanquishedMonster">(arg) vanquished the (arg).</string>
+    <string name="weapons">Weapons</string>
+    <string name="armor">Armor</string>
+    <string name="tools">Tools</string>
+    <string name="title_activity_item_details">ItemDetails</string>
 
 </resources>

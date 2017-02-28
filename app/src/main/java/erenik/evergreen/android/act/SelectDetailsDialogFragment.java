@@ -131,13 +131,14 @@ public class SelectDetailsDialogFragment extends DialogFragment
                 case Transport:
                     choices = Transport.GetStrings();
                     break;
+                /*
                 case TransportAugment:
-                    for (int j = 0; j < player.inventions.size(); ++j)
-                    {
+                    for (int j = 0; j < player.inventions.size(); ++j) {
                         if (player.inventions.get(j).type == InventionType.VehicleUpgrade)
                             choices.add(player.inventions.get(j).name);
                     }
                     break;
+                    */
                 case Player:
                     choices = player.KnownPlayerNames();
                     break;
@@ -161,8 +162,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
                     break;
                 case InventionToCraft:
                     System.out.println("InventionToCraft");
-                    for (int j = 0; j < player.inventions.size(); ++j)
-                    {
+                    for (int j = 0; j < player.inventions.size(); ++j) {
                         Invention inv = player.inventions.get(j);
                         if (inv.IsCraftable()) {
                             System.out.println("inv: "+inv.name);

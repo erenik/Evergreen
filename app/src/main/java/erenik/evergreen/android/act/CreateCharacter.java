@@ -70,6 +70,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
     private View mLoginFormView;
     int avatarID = 0;
     String bonus = "";
+    private String difficulty = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +97,8 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerStartingBonus.setAdapter(adapter);
+
+        SetupDifficultySpinner();
 
         ImageButton ib = (ImageButton) findViewById(R.id.buttonSelectAvatar);
         ib.setOnClickListener(new OnClickListener() {
@@ -161,6 +164,29 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         GetGamesList();
     }
 
+    private void SetupDifficultySpinner() {
+        Spinner spinnerDifficulty = (Spinner) findViewById(R.id.spinnerDifficulty);
+        spinnerDifficulty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TextView b = (TextView) view;
+                System.out.println("Difficulty selected: "+b.getText());
+                difficulty = (String) b.getText();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        // Populate spinner for starting bonus
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.difficulty, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDifficulty.setAdapter(adapter);
+    }
+
     int SELECT_AVATAR = 314;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -220,7 +246,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
     // Attempts to sign in or register the account specified by the login form. * If there are form errors (invalid email, missing fields, etc.), the * errors are presented and no actual login attempt is made.
     private void registerCharacter() {
-        EditText et  = (EditText) findViewById(R.id.textEditName);
+        EditText et = (EditText) findViewById(R.id.textEditName);
         if (et.getText().toString().length() < 1) {
             Toast("Please give your character at least 1 letter... Poor thing.");
             return;
@@ -228,39 +254,41 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         Player player = new Player();
         player.SetName(et.getText().toString());
         player.Set(Stat.Avatar, avatarID);
+        String[] difficulties = getResources().getStringArray(R.array.difficulty);
+        for (int i = 0; i < difficulties.length; ++i) {
+            if (difficulty.equals(difficulties[i])) {
+                player.Set(Stat.Difficulty, i);
+                System.out.println("Difficulty set to: "+i);
+            }
+        }
+        player.AssignResourcesBasedOnDifficulty();
         // Check the requested starting item.
-        if (bonus.equals("Food supply")){
-            player.Log("You find "+20+" units of food in the vicinity.", LogType.INFO);
+        if (bonus.equals("Food supply")) {
+            player.Log("You find " + 20 + " units of food in the vicinity.", LogType.INFO);
             player.Adjust(Stat.FOOD, 20);
-        }
-        else if (bonus.equals("Materials supply")){
-            player.Log("You find "+10+" units of materials in the vicinity.", LogType.INFO);
+        } else if (bonus.equals("Materials supply")) {
+            player.Log("You find " + 10 + " units of materials in the vicinity.", LogType.INFO);
             player.Adjust(Stat.MATERIALS, 10);
-        }
-        else if (bonus.equals("A weapon")) {
-            Invention randomWeapon = Invention.RandomWeapon(0);
-            player.Log("You find a "+randomWeapon.name+" in the vicinity.", LogType.INFO);
+        } else if (bonus.equals("A weapon")) {
+            Invention randomWeapon = Invention.RandomWeapon(player.BonusFromDifficulty()/3);
+            player.Log("You find a " + randomWeapon.name + " in the vicinity.", LogType.INFO);
             player.inventory.add(randomWeapon);
             player.Equip(randomWeapon); // Equip it from start?
-        }
-        else if (bonus.equals("A body armor")){
-            Invention armor = Invention.RandomArmor(0);
-            player.Log("You find a "+armor.name+" in the vicinity.", LogType.INFO);
+        } else if (bonus.equals("A body armor")) {
+            Invention armor = Invention.RandomArmor(player.BonusFromDifficulty()/3);
+            player.Log("You find a " + armor.name + " in the vicinity.", LogType.INFO);
             player.inventory.add(armor);
             player.Equip(armor); // Equip it from start?
-        }
-        else if (bonus.equals("A tool")){
-            Invention tool = Invention.RandomTool(0);
-            player.Log("You find a "+tool.name+" in the vicinity.", LogType.INFO);
+        } else if (bonus.equals("A tool")) {
+            Invention tool = Invention.RandomTool(player.BonusFromDifficulty()/3);
+            player.Log("You find a " + tool.name + " in the vicinity.", LogType.INFO);
             player.inventory.add(tool);
             player.Equip(tool);
-        }
-        else if (bonus.equals("2 inventions")){
+        } else if (bonus.equals("2 inventions")) {
             player.Log("You find 2 invention blueprints in the vicinity.", LogType.INFO);
-            player.inventions.add(Invention.Random(0));
-            player.inventions.add(Invention.Random(0));
+            player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
+            player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
         }
-
         if (App.isLocalGame) {
             /// Just make a player using the chosen config on this screen and go to the main menu without waiting.
             App.RegisterPlayer(player);

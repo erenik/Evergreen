@@ -40,6 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static erenik.evergreen.common.Invention.InventionStat.InventingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
 
 /**
  * Created by Emil on 2016-10-25.
@@ -752,8 +753,7 @@ public class Player extends Combatable implements Serializable {
         return knownNames;
     }
 
-    private void Craft(DAction da)
-    {
+    private void Craft(DAction da) {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
         // How many times to random.
         float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
@@ -768,8 +768,7 @@ public class Player extends Combatable implements Serializable {
         String whatToCraft = da.requiredArguments.get(0).value;
         whatToCraft = whatToCraft.trim();
         Invention toCraft = null;
-        for (int i = 0; i < inventions.size(); ++i)
-        {
+        for (int i = 0; i < inventions.size(); ++i) {
             Invention inv = inventions.get(i);
             System.out.println("Invention names: "+inv.name+", toCraft: "+whatToCraft);
             if (inv.name.equals(whatToCraft))
@@ -795,39 +794,34 @@ public class Player extends Combatable implements Serializable {
         }
         progressGained += progress;
         /// Success.
-        if (progress > progressRequired)
-        {
+        if (progress >= progressRequired) {
             // Crafted!
-            Invention newWeapon = new Invention(toCraft);
+            Invention newlyCraftedObject = toCraft.CraftInventionFromBlueprint();
             float ratioOverProgressed = (progress - progressRequired) / progressRequired;
             System.out.println("ratioOverProgressed: "+ratioOverProgressed);
             Random rCrafting = new Random(System.nanoTime());
             int levelAdjustment = 0;
-            while(ratioOverProgressed > 0)
-            {
+            while(ratioOverProgressed > 0) {
                 float randF = rCrafting.nextFloat();
-                if (randF < ratioOverProgressed)
-                {
+                if (randF < ratioOverProgressed) {
                     System.out.println("level increased +1");
                 }
                 ratioOverProgressed -= randF;
             }
-            newWeapon.Set(InventionStat.QualityLevel, newWeapon.Get(InventionStat.QualityLevel) + levelAdjustment);
+            newlyCraftedObject.Set(InventionStat.QualityLevel, newlyCraftedObject.Get(InventionStat.QualityLevel) + levelAdjustment);
             // Update quality level.
-            newWeapon.UpdateWeaponStats();
-            newWeapon.UpdateWeaponAdditionalEffect();
-            inventory.add(newWeapon);
-            Log("Crafting complete: "+newWeapon.name, LogType.INFO);
+            newlyCraftedObject.UpdateDetails();
+            inventory.add(newlyCraftedObject);
+            Log("Crafting complete: "+newlyCraftedObject.name, LogType.INFO);
         }
         else
         {
-            Log("Crafting progressed by "+progressGained+" units.", LogType.INFO);
+            Log("Crafting progressed by "+progress+" units. Progress is now at "+progressGained+" out of "+progressRequired+".", LogType.INFO);
             // Store as unfinished business?
         }
     }
 
-    private void Invent(DAction inventAction)
-    {
+    private void Invent(DAction inventAction) {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
         // How many times to random.
         float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
@@ -837,23 +831,18 @@ public class Player extends Combatable implements Serializable {
         // Check if inveting has been queued for any special item?
         boolean inventedSomething = false;
         System.out.println("toRandom iterations: "+toRandom);
-        for (int i = 0; i < toRandom; ++i) // Times to random.
-        {
+        for (int i = 0; i < toRandom; ++i) { // Times to random.
             float relativeChance = toRandom > 1.0 ? 1 : toRandom;
             InventionType type = null;
-//            System.out.println("Args? "+da.requiredArguments.size());
-            if (da.requiredArguments.size() > 0)
-            {
+            if (da.requiredArguments.size() > 0) {
                 String typeStr = da.requiredArguments.get(0).value;
-  //              System.out.println("Typestr: "+typeStr);
                 type = InventionType.GetFromString(typeStr);
             }
             if (type == null) {
                 Log("Bad invention type", LogType.Error);
                 return;
             }
-            if (type == InventionType.Any)
-            {
+            if (type == InventionType.Any) {
                 type = InventionType.RandomType();
                 relativeChance += 0.05f; // + 5% chance of inventing if random?
                 System.out.println("Type: "+type.name());
@@ -864,7 +853,7 @@ public class Player extends Combatable implements Serializable {
                 successiveInventingAttempts = 0;
                 inventedSomething = true;
                 // Add it to inventory too.
-                inventory.add(new Invention(inv));
+                inventory.add(inv.CraftInventionFromBlueprint());
                 // Don't auto-equip... Present dialog for it.
              //   Equip(inv);
             }
@@ -896,9 +885,8 @@ public class Player extends Combatable implements Serializable {
         }
         return progress;
     }
-    Invention AttemptInvent(InventionType type, float relativeChance)
-    {
-        Invention inv = new Invention(type);
+    Invention AttemptInvent(InventionType type, float relativeChance) {
+        Invention inv = Invention.CreateBlueprint(type);
         int subType = inv.RandomizeSubType();
         // 1.0 base, + 0.1 for each level in Inventing, +0.25 of the invention progress in the same category/main invention type and 1x subtype progress.
         float bonusFromInventingBefore = 0.001f * getInventionProgress(type, -1) + 0.025f * getInventionProgress(type, subType);
@@ -1248,4 +1236,25 @@ public class Player extends Combatable implements Serializable {
     public float AggregateAttackBonus() {
         return BaseAttack() * (1 + 0.12f * (Damage().Average() - 3.5f)) * (1 + 0.5f * (AttacksPerTurn() - 1));
     }
+    public float AggregateDefenseBonus() {
+        return BaseDefense() * (1 + 0.12f * GetEquipped(ParryBonus)); // Add parry bonus to reflect total defense.
+    }
+
+    public void AssignResourcesBasedOnDifficulty() {
+        int diff = (int) Get(Stat.Difficulty); // from 0 easiest to 5 Wipeout.
+        int multiplier = 6 - diff;
+        Set(Stat.MAX_HP, Stat.MAX_HP.defaultValue + 2 * BonusFromDifficulty());
+        Set(Stat.FOOD, Stat.FOOD.defaultValue * multiplier);
+        Set(Stat.MATERIALS, Stat.MATERIALS.defaultValue * multiplier);
+        Set(Stat.BASE_ATTACK, Stat.BASE_ATTACK.defaultValue + multiplier);
+        Set(Stat.BASE_DEFENSE, Stat.BASE_ATTACK.defaultValue + multiplier);
+        // Heal HP.
+        Set(Stat.HP, Get(Stat.MAX_HP));
+    }
+
+    /// Just 6 - Difficulty.
+    public int BonusFromDifficulty() {
+        return (int) (6 - Get(Stat.Difficulty));
+    }
+
 }

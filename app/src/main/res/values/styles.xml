@@ -196,6 +196,11 @@
         <item name="android:paddingLeft">3sp</item>
     </style>
 
+    <style name="WrapContent">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
     <style name="Evergreen.Layout">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -216,4 +221,5 @@
 <!--        <item name="android:background">@drawable/chatlogbg</item>-->
         <item name="android:layout_width">match_parent</item>
     </style>
+
 </resources>

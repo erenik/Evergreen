@@ -41,7 +41,7 @@ public class Encounter {
     public Encounter() {
     }
     public Encounter(Player attacker, Player defender) {
-        NewEncounter(true);
+        NewEncounter();
         attackers.add(attacker);
         defenders.add(defender);
         PrepareForCombat();
@@ -55,14 +55,29 @@ public class Encounter {
             p.runAwayAtHPPercentage = 0.25f; // Should check the stats-preferences.
         }
     }
+    // Total emissions of all participating players. Sum.
+    int totalEmissions = 0;
+    void CalculateTurnAndTotalEmissions(){
+        // Calculate turn as the maximum of all involved players?
+        totalEmissions = 0;
+        for (int i = 0; i < GetInvolvedPlayers().size(); ++i) {
+            Player player = GetInvolvedPlayers().get(i);
+            totalEmissions += player.Get(Stat.EMISSIONS);
+            if (player.Get(Stat.TurnSurvived) > turn)
+                turn = (int) player.Get(Stat.TurnSurvived);
+        }
+    }
+
+    /// Adds the player as defending player in this encounter, and randomizes an encounter.
     public Encounter(Finding fromFinding, Player andMainPlayer) {
+        NewEncounter();
+        AddDefenders(andMainPlayer);
+        CalculateTurnAndTotalEmissions();
         switch(fromFinding) {
             case AttacksOfTheEvergreen:
-                NewEncounter(true);
                 AssaultsOfTheEvergreen(andMainPlayer);
                 break;
             case RandomEncounter:
-                NewEncounter(false);
                 RandomMonsterEncounter(new Dice(3, 2, 0), andMainPlayer);
                 break;
             default:
@@ -73,7 +88,7 @@ public class Encounter {
     }
 
     /// Clears old lists.
-    public void NewEncounter(boolean inShelter) {
+    public void NewEncounter() {
         attackers.clear();
         defenders.clear();
         combatants.clear();
@@ -81,6 +96,8 @@ public class Encounter {
         dead = false;
         fleeExp = 0;
         creepsKilled = 0;
+        turn = 0;
+        totalEmissions = 0;
     }
 
     // Checks total exp, compares with progress in the encounter?
@@ -93,7 +110,6 @@ public class Encounter {
     public void RandomMonsterEncounter(Dice dice, Player attackedPlayer) {
         isRandom = true;
         System.out.println("Attacked player: "+attackedPlayer.name);
-        AddDefenders(attackedPlayer);
         int level = attackedPlayer.TurnsSurvived() / 16;
         List<EnemyType> typesPossible = new ArrayList<EnemyType>();
         for (int i = 0; i < EnemyType.values().length; ++i) {
@@ -204,6 +220,7 @@ public class Encounter {
     }
     // When the encounter ends, paste in the combat log into their own logs.
     private void OnEncounterEnded() {
+        System.out.println("OnEncounterEnded");
         List<Player> players = GetInvolvedPlayers();
         for (int i = 0; i < players.size(); ++i) {
             Player player = players.get(i);
@@ -313,11 +330,12 @@ public class Encounter {
         int ri = r.nextInt(typesPossible.size());
         EnemyType et = typesPossible.get(ri);
         int totalEnemies = Dice.RollD3(d3) + Dice.RollD6(d6) + bonus;
-        int totalEmissions = 0;
-        for (int i = 0; i < GetInvolvedPlayers().size(); ++i)
-            totalEmissions += GetInvolvedPlayers().get(i).Get(Stat.EMISSIONS);
+        System.out.println("totalEnemies: "+totalEnemies+" d3: "+d3+" d6: "+d6+" bonus: "+bonus);
+        System.out.println("totalEnemies: "+totalEnemies);
         totalEnemies +=  totalEmissions / 12.5;
+        System.out.println("totalEnemies: "+totalEnemies);
         totalEnemies *= et.encounterAmount;
+        System.out.println("totalEnemies: "+totalEnemies);
         if (totalEnemies < 1)
             totalEnemies = 1;
         int iAmount = totalEnemies;

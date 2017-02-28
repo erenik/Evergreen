@@ -26,16 +26,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".android.act.IntroScreen" android:label="@string/app_name" />
-        <activity android:name=".android.act.MainScreen" android:exported="true" android:label="@string/title_activity_main_screen" />
+        <activity
+            android:name=".android.act.IntroScreen"
+            android:label="@string/app_name" />
+        <activity
+            android:name=".android.act.MainScreen"
+            android:exported="true"
+            android:label="@string/title_activity_main_screen" />
+        <activity android:name=".android.act.InventoryScreen"/>
         <activity android:name=".android.act.MenuActivity" />
         <activity android:name=".android.act.SelectActivity" />
         <activity android:name=".android.act.GameOver" />
         <activity android:name=".android.act.EncounterActivity" />
-        <activity android:name=".android.act.EventLogViewer" android:label="@string/title_activity_log_viewer" />
-        <activity android:name=".android.act.CreateCharacter" android:exported="true" android:label="@string/title_activity_create_character" />
+        <activity
+            android:name=".android.act.EventLogViewer"
+            android:label="@string/title_activity_log_viewer" />
+        <activity
+            android:name=".android.act.CreateCharacter"
+            android:exported="true"
+            android:label="@string/title_activity_create_character" />
         <activity android:name=".android.act.SelectAvatar" />
         <activity android:name=".android.act.StatViewActivity" />
+        <activity android:name=".android.act.ItemDetails"/>
     </application>
 
 </manifest>

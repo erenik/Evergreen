@@ -1,5 +1,6 @@
 package erenik.evergreen.android.act;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import java.util.List;
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
 import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
@@ -71,6 +73,20 @@ public class StatViewActivity extends EvergreenActivity {
             }
         });
         UpdateUI();        // Update UI.
+
+        findViewById(R.id.buttonRelevantItems).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getBaseContext(), InventoryScreen.class);
+                InventoryScreen.ReqCode reqCode = InventoryScreen.ReqCode.DisplayAll;
+                switch (statType){
+                    case BASE_ATTACK: reqCode = InventoryScreen.ReqCode.DisplayWeapons; break;
+                    case BASE_DEFENSE: reqCode = InventoryScreen.ReqCode.DisplayArmors; break;
+                }
+                i.putExtra("ReqCode", reqCode.ordinal());
+                startActivity(i);
+            }
+        });
     }
     /// MAIN UI Updater
     public void UpdateUI() {
@@ -93,10 +109,10 @@ public class StatViewActivity extends EvergreenActivity {
         Player player = App.GetPlayer();
         switch(statType) {
             case ATTACK_BONUS: case BASE_ATTACK:
-                tv.setText(""+player.AggregateAttackBonus());
+                tv.setText(""+(int) player.AggregateAttackBonus());
                 break;
             default:
-                tv.setText("" + player.Get(statType));
+                tv.setText("" + (int) player.Get(statType));
         }
         ImageView iv = (ImageView) findViewById(R.id.icon_image);
         iv.setImageResource(strIds[2]);
@@ -106,6 +122,7 @@ public class StatViewActivity extends EvergreenActivity {
         int[] ids = new int[]{R.id.layoutAttackDetails, R.id.layoutDefenseDetails, R.id.layoutFoodDetails};
         for (int i = 0; i < ids.length; ++i)
             findViewById(ids[i]).setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0)); // 0 height to make invisible.
+        InventionType typeRelevant = null;
         switch(statType)
         {
             case ATTACK_BONUS: case BASE_ATTACK:
@@ -116,26 +133,29 @@ public class StatViewActivity extends EvergreenActivity {
                 ((TextView)findViewById(R.id.tvAttackWhenOut)).setText(""+player.BaseAttack());
                 ((TextView)findViewById(R.id.tvAttackWhenInShelter)).setText(""+player.ShelterAttack());
                 ((TextView)findViewById(R.id.tvAttacksPerRound)).setText(""+player.attacksPerTurn);
+                typeRelevant = InventionType.Weapon;
                 break;
             case DEFENSE_BONUS: case BASE_DEFENSE:
-                idmv = R.id.layoutAttackDetails;
+                idmv = R.id.layoutDefenseDetails;
                 ((TextView)findViewById(R.id.tvDefenseWhenOut)).setText(""+player.BaseDefense());
                 ((TextView)findViewById(R.id.tvDefenseWhenInShelter)).setText(""+player.ShelterDefense());
 //                ((TextView)findViewById(R.id.tvAttackDamage)).setText
+                typeRelevant = InventionType.Armor;
                 break;
             case FOOD:
                 idmv = R.id.layoutFoodDetails;
+                typeRelevant = InventionType.Tool;
+                break;
+            default:
+                typeRelevant = InventionType.Tool;
                 break;
         }
         View detailView = findViewById(idmv);
         if (detailView != null)
             detailView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)); // 0 height to make invisible.
 
-
         // Update current bonuses, etc.
 
-        // Update relevant gear.
-        UpdateItemList((ViewGroup)(findViewById(R.id.layoutRelevantItems)), InventionType.Weapon);
 
     }
 

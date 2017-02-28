@@ -39,6 +39,7 @@ import erenik.evergreen.android.ui.EvergreenTextView;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
+import erenik.evergreen.common.Invention.Weapon;
 import erenik.evergreen.common.Invention.WeaponType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
@@ -442,6 +443,7 @@ public class EvergreenActivity extends AppCompatActivity
         // Clear it.
         vg.removeAllViews();
         Player player = App.GetPlayer();
+        int added = 0;
         for (int i = 0; i < player.inventory.size(); ++i) { // List all items of specific type.
             Invention item = player.inventory.get(i);
             if (item.type != type)
@@ -462,6 +464,8 @@ public class EvergreenActivity extends AppCompatActivity
             ll.setPadding(padding,0,padding,0);
             vg.addView(ll);
 
+            ll.setOnClickListener(itemClicked);
+
             // Make a button out of it.
             EvergreenButton b = new EvergreenButton(getBaseContext());
             b.setText(item.name);
@@ -476,23 +480,36 @@ public class EvergreenActivity extends AppCompatActivity
 
             // Add some image views of the stats, depending on the item?
             if (item.type == InventionType.RangedWeapon || item.type == InventionType.Weapon) {
-                AddIconAndBonus(InventionStat.AttackBonus, item, ll);
-                AddIconAndBonus(InventionStat.AttackDamageBonus, item, ll);
-                AddIconAndBonus(InventionStat.BonusAttacks, item, ll);
+//                AddIconAndBonus(InventionStat.AttackBonus, item, ll);
+    //            AddIconAndBonus(InventionStat.AttackDamageBonus, item, ll);
+  //              AddIconAndBonus(InventionStat.BonusAttacks, item, ll);
             }
+            if (item.type == InventionType.Armor){
+                AddIconAndBonus(InventionStat.DefenseBonus, item, ll);
+            }
+            ++added;
         }
-
+        if (added == 0){
+            Toast("Found no items.");
+        }
     }
 
+    // Does what?
     private void AddIconAndBonus(InventionStat stat, Invention item, LinearLayout ll) {
         // Add a button in the button to remove it.
         ImageButton statImageButton = new ImageButton(getBaseContext());
         statImageButton.setBackgroundColor(0x00); // SEe-through?
         int did = 0; // Drawable ID.
         String num = "";
+        Weapon w = null;
+        if (item instanceof Weapon)
+            w = (Weapon) item;
         switch(stat) {
-            case AttackBonus: did = R.drawable.weapon_accuracy; num = ""+item.Get(InventionStat.AttackBonus); break;
-            case AttackDamageBonus: did = R.drawable.weapon_damage; num = ""+item.MinimumDamage()+"-"+item.MaximumDamage(); break;
+            case AttackBonus: did = R.drawable.weapon_accuracy; num = ""+item.AttackBonus(); break;
+            case AttackDamageBonus:
+                did = R.drawable.weapon_damage;
+                num = ""+w.MinimumDamage()+"-"+w.MaximumDamage();
+                break;
             case BonusAttacks: did = R.drawable.weapon_attacks; num = ""+(1+item.Get(InventionStat.BonusAttacks)); break;
         }
         statImageButton.setImageResource(did);
@@ -522,7 +539,14 @@ public class EvergreenActivity extends AppCompatActivity
         @Override
         public void onClick(View v)
         {
-            Button b = (Button)v;
+            Button b = null;
+            if (v instanceof Button){
+                b = (Button)v;
+            }
+            else { // Layout was pressed.
+                ViewGroup vg = (ViewGroup) v;
+                b = (Button) vg.getChildAt(0);
+            }
             String itemName = (String) b.getText();
             System.out.println("Item clicked: "+itemName);
             // Equip it?
@@ -533,9 +557,14 @@ public class EvergreenActivity extends AppCompatActivity
                 {
                     // Equip it?
                     System.out.println("Found the item.");
-                    player.Equip(item);
-                    System.out.println("Equipped it.");
-                    UpdateUI();
+                    // Open screen for this item?
+                    Intent intent = new Intent(getBaseContext(), ItemDetails.class);
+                    intent.putExtra("ItemIndex", i);
+                    startActivity(intent);
+
+//                    player.Equip(item);
+  //                  System.out.println("Equipped it.");
+    //                UpdateUI();
                 }
             }
 
