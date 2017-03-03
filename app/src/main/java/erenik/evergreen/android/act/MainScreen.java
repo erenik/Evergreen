@@ -77,6 +77,9 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             focusLastLogMessageUponUpdate = true;
             UpdateGUI();
             focusLastLogMessageUponUpdate = false;
+            // Check the log for new messages -... will be there, so wtf just go to the walla walla.
+            Intent i = new Intent(getBaseContext(), ResultsScreen.class);
+            startActivity(i);
         }
     };
 

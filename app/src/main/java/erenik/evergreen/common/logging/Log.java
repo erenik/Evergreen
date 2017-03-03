@@ -18,6 +18,8 @@ public class Log implements Serializable {
      * and language chosen by the end-user.
     */
     boolean stringBasicVersion = true;
+    public boolean displayedToEndUser = false; // Default false. Set to true after user confirms on their device that they watched the log message.
+
     public boolean BasicStringVersion() { return stringBasicVersion;};
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(String s, LogType t) {
@@ -92,7 +94,7 @@ public class Log implements Serializable {
     }
     public List<String> Args(){return args;};
     /// New vars added for better cross-platform, cross-language logging.
-    LogTextID ltid;
+    LogTextID ltid = LogTextID.undefined;
     ArrayList<String> args = new ArrayList<>();
     /// Main stats.
     Date date; // Time-stamp of this log message.

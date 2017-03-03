@@ -405,7 +405,6 @@ public class EvergreenActivity extends AppCompatActivity
         int startIndex = player.log.size() - numDisplay;
         System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
-        boolean alternate = true;
         for (int i = player.log.size() - 1; i >= 0; --i) {
             Log l = player.log.get(i);
             boolean show = false;
@@ -415,22 +414,10 @@ public class EvergreenActivity extends AppCompatActivity
             }
             if (!show)
                 continue;
-            String s = l.text;
-            if (l.BasicStringVersion() == false)
-                s = App.GetLogText(l.TextID(), l.Args());
-            TextView t = new TextView(getBaseContext());
-            t.setText(s);
-            int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
-            // System.out.println("Colorizing: "+Integer.toHexString(hex));
-            t.setTextColor(hex);
-            alternate = !alternate;
-            int colorID = alternate? R.color.logColor1 : R.color.logColor2;
-            int bgHex = ContextCompat.getColor(getBaseContext(), colorID);
-            t.setBackgroundColor(bgHex);
-//            t.setBackgroundResource(R.drawable.chatlogbg);
+            // TODO: get the view.
+            View t = GetViewForLogMessage(l);
             v.addView(t, 0); // Insert at index 0 always.
-            t.setFocusable(true); // Focusable.
-            t.setFocusableInTouchMode(true);
+
             if (v.getChildCount() >= maxLogLinesInEventLog)
                 break;
         }
@@ -438,6 +425,29 @@ public class EvergreenActivity extends AppCompatActivity
         if (lastAdded != null && focusLastLogMessageUponUpdate)
             lastAdded.requestFocus(); // Request focus, make visible?
     }
+    boolean alternateLogMessageColor = false;
+
+    /// Creates and returns a new TextView for the larget log-message.
+    View GetViewForLogMessage(Log l){
+        String s = l.text;
+        if (l.BasicStringVersion() == false)
+            s = App.GetLogText(l.TextID(), l.Args());
+        TextView t = new TextView(getBaseContext());
+        t.setText(s);
+        int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
+        // System.out.println("Colorizing: "+Integer.toHexString(hex));
+        t.setTextColor(hex);
+        alternateLogMessageColor = !alternateLogMessageColor;
+        int colorID = alternateLogMessageColor? R.color.logColor1 : R.color.logColor2;
+        int bgHex = ContextCompat.getColor(getBaseContext(), colorID);
+        t.setBackgroundColor(bgHex);
+//            t.setBackgroundResource(R.drawable.chatlogbg);
+        t.setFocusable(true); // Focusable.
+        t.setFocusableInTouchMode(true);
+        return t;
+    }
+
+
 
     protected void UpdateItemList(ViewGroup vg, InventionType type) {
         // Clear it.
@@ -576,5 +586,11 @@ public class EvergreenActivity extends AppCompatActivity
         // Should be subclassed?
         System.out.println("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
     };
+
+
+    // For handling Activity Tracking.
+    void LoadTransportEvents(){
+
+    }
 
 }

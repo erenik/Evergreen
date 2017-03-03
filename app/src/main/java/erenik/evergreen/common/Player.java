@@ -424,6 +424,16 @@ public class Player extends Combatable implements Serializable {
         Transport t = Transport.RandomOf(transports);
        // System.out.println("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.ordinal());
+
+        // Calculate the general transport bonus granted from the previous day?
+
+
+        // Or just give bonuses and random events based on the distances traveled etc?
+
+
+        // Bonuses for greening habits?
+
+
         Log("Transport of the day is: "+CurrentTransport().name(), LogType.INFO);
         float emissionsToGenerate = CurrentTransport().Get(TransportStat.EmissionsPerDay);
         if (emissionsToGenerate > 0)

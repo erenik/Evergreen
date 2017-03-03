@@ -5,6 +5,7 @@ package erenik.evergreen.common.logging;
  */
 
 public enum LogTextID {
+    undefined, // To represent 0, those messages which have not been converted into LogTextID form yet.
     reduceEmissionsSuccessful,
     reduceEmissionsMostlySuccessful,
     reduceEmissionsNotSoSuccessful,
