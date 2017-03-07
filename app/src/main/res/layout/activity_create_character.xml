@@ -22,7 +22,8 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
-    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller" android:text="So, who are you?" />
+    <erenik.evergreen.android.ui.EvergreenTextView
+        style="@style/Evergreen.Text.Title.Smaller" android:text="So, who are you?" />
 
     <ScrollView
         android:id="@+id/login_form"
@@ -32,7 +33,8 @@
         <LinearLayout android:id="@+id/email_login_form" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
 
             <LinearLayout style="@style/Evergreen.Layout">
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Name:" />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Name:" />
                 <EditText android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/textEditName"
                     android:inputType="textPersonName" android:layout_weight="1"
                     android:imeOptions="actionNext" />
@@ -93,7 +95,8 @@
                 android:layout_marginTop="32dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-                <erenik.evergreen.android.ui.EvergreenTextView android:layout_width="wrap_content"
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" android:text="Choose Avatar" android:layout_gravity="center"/>
                 <ImageButton android:layout_width="80dp" android:layout_height="80dp"
                     android:src="@drawable/av_00" android:padding="10dp" android:scaleType="fitCenter" android:background="@drawable/icon" android:id="@+id/buttonSelectAvatar" />
@@ -101,11 +104,13 @@
             </LinearLayout>
             <!-- Starting item -->
             <LinearLayout style="@style/Evergreen.Layout">
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/WrapContent" android:text="Choose Starting Bonus: " />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/WrapContent" android:text="Choose Starting Bonus: " />
                 <Spinner android:id="@+id/spinnerStartingBonus" android:layout_width="match_parent" android:layout_height="wrap_content"/>
             </LinearLayout>
             <LinearLayout style="@style/Evergreen.Layout">
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/WrapContent" android:text="Choose Difficulty: " />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/WrapContent" android:text="Choose Difficulty: " />
                 <Spinner android:id="@+id/spinnerDifficulty" android:layout_width="match_parent" android:layout_height="wrap_content"/>
             </LinearLayout>
 

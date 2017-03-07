@@ -75,6 +75,7 @@ public class Log implements Serializable {
         out.writeObject(ltid);
         out.writeObject(args);
         out.writeBoolean(stringBasicVersion);
+        out.writeBoolean(displayedToEndUser);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         date = (Date) in.readObject();
@@ -83,6 +84,7 @@ public class Log implements Serializable {
         ltid = (LogTextID) in.readObject();
         args = (ArrayList<String>) in.readObject();
         stringBasicVersion = (Boolean) in.readBoolean();
+        displayedToEndUser = (Boolean) in.readBoolean();
     }
     private void readObjectNoData() throws ObjectStreamException
     {

@@ -1,7 +1,6 @@
 package erenik.evergreen.android.act;
 
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,6 @@ import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.Weapon;
 import erenik.evergreen.common.Player;
-import erenik.evergreen.common.player.Item;
 
 public class ItemDetails extends EvergreenActivity {
 

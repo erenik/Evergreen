@@ -111,16 +111,9 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 23 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="java-cup-11b-runtime-2015.03.26" level="project" />
-    <orderEntry type="library" exported="" name="netlib-java-1.1" level="project" />
-    <orderEntry type="library" exported="" name="bounce-0.18" level="project" />
-    <orderEntry type="library" exported="" name="arpack_combined_all-0.1" level="project" />
-    <orderEntry type="library" exported="" name="weka-dev-3.9.1" level="project" />
-    <orderEntry type="library" exported="" name="core-1.1.2" level="project" />
-    <orderEntry type="library" exported="" name="java-cup-11b-2015.03.26" level="project" />
+    <orderEntry type="library" exported="" name="wekaSTRIPPED" level="project" />
     <orderEntry type="library" exported="" name="support-v4-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="design-23.0.1" level="project" />
-    <orderEntry type="library" exported="" name="mtj-1.0.4" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.0.1" level="project" />
   </component>

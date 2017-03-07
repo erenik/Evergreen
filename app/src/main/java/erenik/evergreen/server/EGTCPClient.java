@@ -14,7 +14,7 @@ import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.packet.EGResponseType;
 import erenik.evergreen.common.player.DAction;
-import erenik.evergreen.util.NameGenerator;
+import erenik.util.NameGenerator;
 
 /**
  * A client for the game. Command-line based. For testing AI or being all LINUX-y.

@@ -1,19 +1,17 @@
 package erenik.evergreen;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
-import erenik.evergreen.util.Json;
-import erenik.evergreen.util.Tuple;
+import erenik.util.Json;
+import erenik.util.Tuple;
 
 // import erenik.evergreen.android.App;
 

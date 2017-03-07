@@ -2,10 +2,8 @@ package erenik.evergreen.android.act;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,12 +22,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +32,6 @@ import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Invention.Weapon;
-import erenik.evergreen.common.Invention.WeaponType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
@@ -48,7 +39,6 @@ import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequestType;
-import erenik.evergreen.common.player.Constants;
 import erenik.evergreen.common.packet.EGRequest;
 
 
@@ -428,7 +418,7 @@ public class EvergreenActivity extends AppCompatActivity
     boolean alternateLogMessageColor = false;
 
     /// Creates and returns a new TextView for the larget log-message.
-    View GetViewForLogMessage(Log l){
+    TextView GetViewForLogMessage(Log l){
         String s = l.text;
         if (l.BasicStringVersion() == false)
             s = App.GetLogText(l.TextID(), l.Args());

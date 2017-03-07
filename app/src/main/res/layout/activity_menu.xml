@@ -27,22 +27,32 @@
 
                 <!-- First menu content -->
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/layoutMainMenu">
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonChangeCharacter" android:text="@string/changeCharacter" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonHelp" android:text="@string/help" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonOptions" android:text="@string/options" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonQuitGame" android:text="@string/quitGame" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonBack" android:text="@string/back" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonChangeCharacter" android:text="@string/changeCharacter" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonHelp" android:text="@string/help" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonOptions" android:text="@string/options" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonQuitGame" android:text="@string/quitGame" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonBack" android:text="@string/back" />
                 </LinearLayout>
 
                 <LinearLayout style="@style/Evergreen.Layout.Vertical"
                     android:id="@+id/layoutCharacters" android:visibility="invisible" >
                     <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutCharacterList" android:orientation="vertical">
-                        <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:text="Cloud - Local"/>
-                        <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:text="Tifa - Multiplayer"/>
+                        <erenik.evergreen.android.ui.EvergreenButton
+                            style="@style/Evergreen.MainButtons" android:text="Cloud - Local"/>
+                        <erenik.evergreen.android.ui.EvergreenButton
+                            style="@style/Evergreen.MainButtons" android:text="Tifa - Multiplayer"/>
                     </LinearLayout>
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonNewCharacter" android:text="@string/newCharacter" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonDeleteAllCharacters" android:text="@string/deleteAllCharacters" />
-                    <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.MainButtons" android:id="@+id/buttonBackFromCharacters" android:text="@string/back" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonNewCharacter" android:text="@string/newCharacter" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonDeleteAllCharacters" android:text="@string/deleteAllCharacters" />
+                    <erenik.evergreen.android.ui.EvergreenButton
+                        style="@style/Evergreen.MainButtons" android:id="@+id/buttonBackFromCharacters" android:text="@string/back" />
                 </LinearLayout>
 
             </FrameLayout>

@@ -9,7 +9,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
-import erenik.evergreen.util.Dice;
+import erenik.util.Dice;
 
 /**
  * Created by Emil on 2017-02-26.

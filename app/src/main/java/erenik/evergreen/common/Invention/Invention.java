@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
-import erenik.evergreen.util.Dice;
+import erenik.util.Dice;
 
 import static erenik.evergreen.common.Invention.InventionStat.Blueprint;
 import static erenik.evergreen.common.Invention.InventionType.RangedWeapon;

@@ -1,6 +1,5 @@
 package erenik.evergreen.common;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.Serializable;
@@ -16,7 +15,6 @@ import erenik.evergreen.Simulator;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
-import erenik.evergreen.common.Invention.WeaponType;
 //import erenik.evergreen.android.App;
 import erenik.evergreen.common.combat.Combatable;
 import erenik.evergreen.common.encounter.Encounter;
@@ -25,9 +23,8 @@ import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogListener;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
-import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.player.*;
-import erenik.evergreen.util.Dice;
+import erenik.util.Dice;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -381,19 +378,40 @@ public class Player extends Combatable implements Serializable {
         statArr[stat.ordinal()] = value;
     }
     /// Saves to local "preferences"
-    public void Log(Log l) {
+    void AddLog(Log l){
         log.add(l);
         for (int i = 0; i < logListeners.size(); ++i) {
             LogListener ll = logListeners.get(i);
             ll.OnLog(l, this);
         }
     }
-    public void Log(String text, LogType t) {
-        log.add(new Log(text, t));
-        for (int i = 0; i < logListeners.size(); ++i) {
-            LogListener ll = logListeners.get(i);
-            ll.OnLog(new Log(text, t), this);
-        }
+    public void LogInfo(LogTextID id) {
+        Log l = new Log(id, LogType.INFO);
+        AddLog(l);
+    }
+    public void LogInfo(LogTextID id, String arg1) {
+        Log l = new Log(id, LogType.INFO, arg1);
+        AddLog(l);
+    }
+    public void LogInfo(LogTextID id, String arg1, String arg2) {
+        Log l = new Log(id, LogType.INFO, arg1, arg2);
+        AddLog(l);
+    }
+    public void LogInfo(LogTextID id, String arg1, String arg2, String arg3) {
+        Log l = new Log(id, LogType.INFO, arg1, arg2, arg3);
+        AddLog(l);
+    }
+    public void Log(LogTextID id, LogType lt) {
+        Log l = new Log(id, lt);
+        AddLog(l);
+    }
+    public void Log(LogTextID id, LogType lt, String arg1) {
+        Log l = new Log(id, lt, arg1);
+        AddLog(l);
+    }
+    public void Log(LogTextID id, LogType lt, String arg1, String arg2) {
+        Log l = new Log(id, lt, arg1, arg2);
+        AddLog(l);
     }
 
     public Transport CurrentTransport() {
@@ -420,7 +438,7 @@ public class Player extends Combatable implements Serializable {
             return;
         }
         NewDay();  // New day :3
-        Log("-- Day " + (int) Get(Stat.TurnPlayed) + " --", LogType.INFO);
+        LogInfo(LogTextID.newDayPlayerTurnPlayed, ""+(int) Get(Stat.TurnPlayed));
         Transport t = Transport.RandomOf(transports);
        // System.out.println("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.ordinal());
@@ -432,12 +450,10 @@ public class Player extends Combatable implements Serializable {
 
 
         // Bonuses for greening habits?
-
-
-        Log("Transport of the day is: "+CurrentTransport().name(), LogType.INFO);
+        LogInfo(LogTextID.transportOfTheDay, CurrentTransport().name());
         float emissionsToGenerate = CurrentTransport().Get(TransportStat.EmissionsPerDay);
-        if (emissionsToGenerate > 0)
-            Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
+        if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling.
+            // Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
         Adjust(Stat.EMISSIONS, emissionsToGenerate);
         // Yeah.
         Adjust(Stat.FOOD, -2);
@@ -448,10 +464,9 @@ public class Player extends Combatable implements Serializable {
         else {
             float loss = Get(Stat.FOOD) / 5;
             Adjust(Stat.HP, loss);
-            Log("Starving, lost "+(-loss)+" HP.", LogType.OtherDamage);
-            if (!IsAlive())
-            {
-                Log("Died of starvation", LogType.OtherDamage);
+            Log(LogTextID.starvingLostHP, LogType.OtherDamage, ""+(-loss));
+            if (!IsAlive()) {
+                Log(LogTextID.diedOfStarvation, LogType.DEFEATED);
                 return;
             }
         }
@@ -497,7 +512,7 @@ public class Player extends Combatable implements Serializable {
         Adjust(Stat.FOOD, Get(Stat.FOOD) * -0.75f); // Reduce food.
         Adjust(Stat.MATERIALS, Get(Stat.MATERIALS) * -0.75f); // Reduce food.
         // Reduce other stuff?
-        Log(new Log(LogTextID.secondLife, LogType.INFO));
+        LogInfo(LogTextID.secondLife);
     }
 
     public void ClampHP()
@@ -539,9 +554,9 @@ public class Player extends Combatable implements Serializable {
         if (div > MAX_ACTIONS)
             div += 6.f;
         if (div > MAX_ACTIONS)
-            Log("Having scheduled too much to do during the day, you manage to lose a lot of time between the actions you had intended to do. You are even forced to cancel entirely some of the actions you wanted to do.", LogType.PROBLEM_NOTIFICATION);
+            ; //Log("Having scheduled too much to do during the day, you manage to lose a lot of time between the actions you had intended to do. You are even forced to cancel entirely some of the actions you wanted to do.", LogType.PROBLEM_NOTIFICATION);
         else if (dailyActions.size() > 4)
-            Log("During the day, you lose some time while changing tasks. Choose 4 or fewer actions per day for full efficiency.", LogType.PROBLEM_NOTIFICATION);
+            Log(LogTextID.tooManyDailyActionsLossOfTime, LogType.PROBLEM_NOTIFICATION);
         hoursPerAction = hoursSimulated / div;
 //        System.out.println("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
@@ -560,14 +575,14 @@ public class Player extends Combatable implements Serializable {
         {
             case GatherFood:
                 units = Dice.RollD3(2);  // 2 to 6 base.
-                units += Get(Skill.Foraging).Level();
+                units += Get(Skill.Foraging).Level(); // + Foraging level constant?
                 units += CurrentTransport().Get(TransportStat.ForagingBonus);
                 units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
-                if (units < 1) units = 1;
+                if (units < 1) units = 1; // Get at least 1.
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
                 Adjust(Stat.FOOD, units);
-                Log(da.text + ": Found " + Stringify(units) + " units of food.", LogType.INFO);
+                LogInfo(LogTextID.foragingFood, Stringify(units));
                 break;
             case GatherMaterials:
                 units = Dice.RollD3(2); // 2 to 6 base.
@@ -575,7 +590,7 @@ public class Player extends Combatable implements Serializable {
                 units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
                 units *= t_starvingModifier;
                 units *= hoursPerAction;
-                Log(da.text+": Found " + Stringify(units) + " units of materials.", LogType.INFO);
+                LogInfo(LogTextID.gatherMaterials, Stringify(units));
                 Adjust(Stat.MATERIALS, units);
                 break;
             case Scout:
@@ -588,7 +603,7 @@ public class Player extends Combatable implements Serializable {
                 units *= t_starvingModifier;
                 Adjust(Stat.HP, units);
                 ClampHP();
-                Log(da.text + ": Recovered " + Stringify(units) + " HP.", LogType.INFO);
+                LogInfo(LogTextID.recoverRecovered, ""+units);
                 break;
             case BuildDefenses: BuildDefenses(); break;
 //            case AugmentTransport: AugmentTransport(); break;
@@ -602,7 +617,7 @@ public class Player extends Combatable implements Serializable {
             case Study:
                 // Gain exp into current skill perhaps..?
                 int toGain = Dice.RollD3(2) + Get(Skill.Studious).Level();
-                Log("Studies grant you "+toGain+" experience points.", LogType.PROGRESS);
+                Log(LogTextID.studiesEXP, LogType.PROGRESS);
                 GainEXP(toGain);
                 break;
             case ReduceEmissions: ReduceEmissions(); break;
@@ -614,19 +629,29 @@ public class Player extends Combatable implements Serializable {
 
     private void ReduceEmissions() {
         int successful = 0;
+        float amount = 0;
         for (int i = 0; i < hoursPerAction; ++i) {
-            if (r.nextInt(100) > 50)
+            int diceRoll = r.nextInt(100);
+            if (diceRoll > 50){
+                amount += Dice.RollD3(1);
                 ++successful;
+            }
         }
-        if (successful > hoursPerAction * 0.75)
-            Log(new Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, successful+""));
-        else if (successful > hoursPerAction * 0.5)
-            Log(new Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, successful+""));
-        else if (successful > hoursPerAction * 0.25)
-            Log(new Log(LogTextID.reduceEmissionsNotSoSuccessful, LogType.SUCCESS, successful+""));
+        if (successful > hoursPerAction * 0.75) {
+            amount += Get(Stat.EMISSIONS) * 0.25f; // Successful, get bonus 25% of total.
+            Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, Stringify(amount));
+        }
+        else if (successful > hoursPerAction * 0.5) {
+            amount += Get(Stat.EMISSIONS) * 0.1f; // Successful, get bonus 25% of total.
+            Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, Stringify(amount));
+        }
+        else if (successful > hoursPerAction * 0.25) {
+            amount += Get(Stat.EMISSIONS) * 0.05f; // Successful, get bonus 25% of total.
+            Log(LogTextID.reduceEmissionsNotSoSuccessful, LogType.SUCCESS, Stringify(amount));
+        }
         else
-            Log(new Log(LogTextID.reduceEmissionsFailed, LogType.SUCCESS, successful+""));
-        Adjust(Stat.EMISSIONS, -successful);
+            Log(LogTextID.reduceEmissionsFailed, LogType.SUCCESS, Stringify(amount));
+        Adjust(Stat.EMISSIONS, -amount);
         if (Get(Stat.EMISSIONS) < 0) {
             Set(Stat.EMISSIONS, 0);
         }
@@ -637,11 +662,11 @@ public class Player extends Combatable implements Serializable {
         String targetName = da.requiredArguments.get(0).value;
         Player p = game.GetPlayer(targetName);
         if (p == null) {
-            Log("Unable to find player by name "+targetName, LogType.ACTION_FAILURE);
+            Log(LogTextID.unableToFindPlayerByName, LogType.ACTION_FAILURE, targetName);
             return;
         }
-        Log("You attack "+targetName+".", LogType.ATTACK);
-        p.Log("You are attacked by "+name+"!", LogType.ATTACKED);
+        Log(LogTextID.attackPlayer, LogType.ATTACK, targetName);
+        p.Log(LogTextID.attackedByPlayer, LogType.ATTACKED, name);
         // Create a custom encounter for this.
         Encounter enc = new Encounter(this, p);
         enc.Simulate(); // Simulate it.
@@ -649,6 +674,7 @@ public class Player extends Combatable implements Serializable {
     }
 
     private void AugmentTransport() {
+        /*
         // Arg 1 is Transport, Arg 2 is Transport Augment (an invention).
         String name = da.requiredArguments.get(0).value;
         Log(da.text+": Tinkering on the "+name+".", LogType.INFO);
@@ -664,14 +690,13 @@ public class Player extends Combatable implements Serializable {
             return;
         }
         Log("TODO: Actual transport augmentation.", LogType.INFO);
+        */
     }
-    private void Steal(DAction da, Game game)
-    {
+    private void Steal(DAction da, Game game) {
         String targetPlayerName = da.requiredArguments.get(0).value;
         Player p = game.GetPlayer(targetPlayerName);
-        if (p == null)
-        {
-            Log("No player found with that name.", LogType.ATTACK_MISS);
+        if (p == null) {
+            Log(LogTextID.unableToFindPlayerByName, LogType.ACTION_FAILURE, targetPlayerName);
             return;
         }
         /*
@@ -687,13 +712,20 @@ public class Player extends Combatable implements Serializable {
         */
         int roll = Dice.RollD6(2 + Get(Skill.Thief).Level());
         if (roll < 7) { // Failed and detected.
-            Log("While trying to steal from "+targetPlayerName+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
-            p.Log(""+name+" tried to steal from you, but failed as he was detected!", LogType.ATTACKED);
+            Log(LogTextID.stealFailedDetected, LogType.ATTACK_MISS, targetPlayerName);
+            p.Log(LogTextID.playerTriedToStealFromYouFailedDetected, LogType.ATTACKED);
+            /// Add stealing player into target player's list of known players, so that they may retaliate?
+            p.FoundPlayer(name);
+
+//            Log("While trying to steal from "+targetPlayerName+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
+//            p.Log(""+name+" tried to steal from you, but failed as he was detected!", LogType.ATTACKED);
             return;
         }
         if (roll < 9) {
-            Log("While trying to steal from "+p.name+", you mistakenly caused attention, forcing you to retreat.", LogType.ATTACK_MISS);
-            p.Log("While walking in your shelter, you notice something grabbing your attention. You try to see what it was, but find nothing is amiss.", LogType.ATTACKED_MISS);
+            Log(LogTextID.stealFailed, LogType.ATTACK_MISS);
+            p.Log(LogTextID.somethingAmiss, LogType.INFO);
+           // Log("While trying to steal from "+p.name+", you mistakenly caused attention, forcing you to retreat.", LogType.ATTACK_MISS);
+//            p.Log("While walking in your shelter, you notice something grabbing your attention. You try to see what it was, but find nothing is amiss.", LogType.ATTACKED_MISS);
             return;
         }
         int d3Stolen = (roll - 11)/2 + 2; // Food or materials.
@@ -707,12 +739,13 @@ public class Player extends Combatable implements Serializable {
         p.Adjust(stolenStat, -quantity);
         // Calc success?
         String whatStolen = quantity+" units of "+stolenStat.name();
-        Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
-        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
+        Log(LogTextID.stealSuccess_whatName, LogType.ATTACK);
+        p.Log(LogTextID.stolen, LogType.ATTACKED);
+//        Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
+//        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
 
-    void LookForPlayer(DAction da, Game game)
-    {
+    void LookForPlayer(DAction da, Game game) {
         // Determine chances.
         // Search query.
         // Found?
@@ -732,7 +765,8 @@ public class Player extends Combatable implements Serializable {
         }
         if (player == null) {
             int randInt = r.nextInt(100);
-            Log("Despite searching, you were unable to find a player called "+name+".", LogType.ACTION_FAILURE);
+            Log(LogTextID.searchPlayerFailed, LogType.ACTION_FAILURE);
+//            Log("Despite searching, you were unable to find a player called "+name+".", LogType.ACTION_FAILURE);
             // Add chance to find random other players?
             if (randInt < 50) {
                 Player randomPlayer = game.RandomPlayer(KnownNamesSelfIncluded());
@@ -740,7 +774,7 @@ public class Player extends Combatable implements Serializable {
                     return;
                 String newPlayer = randomPlayer.name;
                 if (newPlayer != null && newPlayer != name) {
-                    Log("However, while searching, you stumbled upon another player!", LogType.SUCCESS);
+                    Log(LogTextID.searchPlayer_foundAnother, LogType.SUCCESS);
                     name = newPlayer;
 //                    knownPlayerNames.add(newPlayer);
                 }
@@ -750,9 +784,19 @@ public class Player extends Combatable implements Serializable {
             else
                 return;
         }
-        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
+        FoundPlayer(name);
+        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+knownPlayerNames);
+    }
+
+    private void FoundPlayer(String name) {
+        for (int i = 0; i < knownPlayerNames.size(); ++i){
+            String n = knownPlayerNames.get(i);
+            if (n.equals(name))
+                return; // Already know this player. o-o
+        }
+        Log(LogTextID.foundPlayer, LogType.SUCCESS, name);
+//        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
         knownPlayerNames.add(name);
-        Log("knownNAmes: "+knownPlayerNames, LogType.INFO);
     }
 
     private ArrayList<String> KnownNamesSelfIncluded() {
@@ -785,7 +829,8 @@ public class Player extends Combatable implements Serializable {
                 toCraft = inv;
         }
         if (toCraft == null) {
-            Log("toCraft null, what did you wanna craft again?", LogType.Error);
+            System.out.println("toCraft null, what did you wanna craft again?");
+            System.exit(15);
             return;
         }
         int progressRequired = toCraft.Get(InventionStat.ProgressRequiredToCraft);
@@ -822,11 +867,12 @@ public class Player extends Combatable implements Serializable {
             // Update quality level.
             newlyCraftedObject.UpdateDetails();
             inventory.add(newlyCraftedObject);
-            Log("Crafting complete: "+newlyCraftedObject.name, LogType.INFO);
+            LogInfo(LogTextID.craftingComplete, newlyCraftedObject.name);
         }
         else
         {
-            Log("Crafting progressed by "+progress+" units. Progress is now at "+progressGained+" out of "+progressRequired+".", LogType.INFO);
+            LogInfo(LogTextID.craftingProgressed, ""+progress, ""+progressGained, ""+progressRequired);
+//            Log("Crafting progressed by "+progress+" units. Progress is now at "+progressGained+" out of "+progressRequired+".", LogType.INFO);
             // Store as unfinished business?
         }
     }
@@ -849,7 +895,9 @@ public class Player extends Combatable implements Serializable {
                 type = InventionType.GetFromString(typeStr);
             }
             if (type == null) {
-                Log("Bad invention type", LogType.Error);
+                System.out.println("Bad invention type.");
+//                Log("Bad invention type", LogType.Error);
+                System.exit(14);
                 return;
             }
             if (type == InventionType.Any) {
@@ -871,7 +919,8 @@ public class Player extends Combatable implements Serializable {
             toRandom -= 1;
         }
         if (inventedSomething == false)
-            Log(s+"Failed to invent anything new.", LogType.INFO);
+            LogInfo(LogTextID.inventFailed);
+//            Log(s+"Failed to invent anything new.", LogType.INFO);
     }
     /// Tries to equip target invention.
     public void Equip(Invention inv) {
@@ -920,12 +969,14 @@ public class Player extends Combatable implements Serializable {
             if (i2.name.equals(inv.name)) {
                 // Save type of invention? Add progress to the invention we already had?
                 i2.Adjust(InventionStat.TimesInvented, 1);
-                Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
+                LogInfo(LogTextID.inventingOldThoughts, inv.name);
+               // Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
                 return null;
             }
         }
         inventions.add(inv);
-        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.SUCCESS);
+        Log(LogTextID.inventSuccess, LogType.SUCCESS, inv.type.text(), inv.name);
+//        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.SUCCESS);
         return inv;
     }
 
@@ -990,32 +1041,37 @@ public class Player extends Combatable implements Serializable {
             }
         }
         if (foundList.size() == 0)
-            Log(new Log(LogTextID.scoutingFailure, LogType.INFO));
+            Log(LogTextID.scoutingFailure, LogType.INFO);
         else
-            Log(new Log(LogTextID.scoutingSuccess, LogType.INFO));
+            Log(LogTextID.scoutingSuccess, LogType.INFO);
 
         /// Check config for preferred display verbosity of the search results?
-        Log(new Log(LogTextID.scoutRandomEncounter, LogType.INFO, numEncounters+""));
-        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
+        Log(LogTextID.scoutRandomEncounter, LogType.INFO, numEncounters+"");
+//        s += numEncounters == 1? "\n- encounter a group of monsters from the Evergreen" : numEncounters > 1? "\n- encounter "+numEncounters+" groups of monsters" : "";
         for (int i = 0; i < numEncounters; ++i) {
             Encounter enc = new Encounter(Finding.RandomEncounter, this);
             encountersToProcess.add(enc);
         }
-        s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
+        LogInfo(LogTextID.scoutFoodStashes, ""+numFoodStashes, Stringify(foodFound));
+//        s += numFoodStashes > 1? "\n- find "+numFoodStashes+" stashes of food, totalling at "+Stringify(foodFound)+" units" : numFoodStashes == 1? "\n a stash of food: "+Stringify(foodFound)+" units" : "";
         Adjust(Stat.FOOD, foodFound);
+
+        LogInfo(LogTextID.scoutMatStashes, ""+numMatStashes, Stringify(matFound));
         s += numMatStashes > 1? "\n- find "+numMatStashes+" stashes of materials, totalling at "+Stringify(matFound)+" units" : numMatStashes == 1? "\n a stash of materials: "+Stringify(matFound)+" units" : "";
-        Adjust(Stat.MATERIALS, amount);
+        Adjust(Stat.MATERIALS, matFound);
+
         /// Advanced shit... Queue up for exploration later?
         s += numAbShelters > 1? "\n- find "+numAbShelters+" seemingly abandoned shelters" : numAbShelters == 1? "\n- find an abandoned shelter." : "";
         Adjust(Stat.ABANDONED_SHELTER, numAbShelters);
+
         // Find max 1 player shelter per scouting round?
         s += numRPS >= 1? "\n- find a shelter which seems to be inhabited" : "";
         Adjust(Stat.RANDOM_PLAYERS_SHELTERS, numRPS >= 1? 1 : 0);
+
         s += numEnStrong >= 1? "\n- find an enemy stronghold." : "";
         Adjust(Stat.ENEMY_STRONGHOLDS, numEnStrong >= 1? 1 : 0);
 
-        Log(s, LogType.INFO);
-
+//        Log(s, LogType.INFO);
     }
     void BuildDefenses() {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
@@ -1028,12 +1084,13 @@ public class Player extends Combatable implements Serializable {
         progress *= hoursPerAction;
         Adjust(Stat.SHELTER_DEFENSE_PROGRESS, progress);
         float requiredToNext = Get(Stat.SHELTER_DEFENSE) * 10;
-        Log(da.text + ": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)) + " units out of " + Stringify(requiredToNext)+ ".", LogType.INFO);
-        if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext)
-        {
+        LogInfo(LogTextID.buildDefensesProgress, Stringify(progress), Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)), Stringify(requiredToNext));
+//        Log(da.text + ": Shelter defense progress increased by " + Stringify(progress) + " units. Progress is now at " + Stringify(Get(Stat.SHELTER_DEFENSE_PROGRESS)) + " units out of " + Stringify(requiredToNext)+ ".", LogType.INFO);
+        if (Get(Stat.SHELTER_DEFENSE_PROGRESS) >= requiredToNext) {
             Adjust(Stat.SHELTER_DEFENSE_PROGRESS, -requiredToNext);
             Adjust(Stat.SHELTER_DEFENSE, 1);
-            Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
+            Log(LogTextID.defensesReachedLevel, LogType.PROGRESS, ""+GetInt(Stat.SHELTER_DEFENSE));
+//            Log("Shelter defense reached level "+GetInt(Stat.SHELTER_DEFENSE)+"!", LogType.PROGRESS);
         }
     }
     // Varies with skills n stuff. Generates emissions.
@@ -1065,12 +1122,10 @@ public class Player extends Combatable implements Serializable {
     }
 
     // To be called after taking required materials. Will calculate material modifier for giving penalties on material debts.
-    float CalcMaterialModifier()
-    {
+    float CalcMaterialModifier() {
         t_materialModifier = (Get(Stat.MATERIALS) < 0 ?  (1 / (1 + Math.abs(Get(Stat.MATERIALS)))): 1);
-        if (t_materialModifier < 1) // IF negative, add warning message and reset to 0 - cannot go further negative.
-        {
-            Log("A lack of materials reduced progress.", LogType.PROBLEM_NOTIFICATION);
+        if (t_materialModifier < 1){ // IF negative, add warning message and reset to 0 - cannot go further negative.
+            Log(LogTextID.materialShortageAffectingProgress, LogType.PROBLEM_NOTIFICATION);
             SetInt(Stat.MATERIALS, 0); // Reset materials to 0.
         }
         return t_materialModifier;
@@ -1103,9 +1158,9 @@ public class Player extends Combatable implements Serializable {
             int oldLevel = toSkillUp.Level();
             int levelReached = toSkillUp.GainExp(toGain);
             int newLevel = toSkillUp.Level();
-            if (newLevel > oldLevel)
-            {
-                Log("Skill " + toSkillUp.text + " reached level " + levelReached + "!", LogType.EXP);
+            if (newLevel > oldLevel) {
+                Log(LogTextID.skillLeveledUp, LogType.EXP, toSkillUp.text, ""+levelReached);
+                //Log("Skill " + toSkillUp.text + " reached level " + levelReached + "!", LogType.EXP);
                 skillTrainingQueue.remove(0);
             }
         }

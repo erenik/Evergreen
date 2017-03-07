@@ -15,7 +15,6 @@ import java.util.List;
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
 import erenik.evergreen.common.Invention.Invention;
-import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;

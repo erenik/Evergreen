@@ -1,8 +1,5 @@
 package erenik.evergreen.android.act;
 
-import android.app.ActivityManager;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,6 +12,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
+import erenik.weka.transport.TransportDetectionService;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -90,13 +90,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
-
         Load();
-
-//        player.SaveLocally(); // Save copy? - Why?
-        /// Update GUI.
         UpdateGUI();
-
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
@@ -105,11 +100,13 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
         findViewById(R.id.nextDay).setOnClickListener(nextDay);
         findViewById(R.id.buttonMenu).setOnClickListener(openMenu);
-
         /// Assign listeners for the icons.
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
         for (int i = 0; i < ids.length; ++i)
             findViewById(ids[i]).setOnClickListener(viewStatDetails);
+        // Launch the transport-sensing service if not already running.
+        Intent serviceIntent = new Intent(getBaseContext(), TransportDetectionService.class);
+        getBaseContext().startService(serviceIntent);
     }
 
     private View.OnClickListener viewStatDetails = new View.OnClickListener() {

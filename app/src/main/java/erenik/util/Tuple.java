@@ -1,4 +1,4 @@
-package erenik.evergreen.util;
+package erenik.util;
 
 /**
  * Created by Emil on 2016-10-30.

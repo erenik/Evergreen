@@ -12,10 +12,9 @@ import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.player.Finding;
-import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.Stat;
 import erenik.evergreen.common.player.TransportStat;
-import erenik.evergreen.util.Dice;
+import erenik.util.Dice;
 
 /**
  * Created by Emil on 2016-12-17.
@@ -131,7 +130,7 @@ public class Encounter {
             e.isAttacker = true;
             AddCombatant(e);
         }
-        Log("You encounter " + iAmount + " " + et.name + "s.", LogType.INFO);
+        LogEnc(new Log(LogTextID.encounterNumMonsters, LogType.INFO, ""+iAmount, et.name));
         CalcEncounterEXP();
         totalCreeps = iAmount;
     }
@@ -165,10 +164,10 @@ public class Encounter {
             return;
         }
         else {
-            Log("You survive the encounter!", LogType.SUCCESS);
+            LogEnc(new Log(LogTextID.encounterSurvived, LogType.SUCCESS));
             int expToGain = (totalCreeps > 0? CreepsKilled() / totalCreeps  : 1 ) * encounterExp + fleeExp;
             if (creepsKilled > 0) {
-                Log("You gain " + expToGain + " EXP.", LogType.EXP);
+                LogEnc(new Log(LogTextID.expGained, LogType.EXP, ""+expToGain));
             }
             for (int i = 0; i < players.size(); ++i) {
                 players.get(i).GainEXP(expToGain);
@@ -350,12 +349,13 @@ public class Encounter {
         CalcEncounterEXP();
         totalCreeps = iAmount;
     }
-    public void Log(String s, LogType type) {
+/*    public void Log(String s, LogType type) {
         // Add to log to present/update to ui?
         System.out.println("Encounter log: "+s);
         Log l = new Log(s, type);
         log.add(l);
     }
+  */
     public void LogEnc(Log logMsg) {
         // Add to log to present/update to ui?
         System.out.println("Encounter log: "+logMsg);

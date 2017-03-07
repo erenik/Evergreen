@@ -12,10 +12,7 @@ import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.encounter.EncounterListener;
-import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.player.Finding;
-import erenik.evergreen.common.player.Stat;
-import erenik.evergreen.util.Dice;
 
 /**
  * Created by Emil on 2016-10-30.

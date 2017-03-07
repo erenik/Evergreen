@@ -1,4 +1,4 @@
-package erenik.evergreen.util;
+package erenik.util;
 
 import java.util.Random;
 

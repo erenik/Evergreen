@@ -3,8 +3,6 @@ package erenik.evergreen.common.Invention;
 import java.util.ArrayList;
 import java.util.Random;
 
-import erenik.evergreen.util.Dice;
-
 /**
  * Created by Emil on 2016-11-07.
  */

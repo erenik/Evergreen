@@ -6,10 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import erenik.evergreen.common.Invention.Invention;
-import erenik.evergreen.common.logging.Log;
-import erenik.evergreen.common.logging.LogType;
-
 /**
  * Created by Emil on 2016-11-11.
  */

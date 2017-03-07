@@ -23,7 +23,9 @@
     <!-- android:src="@drawable/intro_glass_crash"
             android:background="@drawable/intro_glass_crash"
     -->
-    <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_singleplayer" style="@style/Evergreen.MainButtons" android:text="@string/singleplayer"  />
-    <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_multiplayer" style="@style/Evergreen.MainButtons" android:text="@string/multiplayer" />
+    <erenik.evergreen.android.ui.EvergreenButton
+        android:id="@+id/button_singleplayer" style="@style/Evergreen.MainButtons" android:text="@string/singleplayer"  />
+    <erenik.evergreen.android.ui.EvergreenButton
+        android:id="@+id/button_multiplayer" style="@style/Evergreen.MainButtons" android:text="@string/multiplayer" />
 
 </LinearLayout>

@@ -6,6 +6,7 @@ package erenik.evergreen.common.logging;
 
 public enum LogTextID {
     undefined, // To represent 0, those messages which have not been converted into LogTextID form yet.
+    debug,
     reduceEmissionsSuccessful,
     reduceEmissionsMostlySuccessful,
     reduceEmissionsNotSoSuccessful,
@@ -22,5 +23,30 @@ public enum LogTextID {
     scoutRandomEncounter,
     playerPlayerAttack, playerMonsterAttack, monsterPlayerAttack, playerPlayerAttackMiss, monsterPlayerAttackMiss, playerMonsterAttackMiss, playerVanquishedMonster, monsterKnockedOutPlayer,
     secondLife,
+    // Starting bonuses
+    startingBonusFood,
+    startingBonusMaterials,
+    startingBonusWeapon,
+    startingBonusArmor,
+    startingBonusTool,
+    startingBonusInventions, startingBonusItem,
+
+    newDayPlayerTurnPlayed, transportOfTheDay,
+    starvingLostHP, diedOfStarvation,
+    tooManyDailyActionsLossOfTime,
+    foragingFood, gatherMaterials, recoverRecovered,
+    unableToFindPlayerByName,
+    studiesEXP,
+    attackPlayer, attackedByPlayer,
+    stealFailedDetected, playerTriedToStealFromYouFailedDetected, stealFailed, somethingAmiss, stealSuccess_whatName, stolen,
+    searchPlayerFailed, foundPlayer,
+    searchPlayer_foundAnother,
+    craftingComplete, craftingProgressed,
+    inventFailed, inventingOldThoughts, inventSuccess,
+    scoutFoodStashes, scoutMatStashes,
+    buildDefensesProgress, defensesReachedLevel,
+    materialShortageAffectingProgress,
+    skillLeveledUp,
+    encounterNumMonsters, encounterSurvived, expGained,
 
 }

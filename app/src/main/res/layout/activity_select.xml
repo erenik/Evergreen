@@ -14,7 +14,8 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
-        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller" android:text="Placeholder" android:id="@+id/textViewSelectTitle"
+        <erenik.evergreen.android.ui.EvergreenTextView
+            style="@style/Evergreen.Text.Title.Smaller" android:text="Placeholder" android:id="@+id/textViewSelectTitle"
             android:textAlignment="center" android:layout_width="match_parent" />
         <!-- Main upper part with lists -->
         <LinearLayout
@@ -24,7 +25,8 @@
             android:layout_weight="0.55"
             >
             <LinearLayout style="@style/Evergreen.Layout.Vertical" android:layout_weight="3" >
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text"
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text"
                     android:text="Possible items" android:id="@+id/textViewPossibleItems"
                     />
                 <!--android:layout_weight="wrap_content" -->
@@ -37,7 +39,8 @@
 
             <LinearLayout style="@style/Evergreen.Layout.Vertical" android:layout_weight="3">
                 <!-- Then the scroll-view with skills that we have added/queued to perform -->
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Current Queue" android:id="@+id/textViewHeader2" />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Current Queue" android:id="@+id/textViewHeader2" />
 
                 <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3">
                     <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutQueue">
@@ -61,7 +64,8 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/spinnerSelect" />
         -->
-        <erenik.evergreen.android.ui.EvergreenTextView android:layout_width="match_parent" style="@style/Evergreen.Text"
+        <erenik.evergreen.android.ui.EvergreenTextView
+            android:layout_width="match_parent" style="@style/Evergreen.Text"
             android:text="Name" android:id="@+id/textViewItemName" android:textAlignment="center" android:textSize="@dimen/textSize.Larger" />
 
         <!-- Scroll view for all details below! -->

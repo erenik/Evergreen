@@ -43,7 +43,7 @@ import erenik.evergreen.android.auth.NetworkTask;
 import erenik.evergreen.android.auth.NetworkTaskListener;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Player;
-import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.player.Stat;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -264,28 +264,28 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         player.AssignResourcesBasedOnDifficulty();
         // Check the requested starting item.
         if (bonus.equals("Food supply")) {
-            player.Log("You find " + 20 + " units of food in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusFood, ""+20);
             player.Adjust(Stat.FOOD, 20);
         } else if (bonus.equals("Materials supply")) {
-            player.Log("You find " + 10 + " units of materials in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusMaterials, ""+10);
             player.Adjust(Stat.MATERIALS, 10);
         } else if (bonus.equals("A weapon")) {
             Invention randomWeapon = Invention.RandomWeapon(player.BonusFromDifficulty()/3);
-            player.Log("You find a " + randomWeapon.name + " in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusItem, randomWeapon.name);
             player.inventory.add(randomWeapon);
             player.Equip(randomWeapon); // Equip it from start?
         } else if (bonus.equals("A body armor")) {
             Invention armor = Invention.RandomArmor(player.BonusFromDifficulty()/3);
-            player.Log("You find a " + armor.name + " in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusItem, armor.name);
             player.inventory.add(armor);
             player.Equip(armor); // Equip it from start?
         } else if (bonus.equals("A tool")) {
             Invention tool = Invention.RandomTool(player.BonusFromDifficulty()/3);
-            player.Log("You find a " + tool.name + " in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusItem, tool.name);
             player.inventory.add(tool);
             player.Equip(tool);
         } else if (bonus.equals("2 inventions")) {
-            player.Log("You find 2 invention blueprints in the vicinity.", LogType.INFO);
+            player.LogInfo(LogTextID.startingBonusInventions, ""+2);
             player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
             player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
         }

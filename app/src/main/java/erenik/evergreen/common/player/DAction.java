@@ -1,7 +1,5 @@
 package erenik.evergreen.common.player;
 
-import android.app.Notification;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

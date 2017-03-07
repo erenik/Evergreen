@@ -7,12 +7,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.view.Display;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,11 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import erenik.evergreen.android.act.EventDialogFragment;
 import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
-import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacketCommunicator;

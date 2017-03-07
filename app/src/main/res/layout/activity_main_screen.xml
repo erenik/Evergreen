@@ -34,7 +34,8 @@
                         <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/av_01" android:padding="1sp" android:scaleType="fitCenter" android:layout_height="65sp"
                             android:layout_width="65sp" android:layout_gravity="center" android:layout_marginBottom="2sp" android:id="@+id/imageView_avatar" />
                     </FrameLayout>
-                    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.TextBiggest" android:text="Placeholder" android:layout_gravity="center"
+                    <erenik.evergreen.android.ui.EvergreenTextView
+                        style="@style/Evergreen.TextBiggest" android:text="Placeholder" android:layout_gravity="center"
                         android:id="@+id/textViewName"/>
                 </LinearLayout>
 

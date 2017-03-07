@@ -5,31 +5,47 @@
     android:background="@drawable/bg3"
     android:id="@+id/fullscreen_view"
     >
-
-    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller"
-        android:text="Results" android:id="@+id/results" />
+<!--
+    <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title.Smaller" android:text="Results" android:id="@+id/results" />
+-->
 
     <ScrollView style="@style/Evergreen.Layout">
         <LinearLayout style="@style/Evergreen.Layout.Vertical">
             <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutContents">
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
-                <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
+                <erenik.evergreen.android.ui.EvergreenTextView
+                    style="@style/Evergreen.Text" android:text="Sample"  />
             </LinearLayout>
 
-            <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.Button.Wide" android:layout_width="match_parent" android:text="OK" android:id="@+id/buttonOK" />
+            <erenik.evergreen.android.ui.EvergreenButton
+                style="@style/Evergreen.Button.Wide" android:layout_width="match_parent" android:text="OK" android:id="@+id/buttonOK" />
         </LinearLayout>
     </ScrollView>
 

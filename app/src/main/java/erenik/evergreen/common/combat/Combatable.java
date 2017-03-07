@@ -9,8 +9,8 @@ import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
-import erenik.evergreen.util.Dice;
-import erenik.evergreen.util.Tuple;
+import erenik.util.Dice;
+import erenik.util.Tuple;
 
 /**
  * Created by Emil on 2016-10-30.
