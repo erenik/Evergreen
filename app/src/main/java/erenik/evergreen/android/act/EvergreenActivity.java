@@ -15,10 +15,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +75,12 @@ public class EvergreenActivity extends AppCompatActivity
         Intent i = new Intent(getBaseContext(), MainScreen.class);
         startActivity(i);
     }
+    protected void SetSpinnerArray(Spinner spinner, int arrayID) {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, arrayID, android.R.layout.simple_spinner_item);// Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(R.layout.evergreen_spinner_dropdown_item);
+        spinner.setAdapter(adapter);// Apply the adapter to the spinner
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -152,10 +161,14 @@ public class EvergreenActivity extends AppCompatActivity
                     toggle();
                 }
             });
+            /// Set up full-screen flags.
+            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
         }
-        /// Set up full-screen flags.
-        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        else {
+            System.out.println("Unable to find fullscreen_view, cannot set full-screen flags accordingly.");
+            Toast("Unable to find fullscreen_view, cannot set full-screen flags accordingly.");
+        }
 
 
         /*

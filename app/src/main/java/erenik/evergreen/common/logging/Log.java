@@ -68,6 +68,20 @@ public class Log implements Serializable {
         this.args = args;
         stringBasicVersion = false;
     }
+
+    @Override
+    public String toString() {
+        if (stringBasicVersion)
+            return this.text;
+        String s = ltid.name();
+        if (args.size() > 0)
+            s += " args: ";
+        for (int i = 0; i < args.size(); ++i){
+            s += args.get(i)+", ";
+        }
+        return s;
+    }
+
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(date);
         out.writeObject(text);

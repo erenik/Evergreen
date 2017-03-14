@@ -39,11 +39,15 @@ repositories {
 dependencies {
     // Web-server shit.
     //    compile('javax.ws.rs:jsr311-api:1.1.1')
+
     //    compile('org.glassfish.jersey.core:jersey-client:2.24.1')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
     compile 'com.android.support:design:23.0.1'
+
+    // For the graph views.
+    compile 'com.jjoe64:graphview:4.2.1'
 
     //    androidTestCompile 'com.android.support:support-annotations:23.1.1'
 //    androidTestCompile 'com.android.support.test:runner:0.4.1'

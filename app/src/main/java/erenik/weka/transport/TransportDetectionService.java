@@ -1,17 +1,22 @@
 package erenik.weka.transport;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import java.sql.Array;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
-import erenik.util.Tuple;
+import erenik.evergreen.common.player.Transport;
 import erenik.weka.WClassifier;
 import erenik.weka.WekaManager;
-import weka.classifiers.trees.RandomForest;
 
 /**
  * Android-based service.
@@ -20,15 +25,50 @@ import weka.classifiers.trees.RandomForest;
 
 public class TransportDetectionService extends Service {
 
+    private static TransportDetectionService instance = null;
     WekaManager wekaMan = null;
     TransportDetectorThread dataSamplerThread = null;
 
-    private SensingFrame sensingFrame = new SensingFrame("");
-    ArrayList<SensingFrame> sensingFrames = new ArrayList<>(); // Past sensing frames.
-    public WClassifier classifier = null;
-    public ArrayList<TransportOccurrence> transportOccurrences = new ArrayList<>(); // All transport frame IDs
-    public int msPerFrame; // Milliseconds per frame stored in the array above (transportOccurrences).
+    public ArrayList<SensingFrame> GetLastSensingFrames(int maxNum){
+        ArrayList<SensingFrame> sfs = new ArrayList<>();
+        for (int i = dataSamplerThread.sensingFrames.size() - 1; i >= 0; --i){
+            SensingFrame frame = new SensingFrame();
+            SensingFrame sf2 = dataSamplerThread.sensingFrames.get(i);
+            frame.startTimeMs = sf2.startTimeMs;
+            frame.accAvg = sf2.accAvg;
+            frame.gyroAvg = sf2.gyroAvg;
+            frame.transportString = sf2.transportString;
+            sfs.add(frame);
+        }
+        return sfs;
+    }
+
+    public void SetHistorySetSize(int newSize){
+        historySetSize = newSize;
+        System.out.println("History set size: "+historySetSize);
+    }
+    public void SetSleepSessions(int newVal) {
+        sleepSessions = newVal;
+        System.out.println("Sleep sessions: "+sleepSessions);
+    }
+
+    int sleepSessions = 3;
+    int historySetSize = 3; // Do 5 samples, calc average
+    boolean forceAverageBeforeSleep = true; // Then sleep, if true.
+
+    public WClassifier classifier = null,
+        accOnlyClassifier = null,
+        gyroOnlyClassifier = null;
+//    private ArrayList<TransportOccurrence> transportOccurrences = new ArrayList<>(); // All transport frame IDs
     public int msTotalTimeAnalyzedSinceThreadStart = 0; // o-o
+
+    /// All transport data combined!
+    TransportData transportData;
+
+    /// Limit for storing sensing frames. This is also the limit that is applied to converting one sensing frame into a time-frame.
+    int secondLimitSensingFrames;
+    public boolean sleeping = false; // When false, is sleeping?
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -50,16 +90,92 @@ public class TransportDetectionService extends Service {
         super.onCreate();
         System.out.println("TransportDetectionService onCreate");
 //        StartDetection();
+        instance = this;
+    }
+
+    @Override
+    public void onDestroy() {
+        System.out.println("onDestroy called D:");
+        Save();
+        super.onDestroy();
+        instance = null;
+    }
+
+    /// Save to preferences.
+    private static final String preferencesFileName = "TransportDetectionData.save";
+    boolean Save(){
+        ObjectOutputStream objectOut = null;
+        FileOutputStream fileOut = null;
+        try {
+            fileOut = openFileOutput(preferencesFileName, Activity.MODE_PRIVATE);
+            objectOut = new ObjectOutputStream(fileOut);
+            objectOut.writeObject(transportData);
+            fileOut.getFD().sync();
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (objectOut != null) {
+                try {
+                    objectOut.close();
+                } catch (IOException e2) {
+                    // do nowt
+                    System.out.println("Failed to save");
+                    return false;
+                }
+            }
+        };
+        return true;
+    }
+    /// Load from preferences.
+    boolean LoadSavedData(){
+        ObjectInputStream objectIn = null;
+        FileInputStream fileIn = null;
+        try {
+            fileIn = getBaseContext().openFileInput(preferencesFileName);
+            objectIn = new ObjectInputStream(fileIn);
+            transportData = (TransportData) objectIn.readObject();
+            transportData.PrintAllData();
+            fileIn.getFD().sync();
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            if (objectIn != null) {
+                try {
+                    objectIn.close();
+                } catch (IOException e2) {
+                    // do nowt
+                    System.out.println("Failed to save");
+                    return false;
+                }
+            }
+        };
+        return true;
     }
 
     private void StartDetection() {
+        /// Load data if saved, assuming the service had been killed earlier?
+        LoadSavedData();
+        if (transportData == null)
+            transportData = TransportData.BuildPrimaryTree();
+
         // Create it.
         if (wekaMan == null)
             wekaMan = new WekaManager();
         // Spawn thread to gather samples!
-        dataSamplerThread = new TransportDetectorThread(this);
-        dataSamplerThread.start();
-
+        if (dataSamplerThread == null) {
+            dataSamplerThread = new TransportDetectorThread(this);
+            dataSamplerThread.start();
+        }
         // Load a saved model for prediction?
         // Or generate it?
 //        wekaMan.
@@ -85,6 +201,19 @@ public class TransportDetectionService extends Service {
         if (lastMinute != minute){
             PrintData("Last minute: ", GetDataSeconds(60));            // Present statistics for the last minute?
             lastMinute = minute;
+            // New minute?
+            if (minutes % 3 == 0){
+                PrintData("Last 3 minutes: ", GetDataSeconds(180));
+            }
+            if (minutes % 5 == 0){
+                PrintData("Last 5 minutes: ", GetDataSeconds(300));
+            }
+            if (minutes % 10 == 0){
+                PrintData("Last 10 minutes: ", GetDataSeconds(600));
+            }
+            if (minutes % 15 == 0){
+                PrintData("Last 15 minutes: ", GetDataSeconds(900));
+            }
         }
         if (lastHour != hour){
             PrintData("Last hour: ", GetDataSeconds(3600));
@@ -94,15 +223,11 @@ public class TransportDetectionService extends Service {
 
     private void PrintData(String headerText, ArrayList<TransportOccurrence> transportOccurrences) {
         System.out.println(headerText+" nr samples: "+transportOccurrences.size());
-        int[] transports = new int[10];
-        for (int i = 0; i < transportOccurrences.size(); ++i){
-            TransportOccurrence to = transportOccurrences.get(i);
-            ++transports[to.transport];
-        }
-        for (int i = 0; i < transports.length; ++i){
-            if (transports[i] == 0)
-                continue;
-            System.out.println(" "+classifier.trainingData.classAttribute().value(i)+" # "+transports[i]+" % "+transports[i]/(float)transportOccurrences.size());
+        // New array of 0s for each transport.
+        ArrayList<TransportOccurrence> totalTransportDurationUsages =  GetTotalStatsForDataSeconds(3600); ;
+        for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
+            TransportOccurrence to = totalTransportDurationUsages.get(i); // Just print it.
+            System.out.println(" "+to.transport.name()+" # "+to.durationMs+"ms, % "+to.ratioUsed);
         }
     }
 
@@ -111,12 +236,90 @@ public class TransportDetectionService extends Service {
         long nowMs = System.currentTimeMillis();
         long msToInclude = nrOfSecondsToInclude * 1000;
         long thresh = nowMs - msToInclude;
-        for (int i = transportOccurrences.size() - 1; i >= 0; --i){
+        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nrOfSecondsToInclude);
+        for (int i = transportOccurrences.size() - 1; i >= 0; --i){ // Search from the newest occurrence of data and backwards, grab all where start time is after the threshold period.
             TransportOccurrence to = transportOccurrences.get(i);
-            if (to.timeStampMs < thresh)
+            if (to.startTimeMs < thresh)
                 break; // Break loop if too old data.
             newArr.add(to);
         }
         return newArr;
     }
+
+    public boolean ShouldSleep() {
+        if (sleepSessions <= 0)
+            return false;
+        if (forceAverageBeforeSleep){
+            if (classifier.valuesHistory.size() >= this.historySetSize){
+                // Do sleep.
+                return true;
+            }
+        }
+        else
+            return true;
+        return false;
+    }
+
+    public static TransportDetectionService GetInstance() {
+        return instance;
+    }
+
+    public String GetStatus() {
+        return sleeping? "Sleeping" : "Active";
+    }
+
+    public String CurrentTransport() {
+        TransportOccurrence lastEntry = transportData.LastEntry();
+        if (lastEntry == null)
+            return "None";
+        return lastEntry.transport.name();
+    }
+
+    /// Returns an array with one entry for each transport, that holds sums of the duration of each transport, as well as the ratio of each within.
+    public ArrayList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
+        // New array of 0s for each transport.
+        ArrayList<TransportOccurrence> totalTransportDurationUsages = new ArrayList<>();
+        int durationTotalMs = 0;
+        for (int i = 0; i < TransportType.values().length; ++i){
+            TransportOccurrence occ = new TransportOccurrence();
+            occ.transport = TransportType.values()[i];
+            occ.durationMs = 0;
+            totalTransportDurationUsages.add(occ);
+        }
+        long dataMillisecondsToAnalyze = dataSecondsToAnalyze * 1000;
+        long nowMs = System.currentTimeMillis();
+        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
+        for (int i = transportOccurrences.size() - 1; i >= 0; --i){
+            TransportOccurrence to = transportOccurrences.get(i);
+            if (to.startTimeMs < nowMs - dataMillisecondsToAnalyze)
+                break; // Break the loop.
+            totalTransportDurationUsages.get(to.transport.ordinal()).durationMs += to.durationMs;
+            durationTotalMs += to.durationMs;
+        }
+        for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
+            TransportOccurrence to = totalTransportDurationUsages.get(i);
+            if (to.durationMs == 0) {
+                totalTransportDurationUsages.remove(i);
+                --i;
+                continue;
+            }
+            to.ratioUsed = to.durationMs / (float) durationTotalMs;
+    //        System.out.println(" "+classifier.trainingData.classAttribute().value(i)+" # "+to.durationMs+"ms, % "+to.ratioUsed);
+        }
+        return totalTransportDurationUsages;
+    }
+
+    public String GetTransportString(int value) {
+        if (classifier == null || classifier.trainingData == null)
+            return "Null";
+        int numValues = classifier.trainingData.classAttribute().numValues();
+        if (value < 0 || value >= numValues)
+            return "";
+        return classifier.trainingData.classAttribute().value(value);
+    }
+
+    public void AddTransportOccurrence(TransportOccurrence transportOccurrence) {
+        transportData.AddData(transportOccurrence, null); // Add it to the object which will be presisted between sessions and interruptions.
+    }
+
 }

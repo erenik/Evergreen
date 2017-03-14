@@ -42,22 +42,20 @@ public class WekaManager {
 
     ArrayList<Integer> testedWindowSizes = new ArrayList<>();
 
-    public WClassifier NewRandomForest(String fromArffData){
+    public WClassifier NewRandomForest(String name, String fromArffData){
         InputStream is = new ByteArrayInputStream(fromArffData.getBytes());        // convert String into InputStream
-        return NewRandomForest(is);
+        return NewRandomForest(name, is, false);
     }
-    public WClassifier NewRandomForest(InputStream fromArffDataInputStream){
+    /// If accOnly is specified, gyro-entries will be omitted.
+    public WClassifier NewRandomForest(String name, InputStream fromArffDataInputStream, boolean accOnly){
         BufferedReader br = new BufferedReader(new InputStreamReader(fromArffDataInputStream));	// read it with BufferedReader
-        Instances inst = GetInstancesFromReader(br);
+        Instances inst = GetInstancesFromReader(br, accOnly);
         RandomForest rf = new RandomForest();
-        WClassifier wc = new WClassifier(rf);
+        WClassifier wc = new WClassifier(rf, name);
         wc.trainingData = inst;
         classifiers.add(wc);
         wc.Train(inst); // Train using the instances. They are randomized and stratified first?
         trainingData = inst;
-        /// Test it briefly?
-        float acc = wc.TestOnDataFolds(inst, 10);
-        System.out.println("Tested accuracy on rand/strat/fold training data: "+acc);
         return wc;
     }
 
@@ -152,7 +150,7 @@ public class WekaManager {
         alac.add(new BayesNet());
         alac.add(new NaiveBayes());
         for (int i = 0; i < alac.size(); ++i)
-            classifiers.add(new WClassifier(alac.get(i)));
+            classifiers.add(new WClassifier(alac.get(i), "Test"));
     }
 
     public static void main(String[] args) throws IOException {
@@ -164,7 +162,7 @@ public class WekaManager {
     }
 
     /// Tries to fetch .arff data instances from target file.
-    Instances GetInstancesFromReader(Reader reader){
+    Instances GetInstancesFromReader(Reader reader, boolean accOnly){
         try {
             Instances data = new Instances(reader);
             reader.close();
@@ -174,6 +172,16 @@ public class WekaManager {
             }
             if (data.attribute(0).toString().contains("Time")){
                 data = RemoveColumn(1, data); // Remove the start-time?
+            }
+            if (accOnly){
+                for (int i = 0; i < data.numAttributes(); ++i){
+                    String name = data.attribute(i).toString();
+                    if (name.contains("gyro")){
+                        data = RemoveColumn(i, data);
+                        --i;
+                        System.out.println("Removing column: "+name);
+                    }
+                }
             }
             data.setClassIndex(data.numAttributes() - 1);            // setting class attribute to the last index - Transports.
             System.out.println("Loaded "+data.size()+" data instances");
@@ -191,7 +199,7 @@ public class WekaManager {
         try {
             reader = new BufferedReader(
                     new FileReader(fileName));
-            return GetInstancesFromReader(reader);
+            return GetInstancesFromReader(reader, false);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(WekaManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -232,22 +240,15 @@ public class WekaManager {
 
     // Default sets stuff.
     void UpdateSettings(int setting){
-        try {
+//        try {
             // http://weka.sourceforge.net/doc.dev/weka/classifiers/trees/RandomForest.html
-            if (currentClassifier.cls instanceof RandomForest) {
-                options = Utils.splitOptions("");
+//            if (currentClassifier.cls instanceof RandomForest) {
+  //              options = Utils.splitOptions("");
                 // -P Size of each bag, as a percentage of the training set size. (default 100)
-//                System.out.println("Updated settings for Random Forest...");
-            }
-            else if (currentClassifier.cls instanceof RandomTree){
-                options = Utils.splitOptions("");
-            }
-            else
-                options = Utils.splitOptions("");
+//                System.out.println("Updated settings for Random Forest...");}
+// //else if (currentClassifier.cls instanceof RandomTree){options = Utils.splitOptions("");} else options = Utils.splitOptions("");
 //                options = Utils.splitOptions("-I 100 -num-slots 1 -K 0 -M 1.0 -S 1");
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+     //   } catch (Exception e){e.printStackTrace();}
     }
 
 
@@ -297,7 +298,7 @@ public class WekaManager {
             // Set options to the classifier, if any?
             if (options != null)
                 try {
-                    currentClassifier.cls.setOptions(options);
+                  //  currentClassifier.cls.setOptions(options);
                 } catch (Exception e) {
                     e.printStackTrace();
                     continue;
@@ -324,7 +325,6 @@ public class WekaManager {
             }
             if (!Train())
                 continue;
-            Predict();
             if (verbosity > 0)
                 System.out.println(" accuracy: "+currentClassifier.accuracy); // Accuracy of the tests.
         }
@@ -452,100 +452,19 @@ public class WekaManager {
         try {
             eval = new Evaluation(trainingData);
             java.lang.StringBuffer s = new StringBuffer();
-            eval.crossValidateModel(currentClassifier.cls, trainingData, 10, new Random(1), out);
+            eval.crossValidateModel(currentClassifier.GetClassifier(), trainingData, 10, new Random(1), out);
             accuracy = out.accuracy;
         } catch (Exception ex) {
             Logger.getLogger(WekaManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        // Skip it.
-        if (false){
-            accuracy = DoOwn10FoldCrossValidation(); // Now to verify myself!
         }
         if (verbosity > 0)
             System.out.println(currentClassifier.Name()+" accuracy: "+out.accuracy);
         return accuracy;
     }
 
-    /// Returns accuracy.
-    float DoOwn10FoldCrossValidation(){
-        Instances oldData = trainingData;
-        Instances dataToTest = new Instances(trainingData);
-        dataToTest.randomize(new Random(1));
-        trainingData = null;
-        testData = null;
-        // Set up the
-        int numFolds = 10;
-        int numCorrect = 0, numTotal = 0;
-        for (int i = 0; i < numFolds; ++i){
-            trainingData = dataToTest.trainCV(numFolds, i);             // Set training data.
-            testData = dataToTest.testCV(numFolds, i);            // Set the test-data.
-            if (verbosity > 1)
-                System.out.print("training data: "+trainingData.size()+" testData: "+testData.size()+" ");
-            numTotal += testData.size();
-            if (!Train())
-                continue;
-            numCorrect += Predict();
-            if (verbosity > 0)
-                System.out.println("Fold "+i+" Accuracy: "+currentClassifier.accuracy); // Accuracy of the tests.
-        }
-        if (verbosity > 0)
-            System.out.println(currentClassifier.Name()+" 10-fold accuracy: "+numCorrect / (float) numTotal);
-        // Paste over old data again.
-        trainingData = oldData;
-        return numCorrect / (float) numTotal;
-    }
-
-
     /// Call before predicting. Make sure currentClassifier and trainingData is set before. Returns false if it fails.
     boolean Train(){
-        try {
-            currentClassifier.cls.buildClassifier(trainingData);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.out.println("No.");
         return false;
     }
-    /// Predicts the testData that has been provided. Call Train before. Returns the number of correct predictions.
-    private int Predict() {
-        if (do10FoldCrossValidation == false && verbosity > 0)
-            System.out.print("Predicting using the "+currentClassifier.Name());
-        // Make predictions
-        int good = 0;
-        for (int i = 0; i < testData.numInstances(); i++) {
-            Instance inst = testData.instance(i);
-            double pred = 0;
-            try {
-                pred = currentClassifier.cls.classifyInstance(inst);
-            } catch (Exception e) {
-                e.printStackTrace();
-                continue;
-            }
-            pred = ModifyResult(pred); // If active, modifies result based on history values.
-            if (inst.classValue() == pred){
-                ++good;
-            }
-            if (verbosity >= 2) {
-                System.out.print("ID: " + inst.value(0));
-                System.out.print(", actual: " + testData.classAttribute().value((int) inst.classValue()));
-                System.out.println(", predicted: " + testData.classAttribute().value((int) pred)+" good: "+good);
-            }
-        }
-        currentClassifier.accuracy = good / (float) testData.numInstances();
-        return good;
-    }
 }
-
-// Incremental loading, conserves memory perhaps!
-//    // load data
-//    ArffLoader loader = new ArffLoader();
-//loader.setFile(new File("/some/where/data.arff"));
-//        Instances structure = loader.getStructure();
-//        structure.setClassIndex(structure.numAttributes() - 1);
-//
-//        // train NaiveBayes
-//        NaiveBayesUpdateable nb = new NaiveBayesUpdateable();
-//        nb.buildClassifier(structure);
-//        Instance current;
-//        while ((current = loader.getNextInstance(structure)) != null)
-//        nb.updateClassifier(current);

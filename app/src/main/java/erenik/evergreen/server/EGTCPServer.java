@@ -87,7 +87,7 @@ public class EGTCPServer extends Thread {
         public void OnLog(Log l, Player player) {
             // Log onto a server-file for all player's actions?
             // Append to file?
-            AppendToMergedFile(player.name+": "+l.text);
+            AppendToMergedFile(player.name+": "+l);
         }
     };
 

@@ -23,10 +23,13 @@ public class SensingFrame {
         durationMs = 5000;
         transportString = transport;
     }
+    public long StartTimeMs(){
+        return startTimeMs;
+    };
     // Stored on creation, System.currentTimeMillis();
     long startTimeMs;
     /// Default 5000
-    int durationMs;
+    int durationMs = 5000;
     float accMin, accMax, accAvg, accStdev,
         gyroMin, gyroMax, gyroAvg, gyroStdev;
 
@@ -82,6 +85,9 @@ public class SensingFrame {
     }
     public String toString(){
         return "AccS "+accMagns.size()+" GyroS "+gyroMagns.size()+" "+(startTimeMs/1000)+","+accString(",")+","+gyroString(",")+","+transportString+"\n";
+    }
+    public String shortString(){
+        return "AccAvg: "+accAvg+", GyroAvg: "+gyroAvg+" Transport: "+transportString;
     }
     public String accString(String glue) {
         return accMin+glue+accMax+glue+accAvg+glue+accStdev;

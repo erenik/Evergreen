@@ -36,6 +36,7 @@
     <!-- New colors with the purple icons -->
     <color name="mainTextNew">#fffff8d5</color>
     <color name="iconTextColor">#ff89e850</color>
+    <color name="white">#FFFFFFFF</color>
 
     <!-- Old values
     dedbcb

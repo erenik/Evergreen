@@ -61,6 +61,9 @@ public class ResultsScreen extends EvergreenActivity  {
                     if (trans.contains("Bike")) drawableLeftSide = R.drawable.ri_bike;
 //                    if (trans.contains("Bus")) drawableLeftSide = R.drawable.ri_bus;
                     break;
+                case scoutFoodStashes: drawableLeftSide = R.drawable.ri_forage; break;
+                case scoutMatStashes: drawableLeftSide = R.drawable.ri_gathmats; break;
+                case scoutRandomEncounter: drawableLeftSide = R.drawable.ri_monster_encounter; break;
                 case recoverRecovered: drawableLeftSide = R.drawable.ri_recover; break;
                 case monsterKnockedOutPlayer: drawableLeftSide = R.drawable.ri_defeated; break;
                 case studiesEXP: // Same exp sign for battles and studying.

@@ -189,7 +189,7 @@ public class Player extends Combatable implements Serializable {
         out.writeObject(statArr);
         out.writeObject(transportProbabilityArr);
         for (int i = 0; i < transportProbabilityArr.length; ++i) {
-            System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
+         //   System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
         }
         out.writeObject(skills);
         out.writeObject(dailyActions);
@@ -217,7 +217,7 @@ public class Player extends Combatable implements Serializable {
         transportProbabilityArr = (float[]) in.readObject();
         DefaultTransports();
         for (int i = 0; i < transportProbabilityArr.length; ++i) {
-            System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
+         //   System.out.println("transp: "+i+": "+transportProbabilityArr[i]);
             transports.get(i).Set(TransportStat.RandomProbability, transportProbabilityArr[i]);
         }
 //        System.out.println("name: "+name+" pw: "+password);
@@ -1284,7 +1284,7 @@ public class Player extends Combatable implements Serializable {
                 }
                 if (skip)
                     continue;;
-                file.write((log.get(i).text + "\n").getBytes());
+                file.write((l + "\n").getBytes());
             }
             file.close();
         } catch (FileNotFoundException e) {

@@ -30,7 +30,6 @@ public class MenuActivity extends EvergreenActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
         /// Update GUI.
@@ -54,15 +53,23 @@ public class MenuActivity extends EvergreenActivity {
                 finish();
             }
         });
-        findViewById(R.id.buttonChangeCharacter).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonTransportUsage).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                findViewById(R.id.layoutCharacters).setVisibility(View.VISIBLE);
-                findViewById(R.id.layoutMainMenu).setVisibility(View.INVISIBLE);
-                // Clear and refresh list of characters.
-                populateCharacterList();
+                Intent i = new Intent(getBaseContext(), TransportUsage.class);
+                startActivity(i);
+//                finish();
             }
         });
+        findViewById(R.id.buttonNewCharacter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
+                startActivity(i);
+                finish();
+            }
+        });
+
         findViewById(R.id.buttonHelp).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

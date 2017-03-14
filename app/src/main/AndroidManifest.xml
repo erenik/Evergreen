@@ -32,6 +32,7 @@
         <activity android:name="erenik.evergreen.android.act.InventoryScreen"/>
         <activity android:name="erenik.evergreen.android.act.MenuActivity" />
         <activity android:name="erenik.evergreen.android.act.SelectActivity" />
+        <activity android:name="erenik.evergreen.android.act.TransportUsage" />
         <activity android:name="erenik.evergreen.android.act.GameOver" />
         <activity android:name="erenik.evergreen.android.act.EncounterActivity" />
         <activity android:name="erenik.evergreen.android.act.EventLogViewer" android:label="@string/title_activity_log_viewer" />

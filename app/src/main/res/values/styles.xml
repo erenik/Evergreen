@@ -71,7 +71,8 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textColor">@color/mainTextColor</item>
         <item name="android:textSize">@dimen/textSize</item>
-        <item name="android:padding">@dimen/textPadding</item>
+        <!--
+        <item name="android:padding">@dimen/textPadding</item>-->
         <item name="android:layout_margin">@dimen/textMargin</item>
     </style>
 
@@ -220,6 +221,44 @@
     <style name="Evergreen.ScrollViewLog">
 <!--        <item name="android:background">@drawable/chatlogbg</item>-->
         <item name="android:layout_width">match_parent</item>
+    </style>
+
+
+    <!-- Stuff inherited from the AccelerometerSampler project -->
+    <style name="DefaultLL">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="DefaultLLVertical" parent="DefaultLL">
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="DefaultText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DefaultButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DefaultGraph">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:background">#FFFFFFFF</item>
+    </style>
+
+    <style name="Evergreen.Layout.HalfColumn">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="Evergreen.Spinner">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
 </resources>

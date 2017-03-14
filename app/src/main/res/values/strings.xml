@@ -288,5 +288,6 @@
     <string name="encounterNumMonsters">You encounter (arg) (arg)(s)!</string>
     <string name="encounterSurvived">You survive the encounter!</string>
     <string name="expGained">You gain (arg) experience points!</string>
+    <string name="transportUsage">Transport usage</string>
 
 </resources>

@@ -89,6 +89,8 @@ public enum DAction {
                     System.out.println("Random invention category added: "+aa.value);
                     break;
                 case InventionToCraft:
+                    if (forPlayer.inventions.size() == 0)
+                        return false;
                     index = randomAction.nextInt(forPlayer.inventions.size());
                     if (forPlayer.inventions.size() == 0) {
                        System.out.println("Doesn't have any inventions, skipping");

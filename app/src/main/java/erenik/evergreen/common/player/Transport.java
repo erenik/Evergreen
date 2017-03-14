@@ -10,13 +10,25 @@ import java.util.Random;
  * Created by Emil on 2016-11-11.
  */
 public enum Transport {
-    Walking(1),
-    Bike(1),
-    Bus(1),
-    Tram(0), // Same as bus? Similar at least.
-    Train(1),
-    Car(2), // Higher chance, typical commuter?
-    Plane(0); // Only triggerable by user analysis?
+    Unknown(0, 100, 100, 100),
+    Idle(0, 150, 150, 150),
+    Walking(1, 0, 255, 0),
+    Bike(1, 0, 150, 150),
+    Bus(1, 50, 200, 200),
+    Tram(0, 75, 255, 255), // Same as bus? Similar at least.
+    Train(1, 100, 150, 255),
+    Car(2, 175, 100, 50), // Higher chance, typical commuter?
+    Plane(0, 255, 50, 50); // Only triggerable by user analysis?
+
+    Transport(float defProb, int r, int g, int b) {
+        defaultProbability = defProb;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+    }
+
+    /// For representations of the transports, colors for the graphs, charts, etc.
+    public int r, g, b;
 
     public float Probability() { return Get(TransportStat.RandomProbability);};
     public float defaultProbability = 0;
@@ -29,9 +41,6 @@ public enum Transport {
         stats = (float[]) in.readObject();
     }
 
-    Transport(float defProb) {
-        defaultProbability = defProb;
-    }
     /// CAll after creation of an instance of a transport.
     public void SetDefaults() {
         for (int i = 0; i < TransportStat.values().length; ++i)
@@ -124,5 +133,15 @@ public enum Transport {
             }
         }
         return transports.get(transports.size() - 1);
+    }
+
+    public static Transport GetFromString(String s) {
+        if (s.contains("Idle"))
+            return Transport.Idle;
+        if (s.contains("Foot"))
+            return Transport.Walking;
+        if (s.contains("Bike"))
+            return Transport.Bike;
+        return Transport.Unknown;
     }
 }
