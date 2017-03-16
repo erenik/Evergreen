@@ -15,6 +15,8 @@ public enum EGRequestType {
     Save("SAVE"), // Save character, Body of message should be POJO-save-data of Player object to save.
     Load("LOAD"), // Load character, Body of message should be POJO-save-data of Player object to save.
     GetGamesList("GetGamesList"),
+    ActiveActions("ExecActiveActions"), // To evaluate the active (multiplayer) actions.
+    LoadCharacters("LoadPlayers"), // email and password with a line-break between '\n' as a body. Default charset from EGPacket used, encoded as String object.
     ;
     EGRequestType(String header)
     {

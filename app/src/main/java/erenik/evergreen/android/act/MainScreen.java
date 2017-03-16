@@ -3,13 +3,20 @@ package erenik.evergreen.android.act;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import erenik.evergreen.GameID;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.weka.transport.TransportDetectionService;
@@ -26,6 +33,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     protected void onResume() {
         super.onResume();
         UpdateGUI(); // Always update GUI upon resuming.
+        CheckForUpdates(); // Check for updates?
     }
 
     /**
@@ -56,9 +64,9 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             player.lastEditSystemMs = System.currentTimeMillis(); // Update so auto-loaded works for the most recently-played player-character. :)
             System.out.println("Next day!");
             // Local game? less to think about.
-            if (App.isLocalGame) {
+            if (player.gameID == GameID.LocalGame) {
                 System.out.println("Requesting player: "+player.name);
-                int playersSimulated = simulator.RequestNextDay(player);
+                int playersSimulated = simulator.RequestNextDay(player, true);
                 focusLastLogMessageUponUpdate = false;
                 if (playersSimulated <= 0) { // If not a new day, no need to update GUI, etc.
                     Toast("Simulator encountering some issues.. D:");
@@ -66,22 +74,68 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
                 }
                 // Save progress locally?
                 App.SaveLocally();
+                AfterNewTurn();
             }
-            if (!player.IsAlive())
-            {
-                App.GameOver();
-                finish(); // Finish this activity.
-                return;
+            else { // Save to server?
+                SaveChangesAndCheckForUpdates();
             }
-            // Update UI? lol
-            focusLastLogMessageUponUpdate = true;
-            UpdateGUI();
-            focusLastLogMessageUponUpdate = false;
-            // Check the log for new messages -... will be there, so wtf just go to the walla walla.
-            Intent i = new Intent(getBaseContext(), ResultsScreen.class);
-            startActivity(i);
         }
     };
+
+    void SaveChangesAndCheckForUpdates(){
+        Toast("Saving changes/Checking for updates...");
+        // Load this player?
+        SaveToServer(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    default: Toast("Res: "+reply.ResType().name());
+                        break;
+                    case Player: // Saved, now we got the up-to-date version.
+                        App.UpdatePlayer(Player.fromByteArray(reply.GetBody()));
+                        AfterNewTurn();
+                        Toast("Actions saved");
+                        break;
+                    case OK:
+                        break;
+                }
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+                Toast("Error: "+error.name());
+            }
+        });
+    }
+
+    void AfterNewTurn() {
+        if (!App.GetPlayer().IsAlive()) {
+            App.GameOver();
+            finish(); // Finish this activity.
+            return;
+        }
+        DisplayNewMessagesIfAny();
+    }
+    // Simple question..! New log messages?
+    boolean HaveAnythingNewToPresent(){
+        Player player = App.GetPlayer();
+        // Check if we actually have new log messages to display?
+        for (int i = 0; i < player.log.size(); ++i){
+            if (player.log.get(i).displayedToEndUser == false)
+                return true;
+        }
+        return false;
+    }
+    void DisplayNewMessagesIfAny(){
+        if (!HaveAnythingNewToPresent())
+            return;
+        // Update UI? lol
+        focusLastLogMessageUponUpdate = true;
+        UpdateGUI();
+        focusLastLogMessageUponUpdate = false;
+        // Check the log for new messages -... will be there, so wtf just go to the walla walla.
+        Intent i = new Intent(getBaseContext(), ResultsScreen.class);
+        startActivity(i);
+    }
 
     /// Main init function
     @Override
@@ -98,7 +152,9 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
-        findViewById(R.id.nextDay).setOnClickListener(nextDay);
+        Button buttonNextDay = (Button) findViewById(R.id.nextDay);
+        buttonNextDay.setOnClickListener(nextDay);
+        buttonNextDay.setText(App.GetPlayer().gameID == GameID.LocalGame? "Next day" : "Save/Update");
         findViewById(R.id.buttonMenu).setOnClickListener(openMenu);
         /// Assign listeners for the icons.
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
@@ -107,6 +163,41 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         // Launch the transport-sensing service if not already running.
         Intent serviceIntent = new Intent(getBaseContext(), TransportDetectionService.class);
         getBaseContext().startService(serviceIntent);
+
+        // Check for updates if returning to this screen?
+        CheckForUpdates();
+    }
+
+    void CheckForUpdates(){
+        if (System.currentTimeMillis() < App.GetPlayer().lastSaveTimeSystemMs + 15000) {
+            System.out.println("CheckForUpdates - skipping since we checked it like 5 seconds ago, yo.");
+            return;
+        }
+        System.out.println("Checking for updates...");
+        ToastUp("Checking for updates...");
+        // Load this player?
+        LoadFromServer(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    default: Toast("Res: "+reply.ResType().name());
+                        break;
+                    case Player: // Saved, now we got the up-to-date version.
+                        Player player = Player.fromByteArray(reply.GetBody());
+                        if (player.log.size() > App.GetPlayer().log.size()) // Update only if the log has actually increased (i.e., new stuff to actually present to the player).
+                            App.UpdatePlayer(player);
+                        if (HaveAnythingNewToPresent())
+                            AfterNewTurn();
+                        break;
+                    case OK:
+                        break;
+                }
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+                Toast("Error: "+error.name());
+            }
+        });
     }
 
     private View.OnClickListener viewStatDetails = new View.OnClickListener() {

@@ -35,12 +35,12 @@ public class MenuActivity extends EvergreenActivity {
         /// Update GUI.
 //        UpdateGUI();
 
-        findViewById(R.id.buttonNewCharacter).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.buttonChangeCharacter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
-                startActivity(i);
-                finish();
+                findViewById(R.id.layoutCharacters).setVisibility(View.VISIBLE);
+                findViewById(R.id.layoutMainMenu).setVisibility(View.INVISIBLE);
+                populateCharacterList();
             }
         });
         findViewById(R.id.buttonDeleteAllCharacters).setOnClickListener(new View.OnClickListener() {
@@ -48,7 +48,7 @@ public class MenuActivity extends EvergreenActivity {
             public void onClick(View v) {
                 App.DeletePlayers();
                 App.SaveLocally();
-                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
+                Intent i = new Intent(getBaseContext(), TitleScreen.class);
                 startActivity(i);
                 finish();
             }

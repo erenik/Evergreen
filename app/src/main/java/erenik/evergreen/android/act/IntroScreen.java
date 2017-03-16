@@ -49,9 +49,7 @@ public class IntroScreen extends EvergreenActivity
                         ((ImageView) findViewById(R.id.imageViewIntroOverlay2)).setBackgroundColor(0x88000000);
                         textView.setText(getString(R.string.introText3));
                         break;
-                    default: // Load next view.
-                    {
-                        Save();
+                    default: { // Load next view.
                         System.out.println("Starting new activity");
                         Intent i = new Intent(getBaseContext(), CreateCharacter.class);
                         startActivity(i);

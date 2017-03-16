@@ -1,9 +1,11 @@
 package erenik.evergreen.android.act;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
+import android.preference.Preference;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Queue;
 
 import erenik.evergreen.R;
+import erenik.evergreen.android.App;
 import erenik.evergreen.common.player.Transport;
 import erenik.weka.transport.SensingFrame;
 import erenik.weka.transport.TransportDetectionService;
@@ -84,28 +87,55 @@ public class TransportUsage  extends EvergreenActivity {
             }
         });
 
+        final SharedPreferences sp = App.GetPreferences();
+        final String PREF_HISTORY_SET = "HistorySet";
+        final String PREF_SLEEP_SESSIONS = "SleepSessions";
+        int historySetSize = sp.getInt(PREF_HISTORY_SET, 3);
+        int sleepSessions = sp.getInt(PREF_SLEEP_SESSIONS, 3);
+
         spinner = (Spinner) findViewById(R.id.spinnerHistorySetSize);
         SetSpinnerArray(spinner, R.array.historySetSizes);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 TextView tv = (TextView)view;
-                TransportDetectionService.GetInstance().SetHistorySetSize(Integer.parseInt((String) tv.getText()));
+                if (tv == null) // Otherwise causes FATAL EXCEPTION when returning to the view after long periods of time / yeah.
+                    return;
+                int val = Integer.parseInt((String) tv.getText());
+                SharedPreferences.Editor e = sp.edit();
+                e.putInt(PREF_HISTORY_SET, val);
+                e.commit();
+                TransportDetectionService.GetInstance().SetHistorySetSize(val);
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
+        String[] arr = getBaseContext().getResources().getStringArray(R.array.historySetSizes);
+        for (int i = 0; i < arr.length; ++i){
+            if (arr[i].equals(historySetSize+""))
+                spinner.setSelection(i);
+        }
+
         spinner = (Spinner) findViewById(R.id.spinnerSleepSessions);
         SetSpinnerArray(spinner, R.array.sleepSessions);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 TextView tv = (TextView)view;
-                TransportDetectionService.GetInstance().SetSleepSessions(Integer.parseInt((String) tv.getText()));
+                int val = Integer.parseInt((String) tv.getText());
+                SharedPreferences.Editor e = sp.edit();
+                e.putInt(PREF_SLEEP_SESSIONS, val);
+                e.commit();
+                TransportDetectionService.GetInstance().SetSleepSessions(val);
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
+        arr = getBaseContext().getResources().getStringArray(R.array.sleepSessions);
+        for (int i = 0; i < arr.length; ++i){
+            if (arr[i].equals(sleepSessions+""))
+                spinner.setSelection(i);
+        }
 
         graphTransportDurations = (GraphView) findViewById(R.id.graphTransportDurations);
 

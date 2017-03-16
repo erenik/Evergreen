@@ -5,8 +5,20 @@
  */
 package erenik.evergreen.common.packet;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.nio.CharBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
+import java.nio.ShortBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -24,11 +36,9 @@ import java.nio.ByteBuffer;
  *
  * @author Emil
  */
-public class EGPacket 
-{
-
-    static String defaultAddress = "www.erenik.com";
-    static  int defaultPort = 4000;
+public class EGPacket {
+    /// Used for encoding/decoding String objects into bytes and back.
+    public static final Charset defaultCharset = StandardCharsets.UTF_8;
 
     protected EGPacketType type = null;
     protected EGRequestType reqt = null;
@@ -58,6 +68,8 @@ public class EGPacket
     /// If using Send() function, call .SetDest(ip, port) first.
     private String ip;
     private int port;
+    /// Null until set!
+    EGPacketError error;
 
     EGPacket()
     {
@@ -103,8 +115,45 @@ public class EGPacket
     }
     public static EGPacket player(Player playerInSystem) { // Pack with info on 1 player. Sent as reply for Load packets.
         EGPacket pack = new EGPacket(EGResponseType.Player);
+        pack.type = EGPacketType.Response;
+        pack.rest = EGResponseType.Player;
         pack.body = playerInSystem.toByteArr();
         return pack;
+    }
+    public static EGPacket players(ArrayList<Player> players){
+        EGPacket pack = new EGPacket(EGResponseType.Player);
+        pack.type = EGPacketType.Response;
+        pack.rest = EGResponseType.Players;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ObjectOutputStream oos = null;
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(players);
+            oos.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        pack.body = baos.toByteArray();
+        System.out.println("Total bytes: "+pack.body.length);
+        return pack;
+    }
+    // Parse players from the body.
+    public ArrayList<Player> parsePlayers(){
+        // First byte, write amount of
+        ByteArrayInputStream in = new ByteArrayInputStream(body);
+        ArrayList<Player> players = new ArrayList<>();
+        try {
+            ObjectInputStream ois = null;
+            ois = new ObjectInputStream(in);
+            players = (ArrayList<Player>) ois.readObject();
+            ois.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Read players: "+players.size());
+        return players;
     }
 
     static byte[] bytePart(byte[] bytes, int startIndex, int stopIndex)
@@ -273,12 +322,12 @@ public class EGPacket
         this.port = port;
     }
     /// Sends this packet without waiting for a reponse. The response will be set later in the EGPacket reponse variable, or errors in lastError if responses don't arrive.
-    public boolean Send() {
+    boolean Send() {
         return Send(ip, port);
     }
 
     /// Sends this packet without waiting for a reponse. The response will be set later in the EGPacket reponse variable, or errors in lastError if responses don't arrive.
-    public boolean Send(String address, int portN)
+    boolean Send(String address, int portN)
     {
         byte[] total = build();
         try {
@@ -289,6 +338,7 @@ public class EGPacket
             return true; // Success. Sent well.
         } catch (IOException ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, "Unable to connect to target address/port: "+address+":"+portN, ex);
+            error = EGPacketError.CouldNotEstablishConnection;
         }
         return false;
     }
@@ -336,11 +386,6 @@ public class EGPacket
             return;
         }
         reply = ReadFromSocket(socketSentOn);
-        if (reply != null)
-        {
-            for (int i = 0; i < receiverListeners.size(); ++i) // Notify listeners of the reply we received.
-                receiverListeners.get(i).OnReceivedReply(reply);
-        }
     }
 
     
@@ -407,9 +452,13 @@ public class EGPacket
         }
         return games;
     }
-
-    public void SendToServer()
-    {
-        Send(defaultAddress, defaultPort);
+    void InformListenersOnError() {
+        for (int i = 0; i < receiverListeners.size(); ++i){
+            receiverListeners.get(i).OnError(error);
+        }
+    }
+    public void InformListenersOnReply() {
+        for (int i = 0; i < receiverListeners.size(); ++i) // Notify listeners of the reply we received.
+            receiverListeners.get(i).OnReceivedReply(reply);
     }
 }

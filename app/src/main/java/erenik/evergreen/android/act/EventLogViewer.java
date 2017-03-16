@@ -27,6 +27,9 @@ public class EventLogViewer extends EvergreenActivity {
                     SetFilter(LogType.ATTACK, cb.isChecked());
                     SetFilter(LogType.ATTACKED, cb.isChecked());
                     break;
+                case R.id.checboxVanquished:
+                    SetFilter(LogType.DEFEATED_ENEMY, cb.isChecked());
+                    break;
             }
             UpdateLog();
         }

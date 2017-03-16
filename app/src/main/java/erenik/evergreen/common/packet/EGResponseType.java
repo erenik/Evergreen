@@ -14,6 +14,7 @@ public enum EGResponseType {
     OK("OK"),
     GamesList("GamesList"),
     Player("Player"),
+    Players("Players"),
     Failed("NO"),
 
     /// ERROR responses
@@ -21,6 +22,7 @@ public enum EGResponseType {
     SocketClosed("SocketClosed"),
     BadRequest("BadRequest"),
     ParseError("ParseError"),
+    NoPlayer("NoPlayer"), // When no player found for certain credential for example.
     NoSuchGame("NoSuchGame"), // When ID of game does not exist.
     NoSuchPlayer("NoSuchPlayer"), // When the Player with given name/gameID doesn't exist.
     PlayerWithNameAlreadyExists("PlayerWithNameAlreadyExists"),

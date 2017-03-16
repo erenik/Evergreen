@@ -3,7 +3,6 @@ package erenik.evergreen;
 import java.util.ArrayList;
 import java.util.List;
 
-import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 
 // import erenik.evergreen.android.App;
@@ -44,10 +43,10 @@ public class Simulator
     }
 
     /// Adjusts stats, generates events based on chosen actions to be played, logged. Returns amount of player characters simulated.
-    public int RequestNextDay(Player requestingPlayer) {
+    public int RequestNextDay(Player requestingPlayer, boolean isLocalGame) {
         System.out.println("Simulator.RequestNextDay: Requesting player: "+requestingPlayer);
         /// Local game?
-        if (App.isLocalGame){
+        if (isLocalGame){
             // Simulate it?
             if (localGame.players.indexOf(requestingPlayer) == -1)
                 localGame.players.add(requestingPlayer);

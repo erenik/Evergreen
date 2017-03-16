@@ -46,6 +46,8 @@ public class Player extends Combatable implements Serializable {
     List<PlayerListener> listeners = null;
     List<LogListener> logListeners = null;
     List<Encounter> encountersToProcess = null;
+    public ArrayList<AAction> queuedActiveActions = new ArrayList<>();
+    public String email = "";
 
     /// Creates stuff not added automatically - after creation, or after loading from file via e.g. readObject.
     void Init() {
@@ -67,8 +69,8 @@ public class Player extends Combatable implements Serializable {
     /// The current game you are playing in.
 //    Game game = null; // Re-point it, or create locally as needed.
 
-    public long lastSaveTimeSystemMs = 0;
-    public long lastEditSystemMs = 0;
+    public long lastSaveTimeSystemMs = 0; // Last time it was saved? Or returned to us from the server?
+    public long lastEditSystemMs = 0; // Last time we edited it?
 
     static Random r = new Random(System.nanoTime());
     // Main stats.
@@ -182,9 +184,12 @@ public class Player extends Combatable implements Serializable {
         return false;        
     }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        int version = 1; // 0 - Added active actions. 1- email
+        out.writeInt(version);
         out.writeInt(gameID);
         out.writeObject(name);
         System.out.println("name: "+name);
+        out.writeObject(email);
         out.writeObject(password);
         out.writeObject(statArr);
         out.writeObject(transportProbabilityArr);
@@ -193,6 +198,7 @@ public class Player extends Combatable implements Serializable {
         }
         out.writeObject(skills);
         out.writeObject(dailyActions);
+        out.writeObject(queuedActiveActions);
         out.writeObject(equippedIndices);
         out.writeObject(log);
         out.writeObject(skillTrainingQueue);
@@ -204,14 +210,17 @@ public class Player extends Combatable implements Serializable {
         out.writeObject(logTypesToShow);
         out.writeBoolean(isAI);
         out.writeLong(lastEditSystemMs);
+        out.writeLong(lastSaveTimeSystemMs);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+        int version = in.readInt();
         Init();
         SetDefaultStats();
         // Actually load here
         gameID = in.readInt();
         name = (String) in.readObject();
         System.out.println("name: "+name);
+        email = (String) in.readObject();
         password = (String) in.readObject();
         statArr = (float[]) in.readObject();
         transportProbabilityArr = (float[]) in.readObject();
@@ -223,6 +232,7 @@ public class Player extends Combatable implements Serializable {
 //        System.out.println("name: "+name+" pw: "+password);
         skills = (List<Skill>) in.readObject();
         dailyActions = (List<String>) in.readObject();
+        queuedActiveActions = (ArrayList<AAction>) in.readObject();
         equippedIndices = (List<Integer>) in.readObject();
         log = (List<Log>) in.readObject();
         skillTrainingQueue = (List<String>) in.readObject();
@@ -234,6 +244,7 @@ public class Player extends Combatable implements Serializable {
         logTypesToShow = (List<LogType>) in.readObject();
         isAI = in.readBoolean();
         lastEditSystemMs = in.readLong();
+        lastSaveTimeSystemMs = in.readLong();
         System.out.println("Init from readOBject!");
 
     }
@@ -1258,6 +1269,11 @@ public class Player extends Combatable implements Serializable {
     public void SaveFromClient(Player player) {
         dailyActions = player.dailyActions; // Copy over.
         skillTrainingQueue = player.skillTrainingQueue;
+        queuedActiveActions = player.queuedActiveActions;
+        for (int i = 0; i < log.size() && i < player.log.size(); ++i) {
+            // Save the state of old log messages that have already been viewed by the player.
+            log.get(i).displayedToEndUser = player.log.get(i).displayedToEndUser;
+        }
         // Other stuff? Equipment
 
     }

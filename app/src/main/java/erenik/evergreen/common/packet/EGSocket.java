@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
 /**
  *
@@ -18,7 +20,9 @@ import java.net.Socket;
 public class EGSocket {
 
     EGSocket(String ip, int port) throws IOException {
-        sock = new Socket(ip, port);
+        sock = new Socket();
+        SocketAddress sockAddr = new InetSocketAddress(ip, port);
+        sock.connect(sockAddr, 3000); // 3 second time-out?
     }
     
     

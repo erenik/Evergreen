@@ -32,6 +32,10 @@ public class ResultsScreen extends EvergreenActivity  {
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Mark all log-messages as viewed and save when returning.
+                for (int i = 0; i < App.GetPlayer().log.size(); ++i)
+                    App.GetPlayer().log.get(i).displayedToEndUser = true;
+                Save();
                 finish();
             }
         });

@@ -100,7 +100,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
         float secondsPerSample = 1.f / herz;
         int microsecondsPerSample = (int) (secondsPerSample * 1000000);
-        System.out.println("Using sampling rate of "+herz+"Hz, seconds per sample: "+secondsPerSample+" ms per sample: "+microsecondsPerSample);
+        System.out.println("Using sampling rate of "+herz+"Hz, seconds per sample: "+secondsPerSample+", microseconds per sample: "+microsecondsPerSample);
 //        int microSeconds = 10 000 000;
         sensorManager.registerListener(this, accSensor, microsecondsPerSample);
         sensorManager.registerListener(this, gyroSensor, microsecondsPerSample);

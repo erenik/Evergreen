@@ -9,6 +9,7 @@ import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketCommunicator;
+import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.packet.EGRequestType;
@@ -83,6 +84,11 @@ public class EGTCPClient extends Thread
                             break;
                     }
                 }
+
+                @Override
+                public void OnError(EGPacketError error) {
+                    System.out.println("EGPAcketError: "+error.name());
+                }
             });
             comm.Send(pack);
         }
@@ -135,6 +141,11 @@ public class EGTCPClient extends Thread
                             break;
                     }
                 }
+
+                @Override
+                public void OnError(EGPacketError error) {
+                    System.out.println("EGPAcketError: "+error.name());
+                }
             });
             comm.Send(pack);
         }
@@ -149,6 +160,11 @@ public class EGTCPClient extends Thread
             public void OnReceivedReply(EGPacket reply) {
                 System.out.println("Reply received");
                 games = reply.parseGamesList();
+            }
+
+            @Override
+            public void OnError(EGPacketError error) {
+                System.out.println("EGPAcketError: "+error.name());
             }
         });
         comm.Send(pack);

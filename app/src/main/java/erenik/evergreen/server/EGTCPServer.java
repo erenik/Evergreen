@@ -6,7 +6,9 @@
 package erenik.evergreen.server;
 
 import erenik.evergreen.Game;
+import erenik.evergreen.GameID;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.auth.Auth;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogListener;
 import erenik.evergreen.common.logging.LogType;
@@ -23,6 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -92,8 +96,16 @@ public class EGTCPServer extends Thread {
     };
 
     public static void main(String[] args) throws Exception {
+        int numAIs = 5;
+
+        for (int i = 0; i < args.length; ++i){
+            System.out.println("args "+i+": "+args[i]);
+            if (args[i].equals("-ais"))
+                numAIs = Integer.parseInt(args[i+1]);
+        }
+
         Log("Launching server", "INFO");
-        EGTCPClient.LaunchClients(5); // TODO: Remove later, move to have as args for adding AI.
+        EGTCPClient.LaunchClients(numAIs); // TODO: Remove later, move to have as args for adding AI.
 
         if (args.length > 2) {
             if (args[0].equals("test")) {
@@ -118,6 +130,18 @@ public class EGTCPServer extends Thread {
     void StartServer() throws IOException {
         // Create main game list.
         games = Game.CreateDefaultGames();
+        // Create default players?
+        for (int i = 0; i < games.size(); ++i){
+            Game g = games.get(i);
+            Player player = new Player();
+            player.name = "Erenik";
+            player.isAI = false;
+            player.email = "emil_hedemalm@hotmail.com";
+            player.password = Auth.Encrypt("1234", Auth.DefaultKey);
+            player.gameID = g.GameID();
+            System.out.println("Adding default player");
+            g.AddPlayer(player);
+        }
         Host();
         /// Host server.
         long lastUpdateMs = System.currentTimeMillis();
@@ -246,6 +270,9 @@ public class EGTCPServer extends Thread {
                 EvaluateLoadRequest(sock, pack);
                 break;
             }
+            case LoadCharacters:{
+                EvaluateLoadCharactersRequest(sock, pack);
+            }
             case GetGamesList: {
                 try {
                     Log("EGTCPServer.EvaluateRequest");
@@ -279,7 +306,7 @@ public class EGTCPServer extends Thread {
         }
         if (player.CredentialsMatch(playerInSystem)) { // Passwords etc. match?
             if (verbosityLevel > 1)
-                Log("Load success, playerName: "+playerInSystem.name+", replying data to client");
+                Log("Save success, playerName: "+playerInSystem.name+", replying up-to-date data to client");
             // Copy over stats from the system one from the one sent by the client.
             playerInSystem.SaveFromClient(player); // Then save it.
             Reply(sock, EGPacket.player(playerInSystem).build());            // Reply the player in system.
@@ -323,6 +350,54 @@ public class EGTCPServer extends Thread {
         }
         Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());        // Check cause of failure. Bad authentication? Name already exists?
     }
+
+    private void EvaluateLoadCharactersRequest(Socket sock, EGPacket pack) {
+        // Extract the details.
+        //String name = ;
+        byte[] body = pack.GetBody();
+        String bodyAsString = new String(body, EGPacket.defaultCharset);
+
+        String[] strarr = bodyAsString.split("\n");
+        for (int i = 0; i < strarr.length; ++i)
+            System.out.println("arr: "+strarr[i]);
+        if (strarr.length < 2) {
+            Reply(sock, EGPacket.error(EGResponseType.ParseError).build());
+            return;
+        }
+        String email = strarr[0],
+            password = strarr[1];
+        ArrayList<Player> players = GetPlayers(email, password);
+        if (players.size() == 0) {
+            players = GetPlayersByEmail(email);
+            if (players.size() > 0){
+                Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());
+                return;
+            }
+            Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build());
+            return;
+        }
+        Log("Load success, found "+players.size()+" players, replying data to client");
+        Reply(sock, EGPacket.players(players).build());            // Reply the player in system.
+    }
+
+    private ArrayList<Player> GetPlayersByEmail(String email) {
+        ArrayList<Player> p = new ArrayList<>();
+        for (int i = 0; i < games.size(); ++i){
+            Game g = games.get(i);
+            p.addAll(g.GetCharacters(email));
+        }
+        return p;
+    }
+
+    private ArrayList<Player> GetPlayers(String email, String password) {
+        ArrayList<Player> p = new ArrayList<>();
+        for (int i = 0; i < games.size(); ++i){
+            Game g = games.get(i);
+            p.addAll(g.GetCharacters(email, password));
+        }
+        return p;
+    }
+
 
     private void EvaluateCreateRequest(Socket sock, EGPacket pack) {
         Player player = Player.fromByteArray(pack.GetBody());

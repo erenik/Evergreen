@@ -14,12 +14,31 @@ public class EGPacketSender extends Thread {
     public EGPacketSender()
     {
     }
+    // Packets to receive updates - success? Error? Inform listeners and remove from array afterwards
+    private List<EGPacket> packetsToReceiveUpdates = new ArrayList<>();
     public void QueuePacket(EGPacket pack, String ip, int port) {
         pack.SetDest(ip, port); // Set dest.
         packetsToSend.add(pack); // Add to list.
         // TODO: Make sure thread is started?
         assert(threadStarted);
+        packetsToReceiveUpdates.add(pack);
     //    StartSingleton(); // Start thread sender as needed.
+    }
+    /// Checks for updates and informs listeners on old packets. Returns number of packets left to receive updates.
+    public int CheckForUpdates(){
+        for (int i = 0; i < packetsToReceiveUpdates.size(); ++i){
+            EGPacket pack = packetsToReceiveUpdates.get(i);
+            if (pack.error == null)
+                continue;
+            boolean good = false;
+            if (pack.error == EGPacketError.NoError)
+                good = true;
+            if (!good)
+                pack.InformListenersOnError();
+            packetsToReceiveUpdates.remove(pack);
+            --i;
+        }
+        return packetsToReceiveUpdates.size();
     }
 
     boolean stop = false;
@@ -63,7 +82,7 @@ public class EGPacketSender extends Thread {
                 if (packsSend > 0)
                     Log("sent "+packsSend+" packs");
                 if (packetsToSend.size() == 0)
-                    Thread.sleep(1000);
+                    Thread.sleep(10);
                 else
                     Thread.sleep(EGPacketCommunicator.retryTimeMs * multiplier);
             } catch (InterruptedException ex) {

@@ -1,5 +1,6 @@
 package erenik.evergreen.common.auth;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -20,26 +21,28 @@ import java.security.*;
  * Created by Emil on 2016-11-23.
  */
 public class Auth {
-    
-/*
-    public static PrivateKey GetPrivateKey(String filename) throws Exception 
-    {
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-        PKCS8EncodedKeySpec spec =
-          new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePrivate(spec);
-    }
 
-    public static PublicKey GetPublicKey(String filename) throws Exception 
-    {
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-        X509EncodedKeySpec spec =
-          new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
-    }
-  */
+    public static String DefaultKey = "1233455557777888";
+
+    /*
+        public static PrivateKey GetPrivateKey(String filename) throws Exception
+        {
+            byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
+            PKCS8EncodedKeySpec spec =
+              new PKCS8EncodedKeySpec(keyBytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(spec);
+        }
+
+        public static PublicKey GetPublicKey(String filename) throws Exception
+        {
+            byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
+            X509EncodedKeySpec spec =
+              new X509EncodedKeySpec(keyBytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(spec);
+        }
+      */
     /// Generates 2 keys. Saves them into files and returns the file-names.
     public static String[] GenerateKeys() throws NoSuchAlgorithmException, NoSuchProviderException
     {
@@ -80,27 +83,39 @@ public class Auth {
     }
     
     /// Mode should be Cipher.ENCRYPT_MODE or Cipher.DECRYPT_MODE
-    static Cipher InitCipher(String password, int mode) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException
-    {
+    static Cipher InitCipher(String password, int mode)
+            throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        Cipher cipher = null;
+        cipher = Cipher.getInstance( "PBEWithMD5AndDES" );   // initialize cipher in encrypt mode
+        while (password.length() % cipher.getBlockSize() > 0){
+            password = password + " ";
+        }
+        System.out.println("Password mofified to : \""+password+"\"");
         SecretKey secretKey = GenSecretKey(password);
         int iterationCount = 100;// specifies parameters used with password based encryption
         PBEParameterSpec parameterSpec = new PBEParameterSpec( salt, iterationCount );   // obtain cipher instance reference
-        Cipher cipher = null;
-        cipher = Cipher.getInstance( "PBEWithMD5AndDES" );   // initialize cipher in encrypt mode
         cipher.init( mode, secretKey, parameterSpec );
         return cipher;
     }
-
+    /// Encrypts text with target password.
     public static String Encrypt(String textToEncrypt, String password)
     {
-        // create secret key and get cipher instance
         try {
             Cipher cipher = InitCipher(password, Cipher.ENCRYPT_MODE);
-            byte[] bytesToEncrypt = textToEncrypt.getBytes();
+            System.out.println("Block size: "+cipher.getBlockSize());
+            while(textToEncrypt.length() < cipher.getBlockSize()){
+                textToEncrypt = textToEncrypt + " ";
+            }
+            // create secret key and get cipher instance
+            System.out.println("pw for encryption: "+password);
+            for (int i = 0; i  < textToEncrypt.length(); ++i){
+                System.out.println((int)textToEncrypt.charAt(i)+" "+(int)textToEncrypt.charAt(i));
+            }
+            byte[] bytesToEncrypt = textToEncrypt.getBytes(StandardCharsets.UTF_8);
             byte[] cipherText = new byte[cipher.getOutputSize(bytesToEncrypt.length)];
             int ctLength = cipher.update(bytesToEncrypt, 0, bytesToEncrypt.length, cipherText, 0);
             ctLength += cipher.doFinal(cipherText, ctLength);
-            String encrypted = new String(cipherText);
+            String encrypted = new String(cipherText, StandardCharsets.UTF_8);
             return encrypted;
         } catch ( Exception exception ) {
             exception.printStackTrace();

@@ -26,7 +26,7 @@
             <CheckBox style="@style/Evergreen.Checkbox" android:text="Attacks" android:id="@+id/checkboxDamage"
                 android:button="@drawable/evergreen_checkbox"
                 />
-            <CheckBox style="@style/Evergreen.Checkbox" android:text="Filter3" android:id="@+id/checkbox3"
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Vanquished" android:id="@+id/checboxVanquished"
                 android:button="@drawable/evergreen_checkbox"
                 />
             <CheckBox style="@style/Evergreen.Checkbox" android:text="Filter4" android:id="@+id/checkbox4"

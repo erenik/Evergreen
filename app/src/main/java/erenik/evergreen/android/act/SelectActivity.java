@@ -1,17 +1,27 @@
 package erenik.evergreen.android.act;
 
 import android.content.pm.ActivityInfo;
+import android.database.DataSetObserver;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +43,7 @@ public class SelectActivity extends EvergreenActivity
     List<Skill> selectedSkills = new ArrayList<Skill>();
     List<DAction> selectedDActions = new ArrayList<DAction>();
     int buttonBgId = R.drawable.small_button;
+    AAction activeAction = null;
 
     private final View.OnClickListener addItem = new View.OnClickListener()
     {
@@ -41,8 +52,68 @@ public class SelectActivity extends EvergreenActivity
         {
             Button b = (Button)v;
             String text = b.getText().toString();
-            if (type == SELECT_DAILY_ACTION)
-            {
+            if (type == SELECT_ACTIVE_ACTION){
+                // o-o
+                // Open display with further options
+                activeAction = AAction.GetFromString(text);
+                ViewGroup vg = (ViewGroup) findViewById(R.id.layoutQueue);
+                vg.removeAllViews();
+                switch (activeAction){
+                    case GiveResources:
+                        Spinner spinPlayer = new Spinner(getBaseContext());
+
+
+                        ArrayAdapter<String> adapter = new ArrayAdapter(getBaseContext(), android.R.layout.simple_spinner_item);
+                        //.createFromResource(this, arrayID, android.R.layout.simple_spinner_item);// Specify the layout to use when the list of choices appears
+                        // Add choices to the thingy.
+                        List<String> choices = App.GetPlayer().knownPlayerNames;
+                        adapter.addAll(choices);
+                        adapter.setDropDownViewResource(R.layout.evergreen_spinner_dropdown_item);
+                        spinPlayer.setAdapter(adapter);// Apply the adapter to the spinner
+                        spinPlayer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                activeAction.targetPlayer = (String) ((TextView)view).getText();
+                                System.out.println("Resource to give");
+                            }
+                            @Override public void onNothingSelected(AdapterView<?> parent) {}
+                        });
+                        vg.addView(spinPlayer);
+
+                        Spinner spin = new Spinner(getBaseContext());
+                        SetSpinnerArray(spin, R.array.historySetSizes);
+                        spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                activeAction.resourceToGive = (String) ((TextView)view).getText();
+                                System.out.println("Resource to give");
+                            }
+                            @Override public void onNothingSelected(AdapterView<?> parent) {}
+                        });
+                        vg.addView(spin);
+                        EditText et = new EditText(getBaseContext());
+                        et.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        et.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                            @Override
+                            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                                activeAction.quantity = Float.parseFloat((String) v.getText());
+                                return false;
+                            }
+                        });
+                        vg.addView(et);
+                        break;
+                }
+                Button okButton = new Button(getBaseContext());
+                okButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // Verify arguments first?
+                        App.GetPlayer().queuedActiveActions.add(activeAction);                            // Save it?
+                        App.DoQueuedActions();                            // Do it?
+                    }
+                });
+                vg.addView(okButton);
+                return;
+            }
+            if (type == SELECT_DAILY_ACTION) {
                 // Get action
                 DAction da = DAction.GetFromString(text);
                 if (da.requiredArguments.size() >= 1)
@@ -54,7 +125,7 @@ public class SelectActivity extends EvergreenActivity
                     sdf.show(fragMan, "selectDactionDetails");
                     return;
                 }
-                }
+            }
             selected.add(text);
             clicked(b.getText());
             updateQueue(); // Update queue gui.
@@ -188,23 +259,18 @@ public class SelectActivity extends EvergreenActivity
         {
             Player player = App.GetPlayer();
             // Check stuff in list at present. Catenate. Return result? Save into player?
-            if (type == SELECT_DAILY_ACTION)
-            {
+            if (type == SELECT_DAILY_ACTION) {
                 player.dailyActions.clear();
                 for (int i = 0; i < selected.size(); ++i)
-                {
-                    // Just save it as Strings?
-                    player.dailyActions.add(selected.get(i));
-                }
+                    player.dailyActions.add(selected.get(i));                    // Just save it as Strings?
             }
-            else if (type == SELECT_SKILL)
-            {
+            else if (type == SELECT_SKILL) {
                 player.skillTrainingQueue.clear();
                 for (int i = 0; i < selected.size(); ++i)
-                {
                     player.skillTrainingQueue.add(selected.get(i));
-                }
             }
+            App.SaveLocally(); // Save the updates first.
+            SaveToServer(null); // Try save to server, ignore checking the updates for now.
             finish();
         }
     };
@@ -228,22 +294,23 @@ public class SelectActivity extends EvergreenActivity
 
         type = getIntent().getIntExtra("Type", 0);
 
-        int arrayId = -1;
         String itemsHeaderName = "Possible items";
         String header = "heeeee";
         List<String> itemNames = new ArrayList<String>();
         switch(type)
         {
             case SELECT_DAILY_ACTION:
-                arrayId = R.array.dailyActions;
                 header = "Select Daily Action";
                 itemsHeaderName = "Daily actions";
                 itemNames = DAction.Names();
                 break;
-            case SELECT_ACTIVE_ACTION: arrayId = R.array.activeActions; break;
+            case SELECT_ACTIVE_ACTION:
+                header = "Active actions";
+                itemsHeaderName = "Details";
+                itemNames = AAction.Names();
+                break;
             case SELECT_SKILL:
                 header = "Select skill to train";
-                arrayId = R.array.skills;
                 itemsHeaderName = "Trainable Skills";
                 itemNames = Skill.Names();
                 break;

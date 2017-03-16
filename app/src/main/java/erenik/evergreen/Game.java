@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -175,8 +176,8 @@ public class Game
     public static List<Game> CreateDefaultGames()
     {
         List<Game> games = new ArrayList<>();
-        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
-//        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame_60Seconds, "60 seconds"));
+//        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
+        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame_60Seconds, "60 seconds"));
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
   //      games.add(Game.UpdatesEveryMinutes(60, GameID.GlobalGame_60Minutes, "60 minutes"));
         return games;
@@ -244,6 +245,7 @@ public class Game
     // Adds player, saves all player data to file.
     public void AddPlayer(Player player) {
         players.add(player);
+        player.gameID = this.GameID();
         // Save all players?
         Save();
     }
@@ -289,5 +291,28 @@ public class Game
             return randPlayer;
         }
         return null;
+    }
+
+    public ArrayList<Player> GetCharacters(String email, String password) {
+        ArrayList<Player> alp = new ArrayList<>();
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            System.out.println(p.email+" == "+email+"? "+p.email.equals(email)+" "
+                    +p.password+" == "+password+"? "+p.password.equals(password)+ " len: "+p.password.length()+" "+password.length());
+            if (p.email.equals(email) && p.password.equals(password))
+                alp.add(p);
+        }
+        return alp;
+    }
+
+    public Collection<? extends Player> GetCharacters(String email) {
+        ArrayList<Player> alp = new ArrayList<>();
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            System.out.println(p.email+" == "+email+"? "+p.email.equals(email));
+            if (p.email.equals(email))
+                alp.add(p);
+        }
+        return alp;
     }
 }

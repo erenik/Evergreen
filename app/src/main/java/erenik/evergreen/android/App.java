@@ -7,8 +7,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Display;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,12 +23,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import erenik.evergreen.GameID;
 import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
+import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketCommunicator;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 
@@ -34,11 +42,16 @@ import erenik.evergreen.R;
  */
 public class App {
 
-    static public String ip = "www.erenik.com";
-    static public int port = 4000;
+
+    static String defaultAddress =
+            "192.168.0.11";
+    // www.erenik.com";
+    static int defaultPort = 4000;
+//    static public String ip = "www.erenik.com";
+//    static public int port = 4000;
 
     // Static reference. Updated from listener declared in Startup.
-    public static Activity currentActivity;
+    public static EvergreenActivity currentActivity;
     public static Activity mainScreenActivity;
 
     public static Application.ActivityLifecycleCallbacks actLCCallback;
@@ -49,8 +62,15 @@ public class App {
     static private List<Player> players = new ArrayList<>();
     // Player, should be put or created into the list of players, based on what was loaded upon start-up.
     static private Player player = null;
-    public static EGPacketCommunicator comm = new EGPacketCommunicator();
-    public static boolean isLocalGame = false, isMultiplayerGame = false; // Set upon start.
+    static private EGPacketCommunicator comm = null;
+   // public static boolean isLocalGame = false,
+     //       isMultiplayerGame = false; // Set upon start.
+
+
+    static void InitCommunicator(){
+        comm = new EGPacketCommunicator();
+        comm.SetServerIP(defaultAddress);
+    }
 
     static public Player GetPlayer()
     {
@@ -175,7 +195,7 @@ public class App {
             @Override
             public void onActivityResumed(Activity activity) {
                 System.out.println("Acitivity resumed: " + activity.getLocalClassName());
-                App.currentActivity = activity;
+                App.currentActivity = (EvergreenActivity) activity;
             }
             @Override
             public void onActivityPaused(Activity activity) {
@@ -186,12 +206,12 @@ public class App {
             public void onActivityCreated(Activity activity, Bundle savedInstanceState)
             {
                 System.out.println("Acitivity created: " + activity.getLocalClassName());
-                App.currentActivity = activity; // this?
+                App.currentActivity = (EvergreenActivity) activity; // this?
             }
             @Override
             public void onActivityStarted(Activity activity) {
                 System.out.println("Acitivity started: " + activity.getLocalClassName());
-                App.currentActivity = activity;
+                App.currentActivity = (EvergreenActivity) activity;
                 runningActivities.add(activity);
             }
             @Override
@@ -204,7 +224,7 @@ public class App {
             public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
             }
         };
-        App.currentActivity = activity; // Point it right.
+        App.currentActivity = (EvergreenActivity) activity; // Point it right.
         activity.getApplication().registerActivityLifecycleCallbacks(App.actLCCallback); // Set lifecycle callback listener for the application/activity.
     }
 
@@ -346,12 +366,6 @@ public class App {
     public static void MakeActivePlayer(Player playerToBecomeActive) {
         App.player = playerToBecomeActive;
         System.out.println("GameID: "+playerToBecomeActive.gameID);
-        if (playerToBecomeActive.gameID <= 0){
-            App.isLocalGame = true;
-        }
-        else
-            App.isLocalGame = false;
-        App.isMultiplayerGame = !App.isLocalGame;
     }
 
     public static Player GetMostRecentlyEditedPlayer() {
@@ -381,5 +395,75 @@ public class App {
             case 7: return R.drawable.av_07;
         }
         return R.drawable.icon;
+    }
+
+    public static void DoQueuedActions() {
+        // If local game, apply changes straight away.
+        // For multiplayer, launch a Thread or Async
+        EGPacket pack = EGRequest.PerformActiveActions(GetPlayer());
+        pack.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                currentActivity.Toast("Active actions sent.");
+            }
+
+            @Override
+            public void OnError(EGPacketError error) {
+                currentActivity.Toast("Error: "+error.name());
+            }
+        });
+        Send(pack);
+        currentActivity.Toast("Active action queued.");
+    }
+
+    /// Sends the packet to its destination - probably the default server?
+    static int handlerUpdateDelayMs = 20;
+    static Handler packetHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (comm.CheckForUpdates() > 0)
+                packetHandler.sendMessageDelayed(new Message(), handlerUpdateDelayMs); // Update every second?
+            return true;
+        }
+    });
+    public static void Send(EGPacket pack) {
+        if (comm == null)
+            InitCommunicator();
+        comm.Send(pack);
+        packetHandler.sendMessageDelayed(new Message(), handlerUpdateDelayMs); // Update every second?
+    }
+
+
+    public static void SetPlayers(ArrayList<Player> players) {
+        App.players = players;
+        App.SaveLocally();
+    }
+
+    public static void UpdatePlayer(Player player) {
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            if (p.name.equals(player.name) && p.gameID == player.gameID){
+                // Remove from array.
+                players.remove(p);
+                players.add(player);
+                player.lastSaveTimeSystemMs = System.currentTimeMillis();
+                App.player = player; // Assume it is the active one.
+                return;
+            }
+        }
+        System.out.println("FAILED TO UPDATE");
+        System.exit(14);
+    }
+
+    public static boolean IsLocalGame() {
+        return player.gameID == GameID.LocalGame;
+    }
+
+    public static void SetLocalGame() {
+        player.gameID = GameID.LocalGame;
+    }
+
+    public static void SetMultiplayer() {
+        player.gameID = GameID.GlobalGame_60Seconds;
     }
 }

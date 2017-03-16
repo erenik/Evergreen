@@ -111,7 +111,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         });
 
         /// If local game, hide the e-mail and password annoying shits.
-        if (App.isLocalGame) {
+        if (App.IsLocalGame()) {
             ViewGroup vg = (ViewGroup) findViewById(R.id.layoutEmailPassword);
             vg.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
             vg.setVisibility(View.INVISIBLE);
@@ -289,7 +289,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
             player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
         }
-        if (App.isLocalGame) {
+        if (App.IsLocalGame()) {
             /// Just make a player using the chosen config on this screen and go to the main menu without waiting.
             App.RegisterPlayer(player);
             App.MakeActivePlayer(player);

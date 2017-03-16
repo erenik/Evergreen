@@ -9,6 +9,13 @@
         <item>2 inventions</item>
     </string-array>
 
+    <string-array name="resource_types">
+        <item>Food</item>
+        <item>Materials</item>
+        <item>Inventions</item>
+        <item>Items</item>
+    </string-array>
+
     <!--0 - Easiest, 10% progress lost upon death (all stats n skills).
         1 - Easy, 20%,
         2 - Medium, 35% loss,

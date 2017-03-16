@@ -1,21 +1,60 @@
 package erenik.evergreen.common.player;
 
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.logging.LogType;
 
 /**
  * Created by Emil on 2016-11-11.
  */
-public enum AAction {
+public enum AAction implements Serializable {
     ReadReceivedMessages("Read received messages", "Reads/processes one of the messages or requests that you have received from other players", ActionArgument.ReceivedMessage),
-    ExploreAbandonedShelter("Explore Abandoned shelter", "Explores one of the shelters you've found previously. It may yield resources, but could also contain "),
-    ExplorePlayerInhabitedShelter("Explore Inhabited shelter", "Explores one of the inhabited shelters you found previously"),
-    CoTransport("Co-Transport", "Share a transport with target player, reducing emissions and increasing social support bonuses.", ActionArgument.Player),
+ //   ExploreAbandonedShelter("Explore Abandoned shelter", "Explores one of the shelters you've found previously. It may yield resources, but could also contain "),
+//    ExplorePlayerInhabitedShelter("Explore Inhabited shelter", "Explores one of the inhabited shelters you found previously"),
+    CoTransport("Co-Transport", "Share a transport with target player, reducing emissions and increasing social support bonuses if you get attacked during transport.", ActionArgument.Player),
     GiveResources("Give resources", "Gives resources to target player", new ActionArgument[]{ActionArgument.Player, ActionArgument.ResourceType, ActionArgument.ResourceQuantity}),
     RequestResources("Request resources", "Request resources from target player", new ActionArgument[]{ActionArgument.Player,ActionArgument.ResourceType, ActionArgument.ResourceQuantity}),
     SendMessage("Send message", "Send a message to some player", ActionArgument.Player, ActionArgument.Text),
-    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
+//    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
     ;
+    /// o-o
+    public List<ActionArgument> requiredArguments = new ArrayList<ActionArgument>();
+    public String text = "";
+    public String description = "";
+
+    public String message = ""; // For the SendMessage.
+    public String targetPlayer = "";
+    public String transportToShare = ""; // Add later? if at all.
+    public String resourceToGive = ""; // Can be used to request resources as well.
+    public float quantity = 0;
+    boolean processed = false; // Set to true on server when it has actually been processed.
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        int version = 0; // Initial version.
+        out.writeInt(version);
+        out.writeObject(message);
+        out.writeObject(targetPlayer);
+        out.writeObject(transportToShare);
+        out.writeObject(resourceToGive);
+        out.writeFloat(quantity);
+        out.writeBoolean(processed);
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+        int version = in.readInt();
+        message = (String) in.readObject();
+        targetPlayer = (String) in.readObject();
+        transportToShare = (String) in.readObject();
+        resourceToGive = (String) in.readObject();
+        quantity = in.readFloat();
+        processed = in.readBoolean();
+    }
+
     AAction(String txt, String description)
     {
         this.text = txt;
@@ -41,10 +80,6 @@ public enum AAction {
         for (int i = 0; i < args.length; ++i)
             requiredArguments.add(args[i]);
     }
-    /// o-o
-    public List<ActionArgument> requiredArguments = new ArrayList<ActionArgument>();
-    public String text = "";
-    public String description = "";
 
     public static AAction ParseFrom(String s)
     {

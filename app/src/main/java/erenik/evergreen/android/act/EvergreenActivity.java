@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import erenik.evergreen.Game;
+import erenik.evergreen.GameID;
 import erenik.evergreen.android.ui.EvergreenButton;
 import erenik.evergreen.android.ui.EvergreenTextView;
 import erenik.evergreen.common.Invention.Invention;
@@ -40,6 +41,7 @@ import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.packet.EGRequest;
@@ -64,10 +66,17 @@ public class EvergreenActivity extends AppCompatActivity
         Toast toast = Toast.makeText(context, text, duration);
         toast.show();
     }
-    protected void Toast(String text) {
+    public void Toast(String text) {
         Context context = getApplicationContext();
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+    public void ToastUp(String text){
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }
     void GoToMainScreen() {
@@ -138,14 +147,18 @@ public class EvergreenActivity extends AppCompatActivity
     void GetGamesList() {
         System.out.println("Requesting games list from server...");
         EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
-        pack.addReceiverListener(new EGPacketReceiverListener()
-        {
+        pack.addReceiverListener(new EGPacketReceiverListener() {
             @Override
             public void OnReceivedReply(EGPacket reply) {
                 gameList = reply.parseGamesList();
             }
+
+            @Override
+            public void OnError(EGPacketError error) {
+                Toast("PacketError: "+error.name());
+            }
         });
-        App.comm.Send(pack);
+        App.Send(pack);
 //        pack.SendToServer(); // Send to default server.
     }
 
@@ -191,52 +204,40 @@ public class EvergreenActivity extends AppCompatActivity
 
 
 
-    /// General Save/Load. Will determine if it needs to perform it locally or remotely.
+    /// General Save/Load. Generally saves locally only? Will determine if it needs to perform it locally or remotely.
     public boolean Save() {
         // For now, save locally and remotely, for testing purposes.
         App.SaveLocally();
-        if (App.isMultiplayerGame)
-            SaveToServer();
+//        if (App.GetPlayer().gameID != GameID.LocalGame)
+        SaveToServer(null); // Save changes, ignoring any new updates for now.
         return true;
     }
     /// Ease of use method, just loads..?
     public boolean Load() {
         App.LoadLocally();
-        if (App.isMultiplayerGame)
-            LoadFromServer();
+    //    if (App.GetPlayer().gameID != GameID.LocalGame)
+      //      LoadFromServer();
         return true;
     }
 
-    private boolean SaveToServer() {
+    protected boolean SaveToServer(EGPacketReceiverListener responseListener) {
         Player player = App.GetPlayer();
-        System.out.println("Saving to server.");
-        // Connect to server.
-//        EGPacketReceiver.StartSingleton();
+        System.out.println("Saving to server.");// Connect to server.
         EGRequest req = EGRequest.Save(player);
-        App.comm.Send(req);
-//        req.WaitForResponse(1000); // No waiting allowed. Use callbacks only!
-        req.addReceiverListener(new EGPacketReceiverListener() {
-            @Override
-            public void OnReceivedReply(EGPacket reply) {
-                System.out.println("Got reply? : "+reply.toString());
-            }
-        });
+        if (responseListener != null)
+            req.addReceiverListener(responseListener);
+        App.Send(req);//        req.WaitForResponse(1000); // No waiting allowed. Use callbacks only!
         return true;
     }
-    public static boolean LoadFromServer() {
+    protected static boolean LoadFromServer(EGPacketReceiverListener responseListener) {
         // Connect to server.
         Player player = App.GetPlayer();
         System.out.println("Loading from server.");
         // Send shit.
         EGRequest req = EGRequest.Load(player);
-        App.comm.Send(req);
-        req.WaitForResponse(1000);
-        if (req.GetReply() == null)
-        {
-            System.out.println("Failed to get a reply with current timeout.");
-            return false;
-        }
-        System.out.println("Got reply? : "+req.GetReply().toString());
+        if (responseListener != null)
+            req.addReceiverListener(responseListener);
+        App.Send(req);
         return true;
     }
 

@@ -37,4 +37,14 @@ public class EGPacketCommunicator {
             receiver.start();
         }
     }
+    /// Sets the IP stuff should be sent to by default for requests.
+    public void SetServerIP(String defaultAddress) {
+        this.ip = defaultAddress;
+    }
+    /// Returns non-0 if there are more updates to be had later.
+    public int CheckForUpdates() {
+        int updatesToGet = sender.CheckForUpdates();
+        updatesToGet += receiver.CheckForUpdates();
+        return updatesToGet;
+    }
 }

@@ -6,4 +6,5 @@ package erenik.evergreen.common.packet;
 
 public interface EGPacketReceiverListener {
     void OnReceivedReply(EGPacket reply);
+    void OnError(EGPacketError error);
 }

@@ -34,6 +34,7 @@ public class EGPacketReceiver extends Thread
     */
     void NewPacketWaitingForResponse(EGPacket pack) {
         packetsWaitingForReponses.add(pack);
+        packetsToBeUpdated.add(pack);
     }
 //    public static boolean HasPacketsToReceive(){
   //      return packetsWaitingForReponses.size() > 0;
@@ -42,6 +43,7 @@ public class EGPacketReceiver extends Thread
     boolean stop = false;
    // private EGPacketReceiver epr;
     private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
+    private List<EGPacket> packetsToBeUpdated = new ArrayList<>();
 
     void Log(String s) {
         // Do nothing for the moment. Pass it onto a file or listener later perhaps.
@@ -54,7 +56,7 @@ public class EGPacketReceiver extends Thread
         {
             try {
                 if (packetsWaitingForReponses.size() == 0)
-                    Thread.sleep(1000);
+                    Thread.sleep(10);
                 else
                 {
                     int sleepTime = EGPacketCommunicator.retryTimeMs * multiplier;
@@ -99,5 +101,18 @@ public class EGPacketReceiver extends Thread
         }
         Log("Stopping EGPacketSender thread.");
  //       epr = null; // Kill self. Allow restart of the thread.
+    }
+
+    public int CheckForUpdates() {
+        for (int i = 0; i < packetsToBeUpdated.size(); ++i){
+            EGPacket pack = packetsToBeUpdated.get(i);
+            EGPacket reply = pack.reply;
+            if (reply != null) {
+                pack.InformListenersOnReply();
+                packetsToBeUpdated.remove(pack);
+                --i;
+            }
+        }
+        return packetsToBeUpdated.size();
     }
 };

@@ -2,12 +2,21 @@ package erenik.evergreen.android.act;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
+
+import java.util.ArrayList;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
+import erenik.evergreen.common.auth.Auth;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
 
 /**
  * Activity that starts the thingy.
@@ -21,20 +30,76 @@ public class TitleScreen extends EvergreenActivity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title_screen);
+        View v = findViewById(R.id.layoutMainButtons);
+        v.setVisibility(View.VISIBLE);
+        findViewById(R.id.layout_loadGameButtons).setVisibility(View.INVISIBLE);
         findViewById(R.id.button_singleplayer).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                App.isLocalGame = true;
-                App.isMultiplayerGame = false;
+                App.SetLocalGame();
                 TryLoadOrNewGame();
             }
         });
         findViewById(R.id.button_multiplayer).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                App.isMultiplayerGame = true;
-                App.isLocalGame = false;
+                App.SetMultiplayer();
                 TryLoadOrNewGame();
+            }
+        });
+        findViewById(R.id.button_loadGame).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                findViewById(R.id.layoutMainButtons).setVisibility(View.INVISIBLE);
+                findViewById(R.id.layout_loadGameButtons).setVisibility(View.VISIBLE);
+            }
+        });
+        findViewById(R.id.buttonBack).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                findViewById(R.id.layoutMainButtons).setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_loadGameButtons).setVisibility(View.INVISIBLE);
+            }
+        });
+        findViewById(R.id.button_tryLoad).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String email = ((EditText)findViewById(R.id.autoCompleteTextView_email)).getText().toString();
+                String pw = ((EditText)findViewById(R.id.editText_password)).getText().toString();
+                String encPw = Auth.Encrypt(pw, Auth.DefaultKey);
+                System.out.println("Sending to server: "+email+" pw: "+encPw);
+//                Toast("Trying to send to server...");
+                EGPacket pack = EGRequest.LoadCharacters(email, encPw);
+                App.Send(pack);
+                pack.addReceiverListener(new EGPacketReceiverListener() {
+                    @Override
+                    public void OnReceivedReply(EGPacket reply) {
+                        switch (reply.ResType()){
+                            default:
+                                Toast("Unclear res type: "+reply.ResType().name());
+                                break;
+                            case BadPassword:
+                                ToastUp("Bad password, try again");
+                                break;
+                            case NoSuchPlayer:
+                                ToastUp("Found no players under that e-mail and password. Try again.");
+                                break;
+                            case Players:
+                                ToastUp("Received reply");
+                                System.out.println("Received reply: "+reply.toString());
+                                ArrayList<Player> players = reply.parsePlayers();
+                                App.SetPlayers(reply.parsePlayers());
+                                // Open screen to select them, or just auto-load the first one?
+                                App.MakeActivePlayer(players.get(0));
+                                GoToMainScreen();
+                                break;
+                        }
+                    }
+                    @Override
+                    public void OnError(EGPacketError error) {
+                        Toast("Error: "+error.name());
+                    }
+                });
             }
         });
         /// Check for local save file (default user-name, hashed pw, statistics, et al).
