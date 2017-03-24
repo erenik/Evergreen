@@ -21,6 +21,10 @@ public class Invention implements Serializable {
     public InventionType type;
     int inventionSubType = -1; // Used for weapons only, to remember which type was generated? Used for the iterative/upgrade invention feature as well.
     int additionalEffect = -1; // Used for weapons only.
+    /// Returns the item ID for crafted items, should be the same on client and server-side, so can be used for equipping/using items easily.
+    public long GetID(){ return itemID; };
+    private long itemID = -1; // Created incrementally for new items. Should be entirely unique!
+    static private long itemIDenumerator = 0; // Used on server-side mainly.
     int[] stats = new int[InventionStat.values().length];
 
     /// Temporary stats, saved into stats-array later.
@@ -75,6 +79,7 @@ public class Invention implements Serializable {
     }
     public Invention CraftInventionFromBlueprint() {
         Invention inv = Invention.Construct(this);
+        inv.itemID = ++itemIDenumerator;
         // Copy over stats?
         inv.name = name;
         for (int i = 0; i < InventionStat.values().length; ++i)
@@ -82,22 +87,23 @@ public class Invention implements Serializable {
         return inv;
     }
 
-
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        System.out.println("Invention writeObject");
+//        System.out.println("Invention writeObject");
         writeObjectToStream(out);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        System.out.println("Invention readObject");
+  //      System.out.println("Invention readObject");
         readObjectFromStream(in);
     }
     protected void writeObjectToStream(java.io.ObjectOutputStream out) throws IOException{
         out.writeObject(name);
         out.writeObject(stats);
+        out.writeLong(itemID);
     }
     protected void readObjectFromStream(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         name = (String) in.readObject();
         stats = (int[]) in.readObject();
+        itemID = in.readLong();
         type = InventionType.values()[Get(InventionStat.Type)]; // Assign type after reading from stream.
     }
 

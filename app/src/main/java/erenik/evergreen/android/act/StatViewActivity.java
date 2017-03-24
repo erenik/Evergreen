@@ -158,6 +158,12 @@ public class StatViewActivity extends EvergreenActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UpdateUI(); // If something was equipped for example..
+    }
+
     /// Populate the available items.
         /*
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutItems);

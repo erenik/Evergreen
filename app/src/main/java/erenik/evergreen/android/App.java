@@ -27,6 +27,7 @@ import erenik.evergreen.GameID;
 import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
@@ -63,7 +64,9 @@ public class App {
     // Player, should be put or created into the list of players, based on what was loaded upon start-up.
     static private Player player = null;
     static private EGPacketCommunicator comm = null;
-   // public static boolean isLocalGame = false,
+    /// Used during creation of new characters ONLY. After creation the integer should be checked with the player object itself.
+    public static int gameID = GameID.BadID;
+    // public static boolean isLocalGame = false,
      //       isMultiplayerGame = false; // Set upon start.
 
 
@@ -81,7 +84,7 @@ public class App {
         EvergreenActivity ea = (EvergreenActivity)currentActivity;
         if (ea == null)
             return false;
-        return ea.Save();
+        return ea.SaveLocally();
     }
 
     public static boolean HandleGeneratedEvents() {
@@ -141,6 +144,7 @@ public class App {
     }
 
     /// No filter, all is shown.
+    /*
     public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay)
     {
         UpdateLog(vg, context, maxLinesToDisplay, Arrays.asList(LogType.values()));
@@ -148,8 +152,8 @@ public class App {
     // Specify filter.
     public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay, List<LogType> typesToShow)
     {
-
-    }
+        System.out.println("WTF?");
+    }*/
 
     /// Utility method.
     public static Point GetScreenSize(){
@@ -171,7 +175,7 @@ public class App {
             ac = mainScreenActivity;
         else if (ac == null && runningActivities.size() > 0)
             ac = runningActivities.get(0);
-        System.out.println("currentActivity: "+currentActivity+" mainScreen: "+mainScreenActivity+" index 0: "+(runningActivities.size() > 0? runningActivities.get(0) : "no"));
+//        System.out.println("currentActivity: "+currentActivity+" mainScreen: "+mainScreenActivity+" index 0: "+(runningActivities.size() > 0? runningActivities.get(0) : "no"));
         if (ac == null)
             return null;
         return GetPreferences(ac);
@@ -325,6 +329,8 @@ public class App {
             objectIn = new ObjectInputStream(fileIn);
             for (int i = 0; i < numPlayersSaved; ++i) {
                 Player p = (Player) objectIn.readObject();
+                if (p == null)
+                    continue; // Skip if it went bad.
                 players.add(p);
                 if (p.name.equals(activePlayerName)) // Retain active player if loading while still playing.
                     player = p;
@@ -365,6 +371,8 @@ public class App {
     /// Makes the player active, and changes app config to enable swift handling of its associated game, locality, etc.
     public static void MakeActivePlayer(Player playerToBecomeActive) {
         App.player = playerToBecomeActive;
+        if (players.indexOf(playerToBecomeActive) == -1) // Add it to the array if needed :)
+            players.add(playerToBecomeActive);
         System.out.println("GameID: "+playerToBecomeActive.gameID);
     }
 
@@ -446,6 +454,7 @@ public class App {
                 // Remove from array.
                 players.remove(p);
                 players.add(player);
+                player.log = p.log;
                 player.lastSaveTimeSystemMs = System.currentTimeMillis();
                 App.player = player; // Assume it is the active one.
                 return;
@@ -456,14 +465,33 @@ public class App {
     }
 
     public static boolean IsLocalGame() {
-        return player.gameID == GameID.LocalGame;
+        if (player != null)
+            return player.gameID == GameID.LocalGame;
+        return App.gameID == GameID.LocalGame;
     }
 
     public static void SetLocalGame() {
-        player.gameID = GameID.LocalGame;
+        App.gameID = GameID.LocalGame;
     }
 
     public static void SetMultiplayer() {
-        player.gameID = GameID.GlobalGame_60Seconds;
+        App.gameID = GameID.GlobalGame; // Can be any or all, up to the server (testing phase).
+    }
+
+    public static void SetActivePlayer(Player toBeActivePlayer) {
+        player = toBeActivePlayer;
+    }
+
+    public static void RemovePlayer(Player player) {
+        players.remove(player);
+        SaveLocally();
+    }
+
+    public static void UpdateUI() {
+        Activity act = currentActivity;
+        if (act instanceof EvergreenActivity){
+            EvergreenActivity ea = (EvergreenActivity) act;
+            ea.UpdateUI();
+        }
     }
 }

@@ -4,7 +4,7 @@ package erenik.evergreen.common.player;
  * Created by Emil on 2016-11-11.
  */
 public enum TransportStat {
-    RandomProbability, // Probability that this transport is chosen when randomizing transport each turn/day.
+    // Probability that this transport is chosen when randomizing transport each turn/day. No.
     EmissionsPerDay,
     ForagingBonus,
     MaterialGatheringBonus,
@@ -14,12 +14,8 @@ public enum TransportStat {
     SocialSupport, // Attack & Defense bonus from other passangers.
     ;
 
-    public float DefaultValue()
-    {
-        switch (this)
-        {
-            case RandomProbability:
-                return 1;
+    public float DefaultValue() {
+        switch (this) {
             default:
                 return 0;
         }

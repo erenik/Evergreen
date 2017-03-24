@@ -1,7 +1,9 @@
 package erenik.evergreen.android.act;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -10,13 +12,20 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+
 import erenik.evergreen.GameID;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
+import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
+import erenik.evergreen.common.packet.EGResponseType;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.weka.transport.TransportDetectionService;
@@ -32,7 +41,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        UpdateGUI(); // Always update GUI upon resuming.
+        UpdateUI(); // Always update GUI upon resuming.
         CheckForUpdates(); // Check for updates?
     }
 
@@ -46,8 +55,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         public void onClick(View view)
         {
             int selection = -1;
-            switch(view.getId())
-            {
+            switch(view.getId()) {
                 case R.id.buttonChooseSkill: selection = SelectActivity.SELECT_SKILL; break;
                 case R.id.buttonChooseAction: selection = SelectActivity.SELECT_DAILY_ACTION; break;
                 case R.id.buttonChooseActiveAction: selection = SelectActivity.SELECT_ACTIVE_ACTION; break;
@@ -62,7 +70,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         public void onClick(View v) {
             Player player = App.GetPlayer();
             player.lastEditSystemMs = System.currentTimeMillis(); // Update so auto-loaded works for the most recently-played player-character. :)
-            System.out.println("Next day!");
+            System.out.println("Next day! GameID: "+player.gameID);
             // Local game? less to think about.
             if (player.gameID == GameID.LocalGame) {
                 System.out.println("Requesting player: "+player.name);
@@ -74,7 +82,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
                 }
                 // Save progress locally?
                 App.SaveLocally();
-                AfterNewTurn();
+                UpdateUI();
             }
             else { // Save to server?
                 SaveChangesAndCheckForUpdates();
@@ -82,58 +90,77 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         }
     };
 
+    long lastSaveTry = 0;
     void SaveChangesAndCheckForUpdates(){
-        Toast("Saving changes/Checking for updates...");
-        // Load this player?
-        SaveToServer(new EGPacketReceiverListener() {
-            @Override
-            public void OnReceivedReply(EGPacket reply) {
-                switch (reply.ResType()){
-                    default: Toast("Res: "+reply.ResType().name());
-                        break;
-                    case Player: // Saved, now we got the up-to-date version.
-                        App.UpdatePlayer(Player.fromByteArray(reply.GetBody()));
-                        AfterNewTurn();
-                        Toast("Actions saved");
-                        break;
-                    case OK:
-                        break;
-                }
-            }
-            @Override
-            public void OnError(EGPacketError error) {
-                Toast("Error: "+error.name());
-            }
-        });
-    }
-
-    void AfterNewTurn() {
-        if (!App.GetPlayer().IsAlive()) {
-            App.GameOver();
-            finish(); // Finish this activity.
+        long now = System.currentTimeMillis();
+        if (now < lastSaveTry + 1000) {
+            System.out.println("Skipping saving, try again in a second.");
             return;
         }
-        DisplayNewMessagesIfAny();
+        lastSaveTry = now;
+        Toast("Saving changes/Checking for updates...");
+        SaveToServer();
     }
+
     // Simple question..! New log messages?
     boolean HaveAnythingNewToPresent(){
         Player player = App.GetPlayer();
         // Check if we actually have new log messages to display?
         for (int i = 0; i < player.log.size(); ++i){
-            if (player.log.get(i).displayedToEndUser == false)
+            if (player.log.get(i).displayedToEndUser == 0)
                 return true;
         }
         return false;
     }
+
+    private void PresentSystemMessageIfNewOne() {
+        Player player = App.GetPlayer();
+        final String sysmsg = player.sysmsg;
+        if (!sysmsg.equals(LastDisplayedSystemMessage())){
+            if (sysmsg.length() < 3)
+                return; // Nothing to present really.
+            // New one? present it.
+            TextView tv = (TextView)findViewById(R.id.textView_sysMsg);
+            tv.setText(sysmsg);
+            if (sysmsg.contains("http")){
+                tv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        System.out.println("Very clickable, yo.");
+                        int urlStartIndex = sysmsg.indexOf("http");
+                        String url = sysmsg.substring(urlStartIndex);
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(browserIntent);
+                    }
+                });
+            }
+            findViewById(R.id.layout_sysmsg).setVisibility(View.VISIBLE);
+            UpdateBackgroundView(findViewById(R.id.layout_sysmsg));
+            findViewById(R.id.button_sysmsgConfirm).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SetLastDisplayedSystemMessage(sysmsg);
+                    findViewById(R.id.layout_sysmsg).setVisibility(View.INVISIBLE);
+                }
+            });
+//            SetLastDisplayedSysMsg(sysmsg);
+        }
+    }
+
+    private final String SYS_MSG_KEY = "EG_SYS_MSG";
+    private String LastDisplayedSystemMessage() {
+        SharedPreferences sp = App.GetPreferences();
+        return sp.getString(SYS_MSG_KEY, "");
+    }
+    private void SetLastDisplayedSystemMessage(String msg){
+        SharedPreferences sp = App.GetPreferences();
+        sp.edit().putString(SYS_MSG_KEY, msg).commit(); // Set new message and save.
+    }
+
     void DisplayNewMessagesIfAny(){
         if (!HaveAnythingNewToPresent())
             return;
-        // Update UI? lol
-        focusLastLogMessageUponUpdate = true;
-        UpdateGUI();
-        focusLastLogMessageUponUpdate = false;
-        // Check the log for new messages -... will be there, so wtf just go to the walla walla.
-        Intent i = new Intent(getBaseContext(), ResultsScreen.class);
+        Intent i = new Intent(getBaseContext(), ResultsScreen.class);// Check the log for new messages -... will be there, so wtf just go to the walla walla.
         startActivity(i);
     }
 
@@ -144,8 +171,14 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
-        Load();
-        UpdateGUI();
+        if (App.GetPlayer() == null){ // Auto-load from local save if player is still null when entering the main screen.
+            boolean ok = Load();
+            // And if it fails, abort and show a message about it?
+            Toast("Unable to auto-load player when entering MainScreen. Aborting");
+            finish();
+            return;
+        }
+        UpdateUI();
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
@@ -154,7 +187,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
         Button buttonNextDay = (Button) findViewById(R.id.nextDay);
         buttonNextDay.setOnClickListener(nextDay);
-        buttonNextDay.setText(App.GetPlayer().gameID == GameID.LocalGame? "Next day" : "Save/Update");
+        buttonNextDay.setText(App.IsLocalGame()? "Next day" : "Save/Update");
         findViewById(R.id.buttonMenu).setOnClickListener(openMenu);
         /// Assign listeners for the icons.
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
@@ -167,39 +200,30 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         // Check for updates if returning to this screen?
         CheckForUpdates();
     }
-
+    /// Add check so we don't double check when state changes happen and at least 2 functions call this at the same time..?
+    static long lastCheckMs = 0;
     void CheckForUpdates(){
+        long now = System.currentTimeMillis();
+        if (now < lastCheckMs + 5000) { // OK.
+            System.out.println("Skipping check since we already checked 5 second ago.");
+            return;
+        }
+        lastCheckMs = now;
+        if (App.IsLocalGame()){ // Then don't
+            System.out.println("Local game. Skipping checking updates.");
+            return;
+        }
         if (System.currentTimeMillis() < App.GetPlayer().lastSaveTimeSystemMs + 15000) {
             System.out.println("CheckForUpdates - skipping since we checked it like 5 seconds ago, yo.");
             return;
         }
-        System.out.println("Checking for updates...");
-        ToastUp("Checking for updates...");
-        // Load this player?
-        LoadFromServer(new EGPacketReceiverListener() {
-            @Override
-            public void OnReceivedReply(EGPacket reply) {
-                switch (reply.ResType()){
-                    default: Toast("Res: "+reply.ResType().name());
-                        break;
-                    case Player: // Saved, now we got the up-to-date version.
-                        Player player = Player.fromByteArray(reply.GetBody());
-                        if (player.log.size() > App.GetPlayer().log.size()) // Update only if the log has actually increased (i.e., new stuff to actually present to the player).
-                            App.UpdatePlayer(player);
-                        if (HaveAnythingNewToPresent())
-                            AfterNewTurn();
-                        break;
-                    case OK:
-                        break;
-                }
-            }
-            @Override
-            public void OnError(EGPacketError error) {
-                Toast("Error: "+error.name());
-            }
-        });
+        RequestClientData();
     }
 
+/*    private void OnPlayerUpdated() {
+        UpdateGUI();
+    }
+*/
     private View.OnClickListener viewStatDetails = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -219,13 +243,20 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     };
 
     /// Updates all GUI, stats, logs, etc. Called after any change / returning to this activity from another one, pretty much.
-    void UpdateGUI() {
+    public void UpdateUI() {
         Player player = App.GetPlayer();
         if (player == null){
             Toast("Trying to update gui with null player D:");
             return;
         }
-        ((ImageView) findViewById(R.id.imageView_avatar)).setImageResource(App.GetDrawableForAvatarID((int) player.Get(Stat.Avatar)));
+        if (!player.IsAlive()) {
+            App.GameOver();
+            finish(); // Finish this activity.
+            return;
+        }
+        DisplayNewMessagesIfAny();
+
+        ((ImageView) findViewById(R.id.imageView_avatar)).setImageResource(App.GetDrawableForAvatarID((int) player.Get(Config.Avatar)));
         SetText(R.id.textViewName, player.name);
         SetText(R.id.textViewHP, player.GetInt(Stat.HP)+"/"+player.MaxHP());
         SetText(R.id.textViewFood, player.GetInt(Stat.FOOD)+"");
@@ -238,6 +269,12 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         UpdateSkillButton();
         UpdateShelterRepresentation();
         UpdateLog();
+        UpdateBackground();
+
+        if (HaveAnythingNewToPresent()) { // Decide whether to show some ne splash screen? New log messages or sysmsg?
+            // Or new system messages..!
+            PresentSystemMessageIfNewOne();
+        }
     }
 
     private void UpdateShelterRepresentation() {
@@ -288,7 +325,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
                 UpdateSkillButton();
                 break;
         }
-        Save();
+        SaveLocally();
     }
 
     /// Upates the text of the active action button based on what is currently being done/selected by the player.
@@ -305,8 +342,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     private void UpdateDailyActionButton() {
         Player player = App.GetPlayer();
         TextView tv = ((TextView) findViewById(R.id.buttonChooseAction));
-        if (player.dailyActions.size() > 0)
-            tv.setText(getString(R.string.DailyActions)+" ("+player.dailyActions.size()+")");
+        if (player.cd.dailyActions.size() > 0)
+            tv.setText(getString(R.string.DailyActions)+" ("+player.cd.dailyActions.size()+")");
         else
             tv.setText(getString(R.string.DailyActions));
     }
@@ -314,8 +351,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     private void UpdateSkillButton() {
         Player player = App.GetPlayer();
         TextView tv = ((TextView) findViewById(R.id.buttonChooseSkill));
-        if (player.skillTrainingQueue.size() > 0)
-            tv.setText(getString(R.string.SkillTraining)+" ("+player.skillTrainingQueue.size()+")");
+        if (player.cd.skillTrainingQueue.size() > 0)
+            tv.setText(getString(R.string.SkillTraining)+" ("+player.cd.skillTrainingQueue.size()+")");
         else
             tv.setText(getString(R.string.SkillTraining));
     }

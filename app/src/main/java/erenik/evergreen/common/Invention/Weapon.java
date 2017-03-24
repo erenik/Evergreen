@@ -111,11 +111,11 @@ public class Weapon extends Invention  implements Serializable {
 
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        System.out.println("Weapon writeObject");
+//        System.out.println("Weapon writeObject");
         writeObjectToStream(out);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        System.out.println("Weapon readObject");
+  //      System.out.println("Weapon readObject");
         readObjectFromStream(in);
     }
     private void readObjectNoData() throws ObjectStreamException {

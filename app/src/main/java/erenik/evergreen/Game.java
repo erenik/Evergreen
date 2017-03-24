@@ -1,15 +1,22 @@
 package erenik.evergreen;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import erenik.evergreen.common.Enumerator;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.auth.Auth;
+import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.Json;
 import erenik.util.Tuple;
@@ -24,10 +31,16 @@ import erenik.util.Tuple;
  *
  * Created by Emil on 2016-12-10.
  */
-public class Game
-{
+public class Game implements Serializable {
+    public Game(){
+        logEnumerator = new Enumerator();
+        Log.logIDEnumerator = logEnumerator; // Set it.
+    }
     GameID gameID = new GameID(-1, ""); // Contains name, id #, type string.
     private int updateIntervalSeconds = 0; // If non-0, updates to new turn every x minutes.
+    private static String lastError = ""; // Updated as needed, not saved.
+
+    Enumerator logEnumerator = null;
 
     /** Game that this player belongs to.
      *  0 - Local game. Backed up on server for practical purposes.
@@ -42,7 +55,6 @@ public class Game
     /** List of players in the game */
     List<Player> players = new ArrayList<>();
 
-    String fileName(){ return "game_"+gameID.id+".sav"; }
     /// Save data to file.
     boolean Save() {
         // Save ID.
@@ -51,45 +63,83 @@ public class Game
         try {
             file = new FileOutputStream(fileName());
             objectOut = new ObjectOutputStream(file);
-            // Save num players.
-            int numPlayers = players.size();
-            objectOut.writeInt(numPlayers);
-            for (int i = 0; i < players.size(); ++i)
-            {
-                Player p = players.get(i);
-                objectOut.writeObject(p);
-            }
+            objectOut.writeObject(this);
+            objectOut.close(); // Close the stream so that it actually saves to the file?
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }
         return true;
     }
     /// Load data from file.
-    boolean Load(String fromFile) {
+    static public Game Load(String fromFile) {
         // Save ID.
         FileInputStream file;
         ObjectInputStream objectIn;
         try {
             file = new FileInputStream(fromFile);
             objectIn = new ObjectInputStream(file);
-            // Load num players.
-            players.clear();
-            int numPlayers = objectIn.readInt();
-            for (int i = 0; i < numPlayers; ++i)
-            {
-                Player player = new Player();
-                try {
-                    player = (Player) objectIn.readObject();
-                    players.add(player);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-        } catch (java.io.IOException e) {
+            Game game = (Game) objectIn.readObject();
+            objectIn.close(); // Close the SCHTREAM!
+            return game;
+        } catch (FileNotFoundException fnfe){
+            lastError = "File not found.";
+            return null;
+        }
+        catch (java.io.IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return true;
+        return null;
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        System.out.println("Game writeObject");
+        out.writeObject(gameID);
+        out.writeInt(updateIntervalSeconds);
+        out.writeObject(logEnumerator);
+        // Save num players.
+        int numPlayers = players.size();
+        out.writeInt(numPlayers);
+        for (int i = 0; i < players.size(); ++i)
+        {
+            Player p = players.get(i);
+            p.sendAll = Player.SEND_ALL; // Save everything by default.
+            p.sendLogs = Player.SEND_ALL; // Send all logs to file.
+            out.writeObject(p);
+        }
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+        System.out.println("Game readObject");
+        gameID = (GameID) in.readObject();
+        updateIntervalSeconds =  in.readInt();
+        logEnumerator = (Enumerator) in.readObject();
+        Log.logIDEnumerator = logEnumerator; // Set it.
+        // Load num players.
+        players = new ArrayList<>();
+        int numPlayers = in.readInt();
+        System.out.println("Game readObject - before players");
+        for (int i = 0; i < numPlayers; ++i)
+        {
+            Player player = new Player();
+            try {
+                System.out.println("Game readObject - player "+i);
+                player = (Player) in.readObject();
+                if (player == null){
+                    System.out.println("lolFailed to read playeR? D:");
+                    continue;
+                }
+                if (player.sendAll != Player.SEND_ALL) {
+                    System.out.println("Incomplete player saved. WTF?");
+                    continue;
+                }
+                players.add(player);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                break;
+            }
+        }
     }
 
     public void AddDefaultAI() {
@@ -97,6 +147,7 @@ public class Game
         players.add(Player.NewAI("Mad Max"));
         players.add(Player.NewAI("Mad Marvin"));
     }
+
 
     /// returns num of player characters simulated.
     public int NextDay() {
@@ -108,6 +159,14 @@ public class Game
             return 0;
         }
         int activePlayers = ActivePlayers();
+        if (activePlayers == 0){
+            System.out.println("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
+            return 0;
+        }
+        if (UpdatesSinceLastDay() == 0){
+            System.out.println("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day.");
+            return 0;
+        }
         System.out.println("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
         int numSimulated = 0;
         for (int i = 0; i < players.size(); ++i)
@@ -132,7 +191,16 @@ public class Game
         return numSimulated;
     }
 
-    private int ActivePlayers() {
+    /// Player updates since last day.
+    private int UpdatesSinceLastDay() {
+        int updates = 0;
+        for (int i = 0; i < players.size(); ++i){
+            updates += players.get(i).updatesFromClient.size();
+        }
+        return updates;
+    }
+
+    public int ActivePlayers() {
         int tot = 0;
         for (int i = 0; i < players.size(); ++i)
         {
@@ -161,8 +229,7 @@ public class Game
         }
         return null;
     }
-    public Player GetPlayer(String name)
-    {
+    public Player GetPlayer(String name) {
         for (int i = 0; i < players.size(); ++i)
         {
             Player p = players.get(i);
@@ -177,11 +244,26 @@ public class Game
     {
         List<Game> games = new ArrayList<>();
 //        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
-        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame_60Seconds, "60 seconds"));
+        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
   //      games.add(Game.UpdatesEveryMinutes(60, GameID.GlobalGame_60Minutes, "60 minutes"));
+
+        for (int i = 0; i < games.size(); ++i)
+            games.get(i).CreateDefaultPlayers();
         return games;
     }
+    private void CreateDefaultPlayers() {
+        // Create default players?
+        Player player = new Player();
+        player.name = "Erenik";
+        player.isAI = false;
+        player.email = "emil_hedemalm@hotmail.com";
+        player.password = Auth.Encrypt("1234", Auth.DefaultKey);
+        player.gameID = GameID();
+        System.out.println("Adding default player");
+        AddPlayer(player);
+    }
+
 
     private static Game UpdatesEverySeconds(int seconds, int gameID, String gameName) {
         Game g = new Game();
@@ -315,4 +397,10 @@ public class Game
         }
         return alp;
     }
+
+    public static String DefaultPath(int forID) {
+        return "game_"+forID+".sav";
+    }
+
+    String fileName(){ return DefaultPath(gameID.id); }
 }

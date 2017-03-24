@@ -15,12 +15,17 @@ import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.player.Config;
+
+import static erenik.evergreen.common.player.Config.LatestLogMessageIDSeen;
 
 /**
  * Created by Emil on 2017-03-03.
  */
 
 public class ResultsScreen extends EvergreenActivity  {
+
+    long lastID = 0;
 
     /// Main init function
     @Override
@@ -29,31 +34,25 @@ public class ResultsScreen extends EvergreenActivity  {
         setContentView(R.layout.activity_results_screen);
 
         Button b = (Button) findViewById(R.id.buttonOK);
-        b.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Mark all log-messages as viewed and save when returning.
-                for (int i = 0; i < App.GetPlayer().log.size(); ++i)
-                    App.GetPlayer().log.get(i).displayedToEndUser = true;
-                Save();
-                finish();
-            }
-        });
 
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutContents); // Reset layout with contents.
         vg.removeAllViews();
-
-
+        lastID = 0;
         // Populate it with those log messages which we are interested in viewing here in the results screen? All log messages which haven't been flagged as "displayed" yet.
         Player p = App.GetPlayer();
+        int logMessagesAdded = 0;
+        long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
+        System.out.println("LastID seen: "+lastLogMessageIDSeen);
         for (int i = 0; i < p.log.size(); ++i){
             boolean centered = false;
             int textSize = 18;
             int drawableLeftSide = 0;
             Log l = p.log.get(i);
-            if (l.displayedToEndUser)
+            if (l.LogID() <= lastLogMessageIDSeen)
                 continue;
-            l.displayedToEndUser = true;
+            System.out.println("l.LogID(): "+l.LogID());
+            l.displayedToEndUser = 1;
+            lastID = l.LogID();
             TextView viewToAdd = null;
             switch (l.TextID()){
                 case transportOfTheDay:
@@ -121,6 +120,7 @@ public class ResultsScreen extends EvergreenActivity  {
                     viewToAdd = t;
                     break;
             }
+            ++logMessagesAdded;
             LinearLayout ll = new LinearLayout(getBaseContext());
             LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lllp.leftMargin = 10;
@@ -152,7 +152,32 @@ public class ResultsScreen extends EvergreenActivity  {
                 ll.addView(viewToAdd);
             }
         }
+        if (logMessagesAdded == 0) {
+            finish(); // Don't show this if empty....
+            System.out.println("I'm sorry, master...");
+        }
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Mark all log-messages as viewed and save when returning.
+                Player p = App.GetPlayer();
+                for (int i = 0; i < p.log.size(); ++i)
+                    p.log.get(i).displayedToEndUser = 1;
+                if (lastID > p.Get(Config.LatestLogMessageIDSeen)) {
+                    p.Set(LatestLogMessageIDSeen, lastID);
+                    System.out.println("LastID set to: " + p.Get(Config.LatestLogMessageIDSeen));
+                }
+                SaveLocally();
+                finish();
+            }
+        });
+    }
 
+    private long LastLogMsgSeen() {
+        return App.GetPreferences().getLong("LAST_LOG_SEEN", 0);
+    }
+    void SetLastLogMsgSeen(){
+//        return App.GetPreferences().getLong("LAST_LOG_SEEN", 0);
     }
 
 }

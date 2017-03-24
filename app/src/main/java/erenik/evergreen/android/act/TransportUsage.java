@@ -34,6 +34,7 @@ import erenik.evergreen.common.player.Transport;
 import erenik.weka.transport.SensingFrame;
 import erenik.weka.transport.TransportDetectionService;
 import erenik.weka.transport.TransportOccurrence;
+import erenik.weka.transport.TransportType;
 
 /**
  * Created by Emil on 2017-03-08.
@@ -191,15 +192,15 @@ public class TransportUsage  extends EvergreenActivity {
         graphTransportDurations.removeAllSeries(); // Remove old data from graph.
         final ArrayList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
 
-        int max = 10;
+        long max = 10;
         for (int i = 0; i < stats.size(); ++i){
             final BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
             TransportOccurrence to = stats.get(i);
-            if (to.durationMs <= 0)
+            if (to.DurationSeconds() <= 0)
                 continue;
 //            System.out.println("To: "+to.transport+" "+to.durationMs);
             // Add it?
-            int seconds = (int) (to.durationMs / 1000);
+            long seconds = to.DurationSeconds();
             if (seconds > max)
                 max = seconds;
             series.appendData(new DataPoint(to.transport.ordinal(), seconds), false, 10);
@@ -211,7 +212,7 @@ public class TransportUsage  extends EvergreenActivity {
             series.setValueDependentColor(new ValueDependentColor<DataPoint>() {
                 @Override
                 public int get(DataPoint data) {
-                    Transport trans = Transport.GetFromString(service.GetTransportString((int)data.getX()));
+                    TransportType trans = TransportType.GetFromString(service.GetTransportString((int)data.getX()));
                     return Color.rgb(trans.r, trans.g, trans.b);
                 }
             });
@@ -237,7 +238,7 @@ public class TransportUsage  extends EvergreenActivity {
                 } else {
                     // show currency for y values
                     for (int i = 0; i < stats.size(); ++i){
-                        if (value == stats.get(i).durationMs / 1000){
+                        if (value == stats.get(i).DurationSeconds()){
                             return stats.get(i).transport.name()+", "+super.formatLabel(value, isValueX)+"s";
                         }
                     }

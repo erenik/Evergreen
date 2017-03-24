@@ -43,7 +43,14 @@ import erenik.evergreen.android.auth.NetworkTask;
 import erenik.evergreen.android.auth.NetworkTaskListener;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.auth.Auth;
+import erenik.evergreen.common.combat.Combatable;
 import erenik.evergreen.common.logging.LogTextID;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
+import erenik.evergreen.common.player.Config;
 import erenik.evergreen.common.player.Stat;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -69,7 +76,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
     private View mProgressView;
     private View mLoginFormView;
     int avatarID = 0;
-    String bonus = "";
+    int bonusID = -1;
     private String difficulty = "";
 
     @Override
@@ -83,7 +90,12 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TextView b = (TextView) view;
                 System.out.println("Bonus selected: "+b.getText());
-                bonus = (String) b.getText();
+                for (int i = 0; i < Player.StartingBonus.values().length; ++i){
+                    String text  = (String) b.getText();
+                    if (text.equals(Player.StartingBonus.values()[i])){
+                        bonusID = i;
+                    }
+                }
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
@@ -252,43 +264,19 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             return;
         }
         Player player = new Player();
+        player.gameID = App.gameID; // Set the game ID.
         player.SetName(et.getText().toString());
-        player.Set(Stat.Avatar, avatarID);
+        player.Set(Config.Avatar, avatarID);
         String[] difficulties = getResources().getStringArray(R.array.difficulty);
         for (int i = 0; i < difficulties.length; ++i) {
             if (difficulty.equals(difficulties[i])) {
-                player.Set(Stat.Difficulty, i);
+                player.Set(Config.Difficulty, i);
                 System.out.println("Difficulty set to: "+i);
             }
         }
         player.AssignResourcesBasedOnDifficulty();
-        // Check the requested starting item.
-        if (bonus.equals("Food supply")) {
-            player.LogInfo(LogTextID.startingBonusFood, ""+20);
-            player.Adjust(Stat.FOOD, 20);
-        } else if (bonus.equals("Materials supply")) {
-            player.LogInfo(LogTextID.startingBonusMaterials, ""+10);
-            player.Adjust(Stat.MATERIALS, 10);
-        } else if (bonus.equals("A weapon")) {
-            Invention randomWeapon = Invention.RandomWeapon(player.BonusFromDifficulty()/3);
-            player.LogInfo(LogTextID.startingBonusItem, randomWeapon.name);
-            player.inventory.add(randomWeapon);
-            player.Equip(randomWeapon); // Equip it from start?
-        } else if (bonus.equals("A body armor")) {
-            Invention armor = Invention.RandomArmor(player.BonusFromDifficulty()/3);
-            player.LogInfo(LogTextID.startingBonusItem, armor.name);
-            player.inventory.add(armor);
-            player.Equip(armor); // Equip it from start?
-        } else if (bonus.equals("A tool")) {
-            Invention tool = Invention.RandomTool(player.BonusFromDifficulty()/3);
-            player.LogInfo(LogTextID.startingBonusItem, tool.name);
-            player.inventory.add(tool);
-            player.Equip(tool);
-        } else if (bonus.equals("2 inventions")) {
-            player.LogInfo(LogTextID.startingBonusInventions, ""+2);
-            player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
-            player.inventions.add(Invention.Random(player.BonusFromDifficulty()/3));
-        }
+        player.Set(Config.StartingBonus, bonusID);
+        player.AssignResourcesBasedOnStartingBonus();
         if (App.IsLocalGame()) {
             /// Just make a player using the chosen config on this screen and go to the main menu without waiting.
             App.RegisterPlayer(player);
@@ -304,20 +292,8 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         mEmailView.setError(null);
         mPasswordView.setError(null);
 
-        // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
         // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
+        /*
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
@@ -333,35 +309,72 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             // There was an error; don't attempt login and focus the first            // form field with an error.
             focusView.requestFocus();
             return;
+        }*/
+
+        // Store values at the time of the login attempt.
+        String email = mEmailView.getText().toString();
+        String password = mPasswordView.getText().toString();
+        EditText etpwa = (EditText)findViewById(R.id.passwordAgain);
+        String passwordAgain = (etpwa).getText().toString();
+        if (password.equals(passwordAgain) == false){
+            Toast("Passwords don't match D:");
+            etpwa.setError(getString(R.string.error_passwords_dont_match));
+            return;
+        }
+        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
+            return;
+        }
+        if (TextUtils.isEmpty(email)) {
+            mEmailView.setError(getString(R.string.error_field_required));
+            return;
+        } else if (!isEmailValid(email)) {
+            mEmailView.setError(getString(R.string.error_invalid_email));
+            return;
         }
 
-        // Show a progress spinner, and kick off a background task to
-        // perform the user login attempt.
-        showProgress(true);
-        mAuthTask = new NetworkTask(email, password);
-        mAuthTask.AddListener(new NetworkTaskListener(){
+        player.email = email;
+        player.password = Auth.Encrypt(password, Auth.DefaultKey);
+        Toast("Registering character with server...");
+        ShowProgressBar();
+        // Send a packet to the server. Display the loading whatevers.
+        EGPacket pack = EGRequest.CreatePlayer(player);
+        pack.addReceiverListener(new EGPacketReceiverListener() {
             @Override
-            public void OnTaskCompleted(boolean success) {
-                mAuthTask = null;
-                showProgress(false);
-                if (success) {
-                    // finish();
-                    // Go to main screen? Show success window first?
-                    GoToMainScreen();
-                } else {
-                    mPasswordView.setError(getString(R.string.error_incorrect_password));
-                    mPasswordView.requestFocus();
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    case Player:
+                        HideProgressBar();
+                        Player player = null;
+                        try {
+                            player = reply.GetPlayer();
+                        } catch (Exception e) {
+                            Toast("Exception: "+e.getMessage());
+                            e.printStackTrace();
+                            return;
+                        }
+                        System.out.println("Cool..?");
+                        System.out.println("Player: "+player.name);
+                        App.MakeActivePlayer(player);
+                        GoToMainScreen();
+                        finish();
+                        break;
+                    case OK:
+                    default:
+                        Toast("Response: "+reply.ResType().name());
+                        HideProgressBar();
+                        break;
                 }
             }
 
             @Override
-            public void OnTaskCanceled() {
-                mAuthTask = null;
-                showProgress(false);
-
+            public void OnError(EGPacketError error) {
+                // Error D:
+                Toast("Error: "+error.name());
+                HideProgressBar();
             }
         });
-        mAuthTask.execute((Void) null);
+        App.Send(pack);
     }
 
     private boolean isEmailValid(String email) {

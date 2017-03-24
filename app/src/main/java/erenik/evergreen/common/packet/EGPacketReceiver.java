@@ -19,26 +19,10 @@ public class EGPacketReceiver extends Thread
     public EGPacketReceiver()
     {
     }
-    /*
-    public static void StartSingleton()
-    {
-        if (epr != null)
-            return;
-        epr = new EGPacketReceiver();
-        epr.start();
-    }
-    static void StopSingleton()
-    {
-        epr.stop = true;
-    }
-    */
     void NewPacketWaitingForResponse(EGPacket pack) {
         packetsWaitingForReponses.add(pack);
         packetsToBeUpdated.add(pack);
     }
-//    public static boolean HasPacketsToReceive(){
-  //      return packetsWaitingForReponses.size() > 0;
-    //}
 
     boolean stop = false;
    // private EGPacketReceiver epr;
@@ -52,28 +36,16 @@ public class EGPacketReceiver extends Thread
     {
         Log("EGPacketReceiver.run: Starting EGPacketReceiver thread.");
         int multiplier = 1;
-        while(stop == false)
-        {
+        while(stop == false) {
             try {
+                Thread.sleep(10);
                 if (packetsWaitingForReponses.size() == 0)
                     Thread.sleep(10);
-                else
-                {
-                    int sleepTime = EGPacketCommunicator.retryTimeMs * multiplier;
-                    ++multiplier;
-                    Log("EGPacketReceiver sleeping for "+sleepTime+"ms");
-                    Thread.sleep(sleepTime);
-                }
-                for (int i = 0; i < packetsWaitingForReponses.size(); ++i)
-                {
+                for (int i = 0; i < packetsWaitingForReponses.size(); ++i) {
+                  //  System.out.println("Waiting for response...");
                     EGPacket pack = packetsWaitingForReponses.get(i);
                     pack.CheckForReply();
                     boolean remove = false;
-                    // Reply received,
-                    if (pack.reply != null){
-               //         System.out.println("Got a reply?");
-                        remove = true;
-                    }
                     if (pack.lastError != EGResponseType.NoError){
                         remove = true;
                         Log("EGPacketReceiver.run: An error occurred: "+pack.lastError.text);
@@ -89,8 +61,22 @@ public class EGPacketReceiver extends Thread
                         remove = true;
                         Log("Timeout reached. Remove packet from queue");
                     }
+                    // Reply received,
+                    if (pack.replies.size() > 0){
+                        //         System.out.println("Got a reply?");
+                        // Check last reply time?
+                        long msAgo = System.currentTimeMillis() - pack.LastReply().receiveTime;
+                        if (msAgo > 3000){ // Wait at most 1 second more for each packet received on the socket.
+                           // System.out.println("Last response was "+msAgo+"ms ago, removing this packet now from the listener.");
+                            remove = true;
+                        }
+                        else { // Wait some more if we already had replies...
+                            remove = false;
+                        }
+                    }
                     if (remove) {
                         packetsWaitingForReponses.remove(pack); // Remove from receiving queue.
+//                        System.out.println("Removing packet from receiver queue.");
                         --i;
                         continue;
                     }
@@ -103,12 +89,18 @@ public class EGPacketReceiver extends Thread
  //       epr = null; // Kill self. Allow restart of the thread.
     }
 
+    /// Does what exactly?
     public int CheckForUpdates() {
         for (int i = 0; i < packetsToBeUpdated.size(); ++i){
             EGPacket pack = packetsToBeUpdated.get(i);
-            EGPacket reply = pack.reply;
-            if (reply != null) {
-                pack.InformListenersOnReply();
+            for (int j = 0; j < pack.replies.size(); ++j){
+                EGPacket reply = pack.replies.get(j);
+                if (!reply.informedListeners) {
+                    pack.InformListenersOnReply(reply);
+                    reply.informedListeners = true;
+                }
+            }
+            if (pack.sendTime > System.currentTimeMillis() + 3000) { // Wait at most 10 seconds for all replies from a specific packet, then discard it from the array to be checked further.
                 packetsToBeUpdated.remove(pack);
                 --i;
             }

@@ -1,9 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/Evergreen.BG"
-    tools:context=".android.act.MainScreen"
-    android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-    >
+    tools:context=".android.act.MainScreen">
     <!--    android:background="@color/backgroundMainGreen" -->
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -79,5 +77,24 @@
             <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/button3" android:text="@string/messages" />
         </LinearLayout>
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg3"
+        android:clickable="true"
+        android:id="@+id/layout_sysmsg"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title" android:text="System message" />
+        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:layout_width="match_parent"
+            android:text="Placeholder placeholds very good." android:background="@color/black_overlay" android:id="@+id/textView_sysMsg"
+            android:textSize="20dp" />
+        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+        <Button style="@style/Evergreen.Button.Wide" android:text="@string/ok" android:id="@+id/button_sysmsgConfirm" />
+    </LinearLayout>
+
+    <include layout="@layout/progress_bar_overlay"/>
 
 </FrameLayout>

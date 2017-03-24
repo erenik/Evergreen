@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import erenik.evergreen.common.Enumerator;
+
 /**
  * Created by Emil on 2016-10-31.
  */ /// For the player game-log. To be color-coded etc.?
@@ -18,17 +20,20 @@ public class Log implements Serializable {
      * and language chosen by the end-user.
     */
     boolean stringBasicVersion = true;
-    public boolean displayedToEndUser = false; // Default false. Set to true after user confirms on their device that they watched the log message.
+    // 0 - Not displayed, 1 - Displayed at client, 2 - confirmed at server.
+    public int displayedToEndUser = 0;
 
     public boolean BasicStringVersion() { return stringBasicVersion;};
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(String s, LogType t) {
+        logID = ++logIDEnumerator.value;
         text = s;
         type = t;
         date = new Date();
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t) {
+        logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
@@ -36,6 +41,7 @@ public class Log implements Serializable {
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1) {
+        logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
@@ -44,6 +50,7 @@ public class Log implements Serializable {
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1, String arg2) {
+        logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
@@ -53,6 +60,7 @@ public class Log implements Serializable {
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1, String arg2, String arg3) {
+        logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
@@ -62,6 +70,7 @@ public class Log implements Serializable {
         stringBasicVersion = false;
     }
     public Log(LogTextID ltid, LogType t, ArrayList<String> args) {
+        logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
@@ -85,20 +94,22 @@ public class Log implements Serializable {
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(date);
         out.writeObject(text);
-        out.writeObject(type);
-        out.writeObject(ltid);
+        out.writeInt(type.ordinal());
+        out.writeInt(ltid.ordinal());
         out.writeObject(args);
         out.writeBoolean(stringBasicVersion);
-        out.writeBoolean(displayedToEndUser);
+        out.writeInt(displayedToEndUser);
+        out.writeLong(logID);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         date = (Date) in.readObject();
         text = (String) in.readObject();
-        type = (LogType) in.readObject();
-        ltid = (LogTextID) in.readObject();
+        type = LogType.values()[in.readInt()];
+        ltid = LogTextID.values()[in.readInt()];
         args = (ArrayList<String>) in.readObject();
-        stringBasicVersion = (Boolean) in.readBoolean();
-        displayedToEndUser = (Boolean) in.readBoolean();
+        stringBasicVersion = in.readBoolean();
+        displayedToEndUser = in.readInt();
+        logID = in.readLong();
     }
     private void readObjectNoData() throws ObjectStreamException
     {
@@ -113,7 +124,14 @@ public class Log implements Serializable {
     LogTextID ltid = LogTextID.undefined;
     ArrayList<String> args = new ArrayList<>();
     /// Main stats.
-    Date date; // Time-stamp of this log message.
-    public String text;
-    public LogType type;
+    Date date = new Date(); // Time-stamp of this log message.
+    public String text = "";
+    public LogType type = LogType.Undefined;
+    private long logID = -1;     // The actual ID of this specific message, to synchronize properly between client and server and reduce bandwidth consumption for saving/loading procedures.
+
+    public static Enumerator logIDEnumerator = null;
+
+    public long LogID() {
+        return logID;
+    }
 }

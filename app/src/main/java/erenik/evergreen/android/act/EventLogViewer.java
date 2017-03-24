@@ -7,8 +7,17 @@ import android.widget.CheckBox;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
+import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
+import erenik.util.Byter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EventLogViewer extends EvergreenActivity {
 
@@ -68,9 +77,11 @@ public class EventLogViewer extends EvergreenActivity {
         }
         return true;
     }
+    static int numRepliesReceived = 0;
+    int logMessagesToLoad = 0;
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
+        System.out.println("EventLogViewer onCreate");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_viewer);
@@ -85,11 +96,14 @@ public class EventLogViewer extends EvergreenActivity {
         // Update initial contents.
         maxLogLinesInEventLog = 500;
         focusLastLogMessageUponUpdate = true; // Scroll to the bottom.
+        // Up to 1k permitted in this view.
+        RequestLogMessages(500);
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Scroll to the last message in the log?
+        UpdateBackgroundView(findViewById(R.id.layout_log_viewer_bg));
     }
 }

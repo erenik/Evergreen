@@ -289,5 +289,10 @@
     <string name="encounterSurvived">You survive the encounter!</string>
     <string name="expGained">You gain (arg) experience points!</string>
     <string name="transportUsage">Transport usage</string>
+    <string name="restartSameCharacter">Restart character</string>
+    <string name="error_passwords_dont_match">Passwords don\'t match.</string>
+    <string name="ok">OK</string>
+    <string name="equip">Equip</string>
+    <string name="startingBonusNone">No starting bonus was chosen.</string>
 
 </resources>

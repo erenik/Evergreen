@@ -25,6 +25,7 @@ import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.Transport;
+import erenik.weka.transport.TransportType;
 
 import java.util.List;
 
@@ -129,7 +130,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             switch(aarg)
             {
                 case Transport:
-                    choices = Transport.GetStrings();
+                    choices = TransportType.GetStrings();
                     break;
                 /*
                 case TransportAugment:
@@ -162,8 +163,8 @@ public class SelectDetailsDialogFragment extends DialogFragment
                     break;
                 case InventionToCraft:
                     System.out.println("InventionToCraft");
-                    for (int j = 0; j < player.inventions.size(); ++j) {
-                        Invention inv = player.inventions.get(j);
+                    for (int j = 0; j < player.cd.inventions.size(); ++j) {
+                        Invention inv = player.cd.inventions.get(j);
                         if (inv.IsCraftable()) {
                             System.out.println("inv: "+inv.name);
                             choices.add(inv.name);

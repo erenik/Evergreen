@@ -78,6 +78,7 @@ public class EString {
             case encounterNumMonsters: id = R.string.encounterNumMonsters; break;
             case encounterSurvived: id = R.string.encounterSurvived; break;
             case expGained: id = R.string.expGained; break;
+            case startingBonusNone: id = R.string.startingBonusNone; break;
 
             default:
                 s = logTextID.name(); break;

@@ -25,7 +25,7 @@ public class Encounter {
 //    Player attackingPlayer = null; // For PvP.
 //    static List<Player> playersInvolved = new ArrayList<>();
  //   public List<Enemy> enemies = new ArrayList<Enemy>(); // List of 'em.
-    List<Log> log = new ArrayList<Log>();
+    ArrayList<Log> log = new ArrayList<Log>();
     Random r = new Random();
     boolean isRandom = false;
     boolean isAssaultOfTheEvergreen = false;
@@ -329,12 +329,12 @@ public class Encounter {
         int ri = r.nextInt(typesPossible.size());
         EnemyType et = typesPossible.get(ri);
         int totalEnemies = Dice.RollD3(d3) + Dice.RollD6(d6) + bonus;
-        System.out.println("totalEnemies: "+totalEnemies+" d3: "+d3+" d6: "+d6+" bonus: "+bonus);
-        System.out.println("totalEnemies: "+totalEnemies);
+//        System.out.println("totalEnemies: "+totalEnemies+" d3: "+d3+" d6: "+d6+" bonus: "+bonus);
+  //      System.out.println("totalEnemies: "+totalEnemies);
         totalEnemies +=  totalEmissions / 12.5;
-        System.out.println("totalEnemies: "+totalEnemies);
+    //    System.out.println("totalEnemies: "+totalEnemies);
         totalEnemies *= et.encounterAmount;
-        System.out.println("totalEnemies: "+totalEnemies);
+      //  System.out.println("totalEnemies: "+totalEnemies);
         if (totalEnemies < 1)
             totalEnemies = 1;
         int iAmount = totalEnemies;
@@ -358,7 +358,7 @@ public class Encounter {
   */
     public void LogEnc(Log logMsg) {
         // Add to log to present/update to ui?
-        System.out.println("Encounter log: "+logMsg);
+//        System.out.println("Encounter log: "+logMsg);
         log.add(logMsg);
     }
     public void AbandonedShelter() {

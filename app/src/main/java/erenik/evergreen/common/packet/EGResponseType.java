@@ -28,6 +28,10 @@ public enum EGResponseType {
     PlayerWithNameAlreadyExists("PlayerWithNameAlreadyExists"),
     BadPassword("BadPassword"),
     ReplyTimeoutReached("ReplyTimeoutReached"),
+    MaxActivePlayersReached("MaxActivePlayersLimitReached"),
+    LogMessages("LogMessages"),
+    NumLogMessages("NumLogMessages"),
+    PlayerClientData("PlayerClientData"), // The general but minimal data needed to see the status of this player (stats, gear, skills)
     ;
     EGResponseType(String displayText)
     {

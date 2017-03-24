@@ -12,8 +12,7 @@ public class EGPacketCommunicator {
     String ip = "127.0.0.1";
     int port = 4000;
     public EGPacketCommunicator(){}
-    public EGPacketCommunicator(String ip, int port)
-    {
+    public EGPacketCommunicator(String ip, int port) {
         this.ip = ip;
         this.port = port;
     }

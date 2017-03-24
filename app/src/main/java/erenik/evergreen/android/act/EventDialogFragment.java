@@ -89,9 +89,9 @@ public class EventDialogFragment extends DialogFragment
                         }
                         // Update GUI of main activity.
                         Activity act = getActivity();
-                        if (act instanceof MainScreen) {
-                            MainScreen ms = (MainScreen) act;
-                            ms.UpdateGUI(); // Update GUI HP, log, etc.
+                        if (act instanceof EvergreenActivity) {
+                            EvergreenActivity ms = (EvergreenActivity) act;
+                            ms.UpdateUI(); // Update GUI HP, log, etc.
                         }
                     }
                 });

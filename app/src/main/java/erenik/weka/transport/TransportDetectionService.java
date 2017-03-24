@@ -39,6 +39,8 @@ public class TransportDetectionService extends Service {
             frame.gyroAvg = sf2.gyroAvg;
             frame.transportString = sf2.transportString;
             sfs.add(frame);
+            if (sfs.size() >= maxNum)
+                return sfs; // Return early.. lol.
         }
         return sfs;
     }
@@ -138,7 +140,7 @@ public class TransportDetectionService extends Service {
             fileIn = getBaseContext().openFileInput(preferencesFileName);
             objectIn = new ObjectInputStream(fileIn);
             transportData = (TransportData) objectIn.readObject();
-            transportData.PrintAllData();
+//            transportData.PrintAllData();
             fileIn.getFD().sync();
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
@@ -224,12 +226,13 @@ public class TransportDetectionService extends Service {
     private void PrintData(String headerText, ArrayList<TransportOccurrence> transportOccurrences) {
         System.out.println(headerText+" nr samples: "+transportOccurrences.size());
         // New array of 0s for each transport.
-        ArrayList<TransportOccurrence> totalTransportDurationUsages =  GetTotalStatsForDataSeconds(3600); ;
+        ArrayList<TransportOccurrence> totalTransportDurationUsages = GetTotalStatsForData(transportOccurrences);
         for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
             TransportOccurrence to = totalTransportDurationUsages.get(i); // Just print it.
-            System.out.println(" "+to.transport.name()+" # "+to.durationMs+"ms, % "+to.ratioUsed);
+            System.out.println(" "+to.transport.name()+" # "+to.DurationSeconds()+"s, % "+to.ratioUsed);
         }
     }
+
 
     private ArrayList<TransportOccurrence> GetDataSeconds(int nrOfSecondsToInclude) {
         ArrayList<TransportOccurrence> newArr = new ArrayList<>();
@@ -275,38 +278,42 @@ public class TransportDetectionService extends Service {
         return lastEntry.transport.name();
     }
 
-    /// Returns an array with one entry for each transport, that holds sums of the duration of each transport, as well as the ratio of each within.
-    public ArrayList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
+    private ArrayList<TransportOccurrence> GetTotalStatsForData(ArrayList<TransportOccurrence> transportOccurrences) {
         // New array of 0s for each transport.
         ArrayList<TransportOccurrence> totalTransportDurationUsages = new ArrayList<>();
         int durationTotalMs = 0;
+        /// Create a new counter for each transport.
         for (int i = 0; i < TransportType.values().length; ++i){
-            TransportOccurrence occ = new TransportOccurrence();
-            occ.transport = TransportType.values()[i];
-            occ.durationMs = 0;
+            TransportOccurrence occ = new TransportOccurrence(TransportType.values()[i], 0, DurationType.Milliseconds);
             totalTransportDurationUsages.add(occ);
         }
-        long dataMillisecondsToAnalyze = dataSecondsToAnalyze * 1000;
-        long nowMs = System.currentTimeMillis();
-        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
+        // Increment.
         for (int i = transportOccurrences.size() - 1; i >= 0; --i){
             TransportOccurrence to = transportOccurrences.get(i);
-            if (to.startTimeMs < nowMs - dataMillisecondsToAnalyze)
-                break; // Break the loop.
-            totalTransportDurationUsages.get(to.transport.ordinal()).durationMs += to.durationMs;
-            durationTotalMs += to.durationMs;
+            totalTransportDurationUsages.get(to.transport.ordinal()).AddMillis(to.DurationMillis());
+            durationTotalMs += to.DurationMillis();
         }
+        // Calculate ratio of them used and remove those whose duration is 0.
         for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
             TransportOccurrence to = totalTransportDurationUsages.get(i);
-            if (to.durationMs == 0) {
+            if (to.DurationMillis() == 0) {
                 totalTransportDurationUsages.remove(i);
                 --i;
                 continue;
             }
-            to.ratioUsed = to.durationMs / (float) durationTotalMs;
-    //        System.out.println(" "+classifier.trainingData.classAttribute().value(i)+" # "+to.durationMs+"ms, % "+to.ratioUsed);
+            to.ratioUsed = to.DurationMillis() / (float) durationTotalMs;
+            //        System.out.println(" "+classifier.trainingData.classAttribute().value(i)+" # "+to.durationMs+"ms, % "+to.ratioUsed);
         }
         return totalTransportDurationUsages;
+    }
+
+
+    /// Returns an array with one entry for each transport, that holds sums of the duration of each transport, as well as the ratio of each within.
+    public ArrayList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
+        long dataMillisecondsToAnalyze = dataSecondsToAnalyze * 1000;
+        long nowMs = System.currentTimeMillis();
+        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
+        return GetTotalStatsForData(transportOccurrences);
     }
 
     public String GetTransportString(int value) {

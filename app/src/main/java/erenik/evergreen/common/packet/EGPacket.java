@@ -26,7 +26,11 @@ import java.util.logging.Logger;
 
 import erenik.evergreen.Game;
 import erenik.evergreen.common.Player;
+import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.player.ClientData;
 import erenik.evergreen.server.EGTCPServer;
+import erenik.util.Byter;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -39,6 +43,7 @@ import java.nio.ByteBuffer;
 public class EGPacket {
     /// Used for encoding/decoding String objects into bytes and back.
     public static final Charset defaultCharset = StandardCharsets.UTF_8;
+    public static final int BUF_LEN = 40000;
 
     protected EGPacketType type = null;
     protected EGRequestType reqt = null;
@@ -47,7 +52,8 @@ public class EGPacket {
     protected int version = 0;
     int headerLen, bodyLen, totalLen; // Calculated after calling .build()
     protected EGSocket socketSentOn; // When using EGPacketSender class to retrieve replies when available.
-    protected EGPacket reply;
+//    protected EGPacket reply; // Replies received.
+    protected ArrayList<EGPacket> replies = new ArrayList<>();
     protected int replyTimeout = 3000; // Default wait up to 3 seconds for a reply?
     protected int timeWaitedForReplyMs = 0;
 
@@ -56,9 +62,12 @@ public class EGPacket {
     /// List of receiving listeners, to interpret any response that is received..?
     private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
     public long lastAttemptSystemMillis = System.currentTimeMillis();
+    public long receiveTime = 0; // Sys curr Millis.
+    public long sendTime = 0;
+    public boolean informedListeners = false;
 
     public EGResponseType LastError(){return lastError;};
-    public EGPacket GetReply(){return reply;};
+    public EGPacket GetReply(){return replies.get(0);};
     public EGPacketType Type() {return type; };
     public EGRequestType ReqType() { return reqt; };
     public EGResponseType ResType() { return rest; };
@@ -71,16 +80,13 @@ public class EGPacket {
     /// Null until set!
     EGPacketError error;
 
-    EGPacket()
-    {
+    EGPacket() {
     }    
-    EGPacket(EGResponseType resType)
-    {
+    EGPacket(EGResponseType resType) {
         type = EGPacketType.Response;
         rest = resType;
     }
-    EGPacket(EGRequestType reqType)
-    {
+    EGPacket(EGRequestType reqType) {
         type = EGPacketType.Request;
         reqt = reqType;
     }
@@ -115,9 +121,17 @@ public class EGPacket {
     }
     public static EGPacket player(Player playerInSystem) { // Pack with info on 1 player. Sent as reply for Load packets.
         EGPacket pack = new EGPacket(EGResponseType.Player);
-        pack.type = EGPacketType.Response;
-        pack.rest = EGResponseType.Player;
+        playerInSystem.sendLogs = Player.SEND_SERVER_NEW_MESSAGES; // Send only 1 day of data. Player can always request more log data later as needed/wanted.
         pack.body = playerInSystem.toByteArr();
+        return pack;
+    }
+    public static EGPacket logMessages(List<Log> logMessages){
+        ArrayList<Log> lm = new ArrayList();
+        lm.addAll(logMessages);
+        EGPacket pack = new EGPacket(EGResponseType.LogMessages);
+        pack.body = Byter.toByteArray(lm);
+        if (pack.body == null)
+            return null;
         return pack;
     }
     public static EGPacket players(ArrayList<Player> players){
@@ -156,9 +170,10 @@ public class EGPacket {
         return players;
     }
 
-    static byte[] bytePart(byte[] bytes, int startIndex, int stopIndex)
-    {
+    static byte[] bytePart(byte[] bytes, int startIndex, int stopIndex) throws Exception {
         int len = stopIndex - startIndex;
+        if (stopIndex > bytes.length)
+            throw new Exception("Will read outside array, bad operation while builting packet.");
         byte[] b = new byte[stopIndex - startIndex];
         for (int i = 0; i < len; ++i)
             b[i] = bytes[i+startIndex];
@@ -201,8 +216,7 @@ public class EGPacket {
 //        tailBytes(bytes, 10);
         return bytes;
     }
-    public static EGPacket packetFromBytes(byte[] arr)
-    {
+    public static EGPacket packetFromBytes(byte[] arr) {
 //        System.out.println("packetFromBytes arrLen: "+arr.length);
         EGPacket pack = new EGPacket();
         int argN = 0, 
@@ -231,6 +245,17 @@ public class EGPacket {
                 }
                 if (key.equals("PT")) {
                     pack.type = EGPacketType.fromString(val);
+                    EGPacket newPack = null;
+                    switch (pack.type){
+                        case Request: newPack = new EGRequest(); break;
+                        case Response: newPack = new EGResponse(); break;
+                    }
+                    // Copy over the data so far.
+                    newPack.version = pack.version;
+                    newPack.type = pack.type;
+                    newPack.body = pack.body;
+                    newPack.bodyLen = pack.bodyLen;
+                    pack = newPack;
          //           System.out.println("PT "+pack.type+" "+val);
                 }
                 if (key.equals("REQ")) {
@@ -252,8 +277,13 @@ public class EGPacket {
                 {
                     if (bodyLength > 0){
                         int bodyStart = i + 1;
-                        pack.body = bytePart(arr, bodyStart, bodyStart + bodyLength);
-     //                   System.out.print("Tail bytes of parsed body: ");
+                        try {
+                            pack.body = bytePart(arr, bodyStart, bodyStart + bodyLength);
+                        } catch (Exception e) {
+                            System.out.println("Error: "+e.getMessage());
+                            e.printStackTrace();
+                        }
+                        //                   System.out.print("Tail bytes of parsed body: ");
        //                 tailBytes(pack.body, 10);
                     }
                     break;
@@ -261,6 +291,7 @@ public class EGPacket {
             }
         }
 //        System.out.println("argN found: "+argN);
+        pack.receiveTime = System.currentTimeMillis(); // Received timestamp.
         if (pack.type != null)
             return pack;
         return null;        
@@ -327,14 +358,14 @@ public class EGPacket {
     }
 
     /// Sends this packet without waiting for a reponse. The response will be set later in the EGPacket reponse variable, or errors in lastError if responses don't arrive.
-    boolean Send(String address, int portN)
-    {
+    boolean Send(String address, int portN) {
         byte[] total = build();
         try {
             socketSentOn = new EGSocket(address, portN);
             OutputStream out = socketSentOn.getOutputStream();
             out.write(total); // Print the string.
             out.flush();
+            sendTime = System.currentTimeMillis();
             return true; // Success. Sent well.
         } catch (IOException ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, "Unable to connect to target address/port: "+address+":"+portN, ex);
@@ -344,33 +375,27 @@ public class EGPacket {
     }
     
     /// Reads from socket. Returns null if any error occurs.
-    public EGPacket ReadFromSocket(EGSocket sock)
-    {
+    public EGPacket ReadFromSocket(EGSocket sock) {
         try {
-//            System.out.println("Read from socket");
-            // Wait for a reponse.
-            if (sock.isClosed())
-            {
+            if (sock.isClosed()) {
                 System.out.println("Socket closed");
                 lastError = EGResponseType.SocketClosed;
                 return null;
             }
             InputStream is = sock.getInputStream();
             int bytesAvail = is.available();
-            if (bytesAvail <= 0)
-            {
+            if (bytesAvail <= 0) {
                 return null;
             }
-        //    System.out.print("Read from socket");
-            
-            final int BUF_LEN = 40000;
             byte[] buff = new byte[BUF_LEN];
             int bytesRead = is.read(buff, 0, BUF_LEN);
-            System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
+            if (bytesAvail > (BUF_LEN / 10)) // More than a tenth of max? 4kB? then maybe worth spamming about it...
+                System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
             if (bytesRead <= 0){
                 System.out.println("0 bytes read from stream.");
                 return null;
             }
+            System.out.println("read "+bytesRead+" bytes");
             EGPacket pack = EGPacket.packetFromBytes(buff);
       //      System.out.println("Got packet: "+pack);
             return pack;
@@ -380,12 +405,15 @@ public class EGPacket {
         return null;
     }
     
-    void CheckForReply()
-    {
+    void CheckForReply() {
         if (socketSentOn == null){
             return;
         }
-        reply = ReadFromSocket(socketSentOn);
+        EGPacket reply = ReadFromSocket(socketSentOn);
+        if (reply != null) {
+            System.out.println("Got a reply: " + reply);
+            replies.add(reply);
+        }
     }
 
     
@@ -395,32 +423,6 @@ public class EGPacket {
         for (int i = 0; i < body.length; ++i)
             System.out.print(body[i]);
         System.out.println();
-    }
-
-    /** Waits, blocking in 10 ms intervals, until either the packet response has been received
-     *  or until the timeout period is reached.
-     */
-    public void WaitForResponse(int milliseconds) {
-        // Return response?
-        boolean waitingForResponse = true;
-        int msToWait = milliseconds;
-        while(waitingForResponse && msToWait > 0)
-        {
-            switch(lastError)
-            {
-                case ReplyTimeoutReached:
-                    waitingForResponse = false;
-                    break;
-            }
-            if (reply != null)
-                break;
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            msToWait -= 10;
-        }
     }
 
     public static EGPacket gamesList(List<Game> games)
@@ -457,8 +459,21 @@ public class EGPacket {
             receiverListeners.get(i).OnError(error);
         }
     }
-    public void InformListenersOnReply() {
-        for (int i = 0; i < receiverListeners.size(); ++i) // Notify listeners of the reply we received.
+    public void InformListenersOnReply(EGPacket reply) {
+        // Notify listeners of the reply we received..?
+        for (int i = 0; i < receiverListeners.size(); ++i)
             receiverListeners.get(i).OnReceivedReply(reply);
+    }
+    // Assuming the body contains only 1 player's worth of data...
+    public Player GetPlayer() throws Exception {
+        return Player.fromByteArray(GetBody());
+    }
+
+    public EGPacket LastReply() {
+        return replies.get(replies.size()-1);
+    }
+
+    public ClientData GetClientData() {
+        return (ClientData) Byter.toObject(body);
     }
 }

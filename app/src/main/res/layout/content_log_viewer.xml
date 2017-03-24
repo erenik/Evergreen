@@ -3,9 +3,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Evergreen.BG"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/layout_log_viewer_bg"
     android:orientation="vertical"
-    tools:context=".android.act.EventLogViewer"
     >
     <LinearLayout
         android:layout_width="match_parent"

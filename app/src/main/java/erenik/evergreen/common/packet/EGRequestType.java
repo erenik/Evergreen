@@ -17,7 +17,10 @@ public enum EGRequestType {
     GetGamesList("GetGamesList"),
     ActiveActions("ExecActiveActions"), // To evaluate the active (multiplayer) actions.
     LoadCharacters("LoadPlayers"), // email and password with a line-break between '\n' as a body. Default charset from EGPacket used, encoded as String object.
-    ;
+    RestartSameCharacter("RestartSameCharacter"),
+    FetchWholeLog("FetchWholeLog"),
+    FetchLog("FetchLog"),
+    LogLength("LogLength"),; // To keep name, difficulty, etc.
     EGRequestType(String header)
     {
         this.text = header;

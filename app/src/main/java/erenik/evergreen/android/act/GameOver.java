@@ -9,6 +9,10 @@ import android.widget.TextView;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
+import erenik.evergreen.common.packet.EGPacket;
+import erenik.evergreen.common.packet.EGPacketError;
+import erenik.evergreen.common.packet.EGPacketReceiverListener;
+import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.Stat;
 
 public class GameOver extends EvergreenActivity {
@@ -28,25 +32,58 @@ public class GameOver extends EvergreenActivity {
             }
         }, 5000); // 5000ms delay
         */
-
-        TextView tv = (TextView) findViewById(R.id.textView_TurnSurvived);
-        tv.setText(getString(R.string.survivedUntilTurn)+" "+(int)(player.Get(Stat.TurnSurvived)));
-
-        Button b = (Button) findViewById(R.id.buttonNewGame);
-        View.OnClickListener click = new View.OnClickListener()
+        // If player is non-null, update content properly?
+        if (player != null) {
+            TextView tv = (TextView) findViewById(R.id.textView_TurnSurvived);
+            tv.setText(getString(R.string.survivedUntilTurn) + " " + (int) (player.Get(Stat.TurnSurvived)));
+        }
+        Button b = (Button) findViewById(R.id.buttonNewCharacter);
+        b.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(getBaseContext(), MainScreen.class);
+                Intent i = new Intent(getBaseContext(), CreateCharacter.class);
                 startActivity(i);
-
-                // Overwrite/reset save.
-                Player player = App.GetPlayer();
-                player.SetDefaultStats();
-                Save();
             }
-        };
-        b.setOnClickListener(click);
+        });
+        findViewById(R.id.buttonRestartSameCharacter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Request a restart of the same character.
+                EGPacket pack = EGRequest.RestartSameCharacter(App.GetPlayer());
+                ShowProgressBar();
+                pack.addReceiverListener(new EGPacketReceiverListener() {
+                    @Override
+                    public void OnReceivedReply(EGPacket reply) {
+                        HideProgressBar();
+                        switch (reply.ResType()){
+                            default:
+                                Toast("Reply: "+reply.ResType().name());
+                                break;
+                            case Player:
+                                Toast("Character restarted.");
+                                try {
+                                    App.UpdatePlayer(reply.GetPlayer());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    Toast("Error: "+e.getMessage());
+                                    return;
+                                }
+                                // Go to main screen then?
+                                GoToMainScreen();
+                                finish();
+                                break;
+                        }
+                    }
+                    @Override
+                    public void OnError(EGPacketError error) {
+                        HideProgressBar();
+                        Toast("Error: "+error.name());
+                    }
+                });
+                App.Send(pack);
+            }
+        });
 
         focusLastLogMessageUponUpdate = true;
     }

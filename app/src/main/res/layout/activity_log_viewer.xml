@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:fitsSystemWindows="true"
     style="@style/Evergreen.BG"
-    tools:context=".android.act.logViewer"
+    tools:context=".android.act.EventLogViewer"
     >
 
     <include layout="@layout/content_log_viewer" />

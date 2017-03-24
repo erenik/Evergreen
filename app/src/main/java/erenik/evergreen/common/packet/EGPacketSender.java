@@ -49,29 +49,23 @@ public class EGPacketSender extends Thread {
         // Do nothing, later do stuff maybe?
     }
 
-    public void run()
-    {
+    public void run() {
         threadStarted = true;
         Log("EGPacketSender.run: Starting EGPacketSender thread.");
         int multiplier = 1;
-        while(stop == false)
-        {
+        int packsFailed = 0;
+        int packsSend = 0;
+        while(stop == false) {
             try {
-                int packsSend = 0;
-                for (int i = 0; i < packetsToSend.size(); ++i)
-                {
+                for (int i = 0; i < packetsToSend.size(); ++i) {
                     EGPacket pack = packetsToSend.get(i);
                     boolean ok = pack.Send();
-                    boolean remove = false;
+                    boolean remove = true;
                     if (ok) {
-//                        System.out.print("Sent packet: "+pack);
-                        remove = true;
                         ++packsSend;
                     }
-                    else
-                    {
-                        // Some problem occurred, double wait time.
-                        multiplier *= 2;
+                    else {
+                        ++packsFailed;
                     }
                     if (remove) {
                         packetsToSend.remove(pack); // Remove from receiving queue.
@@ -80,7 +74,7 @@ public class EGPacketSender extends Thread {
                     }
                 }
                 if (packsSend > 0)
-                    Log("sent "+packsSend+" packs");
+                    Log("sent "+packsSend+" packs, failed: "+packsFailed);
                 if (packetsToSend.size() == 0)
                     Thread.sleep(10);
                 else

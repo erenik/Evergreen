@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -7,31 +7,35 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     style="@style/Evergreen.BG"
     tools:context=".android.act.GameOver"
-    android:orientation="vertical"
     >
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/gameOverText" android:textColor="@color/mainTextColor"
-        android:id="@+id/textViewGameOver" android:textAlignment="center"
-        android:layout_centerVertical="true" android:textSize="38dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" android:orientation="vertical">
 
-    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
-        <LinearLayout style="@style/Evergreen.Layout.Vertical">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/gameOverText" android:textColor="@color/mainTextColor"
+            android:id="@+id/textViewGameOver" android:textAlignment="center"
+            android:layout_centerVertical="true" android:textSize="38dp" />
 
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="@string/survivedUntilTurn" android:textColor="@color/mainTextColor"
-                android:id="@+id/textView_TurnSurvived" android:layout_centerVertical="true"
-                android:layout_centerHorizontal="true" android:textSize="18dp"
-                android:textAlignment="center" />
+        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
+            <LinearLayout style="@style/Evergreen.Layout.Vertical">
 
-            <Button
-                style="@style/Evergreen.Button.Wide"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/newGame"
-                android:id="@+id/buttonNewGame"
-                />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/survivedUntilTurn" android:textColor="@color/mainTextColor"
+                    android:id="@+id/textView_TurnSurvived" android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true" android:textSize="18dp"
+                    android:textAlignment="center" />
 
-            <include layout="@layout/event_log"/>
+                <Button style="@style/Evergreen.Button.Wide" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/newCharacter" android:id="@+id/buttonNewCharacter" />
+                <Button style="@style/Evergreen.Button.Wide" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/restartSameCharacter" android:id="@+id/buttonRestartSameCharacter" />
 
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+                <include layout="@layout/event_log"/>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+    <include layout="@layout/progress_bar_overlay"/>
+
+</FrameLayout>
+

@@ -68,24 +68,25 @@ public class Players {
 
     void RegisterDefaultPlayers() 
     {
+        /*
         System.out.println("Register default players: ");
         Player p = new Player();
         p.SetName("Yoyo hp ");
-        p.inventory.add(Invention.RandomWeapon(0));
-        p.inventions.add(Invention.RandomWeapon(1));
+        p.cd.inventory.add(Invention.RandomWeapon(0));
+        p.cd.inventions.add(Invention.RandomWeapon(1));
         writePlayerToFile(p, "playerSave.sav");
         p.SetName("Bobo hp ");
         p.Set(Stat.HP, 43);
         p.Set(Stat.ABANDONED_SHELTER, 3);
-        p.inventory.add(Invention.RandomWeapon(0));
-        p.inventions.add(Invention.RandomWeapon(2));
+        p.cd.inventory.add(Invention.RandomWeapon(0));
+        p.cd.inventions.add(Invention.RandomWeapon(2));
         System.out.println("Before: "+p.Name());
         p.PrintAll();
         p = readPlayerFromFile("playerSave.sav");
         System.out.println("\nAfter: "+p.Name());
         p.PrintAll();
         players.add(p);
-
+*/
         System.out.println();
     }
     
@@ -120,6 +121,7 @@ public class Players {
             FileInputStream fileIn = new FileInputStream(filename);
             objectIn = new ObjectInputStream(fileIn);
             player = (Player) objectIn.readObject();
+            objectIn.close();
         } catch (FileNotFoundException e) {
             // Do nothing
             return null;

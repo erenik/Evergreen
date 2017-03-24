@@ -6,6 +6,7 @@ package erenik.evergreen.common.logging;
 
 public enum LogType
 {
+    Undefined,
     INFO, // General info
     PROBLEM_NOTIFICATION, // Warning/problem notifications.
     PROGRESS,

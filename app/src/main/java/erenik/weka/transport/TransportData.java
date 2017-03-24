@@ -76,14 +76,15 @@ public class TransportData implements Serializable {
         TransportOccurrence first = data.get(0),
             last = data.get(data.size() - 1);
 
-        long duration = last.startTimeMs + last.durationMs - first.startTimeMs; // end time - start time = duration.
-        System.out.println(duration+" > "+MillisecondsPerHour+" = "+(duration > MillisecondsPerHour));
+        // Duration between 2 occurrences?
+        long duration = last.startTimeMs + last.DurationMillis() - first.startTimeMs; // end time - start time = duration.
+     //   System.out.println(duration+" > "+MillisecondsPerHour+" = "+(duration > MillisecondsPerHour));
         if (duration > MillisecondsPerHour){
             System.out.println("Time to make an hour! MS duration: "+duration);
             // Make them into an hour.
             TransportData child = new TransportData(TimePeriod.Hour);
             child.startTimeMs = first.startTimeMs;
-            child.endTimeMs = last.startTimeMs + last.durationMs;
+            child.endTimeMs = last.startTimeMs + last.DurationMillis();
             this.children.add(child);
             // Move the raw data into this hour as well. Remove raw data in the next step when the hours are turned into days, or when we have at least 2 hours of data.
             child.data.addAll(data); // Move into here.
@@ -116,10 +117,7 @@ public class TransportData implements Serializable {
         for (int i = 0; i < TransportType.values().length; ++i){
             TransportType tt = TransportType.values()[i];
             long durationTimeMs = GetTimeMs(tt);
-            TransportOccurrence newOcc = new TransportOccurrence();
-            newOcc.transport = tt;
-            newOcc.startTimeMs = this.startTimeMs;
-            newOcc.durationMs = durationTimeMs;
+            TransportOccurrence newOcc = new TransportOccurrence(tt, this.startTimeMs, durationTimeMs);
             newData.add(newOcc);
         }
         data.clear();     // Clear the old data.
@@ -255,7 +253,7 @@ public class TransportData implements Serializable {
     private long GetTotalTimeMs() {
         long totalMs = 0;
         for (int i = 0; i < data.size(); ++i) {
-            totalMs += data.get(i).durationMs;
+            totalMs += data.get(i).DurationMillis();
         }
         for (int i = 0; i < children.size(); ++i)
             totalMs += children.get(i).GetTotalTimeMs();
@@ -267,7 +265,7 @@ public class TransportData implements Serializable {
         for (int i = 0; i < data.size(); ++i) {
             TransportOccurrence to = data.get(i);
             if (to.transport.ordinal() == tt.ordinal())
-                totalMs += to.durationMs;
+                totalMs += to.DurationMillis();
         }
         for (int i = 0; i < children.size(); ++i)
             totalMs += children.get(i).GetTimeMs(tt);

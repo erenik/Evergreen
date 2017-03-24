@@ -89,25 +89,23 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         return ins;
     }
 
+    int microsecondsPerSample = 0;
     private void EnableSensors() {
-        System.out.println("TransportDetectorThread: Enabling sensors.");
+        float secondsPerSample = 1.f / herz;
+        microsecondsPerSample = (int) (secondsPerSample * 1000000);
         if (sensorManager == null)
             sensorManager = (SensorManager) callingService.getSystemService(Context.SENSOR_SERVICE);
         if (accSensor == null)
             accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (gyroSensor == null)
-            gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-        float secondsPerSample = 1.f / herz;
-        int microsecondsPerSample = (int) (secondsPerSample * 1000000);
-        System.out.println("Using sampling rate of "+herz+"Hz, seconds per sample: "+secondsPerSample+", microseconds per sample: "+microsecondsPerSample);
-//        int microSeconds = 10 000 000;
         sensorManager.registerListener(this, accSensor, microsecondsPerSample);
+    }
+    private void EnableGyro(){
+        if (gyroSensor == null) gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorManager.registerListener(this, gyroSensor, microsecondsPerSample);
     }
 
     private void DisableSensors(){
-        System.out.println("TransportDetectorThread: Disabling sensors.");
+    //    System.out.println("TransportDetectorThread: Disabling sensors.");
         sensorManager.unregisterListener(this);
     }
 
@@ -122,6 +120,13 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 //        System.out.println("Time spent: "+timeSpent);
         if (timeSpent > sensingFrame.durationMs - 500) { // Finish the frame?
             /// Calculate sensing frame, if applicable.
+            if (sensingFrame.gyroMagns.size() == 0) {
+                // Didn't seem to work..
+//                System.out.println("0 gyroscope samples, trying to restart.");
+  //              DisableSensors();
+    //            EnableSensors();
+               // EnableGyro();
+            }
             SensingFrame finishedOne = sensingFrame;
             sensingFrame = new SensingFrame();
             finishedOne.CalcStats();
@@ -135,7 +140,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     }
 
     private void ClassifyInstances() {
-        System.out.println("Classifier trained: "+callingService.classifier.IsTrained());
+//        System.out.println("Classifier trained: "+callingService.classifier.IsTrained());
         if (!callingService.classifier.IsTrained() ||
                 !callingService.accOnlyClassifier.IsTrained()) // Return if the classifiers are not trained yet.
             return;
@@ -176,11 +181,11 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                     callingService.AddTransportOccurrence(new TransportOccurrence(tt, finishedOne.startTimeMs, toSleepMs)); // Create an entry corresponding to the average value (i.e., the last modified result).
                     callingService.classifier.valuesHistory.clear();                    // Clear the history set.
                     try {
-                        System.out.println("Sleeping " + toSleepMs / 1000 + " seconds");
+  //                      System.out.println("Sleeping " + toSleepMs / 1000 + " seconds");
                         callingService.sleeping = true; // Flag as sleeping
                         Thread.sleep(toSleepMs);
                         callingService.sleeping = false;
-                        System.out.println("Sleeping done");
+//                        System.out.println("Sleeping done");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -223,7 +228,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         for (int i = 0; i < values.length; ++i) {
             text = text + String.format("%.1f", values[i])+" ";
         }
-        if (event.sensor == accSensor) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ) { // accSensor
       //      System.out.println("AccData");
             SensorData newSensorData = new SensorData(); // Copy over data from Android data to own class type.
             newSensorData.timestamp = event.timestamp; // Time-stamp in nanoseconds.
@@ -232,7 +237,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             accMagnPoints.add(magnData);
             sensingFrame.accMagns.add(magnData);
         }
-        else if (event.sensor == gyroSensor){
+        else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
           //  System.out.println("GyroData");
             SensorData newSensorData = new SensorData(); // Copy over data from Android data to own class type.
             newSensorData.timestamp = event.timestamp; // Time-stamp in nanoseconds.
@@ -245,6 +250,15 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        System.out.println("Accuracy changed");
+        String s;
+        switch (accuracy){
+            case SensorManager.SENSOR_STATUS_NO_CONTACT: s = "No contact";break;
+            case SensorManager.SENSOR_STATUS_ACCURACY_HIGH: s = "High";break;
+            case SensorManager.SENSOR_STATUS_ACCURACY_LOW: s = "Low";break;
+            case SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM: s = "Medium";break;
+            case SensorManager.SENSOR_STATUS_UNRELIABLE: s = "Unreliable"; break;
+                default: s = "Dunno";
+        }
+        // System.out.println("Accuracy changed: "+accuracy+" s"+s);
     }
 }

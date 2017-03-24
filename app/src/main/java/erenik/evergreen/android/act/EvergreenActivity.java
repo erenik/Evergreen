@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
@@ -45,6 +46,12 @@ import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.packet.EGRequest;
+import erenik.evergreen.common.packet.EGResponse;
+import erenik.evergreen.common.packet.EGResponseType;
+import erenik.evergreen.common.player.ClientData;
+import erenik.evergreen.common.player.Stat;
+import erenik.util.Byter;
+import erenik.weka.transport.TransportDetectionService;
 
 
 /**
@@ -104,7 +111,6 @@ public class EvergreenActivity extends AppCompatActivity
 //        setSystemUiVisibility(SYSTEM_UI_FLAG_FULLSCREEN);
         // Store common shit here?
         App.OnActivityCreated(this);  // Setup system callbacks as/if needed.
-
     }
     /* After creation, Cause hideControls of system controls after 500 ms? */
     @Override
@@ -125,6 +131,37 @@ public class EvergreenActivity extends AppCompatActivity
             layoutLog.setOnClickListener(toggleLogFullScreen);
         }
         UpdateLog(); // Update log after subclass has adjusted how it should be presented.
+
+        UpdateBackground();
+    }
+
+    protected void UpdateBackground() {
+        // Update background as needed?
+        View bg = findViewById(R.id.fullscreen_view_background);
+        if (bg != null) {
+            UpdateBackgroundView(bg);
+        }
+    }
+
+    protected void UpdateBackgroundView(View bgv){
+        int id = 0;
+        int stage = 0;
+        if (App.GetPlayer() != null)
+            stage = (int) App.GetPlayer().Get(Stat.EMISSIONS) / 25; // Divide by 20 for stage?
+        if (bgv != null){
+            switch (stage){
+                case 0: id = R.drawable.bg0; break;
+                case 1: id = R.drawable.bg1; break;
+                case 2: id = R.drawable.bg2; break;
+                case 3: id = R.drawable.bg3; break;
+                case 4: id = R.drawable.bg4; break;
+                case 5: id = R.drawable.bg5; break;
+                case 6:
+                default:
+                    id = R.drawable.bg6;
+            }
+        }
+        bgv.setBackgroundResource(id);
     }
 
     @Override
@@ -166,7 +203,7 @@ public class EvergreenActivity extends AppCompatActivity
         // hideControls()?
         mVisible = true; // Default controls are visible.
         // Set up the user interaction to manually showControls or hideControls the system UI.
-        mContentView = findViewById(R.id.fullscreen_view);
+        mContentView = findViewById(R.id.fullscreen_view_background);
         if (mContentView != null) {
             mContentView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -205,11 +242,11 @@ public class EvergreenActivity extends AppCompatActivity
 
 
     /// General Save/Load. Generally saves locally only? Will determine if it needs to perform it locally or remotely.
-    public boolean Save() {
+    public boolean SaveLocally() {
         // For now, save locally and remotely, for testing purposes.
         App.SaveLocally();
 //        if (App.GetPlayer().gameID != GameID.LocalGame)
-        SaveToServer(null); // Save changes, ignoring any new updates for now.
+  //      SaveToServer(null); // Save changes, ignoring any new updates for now.
         return true;
     }
     /// Ease of use method, just loads..?
@@ -220,15 +257,46 @@ public class EvergreenActivity extends AppCompatActivity
         return true;
     }
 
-    protected boolean SaveToServer(EGPacketReceiverListener responseListener) {
+    protected boolean SaveToServer() {
+        ShowProgressBar();
+        // Load this player?
         Player player = App.GetPlayer();
-        System.out.println("Saving to server.");// Connect to server.
+        /// Extract transport information from the TransportDetectorService and add its summary data into player.
+        int secondsToAnalyze = 3600 * 24; // 24 hours?
+        player.UpdateTransportMinutes(TransportDetectionService.GetInstance().GetTotalStatsForDataSeconds(secondsToAnalyze));
+        System.out.println("Saving to server, ");// Connect to server.
+        player.PrintTopTransports(3);
         EGRequest req = EGRequest.Save(player);
-        if (responseListener != null)
-            req.addReceiverListener(responseListener);
+        req.addReceiverListener(new EGPacketReceiverListener() {
+                @Override
+                public void OnReceivedReply(EGPacket reply) {
+                    HideProgressBar();
+                    HandleClientData(reply);
+                }
+                @Override
+                public void OnError(EGPacketError error) {
+                    Toast("Error: "+error.name());
+                    HideProgressBar();
+                }
+            });
         App.Send(req);//        req.WaitForResponse(1000); // No waiting allowed. Use callbacks only!
         return true;
     }
+    /// Performs default actions for some responses, such as removing the active player if the data is no longer valid (e.g. old player/game ID).
+    protected void HandleResponse(EGResponseType egResponseType) {
+        switch (egResponseType){
+            case NoSuchPlayer:
+                Toast("No such player exists. Removing it.");
+                App.GetPlayer();
+                App.RemovePlayer(App.GetPlayer());
+                finish(); // Go back to title screen.
+                break;
+            default:
+                Toast("Res: "+egResponseType.name());
+                break;
+        }
+    }
+
     protected static boolean LoadFromServer(EGPacketReceiverListener responseListener) {
         // Connect to server.
         Player player = App.GetPlayer();
@@ -241,6 +309,17 @@ public class EvergreenActivity extends AppCompatActivity
         return true;
     }
 
+
+    void ShowProgressBar(){
+        View pb = findViewById(R.id.progressBar);
+        if (pb != null)
+            pb.setVisibility(View.VISIBLE);
+    }
+    void HideProgressBar(){
+        View pb = findViewById(R.id.progressBar);
+        if (pb != null)
+            pb.setVisibility(View.INVISIBLE);
+    }
 
 
 
@@ -325,7 +404,7 @@ public class EvergreenActivity extends AppCompatActivity
     private void hideControls()
     {
 //        System.out.println("Hiding in plain sight -o-o- content: "+mContentView);
-        mContentView = findViewById(R.id.fullscreen_view);
+        mContentView = findViewById(R.id.fullscreen_view_background);
         if (mContentView != null)
         {
             System.out.println("goin fullscreen yo: ");
@@ -390,7 +469,7 @@ public class EvergreenActivity extends AppCompatActivity
     // Update log with relevant filters.
     void UpdateLog() {
         if (layoutLog == null) {
-          //  Toast("Nooo looog!");
+         //   Toast("Nooo looog!");
             return;
         }
         Player player = App.GetPlayer();
@@ -421,7 +500,6 @@ public class EvergreenActivity extends AppCompatActivity
             // TODO: get the view.
             View t = GetViewForLogMessage(l);
             v.addView(t, 0); // Insert at index 0 always.
-
             if (v.getChildCount() >= maxLogLinesInEventLog)
                 break;
         }
@@ -458,8 +536,8 @@ public class EvergreenActivity extends AppCompatActivity
         vg.removeAllViews();
         Player player = App.GetPlayer();
         int added = 0;
-        for (int i = 0; i < player.inventory.size(); ++i) { // List all items of specific type.
-            Invention item = player.inventory.get(i);
+        for (int i = 0; i < player.cd.inventory.size(); ++i) { // List all items of specific type.
+            Invention item = player.cd.inventory.get(i);
             if (item.type != type)
                 continue;
             /// First add a LinearLayout (horizontal)
@@ -565,8 +643,8 @@ public class EvergreenActivity extends AppCompatActivity
             System.out.println("Item clicked: "+itemName);
             // Equip it?
             Player player = App.GetPlayer();
-            for (int i = 0; i < player.inventory.size(); ++i) {
-                Invention item = player.inventory.get(i);
+            for (int i = 0; i < player.cd.inventory.size(); ++i) {
+                Invention item = player.cd.inventory.get(i);
                 if (item.name.equals(itemName))
                 {
                     // Equip it?
@@ -596,5 +674,133 @@ public class EvergreenActivity extends AppCompatActivity
     void LoadTransportEvents(){
 
     }
+
+    /*
+    int numMostRecentMessagesToFetch = 0;
+    protected void RequestNumLogMessages(final int numMostRecentMessagesToFetch) {
+        this.numMostRecentMessagesToFetch = numMostRecentMessagesToFetch;
+        EGPacket pack = EGRequest.LogLength(App.GetPlayer());
+        pack.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    case NumLogMessages:
+                        int num = (int) Byter.toObject(reply.GetBody());
+                        logMessagesOnServer = num;
+                        Toast("Log messages on server: "+logMessagesOnServer);
+                        System.out.println("Num log msgs on server: "+num);
+                        App.GetPlayer().log.clear();
+                        // Request them.
+                        RequestLogMessages(numMostRecentMessagesToFetch);
+                }
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+
+            }
+        });
+        App.Send(pack);
+    }*/
+
+    int numRepliesReceived = 0;
+    int totalLogMessagesReceived = 0;
+    static long lastLogRequest = 0;
+    protected void RequestLogMessages(final int numMostRecentOnes) {
+        if (System.currentTimeMillis() == lastLogRequest + 3000)
+            return;
+        System.out.println("Requesting log messages: "+numMostRecentOnes);
+        lastLogRequest = System.currentTimeMillis();
+        int numPerBatch = 20;
+        ShowProgressBar();
+        int numBatches = numMostRecentOnes / numPerBatch;
+        int logMessagesOnServer = App.GetPlayer().cd.totalLogMessagesOnServer;
+        int startIndex = logMessagesOnServer - numBatches * numPerBatch;
+        totalLogMessagesReceived = 0;
+        numRepliesReceived = 0;
+        for (int i = startIndex; i < logMessagesOnServer; i += numPerBatch){
+            // Send request to update the whole log.
+            EGPacket pack = EGRequest.FetchLog(App.GetPlayer(), i, numPerBatch);
+            pack.addReceiverListener(new EGPacketReceiverListener() {
+                @Override
+                public void OnReceivedReply(EGPacket reply) {
+                    HideProgressBar();                        // Hide as long as we get something?
+                    switch (reply.ResType()){
+                        case LogMessages: {
+//                            System.out.println("Received some log messages :)");
+  //                          System.out.println("bytes received: "+reply.GetBody().length);
+                            Object obj = Byter.toObject(reply.GetBody());
+    //                        System.out.println("obj: "+obj);
+                            ArrayList<Log> messages = (ArrayList<Log>) obj;
+                            if (messages == null){
+                                Toast("Some bad data when parsing.");
+                                return;
+                            }
+                            totalLogMessagesReceived += messages.size();
+                            if (numRepliesReceived == 0)
+                                App.GetPlayer().log.clear();
+                            ++numRepliesReceived;
+                            Player p = App.GetPlayer();
+                            App.GetPlayer().log.addAll(messages); // UpdateLogMessages(messages);
+                            App.UpdateUI(); // Update UI once we have them all.
+                            HideProgressBar();
+                            System.out.println("Total messages received: "+totalLogMessagesReceived);
+                            // Update the gui?
+                            break;
+                        }
+                        default:
+                            HideProgressBar(); // Some error?
+                    }
+                }
+                @Override
+                public void OnError(EGPacketError error) {
+                    // Hide as long as we get something?
+                    HideProgressBar();
+                    Toast("RequestLogMessages: An error occurred");
+                }
+            });
+            App.Send(pack);
+        }
+    }
+
+
+    static long lastRCD = 0;
+    protected void RequestClientData() {
+        long now = System.currentTimeMillis();
+        if (now < lastRCD + 5000)
+            return;
+        lastRCD = now;
+        System.out.println("Requesting client data...");
+        ToastUp("Saving/Updating...");
+        EGPacket pack = EGRequest.Save(App.GetPlayer());
+        ShowProgressBar();
+        pack.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                HandleClientData(reply);
+                HideProgressBar();
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+                HideProgressBar();
+            }
+        });
+        App.Send(pack);;
+    }
+
+    protected void HandleClientData(EGPacket reply) {
+        if (reply instanceof EGResponse){
+            switch (reply.ResType()){
+                case PlayerClientData:
+                    Toast("Client data received");
+                    ClientData cd = reply.GetClientData();
+                    App.GetPlayer().UpdateFrom(cd);
+                    UpdateUI();
+                    // Request new log messages if relevant.
+                    RequestLogMessages(20);
+                    break;
+            }
+        }
+    }
+
 
 }

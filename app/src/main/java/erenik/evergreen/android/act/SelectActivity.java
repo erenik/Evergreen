@@ -106,7 +106,7 @@ public class SelectActivity extends EvergreenActivity
                     @Override
                     public void onClick(View v) {
                         // Verify arguments first?
-                        App.GetPlayer().queuedActiveActions.add(activeAction);                            // Save it?
+                        App.GetPlayer().cd.queuedActiveActions.add(activeAction);                            // Save it?
                         App.DoQueuedActions();                            // Do it?
                     }
                 });
@@ -260,17 +260,18 @@ public class SelectActivity extends EvergreenActivity
             Player player = App.GetPlayer();
             // Check stuff in list at present. Catenate. Return result? Save into player?
             if (type == SELECT_DAILY_ACTION) {
-                player.dailyActions.clear();
+                player.cd.dailyActions.clear();
                 for (int i = 0; i < selected.size(); ++i)
-                    player.dailyActions.add(selected.get(i));                    // Just save it as Strings?
+                    player.cd.dailyActions.add(selected.get(i));                    // Just save it as Strings?
             }
             else if (type == SELECT_SKILL) {
-                player.skillTrainingQueue.clear();
+                player.cd.skillTrainingQueue.clear();
                 for (int i = 0; i < selected.size(); ++i)
-                    player.skillTrainingQueue.add(selected.get(i));
+                    player.cd.skillTrainingQueue.add(selected.get(i));
             }
             App.SaveLocally(); // Save the updates first.
-            SaveToServer(null); // Try save to server, ignore checking the updates for now.
+            // It will probably auto-save when returning to the main-screen. Do not do this here....
+//            SaveToServer(null); // Try save to server, ignore checking the updates for now.
             finish();
         }
     };
@@ -337,13 +338,13 @@ public class SelectActivity extends EvergreenActivity
         // Load from player.
         Player p = App.GetPlayer();
         if (type == SELECT_DAILY_ACTION) {
-            for (int i = 0; i < p.dailyActions.size(); ++i)
-                selected.add(p.dailyActions.get(i));
+            for (int i = 0; i < p.cd.dailyActions.size(); ++i)
+                selected.add(p.cd.dailyActions.get(i));
         }
         else if (type == SELECT_SKILL)
         {
-            for (int i = 0; i < p.skillTrainingQueue.size(); ++i)
-                selected.add(p.skillTrainingQueue.get(i));
+            for (int i = 0; i < p.cd.skillTrainingQueue.size(); ++i)
+                selected.add(p.cd.skillTrainingQueue.get(i));
         }
         // Update the queue
         updateQueue();

@@ -73,7 +73,8 @@ public enum DAction {
             int index;
             switch(aa) {
                 case Transport:
-                    aa.value = Transport.values()[randomAction.nextInt(Transport.values().length)].name();
+                    aa.value = forPlayer.transports.get(randomAction.nextInt(forPlayer.transports.size())).name();
+                    break;
                 case Player:
                     if (forPlayer.knownPlayerNames.size() == 0) {
                         System.out.println("Doesn't know any other players, skipping.");
@@ -89,14 +90,14 @@ public enum DAction {
                     System.out.println("Random invention category added: "+aa.value);
                     break;
                 case InventionToCraft:
-                    if (forPlayer.inventions.size() == 0)
+                    if (forPlayer.cd.inventions.size() == 0)
                         return false;
-                    index = randomAction.nextInt(forPlayer.inventions.size());
-                    if (forPlayer.inventions.size() == 0) {
+                    index = randomAction.nextInt(forPlayer.cd.inventions.size());
+                    if (forPlayer.cd.inventions.size() == 0) {
                        System.out.println("Doesn't have any inventions, skipping");
                         return false;
                     }
-                    aa.value = forPlayer.inventions.get(index).name;
+                    aa.value = forPlayer.cd.inventions.get(index).name;
                     break;
             }
         }

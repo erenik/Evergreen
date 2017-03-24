@@ -38,8 +38,8 @@
 
     <!-- Bottom buttons -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-        <erenik.evergreen.android.ui.EvergreenButton
-            style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonBack" android:text="Back" />
+        <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonBack" android:text="Back" />
+        <erenik.evergreen.android.ui.EvergreenButton style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonEquip" android:text="@string/equip" />
     </LinearLayout>
 
 </LinearLayout>

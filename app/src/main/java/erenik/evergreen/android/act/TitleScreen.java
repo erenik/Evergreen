@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.opengl.Visibility;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -30,6 +33,23 @@ public class TitleScreen extends EvergreenActivity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title_screen);
+        App.SetActivePlayer(null);
+
+        EditText et = (EditText)findViewById(R.id.editText_password);
+        et.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_GO) {
+                    // Press?
+                    findViewById(R.id.button_tryLoad).callOnClick(); // Call ittt!!
+                    System.out.println("DONEOEENENNEe");
+                    return true;
+                }
+                return false;
+            }
+        });
+
+
         View v = findViewById(R.id.layoutMainButtons);
         v.setVisibility(View.VISIBLE);
         findViewById(R.id.layout_loadGameButtons).setVisibility(View.INVISIBLE);
@@ -44,7 +64,7 @@ public class TitleScreen extends EvergreenActivity {
             @Override
             public void onClick(View v) {
                 App.SetMultiplayer();
-                TryLoadOrNewGame();
+                NewGame();
             }
         });
         findViewById(R.id.button_loadGame).setOnClickListener(new View.OnClickListener() {
@@ -69,11 +89,13 @@ public class TitleScreen extends EvergreenActivity {
                 String encPw = Auth.Encrypt(pw, Auth.DefaultKey);
                 System.out.println("Sending to server: "+email+" pw: "+encPw);
 //                Toast("Trying to send to server...");
+                ShowProgressBar();
                 EGPacket pack = EGRequest.LoadCharacters(email, encPw);
                 App.Send(pack);
                 pack.addReceiverListener(new EGPacketReceiverListener() {
                     @Override
                     public void OnReceivedReply(EGPacket reply) {
+                        HideProgressBar();
                         switch (reply.ResType()){
                             default:
                                 Toast("Unclear res type: "+reply.ResType().name());
@@ -88,6 +110,10 @@ public class TitleScreen extends EvergreenActivity {
                                 ToastUp("Received reply");
                                 System.out.println("Received reply: "+reply.toString());
                                 ArrayList<Player> players = reply.parsePlayers();
+                                if (players.size() == 0){
+                                    ToastUp("Error parsing Players data");
+                                    return;
+                                }
                                 App.SetPlayers(reply.parsePlayers());
                                 // Open screen to select them, or just auto-load the first one?
                                 App.MakeActivePlayer(players.get(0));
@@ -97,13 +123,12 @@ public class TitleScreen extends EvergreenActivity {
                     }
                     @Override
                     public void OnError(EGPacketError error) {
+                        HideProgressBar();
                         Toast("Error: "+error.name());
                     }
                 });
             }
         });
-        /// Check for local save file (default user-name, hashed pw, statistics, et al).
-        SharedPreferences sp = App.GetPreferences();
     }
 
     @Override
@@ -118,12 +143,19 @@ public class TitleScreen extends EvergreenActivity {
             System.out.println("Auto-loading player: "+p.name);
             App.MakeActivePlayer(p);
             GoToMainScreen();
-            finish();
+            // Don't kill this activity, leave it as the base if the user backs from the main screen.
+//            finish();
             return;
         }
         else
             ToastLong("New player, eh? Welcome aboard! Choose singleplayer if you want want a brief tutorial.");
 
+    }
+
+    private void NewGame() {
+        System.out.println("New game, opening intro-screen..");
+        Intent i = new Intent(getBaseContext(), IntroScreen.class);
+        startActivity(i);
     }
 
     private void TryLoadOrNewGame() {
@@ -140,7 +172,8 @@ public class TitleScreen extends EvergreenActivity {
             Intent i = new Intent(getBaseContext(), IntroScreen.class);
             startActivity(i);
         }
-        finish(); // Kill this activity so that we cannot go back here. Only used on init.
+        // Don't kill this activity, leave it as the base if the user backs from the main screen.
+//        finish(); // Kill this activity so that we cannot go back here. Only used on init.
     }
 
 }

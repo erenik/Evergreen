@@ -48,5 +48,6 @@ public enum LogTextID {
     materialShortageAffectingProgress,
     skillLeveledUp,
     encounterNumMonsters, encounterSurvived, expGained,
+    startingBonusNone,
 
 }

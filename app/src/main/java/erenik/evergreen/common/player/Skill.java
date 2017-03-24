@@ -22,6 +22,7 @@ public enum Skill implements Serializable
     WeaponizedCombat("Weaponized combat", AddLinearAccum(3,1,6), "Increases attack and damage of attacks while using weapons."),
     Marksmanship("Marksmanship", AddLinear(5,5,6), "If you have a ranged weapon: Enables ranged attacks before melee combat starts. Increases ranged attack, damage and amount of attacks."), // Not added yet.
     Parrying("Parrying", AddLinearAccum(2, 5, 6), "Enables parrying of melee attacks. Increases probability at higher levels."), // Not added yet.
+    SilentScouting("Silent scouting", AddLinearAccum(10, 5, 5), "Reduces risks of scouting by lowering the monster encounter rate while scouting."),
     Thief("Thief", AddLinear(5, 5, 5), "Reduces risks and increases profits when stealing from other players"), // Not added yet.
     GroupCombatTraining("Group combat training", AddLinear(5,5,5), "Increases attack and defense while fighting with an ally."), // Not added yet.
     Studious("Studious", AddLinearAccum(20,10,5), "Grants additional EXP each turn. Increases EXP gained when choosing the Study action"),
@@ -42,12 +43,10 @@ public enum Skill implements Serializable
     // Serialization version.
     public static final long serialVersionUID = 1L;
  
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException
-    {
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeFloat(totalExp);
     }
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
-    {
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         totalExp = in.readFloat();
     }
     private void readObjectNoData() throws ObjectStreamException
