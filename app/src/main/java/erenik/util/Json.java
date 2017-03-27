@@ -1,7 +1,7 @@
 package erenik.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-12-18.
@@ -22,7 +22,7 @@ public class Json {
         }
         j.Keys();
     }
-    public List<Tuple<String, String>> Tuples()
+    public EList<Tuple<String, String>> Tuples()
     {
         return tuples;
     }
@@ -94,16 +94,16 @@ public class Json {
             tuples.add(t);
         }
     }
-    List<String> Keys()
+    EList<String> Keys()
     {
         return keys;
     }
-    List<String> Values()
+    EList<String> Values()
     {
         return values;
     }
-    List<Tuple<String,String>> tuples = new ArrayList<>();
-    List<String> keys = new ArrayList<>();
-    List<String> values = new ArrayList<>();
+    EList<Tuple<String,String>> tuples = new EList<>();
+    EList<String> keys = new EList<>();
+    EList<String> values = new EList<>();
     private String str;
 }

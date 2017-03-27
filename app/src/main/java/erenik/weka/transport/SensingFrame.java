@@ -1,6 +1,7 @@
 package erenik.weka.transport;
 
-import java.util.ArrayList;
+
+import erenik.util.EList;
 
 /**
  * A frame of time for sensing which is later analyzed.
@@ -10,8 +11,8 @@ import java.util.ArrayList;
  */
 
 public class SensingFrame {
-    ArrayList<MagnitudeData> accMagns = new ArrayList<>(),
-        gyroMagns = new ArrayList<>();
+    EList<MagnitudeData> accMagns = new EList<>(),
+        gyroMagns = new EList<>();
 
     /// When transport has not been determined?
     SensingFrame(){
@@ -54,7 +55,7 @@ public class SensingFrame {
         gyroMagns = null;
     }
 
-    float Min(ArrayList<MagnitudeData> data){
+    float Min(EList<MagnitudeData> data){
         float min = data.get(0).magnitude;
         for (int i = 1; i < data.size(); ++i)
             if (data.get(i).magnitude < min)
@@ -62,20 +63,20 @@ public class SensingFrame {
         return min;
     }
 
-    float Max(ArrayList<MagnitudeData> data){
+    float Max(EList<MagnitudeData> data){
         float max = data.get(0).magnitude;
         for (int i = 1; i < data.size(); ++i)
             if (data.get(i).magnitude > max)
                 max = data.get(i).magnitude;
         return max;
     }
-    float Avg(ArrayList<MagnitudeData> data){
+    float Avg(EList<MagnitudeData> data){
         float tot = data.get(0).magnitude;
         for (int i = 1; i < data.size(); ++i)
             tot += data.get(i).magnitude;
         return tot / data.size();
     }
-    float Stddev(ArrayList<MagnitudeData> data, float avg){
+    float Stddev(EList<MagnitudeData> data, float avg){
         int totalDiffs = 0;
         for(int i = 0; i < data.size(); i++){
             float diff = data.get(i).magnitude - avg;

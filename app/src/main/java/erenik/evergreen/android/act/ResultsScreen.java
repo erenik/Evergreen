@@ -42,15 +42,16 @@ public class ResultsScreen extends EvergreenActivity  {
         Player p = App.GetPlayer();
         int logMessagesAdded = 0;
         long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
-        System.out.println("LastID seen: "+lastLogMessageIDSeen);
+        System.out.println("LastID seen: "+lastLogMessageIDSeen+" log size: "+p.log.size());
         for (int i = 0; i < p.log.size(); ++i){
             boolean centered = false;
             int textSize = 18;
             int drawableLeftSide = 0;
             Log l = p.log.get(i);
+            System.out.println("l "+l.LogID()+" t: "+l.TextID().name());
             if (l.LogID() <= lastLogMessageIDSeen)
                 continue;
-            System.out.println("l.LogID(): "+l.LogID());
+            System.out.println("l.LogID(): "+l);
             l.displayedToEndUser = 1;
             lastID = l.LogID();
             TextView viewToAdd = null;
@@ -161,7 +162,7 @@ public class ResultsScreen extends EvergreenActivity  {
             public void onClick(View v) {
                 // Mark all log-messages as viewed and save when returning.
                 Player p = App.GetPlayer();
-                for (int i = 0; i < p.log.size(); ++i)
+                for (int i = 0; i < p.log.size(); ++i) // Set the displayed value of all..? Even if this shouldn't really be used anymore..?
                     p.log.get(i).displayedToEndUser = 1;
                 if (lastID > p.Get(Config.LatestLogMessageIDSeen)) {
                     p.Set(LatestLogMessageIDSeen, lastID);

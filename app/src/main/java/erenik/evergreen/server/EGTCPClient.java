@@ -1,7 +1,7 @@
 package erenik.evergreen.server;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,8 +30,8 @@ public class EGTCPClient extends Thread
     String ip;
     int port;
 
-    List<Game> games = new ArrayList<>();
-    List<Player> players = new ArrayList<>();
+    EList<Game> games = new EList<>();
+    EList<Player> players = new EList<>();
 
     EGTCPClient()
     {}
@@ -173,7 +173,7 @@ public class EGTCPClient extends Thread
         comm.Send(pack);
     }
 
-    List<String> log = new ArrayList<>();
+    EList<String> log = new EList<>();
     public void PrintLog()
     {
         System.out.println("\nServer log:\n---------------");

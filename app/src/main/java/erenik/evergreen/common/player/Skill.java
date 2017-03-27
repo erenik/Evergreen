@@ -3,8 +3,8 @@ package erenik.evergreen.common.player;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -97,9 +97,9 @@ public enum Skill implements Serializable
         return (int) (totalNeeded - this.totalExp);
     }
 
-    public static List<String> Names()
+    public static EList<String> Names()
     {
-        List<String> l = new ArrayList<String>();
+        EList<String> l = new EList<String>();
         for (int i = 0; i < values().length; ++i)
         {
             l.add(values()[i].text);

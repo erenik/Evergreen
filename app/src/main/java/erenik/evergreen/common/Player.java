@@ -3,11 +3,9 @@ package erenik.evergreen.common;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -28,7 +26,7 @@ import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.player.*;
 import erenik.util.Byter;
 import erenik.util.Dice;
-import erenik.weka.transport.DurationType;
+import erenik.util.EList;
 import erenik.weka.transport.TransportOccurrence;
 import erenik.weka.transport.TransportType;
 
@@ -75,28 +73,28 @@ public class Player extends Combatable implements Serializable {
     // For whole data or parts of it. SEND_ALL or CREDENTIALS_ONLY
     public static final int CREDENTIALS_ONLY = 5;
 
-    List<PlayerListener> listeners = null;
-    List<LogListener> logListeners = null;
-    List<Encounter> encountersToProcess = null;
+    EList<PlayerListener> listeners = null;
+    EList<LogListener> logListeners = null;
+    EList<Encounter> encountersToProcess = null;
     public String email = "";
     private String bonus = ""; // A string?
     public int sendLogs = SEND_ALL; // Locally used variable to manipulate what is sent to the object streams when saving and loading.
     public String sysmsg = ""; // System message. Should present to user if it has not been presented earlier (check via preferences the oldest saved system message).
 
     /// Statistical fields only used Server-side.
-    public ArrayList<Date> updatesFromClient = null;
+    public EList<Date> updatesFromClient = null;
     public int sendAll = CREDENTIALS_ONLY;
 
     /// Creates stuff not added automatically - after creation, or after loading from file via e.g. readObject.
     void Init() {
         cd = new ClientData();
         cd.Init();
-        encountersToProcess = new ArrayList<>();
+        encountersToProcess = new EList<>();
         transports = Transport.DefaultTransports();
-        listeners = new ArrayList<>();
-        logListeners = new ArrayList<>();
+        listeners = new EList<>();
+        logListeners = new EList<>();
 
-        updatesFromClient = new ArrayList<>();
+        updatesFromClient = new EList<>();
         DefaultLogTypesToShow();
     }
 
@@ -114,7 +112,7 @@ public class Player extends Combatable implements Serializable {
     // Based on the Transport enum as defined in player/Transport.java
     // Only variable we care about for transports as far as configurability is concerned.
     // Contains the seconds the transports were detected during the last 24 or 36 hours.
-    public ArrayList<Transport> transports = null;
+    public EList<Transport> transports = null;
 
     public int activeAction = -1;
     public boolean playEvents = false;
@@ -130,7 +128,7 @@ public class Player extends Combatable implements Serializable {
     public static final long serialVersionUID = 1L;
     
     Invention GetEquipped(InventionType queryType) {
-        List<Invention> equipped = GetEquippedInventions();
+        EList<Invention> equipped = GetEquippedInventions();
         for (int i = 0; i < equipped.size(); ++i) {
             Invention inv = equipped.get(i);
             if (inv.type == queryType)
@@ -145,10 +143,10 @@ public class Player extends Combatable implements Serializable {
         return GetEquipped(InventionType.Armor);
     }
 
-    /// List of events to evaluate/process/play-mini-games. Old events are removed from the list.
-    ArrayList<Event> events = new ArrayList<Event>();
+    /// EList of events to evaluate/process/play-mini-games. Old events are removed from the list.
+    EList<Event> events = new EList<Event>();
     /// Log of messages for this specific player.
-    public ArrayList<Log> log = new ArrayList<Log>();
+    public EList<Log> log = new EList<Log>();
     /// To increase bonuses/chance of invention if failing a lot in series.
     int successiveInventingAttempts = 0;
     int successiveCraftingAttempts = 0;
@@ -164,13 +162,13 @@ public class Player extends Combatable implements Serializable {
     */
     public int gameID = -1;
 
-    public List<String> knownStrongholds = new ArrayList<>();
-    public ArrayList<String> knownPlayerNames = new ArrayList<>();
+    public EList<String> knownStrongholds = new EList<>();
+    public EList<String> knownPlayerNames = new EList<>();
 
     // Auto-created. Start-using whenever.
-    public ArrayList<LogType> logTypesToShow = null;
+    public EList<LogType> logTypesToShow = null;
     public void DefaultLogTypesToShow(){
-        logTypesToShow = new ArrayList<LogType>(Arrays.asList(LogType.values()));
+        logTypesToShow = new EList<LogType>(LogType.values());
     };
     public boolean isAI = false;
     /// Used for clients/single-simulator for self.
@@ -182,40 +180,30 @@ public class Player extends Combatable implements Serializable {
     }
     // Delivers a String based on using ObjectOutputStream, then saving the bytes.
     public byte[] toByteArr() {
-        try { 
-            ObjectOutputStream oos = null;
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(baos);
-            writeObject(oos);
-            oos.close();
-            return baos.toByteArray();
-        } catch (IOException ex) {
-            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
-        } 
-        return null;
+        return Byter.toByteArray(this);
     }
-    public boolean fromByteArr(byte[] bytes) {
-        try { 
-            ObjectInputStream ois = null;
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            ois = new ObjectInputStream(bais);
-            readObject(ois);
-            ois.close();
-            return true;
-        } catch (IOException ex) {
-            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) { 
-            Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return false;        
+    public static Player fromByteArr(byte[] bytes) {
+        Object p = Byter.toObject(bytes);
+        if (p instanceof Player)
+            return (Player) p;
+        return null;
     }
 
     private static final int VERSION_1_EMAIL = 1,
         VERSION_2_SYSMSG = 2,
             VERSION_3_TRANSPORT_ARR_LIST = 3,
-            VERSION_4_CREDENTIALS_ONLY = 4;
+            VERSION_4_CREDENTIALS_ONLY = 4,
+            VERSION_5_CREDENTIALS_NO_PW = 5;
 
+    // To conform to the Serializable interface.
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        writeTo(out);
+    }
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        readFrom(in);
+    }
+
+    public void writeTo(java.io.ObjectOutputStream out) throws IOException {
         System.out.println("Player writeObject");
         int version = VERSION_4_CREDENTIALS_ONLY; // 0 - Added active actions. 1- email
         out.writeInt(version);
@@ -233,21 +221,26 @@ public class Player extends Combatable implements Serializable {
 //        System.out.println("name: "+name);
         out.writeObject(email);
         out.writeObject(password);
-        out.writeObject(transports);
 
-        out.writeObject(cd); // Write the client-data
+        out.writeInt(transports.size());
+        for (int i = 0; i < transports.size(); ++i)
+            transports.get(i).writeTo(out);
+
+        cd.writeTo(out); // Write the client-data
         writeLogs(out);
 
         out.writeObject(inventionCurrentlyBeingCrafted);
+
         out.writeObject(knownStrongholds);
         out.writeObject(knownPlayerNames);
         out.writeObject(logTypesToShow);
+
         out.writeBoolean(isAI);
         out.writeLong(lastEditSystemMs);
         out.writeLong(lastSaveTimeSystemMs);
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+    public boolean readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         System.out.println("Player start");
         try {
             int version = in.readInt();
@@ -262,7 +255,7 @@ public class Player extends Combatable implements Serializable {
                 email = (String) in.readObject();
                 password = (String) in.readObject();
                 System.out.println("Player read - Credentials only");
-                return;
+                return true;
             }
             System.out.println("Player read - All");
 
@@ -272,41 +265,55 @@ public class Player extends Combatable implements Serializable {
             //        System.out.println("name: "+name);
             email = (String) in.readObject();
             password = (String) in.readObject();
-            transports = (ArrayList<Transport>) in.readObject();
+
+            int numTransports = in.readInt();
+            transports.clear();
+            for (int i = 0; i < numTransports; ++i){
+                Transport t = Transport.readFrom(in);
+                if (t != null)
+                    transports.add(t);
+            }
+
             System.out.println("Player read - before log");
 
-            cd = (ClientData) in.readObject(); // Read the client-data
+            if (!cd.readFrom(in)){
+                System.out.println("Failed to read client-data.");
+                return false;
+            }
             readLogs(in);
 
             System.out.println("Player read - after log");
             inventionCurrentlyBeingCrafted = (Invention) in.readObject();
-            knownStrongholds = (List<String>) in.readObject();
-            knownPlayerNames = (ArrayList<String>) in.readObject();
-            logTypesToShow = (ArrayList<LogType>) in.readObject();
+
+            knownStrongholds = (EList<String>) in.readObject();
+            knownPlayerNames = (EList<String>) in.readObject();
+            logTypesToShow = (EList<LogType>) in.readObject();
+
             isAI = in.readBoolean();
             lastEditSystemMs = in.readLong();
             lastSaveTimeSystemMs = in.readLong();
             if (log == null)
-                log = new ArrayList<>();
+                log = new EList<>();
             if (logTypesToShow == null || logTypesToShow.size() == 0)
                 DefaultLogTypesToShow();
         }catch (ClassCastException e){
             System.out.println("Tis bad.");
-            return;
+            e.printStackTrace();
+            return false;
         }
 //        System.out.println("Init from readOBject!");
-        return;
+        return true;
     }
 
     private void writeLogs(ObjectOutputStream out) throws IOException {
         out.writeInt(sendLogs);
         switch (sendLogs){
             case SEND_NO_LOG_MESSAGES:
-                // Save an empty ArrayList instead of the regular one.
-                out.writeObject(new ArrayList<>());
+                // Save an empty EList instead of the regular one.
+                // out.writeObject(new EList<>());
                 break;
             case SEND_CLIENT_SEEN_MESSAGES:
-                ArrayList<Log> clientSeen = new ArrayList<>();
+                EList<Log> clientSeen = new EList<>();
                 for (int i = 0; i < log.size(); ++i){
                     Log l = log.get(i);
                     if (l.displayedToEndUser == 1)
@@ -316,7 +323,7 @@ public class Player extends Combatable implements Serializable {
                 out.writeObject(clientSeen);
                 break;
             case SEND_SERVER_NEW_MESSAGES:
-                ArrayList<Log> serverConfirmed = new ArrayList<>();
+                EList<Log> serverConfirmed = new EList<>();
                 int startIndex = log.size() > 100? log.size() - 100 : 0; // Send at most 100 messages?
                 for (int i = startIndex; i < log.size(); ++i){
                     Log l = log.get(i);
@@ -328,7 +335,7 @@ public class Player extends Combatable implements Serializable {
                 out.writeObject(serverConfirmed);
                 break;
             case SEND_MESSAGES_SINCE_LAST_NEW_DAY:
-                ArrayList<Log> sinceLastDay = new ArrayList<>();
+                EList<Log> sinceLastDay = new EList<>();
                 int indexOfLastNewDay = GetLastNewDayLogIndex();
                 for (int i = indexOfLastNewDay; i < log.size(); ++i){
                     Log l = log.get(i);
@@ -348,9 +355,15 @@ public class Player extends Combatable implements Serializable {
 
     private void readLogs(ObjectInputStream in) throws IOException, ClassNotFoundException {
         int logMessagesRead = in.readInt();
-        //        if (logMessagesRead != SEND_ALL) // If not all (not saving locally), display what it is that we got.
-        //          System.out.println("log messages read/received: "+logMessagesRead);
-        log = (ArrayList<Log>) in.readObject();
+        switch(logMessagesRead){
+            case SEND_NO_LOG_MESSAGES:
+                log = new EList<Log>();
+                break;
+            default:
+                //        if (logMessagesRead != SEND_ALL) // If not all (not saving locally), display what it is that we got.
+                //          System.out.println("log messages read/received: "+logMessagesRead);
+                log = (EList<Log>) in.readObject();
+        }
     }
 
     private void readObjectNoData() throws ObjectStreamException
@@ -383,8 +396,8 @@ public class Player extends Combatable implements Serializable {
     public int UnarmedCombatBonus() {
         return GetEquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
     }
-    public List<Invention> GetEquippedInventions() {
-        List<Invention> equipped = new ArrayList<>();
+    public EList<Invention> GetEquippedInventions() {
+        EList<Invention> equipped = new EList<>();
         for (int i = 0; i < cd.inventory.size(); ++i) {
             Invention item = cd.inventory.get(i);
             if (item.Get(InventionStat.Equipped) >= 0) {
@@ -395,7 +408,7 @@ public class Player extends Combatable implements Serializable {
     }
     /// Fetches total form all equipped gear.
     public int GetEquipped(InventionStat stat) {
-        List<Invention> equipped = GetEquippedInventions();
+        EList<Invention> equipped = GetEquippedInventions();
         int tot = 0;
         for (int i = 0; i < equipped.size(); ++i)
             tot += equipped.get(i) != null? equipped.get(i).Get(stat) : 0;
@@ -912,8 +925,8 @@ public class Player extends Combatable implements Serializable {
         knownPlayerNames.add(name);
     }
 
-    private ArrayList<String> KnownNamesSelfIncluded() {
-        ArrayList<String> knownNames = new ArrayList<>();
+    private EList<String> KnownNamesSelfIncluded() {
+        EList<String> knownNames = new EList<>();
         for (int i = 0; i < knownPlayerNames.size(); ++i)
             knownNames.add(knownPlayerNames.get(i));
         knownNames.add(name);
@@ -1123,7 +1136,7 @@ public class Player extends Combatable implements Serializable {
             sumChances += (Integer) chances.values().toArray()[i];
         }
 //        System.out.println("Sum chances: "+sumChances);
-        List<Finding> foundList = new ArrayList<Finding>();
+        EList<Finding> foundList = new EList<Finding>();
         String foundStr = "Found: ";
         while(toRandom > 0) {
             toRandom -= 1;
@@ -1310,9 +1323,9 @@ public class Player extends Combatable implements Serializable {
         return attacks;
     }
 
-    public List<String> KnownPlayerNames()
+    public EList<String> KnownPlayerNames()
     {
-        List<String> ll = new ArrayList<>();
+        EList<String> ll = new EList<>();
         return ll;
     }
 
@@ -1352,15 +1365,11 @@ public class Player extends Combatable implements Serializable {
     }
 
     public static Player fromByteArray(byte[] bytes) throws Exception {
-        Player player = new Player();
         try {
-            boolean ok = player.fromByteArr(bytes);
-            if (ok)
-                return player;
+            return Player.fromByteArr(bytes);
         } catch (Exception e){
             throw new Exception("Could not parse properly");
         }
-        return null;
     }
 
     public boolean CredentialsMatch(Player playerInSystem) {
@@ -1397,7 +1406,7 @@ public class Player extends Combatable implements Serializable {
         }
         transports = clientPlayer.transports; // Copy over all transports.
         System.out.println("SaveFromClient, transports: "+clientPlayer.TopTransportsAsString(3)); // Print the new transport data we received.
-        List<Invention> equipped = clientPlayer.GetEquippedInventions();         // Equip those items as requested by the player as well.
+        EList<Invention> equipped = clientPlayer.GetEquippedInventions();         // Equip those items as requested by the player as well.
         for (int i = 0; i < equipped.size(); ++i){
             Invention item = equipped.get(i);
             boolean ok = EquipItemWithID(item.GetID());
@@ -1445,7 +1454,7 @@ public class Player extends Combatable implements Serializable {
         }
     }
 
-    public void SaveLog(List<LogType> filterToSkip, String folder) {
+    public void SaveLog(EList<LogType> filterToSkip, String folder) {
         String path = folder+"/"+gameID+"_player_log_"+name+".txt";
         System.out.println("SavePlayerLog, dumping logs to file "+path);
         try {
@@ -1517,7 +1526,7 @@ public class Player extends Combatable implements Serializable {
             log.get(i).displayedToEndUser = 1;
     }
 
-    public void UpdateTransportMinutes(ArrayList<TransportOccurrence> transportOccurrences) {
+    public void UpdateTransportMinutes(EList<TransportOccurrence> transportOccurrences) {
         // Clear the array.
         for (int i = 0; i < transports.size(); ++i)
             transports.get(i).secondsUsed = 0;
@@ -1540,7 +1549,7 @@ public class Player extends Combatable implements Serializable {
     // Prints the transports in the order of highest occurrence.
     public void PrintTopTransports(int topNum) {
         System.out.println("Top "+topNum+":");
-        ArrayList<Transport> sorted = TransportsSortedBySeconds();
+        EList<Transport> sorted = TransportsSortedBySeconds();
         long totalTimeSeconds = TotalTransportSeconds();
         for (int i = 0; i < topNum; ++i){
             Transport highest = sorted.get(i);
@@ -1556,9 +1565,9 @@ public class Player extends Combatable implements Serializable {
         return tot;
     }
 
-    private ArrayList<Transport> TransportsSortedBySeconds() {
+    private EList<Transport> TransportsSortedBySeconds() {
         /// Update list before returning it?
-        ArrayList<Transport> newList = new ArrayList<>();
+        EList<Transport> newList = new EList<>();
         while(newList.size() != transports.size()) {
             Transport longest = null;
             for (int i = 0; i < transports.size(); ++i) {
@@ -1578,7 +1587,7 @@ public class Player extends Combatable implements Serializable {
     // Returns e.g. "Idle: 3252s, Foot: 1235s, Car: 123s"
     public String TopTransportsAsString(int topNum){
         System.out.println("Top "+topNum+":");
-        ArrayList<Transport> to = TransportsSortedBySeconds();
+        EList<Transport> to = TransportsSortedBySeconds();
         float totalTimeSeconds = TotalTransportSeconds();
         String s = "";
         for (int i = 0; i < topNum; ++i){
@@ -1591,17 +1600,17 @@ public class Player extends Combatable implements Serializable {
         return s;
     }
 
-    private long TotalMinutes(ArrayList<TransportOccurrence> to) {
+    private long TotalMinutes(EList<TransportOccurrence> to) {
         return TotalSeconds(to) / 60;
     }
-    private long TotalSeconds(ArrayList<TransportOccurrence> to){
+    private long TotalSeconds(EList<TransportOccurrence> to){
         long secs = 0;
         for (int i = 0; i < to.size(); ++i)
             secs += to.get(i).DurationSeconds();
         return secs;
     }
 
-    private TransportOccurrence HighestOf(ArrayList<TransportOccurrence> to) {
+    private TransportOccurrence HighestOf(EList<TransportOccurrence> to) {
         TransportOccurrence highest = to.get(0);
         for (int i = 1; i < to.size(); ++i){
             if (to.get(i).DurationSeconds() > highest.DurationSeconds())
@@ -1610,10 +1619,10 @@ public class Player extends Combatable implements Serializable {
         return highest;
     }
 
-    public void UpdateLogMessages(List<Log> messages) {
-        ArrayList<Log> newLog = new ArrayList<>();
-        ArrayList<Long> logIDs = new ArrayList<>(),
-            logIDs2 = new ArrayList<>();
+    public void UpdateLogMessages(EList<Log> messages) {
+        EList<Log> newLog = new EList<>();
+        EList<Long> logIDs = new EList<>(),
+            logIDs2 = new EList<>();
         for (int i = 0; i < log.size(); ++i){ // Check IDs of all
             logIDs.add(log.get(i).LogID());
         }
@@ -1632,7 +1641,7 @@ public class Player extends Combatable implements Serializable {
         log = newLog; // Done and sorted.
     }
 
-    private Log GetLogByID(List<Log> logs, long id) {
+    private Log GetLogByID(EList<Log> logs, long id) {
         for (int i = 0; i < logs.size(); ++i){
             Log l = logs.get(i);
             if (l.LogID() == id)
@@ -1641,7 +1650,7 @@ public class Player extends Combatable implements Serializable {
         return null;
     }
 
-    public List<Log> LogSublist(int startIndex, int endIndexInclusive) {
+    public EList<Log> LogSublist(int startIndex, int endIndexInclusive, long oldestIDtoInclude) {
         if (log.size() == 0)
             return log;
         if (startIndex < 0)
@@ -1652,7 +1661,23 @@ public class Player extends Combatable implements Serializable {
             endIndexInclusive = 0;
         if (endIndexInclusive >= log.size())
             endIndexInclusive = log.size() - 1;
-        return log.subList(startIndex, endIndexInclusive);
+
+        EList<Log> partList = log.subList(startIndex, endIndexInclusive);
+        for (int i = 0; i < partList.size(); ++i){ // Filter based on oldest ID.
+            Log l = partList.get(i);
+            if (l.LogID() < oldestIDtoInclude) {
+                partList.remove(l);
+                --i;
+            };
+        }
+        for (int i = 0; i < partList.size(); ++i){
+            System.out.println(partList.get(i));
+        }
+        return partList;
+    }
+
+    public void ClearLog() {
+        log = new EList<Log>();
     }
 
     public enum StartingBonus{

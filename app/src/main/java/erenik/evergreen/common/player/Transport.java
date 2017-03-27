@@ -2,24 +2,26 @@ package erenik.evergreen.common.player;
 
 import java.io.IOException;
 import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
+import erenik.util.EList;
+import erenik.util.ESerializable;
 import erenik.weka.transport.TransportType;
 
 /**
  * Created by Emil on 2016-11-11.
  */
 public class Transport implements Serializable {
+    Transport() {}
     Transport(TransportType tt, float defProb) {
         this.tt = tt;
         defaultProbability = defProb;
     }
 
-    public static ArrayList<Transport> DefaultTransports(){
-        ArrayList<Transport> alt = new ArrayList<>();
+    public static EList<Transport> DefaultTransports(){
+        EList<Transport> alt = new EList<>();
         alt.add(new Transport(TransportType.Idle, 0));
         alt.add(new Transport(TransportType.Foot, 1));
         alt.add(new Transport(TransportType.Bike, 1));
@@ -40,6 +42,9 @@ public class Transport implements Serializable {
 
     float[] stats = new float[TransportStat.values().length];
 
+    public void writeTo(java.io.ObjectOutputStream out) throws IOException {
+        writeObject(out);
+    }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(tt);
         out.writeFloat(defaultProbability);
@@ -119,7 +124,7 @@ public class Transport implements Serializable {
         stats[s.ordinal()] += adjustment;
     }
 
-    public static Transport RandomOf(List<Transport> transports) {
+    public static Transport RandomOf(EList<Transport> transports) {
         float total = 0;
         for (int i = 0; i < transports.size(); ++i)
             total += transports.get(i).defaultProbability;
@@ -136,6 +141,19 @@ public class Transport implements Serializable {
             }
         }
         return transports.get(transports.size() - 1);
+    }
+
+    public static Transport readFrom(ObjectInputStream in) {
+        Transport t = new Transport();
+        try {
+            t.readObject(in);
+            return t;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 /*    public static Transport GetFromString(String s) {

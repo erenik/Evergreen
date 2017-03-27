@@ -9,9 +9,9 @@ import android.os.Handler;
 import android.widget.TextView;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 
 import erenik.evergreen.R;
+import erenik.util.EList;
 import weka.classifiers.trees.RandomForest;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -26,7 +26,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     SensorManager sensorManager;
     private Sensor accSensor, gyroSensor;
     private SensingFrame sensingFrame;
-    ArrayList<SensingFrame> sensingFrames;
+    EList<SensingFrame> sensingFrames;
 
     public int herz = 20; // Samples per second.
     boolean stop = false;
@@ -37,14 +37,14 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     int msPerIteration = 5000;
 
     /// All stored accelerometer-sensor points.
-    ArrayList<MagnitudeData> accMagnPoints = new ArrayList<>(),
-            gyroMagnPoints = new ArrayList<>();
-    private ArrayList<SensingFrame> finishedSensingFrames = new ArrayList<>();
+    EList<MagnitudeData> accMagnPoints = new EList<>(),
+            gyroMagnPoints = new EList<>();
+    private EList<SensingFrame> finishedSensingFrames = new EList<>();
 
 
     TransportDetectorThread(TransportDetectionService service){
         callingService = service;
-        sensingFrames = new ArrayList<>();
+        sensingFrames = new EList<>();
         sensingFrame = new SensingFrame();
     }
 

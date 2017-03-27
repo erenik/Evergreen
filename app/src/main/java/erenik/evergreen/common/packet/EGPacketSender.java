@@ -1,7 +1,7 @@
 package erenik.evergreen.common.packet;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,7 +15,7 @@ public class EGPacketSender extends Thread {
     {
     }
     // Packets to receive updates - success? Error? Inform listeners and remove from array afterwards
-    private List<EGPacket> packetsToReceiveUpdates = new ArrayList<>();
+    private EList<EGPacket> packetsToReceiveUpdates = new EList<>();
     public void QueuePacket(EGPacket pack, String ip, int port) {
         pack.SetDest(ip, port); // Set dest.
         packetsToSend.add(pack); // Add to list.
@@ -44,7 +44,7 @@ public class EGPacketSender extends Thread {
     boolean stop = false;
     boolean threadStarted = false;
   //  private EGPacketSender eps;
-    private List<EGPacket> packetsToSend = new ArrayList<EGPacket>();
+    private EList<EGPacket> packetsToSend = new EList<EGPacket>();
     void Log(String s) {
         // Do nothing, later do stuff maybe?
     }

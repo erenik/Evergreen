@@ -1,25 +1,23 @@
 package erenik.evergreen.android.act;
 
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
-import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.Player;
-import erenik.evergreen.common.packet.EGPacket;
-import erenik.evergreen.common.packet.EGPacketError;
-import erenik.evergreen.common.packet.EGPacketReceiverListener;
-import erenik.evergreen.common.packet.EGRequest;
-import erenik.util.Byter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class EventLogViewer extends EvergreenActivity {
+
+    final String NUM_LOG_MESSAGES = "NumLogMessages";
 
     Player player = App.GetPlayer();
     private View.OnClickListener toggleFilter = new View.OnClickListener() {
@@ -46,12 +44,9 @@ public class EventLogViewer extends EvergreenActivity {
 
     void SetFilter(LogType lt, boolean filterIt) {
         // Filter it -> Remove it from types to show.
-        if (filterIt)
-        {
-            for (int i = 0; i < player.logTypesToShow.size(); ++i)
-            {
-                if (player.logTypesToShow.get(i).ordinal() == lt.ordinal())
-                {
+        if (filterIt) {
+            for (int i = 0; i < player.logTypesToShow.size(); ++i) {
+                if (player.logTypesToShow.get(i).ordinal() == lt.ordinal()) {
                     player.logTypesToShow.remove(i);
                     --i;
                 }
@@ -68,10 +63,8 @@ public class EventLogViewer extends EvergreenActivity {
     {
         return !IsFiltered(lt);
     }
-    boolean IsFiltered(LogType lt)
-    {
-        for (int i = 0; i < player.logTypesToShow.size(); ++i)
-        {
+    boolean IsFiltered(LogType lt) {
+        for (int i = 0; i < player.logTypesToShow.size(); ++i) {
             if (player.logTypesToShow.get(i).ordinal() == lt.ordinal())
                 return false;
         }
@@ -93,11 +86,42 @@ public class EventLogViewer extends EvergreenActivity {
         checkboxDamage.setChecked(IsFiltered(LogType.ATTACK));
         checkboxDamage.setOnClickListener(toggleFilter);
 
-        // Update initial contents.
-        maxLogLinesInEventLog = 500;
-        focusLastLogMessageUponUpdate = true; // Scroll to the bottom.
-        // Up to 1k permitted in this view.
-        RequestLogMessages(500);
+        Spinner spin = (Spinner) findViewById(R.id.spinnerLogMessagesToDisplay);
+        spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TextView tv = (TextView) view;
+                if (tv == null) return;
+                String choice = (String) tv.getText();
+                App.GetPreferences().edit().putString(NUM_LOG_MESSAGES, choice).commit();  // Save it into preferences.
+                int num = Integer.parseInt(choice);
+                // Update initial contents.
+                maxLogLinesInEventLog = 500;
+                focusLastLogMessageUponUpdate = true; // Scroll to the bottom.
+                RequestLogMessages(num, 0);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.num_log_messages_to_display, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spin.setAdapter(adapter);
+
+        // Check the saved preferences.
+        SharedPreferences sp = App.GetPreferences();
+        String oldChoice = sp.getString(NUM_LOG_MESSAGES, "100");
+        String[] choices = getResources().getStringArray(R.array.num_log_messages_to_display);
+        int index = 0;
+        for (int i = 0; i < choices.length; ++i){
+            if (choices[i].equals(oldChoice))
+                index = i;
+        }
+        spin.setSelection(index);
     }
 
     @Override

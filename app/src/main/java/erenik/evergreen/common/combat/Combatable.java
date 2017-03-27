@@ -1,7 +1,5 @@
 package erenik.evergreen.common.combat;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 // import erenik.evergreen.android.act.EncounterActivity;
@@ -10,6 +8,7 @@ import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.util.Dice;
+import erenik.util.EList;
 import erenik.util.Tuple;
 
 /**
@@ -174,8 +173,8 @@ public class Combatable extends Object
     /// Attacks performed this combat?
     int hitsAttempted = 0;
 
-    /// List of status effects for this current fight.
-    List<Tuple<Integer,Integer>> ensnared = new ArrayList<Tuple<Integer, Integer>>(); // May be stacked, hence the list.
+    /// EList of status effects for this current fight.
+    EList<Tuple<Integer,Integer>> ensnared = new EList<Tuple<Integer, Integer>>(); // May be stacked, hence the list.
 
     float numDefeatedThisFightAttackBonus = 0, numDefeatedThisGameAttackBonus = 0;
     public Dice attackDamage = new Dice(1, 0, 1);

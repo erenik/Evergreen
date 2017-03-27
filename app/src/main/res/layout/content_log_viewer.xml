@@ -8,12 +8,12 @@
     android:id="@+id/layout_log_viewer_bg"
     android:orientation="vertical"
     >
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/layoutMenuAndLog"
-        android:orientation="vertical"
-        >
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:id="@+id/layoutMenuAndLog" android:orientation="vertical">
+        <LinearLayout style="@style/Evergreen.Layout">
+            <TextView style="@style/Evergreen.Text" android:text="Messages to show: "/>
+            <Spinner style="@style/Evergreen.Spinner" android:id="@+id/spinnerLogMessagesToDisplay"></Spinner>
+        </LinearLayout>
         <TextView style="@style/Evergreen.Text"
             android:text="Filters"
             />

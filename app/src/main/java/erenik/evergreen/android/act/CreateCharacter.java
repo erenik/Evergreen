@@ -33,25 +33,19 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.android.auth.NetworkTask;
-import erenik.evergreen.android.auth.NetworkTaskListener;
-import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.auth.Auth;
-import erenik.evergreen.common.combat.Combatable;
-import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.Config;
-import erenik.evergreen.common.player.Stat;
+import erenik.util.EList;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -173,7 +167,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         mProgressView = findViewById(R.id.login_progress);
 
         /// Request games list, should maybe fetch it even earlier..?
-        GetGamesList();
+    //    GetGamesList();
     }
 
     private void SetupDifficultySpinner() {
@@ -442,7 +436,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        List<String> emails = new ArrayList<>();
+        EList<String> emails = new EList<>();
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
             emails.add(cursor.getString(ProfileQuery.ADDRESS));
@@ -456,12 +450,11 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
     }
 
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
+    private void addEmailsToAutoComplete(EList<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<>(CreateCharacter.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
+                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection.asArrayList());
         mEmailView.setAdapter(adapter);
     }
 

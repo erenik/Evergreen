@@ -14,7 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import erenik.util.EList;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
@@ -27,7 +27,7 @@ import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.Transport;
 import erenik.weka.transport.TransportType;
 
-import java.util.List;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -36,7 +36,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
 {
     DAction da = null;
     Player player = App.GetPlayer();
-    List<View> argumentViews = new ArrayList<>();
+    EList<View> argumentViews = new EList<>();
 
     // When confirming everything. Add the action?
     DialogInterface.OnClickListener onClickOK = new DialogInterface.OnClickListener()
@@ -126,7 +126,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
         for (int ra = 0; ra < da.requiredArguments.size(); ++ra)
         {
             ActionArgument aarg = da.requiredArguments.get(ra);
-            List<String> choices = new ArrayList<String>();
+            EList<String> choices = new EList<String>();
             switch(aarg)
             {
                 case Transport:
@@ -190,7 +190,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             {
                 // Add choices to the thingy.
                 ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item);
-                arrayAdapter.addAll(choices);
+                arrayAdapter.addAll(choices.asArrayList());
                 Spinner spinner = new Spinner(getContext());
                 spinner.setAdapter(arrayAdapter);
                 spinner.setLayoutParams(selectionLayoutParams);

@@ -7,8 +7,8 @@ package erenik.evergreen.server;
 
 import erenik.evergreen.common.Invention.Invention;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
 import java.io.File;
@@ -25,7 +25,7 @@ import java.io.ObjectOutputStream;
  */
 public class Players {
    
-    List<Player> players = new ArrayList<Player>();
+    EList<Player> players = new EList<Player>();
     
     static String playersDir = "players/";
 

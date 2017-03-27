@@ -12,20 +12,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
 
 import erenik.evergreen.GameID;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
-import erenik.evergreen.common.logging.Log;
-import erenik.evergreen.common.packet.EGPacket;
-import erenik.evergreen.common.packet.EGPacketError;
-import erenik.evergreen.common.packet.EGPacketReceiverListener;
-import erenik.evergreen.common.packet.EGRequest;
-import erenik.evergreen.common.packet.EGResponseType;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.weka.transport.TransportDetectionService;
@@ -102,20 +93,11 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         SaveToServer();
     }
 
-    // Simple question..! New log messages?
-    boolean HaveAnythingNewToPresent(){
-        Player player = App.GetPlayer();
-        // Check if we actually have new log messages to display?
-        for (int i = 0; i < player.log.size(); ++i){
-            if (player.log.get(i).displayedToEndUser == 0)
-                return true;
-        }
-        return false;
-    }
-
     private void PresentSystemMessageIfNewOne() {
         Player player = App.GetPlayer();
         final String sysmsg = player.sysmsg;
+        if (sysmsg == null)
+            return;
         if (!sysmsg.equals(LastDisplayedSystemMessage())){
             if (sysmsg.length() < 3)
                 return; // Nothing to present really.
@@ -157,13 +139,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         sp.edit().putString(SYS_MSG_KEY, msg).commit(); // Set new message and save.
     }
 
-    void DisplayNewMessagesIfAny(){
-        if (!HaveAnythingNewToPresent())
-            return;
-        Intent i = new Intent(getBaseContext(), ResultsScreen.class);// Check the log for new messages -... will be there, so wtf just go to the walla walla.
-        startActivity(i);
-    }
-
     /// Main init function
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,6 +146,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         App.mainScreenActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
+        Player player = App.GetPlayer();
         if (App.GetPlayer() == null){ // Auto-load from local save if player is still null when entering the main screen.
             boolean ok = Load();
             // And if it fails, abort and show a message about it?
@@ -178,6 +154,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             finish();
             return;
         }
+
         UpdateUI();
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -254,7 +231,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             finish(); // Finish this activity.
             return;
         }
-        DisplayNewMessagesIfAny();
 
         ((ImageView) findViewById(R.id.imageView_avatar)).setImageResource(App.GetDrawableForAvatarID((int) player.Get(Config.Avatar)));
         SetText(R.id.textViewName, player.name);
@@ -268,13 +244,12 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         UpdateDailyActionButton();
         UpdateSkillButton();
         UpdateShelterRepresentation();
+        // Set max log messages?
+        maxLogLinesInEventLog = 10;
         UpdateLog();
         UpdateBackground();
 
-        if (HaveAnythingNewToPresent()) { // Decide whether to show some ne splash screen? New log messages or sysmsg?
-            // Or new system messages..!
-            PresentSystemMessageIfNewOne();
-        }
+        PresentSystemMessageIfNewOne(); // Sys msg overlay?
     }
 
     private void UpdateShelterRepresentation() {

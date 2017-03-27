@@ -8,12 +8,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import java.util.List;
-
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.android.ui.EvergreenButton;
 import erenik.evergreen.common.Player;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2017-02-20.
@@ -108,7 +107,7 @@ public class MenuActivity extends EvergreenActivity {
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutCharacterList);
         vg.removeAllViews();
         // Re-populate.
-        List<Player> players = App.GetPlayers();
+        EList<Player> players = App.GetPlayers();
         for (int i = 0; i < players.size(); ++i) {
             Player p = players.get(i);
             // Make a bouton.
@@ -125,7 +124,7 @@ public class MenuActivity extends EvergreenActivity {
                 @Override
                 public void onClick(View v) {
                     Button b = (Button) v;
-                    List<Player> players = App.GetPlayers();
+                    EList<Player> players = App.GetPlayers();
                     for (int i = 0; i < players.size(); ++i){
                         Player p = players.get(i);
                         if (p.name.equals(b.getText()))

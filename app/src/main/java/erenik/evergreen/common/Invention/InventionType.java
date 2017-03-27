@@ -1,10 +1,10 @@
 package erenik.evergreen.common.Invention;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import erenik.util.EList;
 
 public enum InventionType
 {
@@ -47,7 +47,7 @@ public enum InventionType
         }
         int sumChances = 0; for (int i = 0; i < chances.size(); ++i) sumChances+= (Integer) chances.values().toArray()[i];
         InventionType type = null;
-        List<Invention> inventions = new ArrayList<>();
+        EList<Invention> inventions = new EList<>();
         Random r = new Random(System.nanoTime());
         float r2 = r.nextFloat() * sumChances;
         System.out.println("Next int: "+r2);
@@ -64,9 +64,9 @@ public enum InventionType
         return type;
     };
 
-    public static List<String> GetStrings()
+    public static EList<String> GetStrings()
     {
-        List<String> l = new ArrayList<>();
+        EList<String> l = new EList<>();
         for (int i = 0; i < values().length; ++i)
             l.add(values()[i].text());
         return l;

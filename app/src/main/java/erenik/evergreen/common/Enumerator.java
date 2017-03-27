@@ -9,10 +9,11 @@ import java.io.Serializable;
  */
 public class Enumerator implements Serializable{
     public long value = 0;
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+
+    public void writeTo(java.io.ObjectOutputStream out) throws IOException {
         out.writeLong(value);
     }
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+    public void readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         value = in.readLong();
     }
 }

@@ -1,9 +1,7 @@
 package erenik.evergreen;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import erenik.evergreen.common.Player;
+import erenik.util.EList;
 
 // import erenik.evergreen.android.App;
 // import erenik.evergreen.common.Player;
@@ -21,7 +19,7 @@ public class Simulator
         return s;
     }
 
-    List<Game> games = new ArrayList<>();
+    EList<Game> games = new EList<>();
     // Local game for singleplayer. Default has some NPCs, or no?
     Game localGame = new Game();
 

@@ -1,7 +1,6 @@
 package erenik.weka.transport;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2017-03-09.
@@ -40,8 +39,8 @@ public enum TransportType {
     }
 
     // Used...?
-    public static List<String> GetStrings() {
-        List<String> list = new ArrayList<String>();
+    public static EList<String> GetStrings() {
+        EList<String> list = new EList<String>();
         for (int i = 0; i < values().length; ++i) {
             list.add(values()[i].toString());
         }

@@ -25,7 +25,7 @@ import org.w3c.dom.Text;
 
 import java.sql.Array;
 import java.text.NumberFormat;
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Queue;
 
 import erenik.evergreen.R;
@@ -171,7 +171,7 @@ public class TransportUsage  extends EvergreenActivity {
         // Update the log - only when button is pressed?
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutTransportLogs);
         vg.removeAllViews();
-        ArrayList<SensingFrame> sfs = service.GetLastSensingFrames(12 * 3); // The past 3 minutes?
+        EList<SensingFrame> sfs = service.GetLastSensingFrames(12 * 3); // The past 3 minutes?
         for (int i = 0; i < sfs.size(); ++i){
             TextView tv2 = new TextView(getBaseContext());
             SensingFrame sf = sfs.get(i);
@@ -190,7 +190,7 @@ public class TransportUsage  extends EvergreenActivity {
 
         /// Update it with total time for now? or past 5 mins?
         graphTransportDurations.removeAllSeries(); // Remove old data from graph.
-        final ArrayList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
+        final EList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
 
         long max = 10;
         for (int i = 0; i < stats.size(); ++i){

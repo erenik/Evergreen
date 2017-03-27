@@ -2,8 +2,8 @@ package erenik.evergreen.android.auth;
 
 import android.os.AsyncTask;
 
-import java.util.AbstractCollection;
-import java.util.ArrayList;
+import erenik.util.EList;
+
 
 /*
 import javax.ws.rs.client.Client;
@@ -25,7 +25,7 @@ public class NetworkTask extends AsyncTask<Void, Void, Boolean>
      */
     private final String mEmail;
     private final String mPassword;
-    private ArrayList<NetworkTaskListener> listeners = new ArrayList<>();
+    private EList<NetworkTaskListener> listeners = new EList<>();
   //  private WebTarget target;
 //    private Client client;
     public NetworkTask(String email, String password) {

@@ -2,7 +2,8 @@ package erenik.weka.transport;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
+import erenik.util.EList;
+import java.util.Arrays;
 
 import erenik.evergreen.common.player.Transport;
 import weka.filters.unsupervised.attribute.Add;
@@ -38,8 +39,8 @@ public class TransportData implements Serializable {
         timePeriodID = in.readLong();
         startTimeMs = in.readLong();
         endTimeMs = in.readLong();
-        children = (ArrayList<TransportData>) in.readObject();
-        data = (ArrayList<TransportOccurrence>) in.readObject();
+        children = (EList<TransportData>)in.readObject();
+        data = (EList<TransportOccurrence>) in.readObject();
         if (data.size() > 0)
             lastEntry = data.get(data.size() - 1); // Just point it to the last one, makes things easier...
     }
@@ -92,7 +93,7 @@ public class TransportData implements Serializable {
 
         }
         // Go from the 2nd newest hour and backwards.
-        ArrayList<TransportData> hours = Hours();
+        EList<TransportData> hours = Hours();
         for (int i = hours.size() - 2; i >= 0; --i) {
             hours.get(i).Aggregate();
         }
@@ -113,7 +114,7 @@ public class TransportData implements Serializable {
     }
 
     private void Aggregate() {
-        ArrayList<TransportOccurrence> newData = new ArrayList<>();
+        EList<TransportOccurrence> newData = new EList<>();
         for (int i = 0; i < TransportType.values().length; ++i){
             TransportType tt = TransportType.values()[i];
             long durationTimeMs = GetTimeMs(tt);
@@ -124,8 +125,8 @@ public class TransportData implements Serializable {
         data = newData;   // Replace with new aggregate to reduce memory/storage needed.
     }
 
-    private ArrayList<TransportData> Hours() {
-        ArrayList<TransportData> result = new ArrayList<>();
+    private EList<TransportData> Hours() {
+        EList<TransportData> result = new EList<>();
         for (int i = 0; i < children.size(); ++i){
             TransportData td = children.get(i);
             if (td.timePeriodContained == TimePeriod.Hour)
@@ -205,8 +206,8 @@ public class TransportData implements Serializable {
     }
 
     /// Returns data back up until the target threshold in milliseconds system time. Beyond an hour's usage, this may or may not work as intended. Granularity of seconds decays at 1 hours' limit.
-    public ArrayList<TransportOccurrence> GetDataSeconds(long thresholdTimeMs) {
-        ArrayList<TransportOccurrence> newList = new ArrayList<>();
+    public EList<TransportOccurrence> GetDataSeconds(long thresholdTimeMs) {
+        EList<TransportOccurrence> newList = new EList<>();
         for (int i = 0; i < data.size(); ++i){   // Add from data here.
             TransportOccurrence to = data.get(i);
             if (to.startTimeMs > thresholdTimeMs)
@@ -238,9 +239,9 @@ public class TransportData implements Serializable {
     long startTimeMs, endTimeMs;
     /// The actual data. Should not be used directly here in this base class?
     /// Each occurrence holds data for transport ID, duration, start-time and possibly ratio compared to the total of this time period (not guaranteed, should be calculated before use).
-    protected ArrayList<TransportOccurrence> data = new ArrayList<>();
+    protected EList<TransportOccurrence> data = new EList<>();
     /// Contains data on the children of this data.
-    protected ArrayList<TransportData> children = new ArrayList<>();
+    protected EList<TransportData> children = new EList<>();
 
     /// Returns ratio of time spent in a certain mode of transport for this data-set.
     public float Ratio(TransportType t){

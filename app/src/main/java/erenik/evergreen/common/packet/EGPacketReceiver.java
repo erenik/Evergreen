@@ -5,8 +5,8 @@
  */
 package erenik.evergreen.common.packet;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,8 +26,8 @@ public class EGPacketReceiver extends Thread
 
     boolean stop = false;
    // private EGPacketReceiver epr;
-    private List<EGPacket> packetsWaitingForReponses = new ArrayList<EGPacket>();
-    private List<EGPacket> packetsToBeUpdated = new ArrayList<>();
+    private EList<EGPacket> packetsWaitingForReponses = new EList<EGPacket>();
+    private EList<EGPacket> packetsToBeUpdated = new EList<>();
 
     void Log(String s) {
         // Do nothing for the moment. Pass it onto a file or listener later perhaps.

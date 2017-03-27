@@ -8,9 +8,7 @@ import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import erenik.evergreen.common.Enumerator;
@@ -18,6 +16,7 @@ import erenik.evergreen.common.Player;
 import erenik.evergreen.common.auth.Auth;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.player.Stat;
+import erenik.util.EList;
 import erenik.util.Json;
 import erenik.util.Tuple;
 
@@ -52,8 +51,8 @@ public class Game implements Serializable {
     public int GameID() { return gameID.id;   };
 
 
-    /** List of players in the game */
-    List<Player> players = new ArrayList<>();
+    /** EList of players in the game */
+    public EList<Player> players = new EList<>();
 
     /// Save data to file.
     boolean Save() {
@@ -63,11 +62,13 @@ public class Game implements Serializable {
         try {
             file = new FileOutputStream(fileName());
             objectOut = new ObjectOutputStream(file);
-            objectOut.writeObject(this);
+            writeTo(objectOut);
             objectOut.close(); // Close the stream so that it actually saves to the file?
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }
+        // Try load straight away.
+        Load(fileName());
         return true;
     }
     /// Load data from file.
@@ -78,7 +79,9 @@ public class Game implements Serializable {
         try {
             file = new FileInputStream(fromFile);
             objectIn = new ObjectInputStream(file);
-            Game game = (Game) objectIn.readObject();
+            Game game = new Game();
+            if (!game.readFrom(objectIn))
+                return null;
             objectIn.close(); // Close the SCHTREAM!
             return game;
         } catch (FileNotFoundException fnfe){
@@ -94,11 +97,12 @@ public class Game implements Serializable {
         return null;
     }
 
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+    private void writeTo(java.io.ObjectOutputStream out) throws IOException {
         System.out.println("Game writeObject");
         out.writeObject(gameID);
         out.writeInt(updateIntervalSeconds);
-        out.writeObject(logEnumerator);
+        logEnumerator.writeTo(out);
+        System.out.println("logEnumerator saved at "+logEnumerator.value);
         // Save num players.
         int numPlayers = players.size();
         out.writeInt(numPlayers);
@@ -107,39 +111,40 @@ public class Game implements Serializable {
             Player p = players.get(i);
             p.sendAll = Player.SEND_ALL; // Save everything by default.
             p.sendLogs = Player.SEND_ALL; // Send all logs to file.
-            out.writeObject(p);
+            p.writeTo(out);
+            System.out.println("Player "+p.name+" last log messages");
+            Log.PrintLastLogMessages(p.log, 5);
         }
     }
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
+    private boolean readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
         System.out.println("Game readObject");
         gameID = (GameID) in.readObject();
         updateIntervalSeconds =  in.readInt();
-        logEnumerator = (Enumerator) in.readObject();
-        Log.logIDEnumerator = logEnumerator; // Set it.
+        logEnumerator.readFrom(in);
+        System.out.println("logEnumerator loaded to "+logEnumerator.value);
         // Load num players.
-        players = new ArrayList<>();
+        players = new EList<>();
         int numPlayers = in.readInt();
         System.out.println("Game readObject - before players");
-        for (int i = 0; i < numPlayers; ++i)
-        {
+        for (int i = 0; i < numPlayers; ++i) {
             Player player = new Player();
             try {
                 System.out.println("Game readObject - player "+i);
-                player = (Player) in.readObject();
-                if (player == null){
-                    System.out.println("lolFailed to read playeR? D:");
-                    continue;
+                if (player.readFrom(in)) {
+                    players.add(player);
+                    System.out.println("Loaded player "+player.name);
                 }
                 if (player.sendAll != Player.SEND_ALL) {
                     System.out.println("Incomplete player saved. WTF?");
                     continue;
                 }
-                players.add(player);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 break;
             }
         }
+        System.out.println("Loaded "+players.size()+" players");
+        return true;
     }
 
     public void AddDefaultAI() {
@@ -151,6 +156,8 @@ public class Game implements Serializable {
 
     /// returns num of player characters simulated.
     public int NextDay() {
+        Log.logIDEnumerator = logEnumerator; // Set log enumerator for this session.
+
         // TODO: Add default player as needed? Elsewhere?
 //        if (!players.contains(App.GetPlayer()))
   //          players.add(App.GetPlayer());
@@ -240,9 +247,9 @@ public class Game implements Serializable {
         return null;
     }
 
-    public static List<Game> CreateDefaultGames()
+    public static EList<Game> CreateDefaultGames()
     {
-        List<Game> games = new ArrayList<>();
+        EList<Game> games = new EList<>();
 //        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
         games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
@@ -299,7 +306,7 @@ public class Game implements Serializable {
        // try {
             Json j = new Json();
             j.Parse(line);
-            List<Tuple<String,String>> tuples = j.Tuples();
+            EList<Tuple<String,String>> tuples = j.Tuples();
             for (int i = 0; i < tuples.size(); ++i){
                 String key = tuples.get(i).x;
                 Object value = tuples.get(i).y;
@@ -345,7 +352,7 @@ public class Game implements Serializable {
         }
     }
     // Returns null if all known player names are already known.
-    public Player RandomPlayer(List<String> knownPlayerNames) {
+    public Player RandomPlayer(EList<String> knownPlayerNames) {
         /// 10 random chances.
         if (players.size() == 0) {
             System.out.println("Game has 0 players. WAT");
@@ -375,8 +382,8 @@ public class Game implements Serializable {
         return null;
     }
 
-    public ArrayList<Player> GetCharacters(String email, String password) {
-        ArrayList<Player> alp = new ArrayList<>();
+    public EList<Player> GetCharacters(String email, String password) {
+        EList<Player> alp = new EList<>();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
             System.out.println(p.email+" == "+email+"? "+p.email.equals(email)+" "
@@ -387,8 +394,8 @@ public class Game implements Serializable {
         return alp;
     }
 
-    public Collection<? extends Player> GetCharacters(String email) {
-        ArrayList<Player> alp = new ArrayList<>();
+    public EList<Player> GetCharacters(String email) {
+        EList<Player> alp = new EList<>();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
             System.out.println(p.email+" == "+email+"? "+p.email.equals(email));

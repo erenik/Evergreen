@@ -10,7 +10,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Date;
 
 import erenik.evergreen.common.Player;
@@ -54,7 +54,7 @@ public class EGRequest extends EGPacket {
         return eg;
     }
     public static EGRequest Save(Player player) {
-        player.sendLogs = Player.SEND_CLIENT_SEEN_MESSAGES;
+        player.sendLogs = Player.SEND_NO_LOG_MESSAGES;
         System.out.println("EGRequest.Save, SEND_CLIENT_SEEN_MESSAGES");
         EGRequest eg = new EGRequest(EGRequestType.Save, player.toByteArr());
         return eg;
@@ -95,25 +95,30 @@ public class EGRequest extends EGPacket {
         public Player player; // The player object used for authentication/verifying.
         /// Used for FetchLogs
         public int startIndex;
-        public int num;
+        public int numMsgsFromStartIndex;
+        public long oldestLogIDToInclude;
+
         private void writeObject(java.io.ObjectOutputStream out) throws IOException {
             out.writeObject(player);
             out.writeInt(startIndex);
-            out.writeInt(num);
+            out.writeInt(numMsgsFromStartIndex);
+            out.writeLong(oldestLogIDToInclude);
         }
         private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
             player = (Player) in.readObject();
             startIndex = in.readInt();
-            num = in.readInt();
+            numMsgsFromStartIndex = in.readInt();
+            oldestLogIDToInclude = in.readLong();
         }
         private void readObjectNoData() throws ObjectStreamException {}
     }
 
-    public static EGPacket FetchLog(Player player, int startIndex, int num) {
+    public static EGPacket FetchLog(Player player, int startIndex, int numMsgsFromStartIndex, long oldestLogIDToInclude) {
         ExtraArgs fla = new ExtraArgs();
         fla.player = player;
         fla.startIndex = startIndex;
-        fla.num = num;
+        fla.numMsgsFromStartIndex = numMsgsFromStartIndex;
+        fla.oldestLogIDToInclude = oldestLogIDToInclude;
         player.sendAll = Player.CREDENTIALS_ONLY;
         byte[] bytes = Byter.toByteArray(fla);
         player.sendAll = Player.SEND_ALL;

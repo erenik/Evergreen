@@ -23,8 +23,8 @@ import android.widget.TextView;
 
 import org.w3c.dom.Text;
 
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import erenik.util.EList;
 
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
@@ -39,9 +39,9 @@ public class SelectActivity extends EvergreenActivity
     static final int SELECT_DAILY_ACTION = 0;
     static final int SELECT_SKILL = 1;
 
-    List<String> selected = new ArrayList<String>();
-    List<Skill> selectedSkills = new ArrayList<Skill>();
-    List<DAction> selectedDActions = new ArrayList<DAction>();
+    EList<String> selected = new EList<String>();
+    EList<Skill> selectedSkills = new EList<Skill>();
+    EList<DAction> selectedDActions = new EList<DAction>();
     int buttonBgId = R.drawable.small_button;
     AAction activeAction = null;
 
@@ -66,8 +66,8 @@ public class SelectActivity extends EvergreenActivity
                         ArrayAdapter<String> adapter = new ArrayAdapter(getBaseContext(), android.R.layout.simple_spinner_item);
                         //.createFromResource(this, arrayID, android.R.layout.simple_spinner_item);// Specify the layout to use when the list of choices appears
                         // Add choices to the thingy.
-                        List<String> choices = App.GetPlayer().knownPlayerNames;
-                        adapter.addAll(choices);
+                        EList<String> choices = App.GetPlayer().knownPlayerNames;
+                        adapter.addAll(choices.asArrayList());
                         adapter.setDropDownViewResource(R.layout.evergreen_spinner_dropdown_item);
                         spinPlayer.setAdapter(adapter);// Apply the adapter to the spinner
                         spinPlayer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -297,7 +297,7 @@ public class SelectActivity extends EvergreenActivity
 
         String itemsHeaderName = "Possible items";
         String header = "heeeee";
-        List<String> itemNames = new ArrayList<String>();
+        EList<String> itemNames = new EList<String>();
         switch(type)
         {
             case SELECT_DAILY_ACTION:

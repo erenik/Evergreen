@@ -10,7 +10,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import erenik.evergreen.common.packet.OnPacketReplyListener;
+import erenik.evergreen.common.player.Config;
+import erenik.util.EList;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
@@ -107,17 +109,17 @@ public class TitleScreen extends EvergreenActivity {
                                 ToastUp("Found no players under that e-mail and password. Try again.");
                                 break;
                             case Players:
-                                ToastUp("Received reply");
                                 System.out.println("Received reply: "+reply.toString());
-                                ArrayList<Player> players = reply.parsePlayers();
+                                EList<Player> players = reply.parsePlayers();
                                 if (players.size() == 0){
                                     ToastUp("Error parsing Players data");
                                     return;
                                 }
-                                App.SetPlayers(reply.parsePlayers());
-                                // Open screen to select them, or just auto-load the first one?
+                                App.SetPlayers(reply.parsePlayers());  // Set array of players.
+                                ToastUp("Found player data, loading details");
                                 App.MakeActivePlayer(players.get(0));
-                                GoToMainScreen();
+                                players.get(0).Set(Config.LatestLogMessageIDSeen, 0); // If loadng, reset the last log ID seen, so that we will actually see new messages on the ResultsScreen.
+                                LoadPlayerAndHeadToMainScreenOnSuccess();
                                 break;
                         }
                     }
@@ -127,6 +129,21 @@ public class TitleScreen extends EvergreenActivity {
                         Toast("Error: "+error.name());
                     }
                 });
+            }
+        });
+    }
+
+    private void LoadPlayerAndHeadToMainScreenOnSuccess() {
+        System.out.println("LoadPlayerAndHeadToMainScreenOnSuccess..");
+        LoadPlayerData(App.GetPlayer(), new OnPacketReplyListener(){
+            @Override
+            public void onSuccess(){
+                App.MakeActivePlayer(App.GetPlayer());
+                GoToMainScreen();
+            }
+            @Override
+            public void onFailure(){
+                ToastUp("Faillled!");
             }
         });
     }
@@ -142,7 +159,11 @@ public class TitleScreen extends EvergreenActivity {
             Toast("Auto-loading: "+p.name);
             System.out.println("Auto-loading player: "+p.name);
             App.MakeActivePlayer(p);
-            GoToMainScreen();
+            if (p.sendAll == Player.CREDENTIALS_ONLY){
+                LoadPlayerAndHeadToMainScreenOnSuccess();
+            }
+            else
+                GoToMainScreen();
             // Don't kill this activity, leave it as the base if the user backs from the main screen.
 //            finish();
             return;

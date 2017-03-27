@@ -8,9 +8,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Arrays;
-import java.util.List;
+import erenik.util.EList;
 
 import erenik.evergreen.android.App;
 import erenik.evergreen.R;
@@ -25,9 +25,9 @@ import erenik.evergreen.common.player.Stat;
 
 public class StatViewActivity extends EvergreenActivity {
     Stat statType = null;
-    List<Stat> relevantStats() {
+    EList<Stat> relevantStats() {
         Stat[] statArr = new Stat[]{Stat.BASE_ATTACK, Stat.BASE_DEFENSE, Stat.EMISSIONS, Stat.FOOD, Stat.MATERIALS, Stat.HP};
-        return new ArrayList<Stat>(Arrays.asList( statArr));
+        return new EList<Stat>(statArr);
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {

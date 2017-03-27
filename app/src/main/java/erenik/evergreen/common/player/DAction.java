@@ -1,11 +1,10 @@
 package erenik.evergreen.common.player;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -46,7 +45,7 @@ public enum DAction {
         this.requiredArguments.add(arg2);
     }
     /// o-o
-    public List<ActionArgument> requiredArguments = new ArrayList<ActionArgument>();
+    public EList<ActionArgument> requiredArguments = new EList<ActionArgument>();
     public String text = "";
     public String description = "";
 
@@ -191,9 +190,9 @@ public enum DAction {
         int iData;
     }
 
-    public static List<String> Names()
+    public static EList<String> Names()
     {
-        List<String> l = new ArrayList<String>();
+        EList<String> l = new EList<String>();
         for (int i = 0; i < values().length; ++i)
             l.add(values()[i].text);
         return l;

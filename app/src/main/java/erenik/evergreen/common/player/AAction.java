@@ -3,12 +3,11 @@ package erenik.evergreen.common.player;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-11-11.
@@ -24,7 +23,7 @@ public enum AAction implements Serializable {
 //    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
     ;
     /// o-o
-    public List<ActionArgument> requiredArguments = new ArrayList<ActionArgument>();
+    public EList<ActionArgument> requiredArguments = new EList<ActionArgument>();
     public String text = "";
     public String description = "";
 
@@ -120,9 +119,9 @@ public enum AAction implements Serializable {
         int iData;
     }
 
-    public static List<String> Names()
+    public static EList<String> Names()
     {
-        List<String> l = new ArrayList<String>();
+        EList<String> l = new EList<String>();
         for (int i = 0; i < values().length; ++i)
             l.add(values()[i].text);
         return l;

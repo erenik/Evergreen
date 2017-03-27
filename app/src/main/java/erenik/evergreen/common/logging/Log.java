@@ -3,11 +3,10 @@ package erenik.evergreen.common.logging;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import erenik.evergreen.common.Enumerator;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-10-31.
@@ -69,7 +68,7 @@ public class Log implements Serializable {
         this.args.add(arg3);
         stringBasicVersion = false;
     }
-    public Log(LogTextID ltid, LogType t, ArrayList<String> args) {
+    public Log(LogTextID ltid, LogType t, EList<String> args) {
         logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
@@ -96,7 +95,7 @@ public class Log implements Serializable {
         out.writeObject(text);
         out.writeInt(type.ordinal());
         out.writeInt(ltid.ordinal());
-        out.writeObject(args);
+        out.writeObject(args); // Write it as an array instead of EList! Supposedly safer. http://stackoverflow.com/questions/20275623/type-safety-unchecked-cast-from-object-to-arraylistmyvariable
         out.writeBoolean(stringBasicVersion);
         out.writeInt(displayedToEndUser);
         out.writeLong(logID);
@@ -106,7 +105,7 @@ public class Log implements Serializable {
         text = (String) in.readObject();
         type = LogType.values()[in.readInt()];
         ltid = LogTextID.values()[in.readInt()];
-        args = (ArrayList<String>) in.readObject();
+        args = (EList<String>) in.readObject();
         stringBasicVersion = in.readBoolean();
         displayedToEndUser = in.readInt();
         logID = in.readLong();
@@ -119,10 +118,10 @@ public class Log implements Serializable {
     public LogTextID TextID() {
         return ltid;
     }
-    public List<String> Args(){return args;};
+    public EList<String> Args(){return args;};
     /// New vars added for better cross-platform, cross-language logging.
     LogTextID ltid = LogTextID.undefined;
-    ArrayList<String> args = new ArrayList<>();
+    EList<String> args = new EList<>();
     /// Main stats.
     Date date = new Date(); // Time-stamp of this log message.
     public String text = "";
@@ -133,5 +132,16 @@ public class Log implements Serializable {
 
     public long LogID() {
         return logID;
+    }
+
+    public static void PrintLastLogMessages(EList<Log> log, int num) {
+        EList<Log> logs = log;
+        for (int i = logs.size() - num; i < logs.size(); ++i){
+            if (i < 0)
+                continue;
+            Log l = logs.get(i);
+            System.out.println("Log msg "+l.LogID()+" index"+i+" "+l);
+        }
+
     }
 }

@@ -1,6 +1,6 @@
 package erenik.evergreen.common.Invention;
 
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Random;
 
 /**
@@ -33,7 +33,7 @@ public enum WeaponType {
 
     /// Assumed to be non-ranged.
     public static int Random() {
-        ArrayList<WeaponType> nonRangedTypes = new ArrayList<>();
+        EList<WeaponType> nonRangedTypes = new EList<>();
         for (int i = 0; i < WeaponType.values().length; ++i){
             WeaponType t = WeaponType.values()[i];
             if (t.isRanged)
@@ -43,7 +43,7 @@ public enum WeaponType {
     }
 
     public static int RandomRanged() {
-        ArrayList<WeaponType> rangedTypes = new ArrayList<>();
+        EList<WeaponType> rangedTypes = new EList<>();
         for (int i = 0; i < WeaponType.values().length; ++i){
             WeaponType t = WeaponType.values()[i];
             if (t.isRanged)

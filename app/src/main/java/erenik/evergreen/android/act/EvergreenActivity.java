@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
@@ -20,17 +21,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import erenik.evergreen.Game;
-import erenik.evergreen.GameID;
 import erenik.evergreen.android.ui.EvergreenButton;
 import erenik.evergreen.android.ui.EvergreenTextView;
 import erenik.evergreen.common.Invention.Invention;
@@ -48,9 +45,12 @@ import erenik.evergreen.common.packet.EGRequestType;
 import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.packet.EGResponse;
 import erenik.evergreen.common.packet.EGResponseType;
+import erenik.evergreen.common.packet.OnPacketReplyListener;
 import erenik.evergreen.common.player.ClientData;
+import erenik.evergreen.common.player.Config;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.Byter;
+import erenik.util.EList;
 import erenik.weka.transport.TransportDetectionService;
 
 
@@ -125,13 +125,13 @@ public class EvergreenActivity extends AppCompatActivity
         if (scrollViewLog != null) {
             System.out.println("Event log found.");
             scrollViewLog.setOnClickListener(toggleLogFullScreen);
+            scrollViewLog.setClickable(true);
         }
         if (layoutLog != null) {
             System.out.println("Layout for Event log found.");
             layoutLog.setOnClickListener(toggleLogFullScreen);
         }
         UpdateLog(); // Update log after subclass has adjusted how it should be presented.
-
         UpdateBackground();
     }
 
@@ -179,7 +179,7 @@ public class EvergreenActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     }
 
-    static public List<Game> gameList = new ArrayList<>();
+    static public EList<Game> gameList = new EList<>();
 
     void GetGamesList() {
         System.out.println("Requesting games list from server...");
@@ -474,9 +474,10 @@ public class EvergreenActivity extends AppCompatActivity
         }
         Player player = App.GetPlayer();
         if (player == null) {
-            Toast("Nooo playereer!");
             return;
         }
+        if (player.log == null)
+            return;
 //        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), maxLogLinesInEventLog, player.logTypesToShow);
         System.out.println("Log.UpdateLog");
         ViewGroup v = (ViewGroup) layoutLog;
@@ -485,24 +486,29 @@ public class EvergreenActivity extends AppCompatActivity
         // Add new ones?
         int numDisplay = player.log.size();
         numDisplay = numDisplay > maxLogLinesInEventLog ? maxLogLinesInEventLog : numDisplay;
-        int startIndex = player.log.size() - numDisplay;
+        int startIndex = player.log.size() - numDisplay + 1;
         System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
-        for (int i = player.log.size() - 1; i >= 0; --i) {
-            Log l = player.log.get(i);
+        EList<Log> newLogMessages = player.log.subList(startIndex);
+        System.out.println("Log messages to show: "+newLogMessages.size());
+        Log.PrintLastLogMessages(newLogMessages, newLogMessages.size());
+        PrintLastLogMessages(newLogMessages.size());
+        for (int i = 0; i < newLogMessages.size(); ++i) {
+            Log l = newLogMessages.get(i);
             boolean show = false;
             for (int j = 0; j < player.logTypesToShow.size(); ++j) {
-                if (l.type.ordinal() == player.logTypesToShow.get(j).ordinal())
+                if (l.type.ordinal() == player.logTypesToShow.get(j).ordinal()) {
+                    System.out.println("Skipping message "+l.LogID()+" "+l);
                     show = true;
+                }
             }
             if (!show)
                 continue;
             // TODO: get the view.
             View t = GetViewForLogMessage(l);
-            v.addView(t, 0); // Insert at index 0 always.
-            if (v.getChildCount() >= maxLogLinesInEventLog)
-                break;
+            v.addView(t); // Insert at index 0 always.
         }
+
         lastAdded = v.getChildAt(v.getChildCount()-1);
         if (lastAdded != null && focusLastLogMessageUponUpdate)
             lastAdded.requestFocus(); // Request focus, make visible?
@@ -536,7 +542,7 @@ public class EvergreenActivity extends AppCompatActivity
         vg.removeAllViews();
         Player player = App.GetPlayer();
         int added = 0;
-        for (int i = 0; i < player.cd.inventory.size(); ++i) { // List all items of specific type.
+        for (int i = 0; i < player.cd.inventory.size(); ++i) { // EList all items of specific type.
             Invention item = player.cd.inventory.get(i);
             if (item.type != type)
                 continue;
@@ -666,7 +672,8 @@ public class EvergreenActivity extends AppCompatActivity
 
     public void UpdateUI() {
         // Should be subclassed?
-        System.out.println("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
+//        System.out.println("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
+        UpdateLog(); // Update the log, if it exists there.
     };
 
 
@@ -701,50 +708,61 @@ public class EvergreenActivity extends AppCompatActivity
         });
         App.Send(pack);
     }*/
+/*
+    int numMostRecentMessagesToFetch = 0;
+    protected void RequestNumLogMessages(final int numMostRecentMessagesToFetch) {
+        this.numMostRecentMessagesToFetch = numMostRecentMessagesToFetch;
+        EGPacket pack = EGRequest.LogLength(App.GetPlayer());
+        pack.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    case NumLogMessages:
+                        int num = (int) Byter.toObject(reply.GetBody());
+                        logMessagesOnServer = num;
+                        Toast("Log messages on server: "+logMessagesOnServer);
+                        System.out.println("Num log msgs on server: "+num);
+                        App.GetPlayer().log.clear();
+                        // Request them.
+                        RequestLogMessages(numMostRecentMessagesToFetch);
+                }
+            }
+            @Override
+            public void OnError(EGPacketError error) {
 
-    int numRepliesReceived = 0;
+            }
+        });
+        App.Send(pack);
+    }
+*/
     int totalLogMessagesReceived = 0;
     static long lastLogRequest = 0;
-    protected void RequestLogMessages(final int numMostRecentOnes) {
+    ArrayList<EGPacket> replies = new ArrayList<>();
+    ArrayList<EGPacket> packetsSent = new ArrayList<>();
+    protected boolean RequestLogMessages(final int numMostRecentOnes, final long oldestIDtoInclude) {
         if (System.currentTimeMillis() == lastLogRequest + 3000)
-            return;
+            return false;
+        packetsSent.clear();
+        replies.clear();
         System.out.println("Requesting log messages: "+numMostRecentOnes);
         lastLogRequest = System.currentTimeMillis();
-        int numPerBatch = 20;
+        int numPerBatch = 50;
         ShowProgressBar();
         int numBatches = numMostRecentOnes / numPerBatch;
         int logMessagesOnServer = App.GetPlayer().cd.totalLogMessagesOnServer;
-        int startIndex = logMessagesOnServer - numBatches * numPerBatch;
+        int startIndex = logMessagesOnServer - numBatches * numPerBatch + 1;
         totalLogMessagesReceived = 0;
-        numRepliesReceived = 0;
         for (int i = startIndex; i < logMessagesOnServer; i += numPerBatch){
             // Send request to update the whole log.
-            EGPacket pack = EGRequest.FetchLog(App.GetPlayer(), i, numPerBatch);
+            EGPacket pack = EGRequest.FetchLog(App.GetPlayer(), i, numPerBatch, oldestIDtoInclude);
+            packetsSent.add(pack);
             pack.addReceiverListener(new EGPacketReceiverListener() {
                 @Override
                 public void OnReceivedReply(EGPacket reply) {
                     HideProgressBar();                        // Hide as long as we get something?
                     switch (reply.ResType()){
                         case LogMessages: {
-//                            System.out.println("Received some log messages :)");
-  //                          System.out.println("bytes received: "+reply.GetBody().length);
-                            Object obj = Byter.toObject(reply.GetBody());
-    //                        System.out.println("obj: "+obj);
-                            ArrayList<Log> messages = (ArrayList<Log>) obj;
-                            if (messages == null){
-                                Toast("Some bad data when parsing.");
-                                return;
-                            }
-                            totalLogMessagesReceived += messages.size();
-                            if (numRepliesReceived == 0)
-                                App.GetPlayer().log.clear();
-                            ++numRepliesReceived;
-                            Player p = App.GetPlayer();
-                            App.GetPlayer().log.addAll(messages); // UpdateLogMessages(messages);
-                            App.UpdateUI(); // Update UI once we have them all.
-                            HideProgressBar();
-                            System.out.println("Total messages received: "+totalLogMessagesReceived);
-                            // Update the gui?
+                            replies.add(reply);
                             break;
                         }
                         default:
@@ -759,6 +777,76 @@ public class EvergreenActivity extends AppCompatActivity
                 }
             });
             App.Send(pack);
+        }
+        System.out.println("Sent "+packetsSent.size()+" req packets");
+        logMessagesUpdatedHandler.sendMessageDelayed(new Message(), 1000);
+        return true;
+    }
+
+    Handler logMessagesUpdatedHandler = new Handler(new Handler.Callback() {
+        void UpdateSelf(int ms){
+            logMessagesUpdatedHandler.sendMessageDelayed(new Message(), ms);
+        };
+        @Override
+        public boolean handleMessage(Message msg) {
+            System.out.println("logMessagesUpdatedHandler?");
+            // Check if all replies have been received?
+            int packsWaitingUpdates = 0;
+            for (int i = 0; i < packetsSent.size(); ++i){
+                EGPacket pack = packetsSent.get(i);
+                if (pack.GetReplies().size() == 0) {
+                    ++packsWaitingUpdates;
+                }
+            }
+            if (packsWaitingUpdates > 0) {
+                UpdateSelf(packsWaitingUpdates * 100);
+                Toast("Waiting for "+packsWaitingUpdates+" packets..");
+                return false;
+            }
+            // yeah o.o
+            HideProgressBar();
+            EList<Log> newLog = new EList<>();
+            for (int i = 0; i < replies.size(); ++i){
+                EList<Log> messages = null;
+                EGPacket reply = replies.get(i);
+                switch (reply.ResType()){
+                    case LogMessages:
+                        Object obj = Byter.toObject(reply.GetBody());
+                        if (obj == null)
+                            continue;
+                        messages = (EList<Log>) obj;
+                        break;
+                    default:
+                        System.out.println("Reply: "+reply.ResType().name());
+                        continue;
+                }
+                if (messages == null){
+                    Toast("Some bad data when parsing.");
+                }
+                newLog.addAll(messages); // UpdateLogMessages(messages);
+                totalLogMessagesReceived += messages.size();
+            }
+            if (newLog.size() > 0) {
+                Player player = App.GetPlayer();
+                player.log = newLog;
+            }
+            UpdateLog(); // Update UI once we have them all.
+            System.out.println("Total messages received: "+totalLogMessagesReceived);
+            PrintLastLogMessages(5);
+            // Update the gui?
+            OnLogMessagesUpdated();
+            return false;
+        }
+    });
+
+    private void PrintLastLogMessages(int num) {
+        Log.PrintLastLogMessages(App.GetPlayer().log, num);
+    }
+
+    void OnLogMessagesUpdated(){
+        UpdateLog();
+        if (NewLogMessagesToPresent().size() > 0) {
+            GoToResultsScreen();
         }
     }
 
@@ -777,7 +865,6 @@ public class EvergreenActivity extends AppCompatActivity
             @Override
             public void OnReceivedReply(EGPacket reply) {
                 HandleClientData(reply);
-                HideProgressBar();
             }
             @Override
             public void OnError(EGPacketError error) {
@@ -787,7 +874,8 @@ public class EvergreenActivity extends AppCompatActivity
         App.Send(pack);;
     }
 
-    protected void HandleClientData(EGPacket reply) {
+    // Returns true if it was a success - got some data, or false - if an error was replied or parsing errors occurred.
+    protected boolean HandleClientData(EGPacket reply) {
         if (reply instanceof EGResponse){
             switch (reply.ResType()){
                 case PlayerClientData:
@@ -796,11 +884,59 @@ public class EvergreenActivity extends AppCompatActivity
                     App.GetPlayer().UpdateFrom(cd);
                     UpdateUI();
                     // Request new log messages if relevant.
-                    RequestLogMessages(20);
-                    break;
+                    if (!RequestLogMessages(100, (long) 0)) // Add option to only request new messages? App.GetPlayer().Get(Config.LatestLogMessageIDSeen)
+                        HideProgressBar(); // If not requesting log messages, then hide progress bar straight away, otherwise wait for the incoming log-messages.
+                    return true;
+                default:
+                    ToastUp("Other reply: "+reply.ResType().name());
             }
         }
+        return false;
     }
 
+    /// To determine if we should open the Results-screen.
+    private EList<Log> NewLogMessagesToPresent(){
+        // Populate it with those log messages which we are interested in viewing here in the results screen? All log messages which haven't been flagged as "displayed" yet.
+        Player p = App.GetPlayer();
+        int logMessagesAdded = 0;
+        long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
+        System.out.println("LastID seen: "+lastLogMessageIDSeen);
+        EList<Log> toDisplay = new EList<>();
+        for (int i = 0; i < p.log.size(); ++i){
+            Log l = p.log.get(i);
+            if (l.LogID() <= lastLogMessageIDSeen)
+                continue;
+            // The old check, where it bases relevant messages on what is saved server-side, which was bugging more or less....
+            //     if (player.log.get(i).displayedToEndUser == 0)
+            //            return true;
+            System.out.println("l.LogID(): "+l.LogID());
+            toDisplay.add(l);
+        }
+        return toDisplay;
+    }
+
+    void GoToResultsScreen(){
+        Intent i = new Intent(getBaseContext(), ResultsScreen.class);// Check the log for new messages -... will be there, so wtf just go to the walla walla.
+        startActivity(i);
+    }
+
+    protected void LoadPlayerData(Player player, final OnPacketReplyListener onPacketReplyListener) {
+        System.out.println("Load player data...");
+        EGPacket pack = EGRequest.Load(player);
+        ShowProgressBar();
+        pack.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                HideProgressBar();
+                if (HandleClientData(reply))
+                    onPacketReplyListener.onSuccess();
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+                HideProgressBar();
+            }
+        });
+        App.Send(pack);;
+    }
 
 }

@@ -12,9 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 
-import erenik.evergreen.common.player.Transport;
+import erenik.util.EList;
 import erenik.weka.WClassifier;
 import erenik.weka.WekaManager;
 
@@ -29,8 +28,8 @@ public class TransportDetectionService extends Service {
     WekaManager wekaMan = null;
     TransportDetectorThread dataSamplerThread = null;
 
-    public ArrayList<SensingFrame> GetLastSensingFrames(int maxNum){
-        ArrayList<SensingFrame> sfs = new ArrayList<>();
+    public EList<SensingFrame> GetLastSensingFrames(int maxNum){
+        EList<SensingFrame> sfs = new EList<>();
         for (int i = dataSamplerThread.sensingFrames.size() - 1; i >= 0; --i){
             SensingFrame frame = new SensingFrame();
             SensingFrame sf2 = dataSamplerThread.sensingFrames.get(i);
@@ -61,7 +60,7 @@ public class TransportDetectionService extends Service {
     public WClassifier classifier = null,
         accOnlyClassifier = null,
         gyroOnlyClassifier = null;
-//    private ArrayList<TransportOccurrence> transportOccurrences = new ArrayList<>(); // All transport frame IDs
+//    private EList<TransportOccurrence> transportOccurrences = new EList<>(); // All transport frame IDs
     public int msTotalTimeAnalyzedSinceThreadStart = 0; // o-o
 
     /// All transport data combined!
@@ -223,10 +222,10 @@ public class TransportDetectionService extends Service {
         }
     }
 
-    private void PrintData(String headerText, ArrayList<TransportOccurrence> transportOccurrences) {
+    private void PrintData(String headerText, EList<TransportOccurrence> transportOccurrences) {
         System.out.println(headerText+" nr samples: "+transportOccurrences.size());
         // New array of 0s for each transport.
-        ArrayList<TransportOccurrence> totalTransportDurationUsages = GetTotalStatsForData(transportOccurrences);
+        EList<TransportOccurrence> totalTransportDurationUsages = GetTotalStatsForData(transportOccurrences);
         for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
             TransportOccurrence to = totalTransportDurationUsages.get(i); // Just print it.
             System.out.println(" "+to.transport.name()+" # "+to.DurationSeconds()+"s, % "+to.ratioUsed);
@@ -234,12 +233,12 @@ public class TransportDetectionService extends Service {
     }
 
 
-    private ArrayList<TransportOccurrence> GetDataSeconds(int nrOfSecondsToInclude) {
-        ArrayList<TransportOccurrence> newArr = new ArrayList<>();
+    private EList<TransportOccurrence> GetDataSeconds(int nrOfSecondsToInclude) {
+        EList<TransportOccurrence> newArr = new EList<>();
         long nowMs = System.currentTimeMillis();
         long msToInclude = nrOfSecondsToInclude * 1000;
         long thresh = nowMs - msToInclude;
-        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nrOfSecondsToInclude);
+        EList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nrOfSecondsToInclude);
         for (int i = transportOccurrences.size() - 1; i >= 0; --i){ // Search from the newest occurrence of data and backwards, grab all where start time is after the threshold period.
             TransportOccurrence to = transportOccurrences.get(i);
             if (to.startTimeMs < thresh)
@@ -278,9 +277,9 @@ public class TransportDetectionService extends Service {
         return lastEntry.transport.name();
     }
 
-    private ArrayList<TransportOccurrence> GetTotalStatsForData(ArrayList<TransportOccurrence> transportOccurrences) {
+    private EList<TransportOccurrence> GetTotalStatsForData(EList<TransportOccurrence> transportOccurrences) {
         // New array of 0s for each transport.
-        ArrayList<TransportOccurrence> totalTransportDurationUsages = new ArrayList<>();
+        EList<TransportOccurrence> totalTransportDurationUsages = new EList<>();
         int durationTotalMs = 0;
         /// Create a new counter for each transport.
         for (int i = 0; i < TransportType.values().length; ++i){
@@ -309,10 +308,10 @@ public class TransportDetectionService extends Service {
 
 
     /// Returns an array with one entry for each transport, that holds sums of the duration of each transport, as well as the ratio of each within.
-    public ArrayList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
+    public EList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
         long dataMillisecondsToAnalyze = dataSecondsToAnalyze * 1000;
         long nowMs = System.currentTimeMillis();
-        ArrayList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
+        EList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
         return GetTotalStatsForData(transportOccurrences);
     }
 

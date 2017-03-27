@@ -19,8 +19,9 @@ import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import erenik.util.EList;
+import java.util.Arrays;
+import erenik.util.EList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +31,7 @@ import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.player.ClientData;
 import erenik.evergreen.server.EGTCPServer;
 import erenik.util.Byter;
+import erenik.util.EList;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -53,14 +55,14 @@ public class EGPacket {
     int headerLen, bodyLen, totalLen; // Calculated after calling .build()
     protected EGSocket socketSentOn; // When using EGPacketSender class to retrieve replies when available.
 //    protected EGPacket reply; // Replies received.
-    protected ArrayList<EGPacket> replies = new ArrayList<>();
+    protected EList<EGPacket> replies = new EList<>();
     protected int replyTimeout = 3000; // Default wait up to 3 seconds for a reply?
     protected int timeWaitedForReplyMs = 0;
 
     /// Receiver which should be added/set before sending packet.
     EGResponseType lastError = EGResponseType.NoError; // Default no errors, right?
-    /// List of receiving listeners, to interpret any response that is received..?
-    private List<EGPacketReceiverListener> receiverListeners = new ArrayList<>();
+    /// EList of receiving listeners, to interpret any response that is received..?
+    private EList<EGPacketReceiverListener> receiverListeners = new EList<>();
     public long lastAttemptSystemMillis = System.currentTimeMillis();
     public long receiveTime = 0; // Sys curr Millis.
     public long sendTime = 0;
@@ -125,16 +127,18 @@ public class EGPacket {
         pack.body = playerInSystem.toByteArr();
         return pack;
     }
-    public static EGPacket logMessages(List<Log> logMessages){
-        ArrayList<Log> lm = new ArrayList();
+    public static EGPacket logMessages(EList<Log> logMessages){
+        EList<Log> lm = new EList();
         lm.addAll(logMessages);
+        System.out.println("Replying "+lm.size()+" logMessages, printing the last 5");
+        Log.PrintLastLogMessages(lm, lm.size());
         EGPacket pack = new EGPacket(EGResponseType.LogMessages);
         pack.body = Byter.toByteArray(lm);
         if (pack.body == null)
             return null;
         return pack;
     }
-    public static EGPacket players(ArrayList<Player> players){
+    public static EGPacket players(EList<Player> players){
         EGPacket pack = new EGPacket(EGResponseType.Player);
         pack.type = EGPacketType.Response;
         pack.rest = EGResponseType.Players;
@@ -152,14 +156,14 @@ public class EGPacket {
         return pack;
     }
     // Parse players from the body.
-    public ArrayList<Player> parsePlayers(){
+    public EList<Player> parsePlayers(){
         // First byte, write amount of
         ByteArrayInputStream in = new ByteArrayInputStream(body);
-        ArrayList<Player> players = new ArrayList<>();
+        EList<Player> players = new EList<>();
         try {
             ObjectInputStream ois = null;
             ois = new ObjectInputStream(in);
-            players = (ArrayList<Player>) ois.readObject();
+            players = (EList<Player>) ois.readObject();
             ois.close();
         } catch (IOException ex) {
             Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
@@ -425,7 +429,7 @@ public class EGPacket {
         System.out.println();
     }
 
-    public static EGPacket gamesList(List<Game> games)
+    public static EGPacket gamesList(EList<Game> games)
     {
         EGPacket pack = new EGPacket(EGResponseType.GamesList);
         String bodyStr = "NumGames:"+games.size()+"\n";
@@ -437,12 +441,12 @@ public class EGPacket {
         pack.body = bodyStr.getBytes();
         return pack;
     }
-    public List<Game> parseGamesList()
+    public EList<Game> parseGamesList()
     {
         String bodyAsStr = new String(body);
         System.out.println("bodyASStr: "+bodyAsStr);
         String[] lines = bodyAsStr.split("\n");
-        List<Game> games = new ArrayList<>();
+        EList<Game> games = new EList<>();
         for (int i = 0; i < lines.length; ++i)
         {
             String line = lines[i];
@@ -475,5 +479,9 @@ public class EGPacket {
 
     public ClientData GetClientData() {
         return (ClientData) Byter.toObject(body);
+    }
+
+    public EList<EGPacket> GetReplies() {
+        return replies;
     }
 }

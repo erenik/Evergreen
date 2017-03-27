@@ -10,10 +10,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 
-import java.util.ArrayList;
-
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2017-02-23.
@@ -25,7 +24,7 @@ public class SelectAvatar  extends EvergreenActivity {
         int index;
         ImageButton button;
     }
-    ArrayList<AvatarButton> buttons = new ArrayList<>();
+    EList<AvatarButton> buttons = new EList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

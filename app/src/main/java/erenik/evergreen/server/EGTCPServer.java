@@ -39,9 +39,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Date;
-import java.util.List;
+import erenik.util.EList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,8 +59,8 @@ public class EGTCPServer extends Thread {
     public int packetsReceived = 0;
     public int GetPort(){return portN;};
     int millisecondsTimeout = 50;
-    List<Socket> sockets = new ArrayList<Socket>();
-    List<Game> games = new ArrayList<>();
+    EList<Socket> sockets = new EList<Socket>();
+    EList<Game> games = new EList<>();
     ServerSocket servSock;
 
 
@@ -182,9 +182,12 @@ public class EGTCPServer extends Thread {
         games.clear();
         for (int i = 0; i < GameID.MAX_TYPES; ++i){
             Game game = Game.Load(Game.DefaultPath(i));
-            if (game != null)
-                games.add(game);
-
+            if (game == null)
+                continue;
+            games.add(game);
+            for (int j = 0; j < game.players.size(); ++j){
+                AddListenersAndSetSysMsg(game.players.get(j));
+            }
         }
         return games.size() > 0;
     }
@@ -316,9 +319,9 @@ public class EGTCPServer extends Thread {
                 break;
             case FetchLog:{
                 EGRequest.ExtraArgs fla = req.parseExtraArgs();
-                System.out.println("start index : "+fla.startIndex+" num: "+fla.num+" avail: "+GetPlayerInSystem(fla.player).log.size());
+                System.out.println("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size());
                 if (CheckCredentials(fla.player, sock)){
-                    Reply(sock, EGResponse.logMessages(GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.num - 1)).build());
+                    Reply(sock, EGResponse.logMessages(GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.numMsgsFromStartIndex - 1, fla.oldestLogIDToInclude)).build());
                 }
                 break;
             }
@@ -360,7 +363,7 @@ public class EGTCPServer extends Thread {
             int endIndex = i + divider - 1;
             if (endIndex >= playerInSystem.log.size())
                 endIndex = playerInSystem.log.size() - 1;
-            ArrayList<Log> subList = new ArrayList<>();
+            EList<Log> subList = new EList<>();
             subList.addAll(playerInSystem.log.subList(startIndex, endIndex));
 //            for (int j = startIndex; j < endIndex; ++j)
   //              subList.add(playerInSystem.log.get(j));
@@ -374,12 +377,14 @@ public class EGTCPServer extends Thread {
     private boolean CheckCredentials(Player player, Socket sock) {
         Player playerInSystem = GetPlayerInSystem(player); // Does it equate an existing player?
         if (playerInSystem == null){
+            System.out.println("Credentials not ok, no such player");
             Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build()); // No?
             return false;
         }
         if (player.CredentialsMatch(playerInSystem)) { // Passwords etc. match?
             return true;
         }
+        System.out.println("Credentials not ok, bad password");
         Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());
         return false;
     }
@@ -399,9 +404,10 @@ public class EGTCPServer extends Thread {
     }
 
     private void EvaluateLoadRequest(Socket sock, EGPacket pack) throws Exception {
-//       System.out.println("Evaluate request: LOAD");
-        if (CheckCredentials(pack.GetPlayer(), sock))
+       System.out.println("Evaluate request: LOAD");
+        if (!CheckCredentials(pack.GetPlayer(), sock))
             return;
+        System.out.println("Credentials OK, replying");
         Player playerInSystem = GetPlayerInSystem(pack.GetPlayer());
         Reply(sock, EGResponse.clientPlayerData(playerInSystem).build());            // Reply the player in system.
     }
@@ -445,7 +451,7 @@ public class EGTCPServer extends Thread {
         }
         String email = strarr[0],
             password = strarr[1];
-        ArrayList<Player> players = GetPlayers(email, password);
+        EList<Player> players = GetPlayers(email, password);
         if (players.size() == 0) {
             players = GetPlayersByEmail(email);
             if (players.size() > 0){
@@ -455,12 +461,16 @@ public class EGTCPServer extends Thread {
             Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build());
             return;
         }
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            p.sendAll = Player.CREDENTIALS_ONLY;
+        }
         Log("Load success, found "+players.size()+" players, replying data to client");
         Reply(sock, EGPacket.players(players).build());            // Reply the player in system.
     }
 
-    private ArrayList<Player> GetPlayersByEmail(String email) {
-        ArrayList<Player> p = new ArrayList<>();
+    private EList<Player> GetPlayersByEmail(String email) {
+        EList<Player> p = new EList<>();
         for (int i = 0; i < games.size(); ++i){
             Game g = games.get(i);
             p.addAll(g.GetCharacters(email));
@@ -468,8 +478,8 @@ public class EGTCPServer extends Thread {
         return p;
     }
 
-    private ArrayList<Player> GetPlayers(String email, String password) {
-        ArrayList<Player> p = new ArrayList<>();
+    private EList<Player> GetPlayers(String email, String password) {
+        EList<Player> p = new EList<>();
         for (int i = 0; i < games.size(); ++i){
             Game g = games.get(i);
             p.addAll(g.GetCharacters(email, password));
@@ -539,6 +549,11 @@ public class EGTCPServer extends Thread {
         game.AddPlayer(player);        // Add player to game. Save game and player.
         player.ReviveRestart(); // Revive and restart the player - set default stats according to difficulty and bonuses, etc.
 //        player.gameID
+        AddListenersAndSetSysMsg(player);
+        Reply(sock, EGPacket.player(player).build());        // Notify success by replying the updated player.
+    }
+
+    private void AddListenersAndSetSysMsg(Player player) {
         player.addLogListener(logListener);
         player.addStateListener(new PlayerListener() {
             @Override
@@ -551,7 +566,6 @@ public class EGTCPServer extends Thread {
             }
         });
         player.sysmsg = GetSysMsg();
-        Reply(sock, EGPacket.player(player).build());        // Notify success by replying the updated player.
     }
 
     private int ActivePlayers() {
@@ -564,7 +578,7 @@ public class EGTCPServer extends Thread {
 
     /// Saves player log to file, within logs directory.
     void SavePlayerLog(Player player) {
-        List<LogType> filter = new ArrayList<>();
+        EList<LogType> filter = new EList<>();
         filter.add(LogType.ATTACK_MISS);
         filter.add(LogType.ATTACKED_MISS);
         player.SaveLog(filter, folderString);

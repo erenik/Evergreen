@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import weka.classifiers.Evaluation;
@@ -35,12 +35,12 @@ import weka.classifiers.evaluation.output.prediction.AbstractOutput;
  */
 
 public class WekaManager {
-    ArrayList<WClassifier> classifiers = new ArrayList<>();
+    EList<WClassifier> classifiers = new EList<>();
 
     Instances trainingData = null, // Always set before usage.
             testData = null;
 
-    ArrayList<Integer> testedWindowSizes = new ArrayList<>();
+    EList<Integer> testedWindowSizes = new EList<>();
 
     public WClassifier NewRandomForest(String name, String fromArffData){
         InputStream is = new ByteArrayInputStream(fromArffData.getBytes());        // convert String into InputStream
@@ -144,7 +144,7 @@ public class WekaManager {
 
     // Populate the list with classifiers.
     public void Init(){
-        ArrayList<AbstractClassifier> alac = new ArrayList();
+        EList<AbstractClassifier> alac = new EList();
         alac.add(new RandomForest());
         alac.add(new RandomTree());
         alac.add(new BayesNet());
@@ -330,7 +330,7 @@ public class WekaManager {
         }
     }
 
-    ArrayList<Double> valuesHistory = new ArrayList();
+    EList<Double> valuesHistory = new EList();
     int historyLength = 0;
 
     public double ModifyResult(double value){
@@ -342,7 +342,7 @@ public class WekaManager {
             valuesHistory.remove(0); // Remove index 0 - the oldest value.
         }
         /// Count them.
-        ArrayList<Tuple<Double, Integer>> valueCount = new ArrayList();
+        EList<Tuple<Double, Integer>> valueCount = new EList();
         for (int i = 0; i < valuesHistory.size(); ++i){
             double valueInHistory = valuesHistory.get(i);
             boolean foundIt = false;

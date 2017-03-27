@@ -10,8 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.Display;
-import android.view.ViewGroup;
-import android.widget.Toast;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,9 +17,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import erenik.evergreen.GameID;
 import erenik.evergreen.android.act.EvergreenActivity;
@@ -37,6 +32,7 @@ import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-10-26.
@@ -57,10 +53,10 @@ public class App {
 
     public static Application.ActivityLifecycleCallbacks actLCCallback;
 
-    static List<Activity> runningActivities = new ArrayList<Activity>();
+    static EList<Activity> runningActivities = new EList<Activity>();
 
-    /// List of players.
-    static private List<Player> players = new ArrayList<>();
+    /// EList of players.
+    static private EList<Player> players = new EList<>();
     // Player, should be put or created into the list of players, based on what was loaded upon start-up.
     static private Player player = null;
     static private EGPacketCommunicator comm = null;
@@ -72,7 +68,8 @@ public class App {
 
     static void InitCommunicator(){
         comm = new EGPacketCommunicator();
-        comm.SetServerIP(defaultAddress);
+//        comm.SetServerIP(defaultAddress); // Home/local address
+        comm.SetServerIP("10.104.33.248"); // School address
     }
 
     static public Player GetPlayer()
@@ -150,7 +147,7 @@ public class App {
         UpdateLog(vg, context, maxLinesToDisplay, Arrays.asList(LogType.values()));
     }
     // Specify filter.
-    public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay, List<LogType> typesToShow)
+    public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay, EList<LogType> typesToShow)
     {
         System.out.println("WTF?");
     }*/
@@ -237,7 +234,7 @@ public class App {
         App.NewActivityLifeCycleCallback(activity);
     }
 
-    public static String GetLogText(LogTextID logTextID, List<String> args) {
+    public static String GetLogText(LogTextID logTextID, EList<String> args) {
         return EString.GetLogText(logTextID, args);
     }
 
@@ -344,7 +341,11 @@ public class App {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return false;
-        } finally {
+        } catch (ClassCastException e){
+            e.printStackTrace();
+            return false;
+        }
+        finally {
             if (objectIn != null) {
                 try {
                     objectIn.close();
@@ -359,7 +360,7 @@ public class App {
     }
 
     // Check all saves, return the players.
-    public static List<Player> GetPlayers() {
+    public static EList<Player> GetPlayers() {
         return players;
     }
     /// Adds a player to the list of players.
@@ -442,7 +443,7 @@ public class App {
     }
 
 
-    public static void SetPlayers(ArrayList<Player> players) {
+    public static void SetPlayers(EList<Player> players) {
         App.players = players;
         App.SaveLocally();
     }

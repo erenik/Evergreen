@@ -1,16 +1,15 @@
 package erenik.evergreen.android;
 
-import java.util.List;
-
 import erenik.evergreen.R;
 import erenik.evergreen.common.logging.LogTextID;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2017-02-21.
  */
 
 public class EString {
-    public static String GetLogText(LogTextID logTextID, List<String> args) {
+    public static String GetLogText(LogTextID logTextID, EList<String> args) {
         int id = -1; // id on android.
         String s = "";
         switch(logTextID) {

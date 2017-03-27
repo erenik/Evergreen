@@ -1,6 +1,6 @@
 package erenik.util;
 
-import java.util.ArrayList;
+import erenik.util.EList;
 import java.util.Random;
 
 /**

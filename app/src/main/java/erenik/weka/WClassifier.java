@@ -1,10 +1,10 @@
 package erenik.weka;
 
 import java.util.Random;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import erenik.util.EList;
 import erenik.util.Tuple;
 import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
@@ -34,7 +34,7 @@ public class WClassifier {
     int verbosity = 0;
 
     // Includes all result data for a session, no matter the window size.
-    public ArrayList<ClassificationStats> classificationStats = new ArrayList<>();
+    public EList<ClassificationStats> classificationStats = new EList<>();
 
     String Name() {
         return cls.getClass().getSimpleName();
@@ -104,7 +104,7 @@ public class WClassifier {
     public float TestOnDataFolds(Instances inst, int numFolds, int historySetSize){
         // Make a copy of the data we can reorder
         Random r = new Random(System.currentTimeMillis());
-        ArrayList<ClassificationStats> css = new ArrayList<>();
+        EList<ClassificationStats> css = new EList<>();
         // Test on sub-sections of the data?
         int totGood = 0, totTest = 0;
         System.out.println("Num folds: "+numFolds);
@@ -179,7 +179,7 @@ public class WClassifier {
         return cs;
     }
 
-    public ArrayList<Double> valuesHistory = new ArrayList();
+    public EList<Double> valuesHistory = new EList();
     public double ModifyResult(double value, int historySetSize){
         if (historySetSize < 2) // Just return if history window is not active, i.e., less than 2 in size. 1 would be the same as giving the most recent value.
             return value;
@@ -189,7 +189,7 @@ public class WClassifier {
             valuesHistory.remove(0); // Remove index 0 - the oldest value.
         }
         /// Count them.
-        ArrayList<Tuple<Double, Integer>> valueCount = new ArrayList();
+        EList<Tuple<Double, Integer>> valueCount = new EList();
         for (int i = 0; i < valuesHistory.size(); ++i){
             double valueInHistory = valuesHistory.get(i);
             boolean foundIt = false;
@@ -205,6 +205,10 @@ public class WClassifier {
                 continue;
             // Didn't find it?
             valueCount.add(new Tuple<Double, Integer>(valueInHistory, 1)); // Initial count to 1.
+        }
+        if (valueCount.size() == 0) {
+            System.out.println("Some issue when counting results in WClassifier.ModifyResult, returning value without modification.");
+            return value;
         }
         Tuple<Double, Integer> highestCount = valueCount.get(0);
         for (int i = 1; i < valueCount.size(); ++i){

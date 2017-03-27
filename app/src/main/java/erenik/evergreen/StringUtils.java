@@ -1,11 +1,11 @@
 package erenik.evergreen;
-import java.util.List;
+import erenik.util.EList;
 
 /**
  * Created by Emil on 2016-11-06.
  */
 public class StringUtils {
-    public static String join(List<String> list, String glue)
+    public static String join(EList<String> list, String glue)
     {
         String s = "";
         for (int i = 0; i < list.size(); ++i)
