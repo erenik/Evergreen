@@ -903,7 +903,7 @@ public class Player extends Combatable implements Serializable {
             return;
         }
         if (roll < 9) {
-            Log(LogTextID.stealFailed, LogType.ATTACK_MISS);
+            Log(LogTextID.stealFailed, LogType.ATTACK_MISS, targetPlayerName);
             p.Log(LogTextID.somethingAmiss, LogType.INFO);
            // Log("While trying to steal from "+p.name+", you mistakenly caused attention, forcing you to retreat.", LogType.ATTACK_MISS);
 //            p.Log("While walking in your shelter, you notice something grabbing your attention. You try to see what it was, but find nothing is amiss.", LogType.ATTACKED_MISS);
@@ -920,7 +920,7 @@ public class Player extends Combatable implements Serializable {
         p.Adjust(stolenStat, -quantity);
         // Calc success?
         String whatStolen = quantity+" units of "+stolenStat.name();
-        Log(LogTextID.stealSuccess_whatName, LogType.ATTACK);
+        Log(LogTextID.stealSuccess_whatName, LogType.ATTACK, formattedFloat(quantity, 2)+" units of "+stolenStat.name(), targetPlayerName);
         p.Log(LogTextID.stolen, LogType.ATTACKED);
 //        Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
 //        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);

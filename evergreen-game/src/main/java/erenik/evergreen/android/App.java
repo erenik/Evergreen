@@ -40,11 +40,6 @@ import erenik.util.EList;
 public class App {
 
 
-    static String defaultAddress =
-            "www.erenik.com"; // Public game!
-//            "192.168.0.11"; // Local testing.
-    // www.erenik.com";
-    static int defaultPort = 4000;
 //    static public String ip = "www.erenik.com";
 //    static public int port = 4000;
 
@@ -70,7 +65,8 @@ public class App {
     static void InitCommunicator(){
         comm = new EGPacketCommunicator();
 //        comm.SetServerIP(defaultAddress); // Home/local address
-        comm.SetServerIP("10.104.33.248"); // School address
+//        comm.SetServerIP("10.104.33.248"); // School address
+        comm.SetServerIP("www.erenik.com"); // Public address
     }
 
     static public Player GetPlayer()
