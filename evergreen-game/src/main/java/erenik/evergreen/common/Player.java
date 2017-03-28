@@ -954,6 +954,8 @@ public class Player extends Combatable implements Serializable {
                     return;
                 String newPlayer = randomPlayer.name;
                 if (newPlayer != null && newPlayer != name) {
+                    if (KnowsThisPlayer(newPlayer))
+                        return; // Skip it then.
                     Log(LogTextID.searchPlayer_foundAnother, LogType.SUCCESS);
                     name = newPlayer;
 //                    knownPlayerNames.add(newPlayer);
@@ -961,10 +963,11 @@ public class Player extends Combatable implements Serializable {
                 else // In-case you already know all the players in the game already.
                     return;
             }
-            return;
+            else
+                return;
         }
-        FoundPlayer(name);
-        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+cd.knownPlayerNames);
+        FoundPlayer(player.name);
+//        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+cd.knownPlayerNames);
     }
 
     // Returns true if THIS player knows target player.
