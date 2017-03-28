@@ -845,7 +845,8 @@ public class EvergreenActivity extends AppCompatActivity
 
     void OnLogMessagesUpdated(){
         UpdateLog();
-        if (NewLogMessagesToPresent().size() > 0) {
+        EList<Log> ell = NewLogMessagesToPresent();
+        if (ell != null && ell.size() > 0) {
             GoToResultsScreen();
         }
     }
@@ -859,19 +860,25 @@ public class EvergreenActivity extends AppCompatActivity
         lastRCD = now;
         System.out.println("Requesting client data...");
         ToastUp("Saving/Updating...");
-        EGPacket pack = EGRequest.Save(App.GetPlayer());
-        ShowProgressBar();
-        pack.addReceiverListener(new EGPacketReceiverListener() {
-            @Override
-            public void OnReceivedReply(EGPacket reply) {
-                HandleClientData(reply);
-            }
-            @Override
-            public void OnError(EGPacketError error) {
-                HideProgressBar();
-            }
-        });
-        App.Send(pack);;
+        try {
+            EGPacket pack = EGRequest.Save(App.GetPlayer());
+            ShowProgressBar();
+            pack.addReceiverListener(new EGPacketReceiverListener() {
+                @Override
+                public void OnReceivedReply(EGPacket reply) {
+                    HandleClientData(reply);
+                }
+                @Override
+                public void OnError(EGPacketError error) {
+                    HideProgressBar();
+                }
+            });
+            App.Send(pack);;
+        } catch (NullPointerException e){
+            ToastUp(e.getMessage());
+            e.printStackTrace();
+            return;
+        }
     }
 
     // Returns true if it was a success - got some data, or false - if an error was replied or parsing errors occurred.
@@ -879,8 +886,14 @@ public class EvergreenActivity extends AppCompatActivity
         if (reply instanceof EGResponse){
             switch (reply.ResType()){
                 case PlayerClientData:
-                    Toast("Client data received");
                     ClientData cd = reply.GetClientData();
+                    if (cd == null) {
+                        HideProgressBar();
+                        ToastUp("Errors parsing client data");
+                        return false;
+                    }
+                    Toast("Client data received");
+                    cd.PrintDetails();
                     App.GetPlayer().UpdateFrom(cd);
                     UpdateUI();
                     // Request new log messages if relevant.
@@ -898,6 +911,11 @@ public class EvergreenActivity extends AppCompatActivity
     private EList<Log> NewLogMessagesToPresent(){
         // Populate it with those log messages which we are interested in viewing here in the results screen? All log messages which haven't been flagged as "displayed" yet.
         Player p = App.GetPlayer();
+        if (p.log == null){
+            ToastUp("log messages null");
+            p.log = new EList<>();
+            return null;
+        }
         int logMessagesAdded = 0;
         long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
         System.out.println("LastID seen: "+lastLogMessageIDSeen);

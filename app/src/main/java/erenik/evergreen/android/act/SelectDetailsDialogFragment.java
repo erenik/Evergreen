@@ -3,10 +3,12 @@ package erenik.evergreen.android.act;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -14,6 +16,8 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import erenik.evergreen.common.player.AAction;
+import erenik.evergreen.common.player.Action;
 import erenik.util.EList;
 
 import erenik.evergreen.android.App;
@@ -32,9 +36,9 @@ import erenik.util.EList;
 /**
  * Created by Emil on 2016-10-30.
  */
-public class SelectDetailsDialogFragment extends DialogFragment
-{
-    DAction da = null;
+public class SelectDetailsDialogFragment extends DialogFragment {
+    Action a = null;
+
     Player player = App.GetPlayer();
     EList<View> argumentViews = new EList<>();
 
@@ -45,13 +49,12 @@ public class SelectDetailsDialogFragment extends DialogFragment
         {
             Activity act = getActivity();
             System.out.println("Activity: "+act.toString());
-            if (act instanceof SelectActivity)
-            {
+            if (act instanceof SelectActivity) {
                 // Update GUI of main activity.
                 SelectActivity sa = (SelectActivity) act;
                 // Hide system buttons?
                 sa.setupFullscreenFlags(); // Remove stuff?
-                String text = da.text;
+                String text = a.text;
                 // Fetch arguments as set in the ui?
                 if (argumentViews.size() > 0)
                     text += ": ";
@@ -75,10 +78,9 @@ public class SelectDetailsDialogFragment extends DialogFragment
                     if (i < argumentViews.size() - 1)
                         text += ", ";
                 }
-
                 // Add the text?
                 sa.selected.add(text);
-                sa.dActionClicked(da);
+                sa.ActionClicked(a);
                 sa.updateQueue(); // Update queue gui.
             }
         }
@@ -90,6 +92,8 @@ public class SelectDetailsDialogFragment extends DialogFragment
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         String header = "Action details:";
+        header = "Details: "+a.text;
+        /*
         switch(da)
         {
             //case AugmentTransport: header = "Augment transport. Choose transport and upgrade type."; break;
@@ -103,7 +107,7 @@ public class SelectDetailsDialogFragment extends DialogFragment
             default:
                 header = "Set additional arguments";
                 break;
-        }
+        }*/
         builder.setMessage(header);
         builder
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -118,14 +122,17 @@ public class SelectDetailsDialogFragment extends DialogFragment
         mainLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN); // Hide the back/home/change app buttons still...!
 
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        mainLayout.setOrientation(LinearLayout.HORIZONTAL);
+        mainLayout.setOrientation(LinearLayout.VERTICAL);
         layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
         mainLayout.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.mainButtonBackground));
         boolean textInput = false;
         boolean possible = false;
-        for (int ra = 0; ra < da.requiredArguments.size(); ++ra)
-        {
-            ActionArgument aarg = da.requiredArguments.get(ra);
+        possible = true;
+        String reason = "";
+        EList<View> tempList = new EList<>();
+        for (int ra = 0; ra < a.requiredArguments.size(); ++ra) {
+            boolean numbersOnly = false;
+            ActionArgument aarg = a.requiredArguments.get(ra);
             EList<String> choices = new EList<String>();
             switch(aarg)
             {
@@ -142,6 +149,10 @@ public class SelectDetailsDialogFragment extends DialogFragment
                     */
                 case Player:
                     choices = player.KnownPlayerNames();
+                    if (choices.size() == 0) {
+                        possible = false;
+                        reason = "No known players.";
+                    }
                     break;
                 case TextSearchType:
                     choices.add("Exactly");
@@ -152,7 +163,6 @@ public class SelectDetailsDialogFragment extends DialogFragment
                 case PlayerName:
                     // Text input only.
                     textInput = true;
-                    possible = true;
                     break;
                 case Stronghold:
                     // Known ones only?
@@ -170,55 +180,74 @@ public class SelectDetailsDialogFragment extends DialogFragment
                             choices.add(inv.name);
                         }
                     }
-                    System.out.println("InventionToCraft - 2");
+                    if (choices.size() == 0) {
+                        possible = false;
+                        reason = "No invention blueprints available.";
+                    }
                     break;
                 case SkillToStudy:
                     choices = Skill.Names();
                     break;
+                case ResourceType:
+                    choices = new EList<>();
+                    choices.add("Food");
+                    choices.add("Materials");
+                    break;
+                case ResourceQuantity:
+                    textInput = true;
+                    numbersOnly = true;
+                    break;
+                case Text:
+                    textInput = true;
+                    break;
                 default:
-                    System.out.println("Bad thing to select from");
+                    System.out.println("Bad thing to select from: "+aarg.name());
                     System.exit(4);
             }
-            if (choices.size() > 0)
-                possible = true;
-            LinearLayout.LayoutParams selectionLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1.f);
+            LinearLayout.LayoutParams selectionLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1.f);
             //selectionLayoutParams.setOrientation(LinearLayout.HORIZONTAL);
             selectionLayoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
 
             // addView(ll);
-            if (choices.size() > 0)
-            {
+            if (choices.size() > 0) {
                 // Add choices to the thingy.
                 ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item);
                 arrayAdapter.addAll(choices.asArrayList());
                 Spinner spinner = new Spinner(getContext());
                 spinner.setAdapter(arrayAdapter);
                 spinner.setLayoutParams(selectionLayoutParams);
-                mainLayout.addView(spinner);
-                argumentViews.add(spinner);
+                tempList.add(spinner);
             }
             if (textInput) {
                 // Name ?
                 EditText et = new EditText(getContext());
                 et.setId(R.id.nameInput);
                 et.setLayoutParams(selectionLayoutParams);
-                mainLayout.addView(et);
-                argumentViews.add(et);
+                if (numbersOnly) {
+                    et.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    et.setInputType(InputType.TYPE_CLASS_PHONE);
+                }
+                tempList.add(et);
             }
         }
-        if (possible)
+        if (possible) {
             builder.setPositiveButton("OK", onClickOK);
+            for (int i = 0; i < tempList.size(); ++i){
+                mainLayout.addView(tempList.get(i));
+            }
+            argumentViews = tempList;
+        }
         else {
             // Add error messages?
             TextView tv = new TextView(getContext());
-            String text = "Unable to perform action.";
-            switch(da)
-            {
-//                case AugmentTransport:
-                case Craft:
-                    text = "No craftable inventions found.";
-                    break;
-            }
+            String text = "Unable to perform action. "+reason;
+            if (a.daType != null)
+                switch(a.daType) {
+    //                case AugmentTransport:
+                    case Craft:
+                        text = "No craftable inventions found.";
+                        break;
+                }
             tv.setText(text);
             mainLayout.addView(tv);
         }

@@ -95,6 +95,10 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         microsecondsPerSample = (int) (secondsPerSample * 1000000);
         if (sensorManager == null)
             sensorManager = (SensorManager) callingService.getSystemService(Context.SENSOR_SERVICE);
+        EnableAcc();
+        EnableGyro();
+    }
+    private void EnableAcc(){
         if (accSensor == null)
             accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accSensor, microsecondsPerSample);

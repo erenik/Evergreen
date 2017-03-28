@@ -219,8 +219,9 @@ public class Game implements Serializable {
     }
 
     /// Booleans default false, flag the one you wish to search with, both may be used simultaneously.
-    public Player GetPlayer(String name, boolean contains, boolean startsWith)
-    {
+    public Player GetPlayer(String name, boolean contains, boolean startsWith) {
+        if (name == null)
+            return null;
         System.out.println("Looking for "+name);
         for (int i = 0; i < players.size(); ++i)
         {
@@ -237,12 +238,19 @@ public class Game implements Serializable {
         return null;
     }
     public Player GetPlayer(String name) {
-        for (int i = 0; i < players.size(); ++i)
-        {
+        if (name == null){
+            System.out.println("Player.GetPlayer with null name, wtf");
+            return null;
+        }
+        name = name.trim();
+        for (int i = 0; i < players.size(); ++i) {
             Player p = players.get(i);
 //            System.out.println("Player "+i+" name equals? "+p.Name());
             if (p.Name().equals(name))
                 return p;
+            if (p.Name().compareToIgnoreCase(name) == 0){
+                return p;
+            }
         }
         return null;
     }

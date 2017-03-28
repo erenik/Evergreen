@@ -36,6 +36,7 @@ public class EventLogViewer extends EvergreenActivity {
                     break;
                 case R.id.checboxVanquished:
                     SetFilter(LogType.DEFEATED_ENEMY, cb.isChecked());
+                    System.out.println("Log typ set for DEFEATED_ENEMY: "+cb.isChecked());
                     break;
             }
             UpdateLog();
@@ -85,6 +86,9 @@ public class EventLogViewer extends EvergreenActivity {
         CheckBox checkboxDamage = (CheckBox) findViewById(R.id.checkboxDamage);
         checkboxDamage.setChecked(IsFiltered(LogType.ATTACK));
         checkboxDamage.setOnClickListener(toggleFilter);
+        CheckBox checkboxVanquished = (CheckBox) findViewById(R.id.checboxVanquished);
+        checkboxVanquished.setChecked(IsFiltered(LogType.DEFEATED_ENEMY));
+        checkboxVanquished.setOnClickListener(toggleFilter);
 
         Spinner spin = (Spinner) findViewById(R.id.spinnerLogMessagesToDisplay);
         spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

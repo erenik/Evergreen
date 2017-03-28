@@ -78,7 +78,11 @@ public class EString {
             case encounterSurvived: id = R.string.encounterSurvived; break;
             case expGained: id = R.string.expGained; break;
             case startingBonusNone: id = R.string.startingBonusNone; break;
-
+            case ReceivedPlayerResources: id = R.string.receivedPlayerResources; break;
+            case SentPlayerResources: id = R.string.sentPlayerResources; break;
+            case MessageSentToPlayer: id = R.string.messageSentToPlayer; break;
+            case MessageReceivedFromPlayer: id = R.string.messageReceivedFromPlayer; break;
+            case foundPlayerSelfLol: id = R.string.foundPlayerSelfLol; break;
             default:
                 s = logTextID.name(); break;
         }

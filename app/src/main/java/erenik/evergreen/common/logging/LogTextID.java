@@ -49,5 +49,10 @@ public enum LogTextID {
     skillLeveledUp,
     encounterNumMonsters, encounterSurvived, expGained,
     startingBonusNone,
+    ReceivedPlayerResources, // Player, quantity, type,
+    SentPlayerResources, // Player, quantity, type,
+    MessageSentToPlayer, // Player name only,
+    MessageReceivedFromPlayer,
+    foundPlayerSelfLol,  // Player name, message contents.
 
 }

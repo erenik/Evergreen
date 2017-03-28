@@ -53,8 +53,10 @@ public class Player extends Combatable implements Serializable {
         Set(Config.LatestLogMessageIDSeen, idSeen);
     }
 
+    /// Why need the copy..?
     public ClientData GetClientData() { // Server-side.
-        return cd.Copy();
+//        cd.PrintDetails();
+        return cd;
     }
 
 
@@ -226,7 +228,8 @@ public class Player extends Combatable implements Serializable {
         for (int i = 0; i < transports.size(); ++i)
             transports.get(i).writeTo(out);
 
-        cd.writeTo(out); // Write the client-data
+        if (!cd.writeTo(out)) // Write the client-data
+            throw new IOException("Failed writing ClientData");
         writeLogs(out);
 
         out.writeObject(inventionCurrentlyBeingCrafted);
@@ -663,7 +666,7 @@ public class Player extends Combatable implements Serializable {
     }
     float hoursPerAction  = 1.f;
     float foodHarvested = 0.0f;
-    DAction da;
+    Action da;
     void EvaluateActions(Game game) {
         t_starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
         // Have this increase with some skill?
@@ -687,70 +690,121 @@ public class Player extends Combatable implements Serializable {
 //        System.out.println("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
         // Execute at most 8 actions per day, regardless of queue.
-        for (int i = 0; i < cd.dailyActions.size() && i < MAX_ACTIONS; ++i)
-        {
+        for (int i = 0; i < cd.dailyActions.size() && i < MAX_ACTIONS; ++i) {
             /// Parse actions and execute them.
-            da = DAction.ParseFrom(cd.dailyActions.get(i));
+            da = cd.dailyActions.get(i);
             EvaluateAction(da, game);
         }
     }
-    void EvaluateAction(DAction da, Game game)
-    {
+
+    String formattedFloat(float value, int decimals){
+        String format = "%."+decimals+"f"; // e.g. "%.2f"
+        String formattedFloat = String.format(Locale.ENGLISH, format, value);
+        return formattedFloat;
+    }
+
+
+    void EvaluateAction(Action a, Game game) {
         float units = 1;
-        switch (da)
-        {
-            case GatherFood:
-                units = Dice.RollD3(2);  // 2 to 6 base.
-                units += Get(Skill.Foraging).Level(); // + Foraging level constant?
-                units += CurrentTransport().Get(TransportStat.ForagingBonus);
-                units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
-                if (units < 1) units = 1; // Get at least 1.
-                units *= t_starvingModifier;
-                units *= hoursPerAction;
-                Adjust(Stat.FOOD, units);
-                LogInfo(LogTextID.foragingFood, Stringify(units));
-                break;
-            case GatherMaterials:
-                units = Dice.RollD3(2); // 2 to 6 base.
-                units += CurrentTransport().Get(TransportStat.MaterialGatheringBonus);
-                units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
-                units *= t_starvingModifier;
-                units *= hoursPerAction;
-                LogInfo(LogTextID.gatherMaterials, Stringify(units));
-                Adjust(Stat.MATERIALS, units);
-                break;
-            case Scout:
-                Scout();
-                break;
-            case Recover:
-                units = (1 + 0.5f * Get(Skill.Survival).Level()); // 1 + 0.5 for each survival skill.
-                units += GetEquipped(InventionStat.RecoveryBonus); // +2 for First aid kit, for example.
-                units *= 0.5f * hoursPerAction; // Recovery +50/100/150/200/250%
-                units *= t_starvingModifier;
-                Adjust(Stat.HP, units);
-                ClampHP();
-                LogInfo(LogTextID.recoverRecovered, ""+units);
-                break;
-            case BuildDefenses: BuildDefenses(); break;
-//            case AugmentTransport: AugmentTransport(); break;
-            case LookForPlayer: LookForPlayer(da, game); break;
-//            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
-            case Invent: Invent(da); break;
-            case Craft: Craft(da); break;
-            case Steal: Steal(da, game); break;
-            case AttackAPlayer: AttackAPlayer(da, game);
-                break;
-            case Study:
-                // Gain exp into current skill perhaps..?
-                int toGain = Dice.RollD3(2) + Get(Skill.Studious).Level();
-                Log(LogTextID.studiesEXP, LogType.PROGRESS);
-                GainEXP(toGain);
-                break;
-            case ReduceEmissions: ReduceEmissions(); break;
-            default:
-                System.out.println("Uncoded daily action");
-                System.exit(15);
-        }
+        String playerName = a.GetPlayerName();
+        Player player = null;
+        if (playerName != null)
+            player = game.GetPlayer(playerName);
+        /// THEN ACTIVE ACTIONS
+        if (a.aaType != null)
+            switch (a.aaType){
+                case GiveResources:
+                    if (player == null){
+                        System.out.println("NULL player");
+                        return;
+                    }
+                    Stat s = null;
+                    String type = a.Get(ActionArgument.ResourceType);
+                    if (type.equals("Food"))
+                        s = Stat.FOOD;
+                    else if (type.equals("Materials"))
+                        s = Stat.MATERIALS;
+                    else {
+                        System.out.println("Bad resource type");
+                        return;
+                    }
+                    String quantity = a.Get(ActionArgument.ResourceQuantity);
+                    float qu = Float.parseFloat(quantity);
+                    float quantAvail = Get(s);
+                    float toSend = Math.min(qu, quantAvail);
+                    if (toSend < 0) {
+                        System.out.println("negative quant");
+                        return;
+                    }
+                    player.Adjust(s, toSend);
+                    Adjust(s, -toSend);
+                    LogInfo(LogTextID.SentPlayerResources, playerName, type, formattedFloat(toSend, 2));
+                    player.LogInfo(LogTextID.ReceivedPlayerResources, this.name, type, formattedFloat(toSend, 2));
+                    break;
+                case SendMessage:
+                    if (player == null){
+                        System.out.println("NULL player");
+                        return;
+                    }
+                    LogInfo(LogTextID.MessageSentToPlayer, playerName);
+                    player.LogInfo(LogTextID.MessageReceivedFromPlayer, playerName, a.Get(ActionArgument.Text));
+                    break;
+            }
+
+        if (a.daType != null)
+            switch (a.daType) {
+                case GatherFood:
+                    units = Dice.RollD3(2);  // 2 to 6 base.
+                    units += Get(Skill.Foraging).Level(); // + Foraging level constant?
+                    units += CurrentTransport().Get(TransportStat.ForagingBonus);
+                    units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
+                    if (units < 1) units = 1; // Get at least 1.
+                    units *= t_starvingModifier;
+                    units *= hoursPerAction;
+                    Adjust(Stat.FOOD, units);
+                    LogInfo(LogTextID.foragingFood, Stringify(units));
+                    break;
+                case GatherMaterials:
+                    units = Dice.RollD3(2); // 2 to 6 base.
+                    units += CurrentTransport().Get(TransportStat.MaterialGatheringBonus);
+                    units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
+                    units *= t_starvingModifier;
+                    units *= hoursPerAction;
+                    LogInfo(LogTextID.gatherMaterials, Stringify(units));
+                    Adjust(Stat.MATERIALS, units);
+                    break;
+                case Scout:
+                    Scout();
+                    break;
+                case Recover:
+                    units = (1 + 0.5f * Get(Skill.Survival).Level()); // 1 + 0.5 for each survival skill.
+                    units += GetEquipped(InventionStat.RecoveryBonus); // +2 for First aid kit, for example.
+                    units *= 0.5f * hoursPerAction; // Recovery +50/100/150/200/250%
+                    units *= t_starvingModifier;
+                    Adjust(Stat.HP, units);
+                    ClampHP();
+                    LogInfo(LogTextID.recoverRecovered, ""+units);
+                    break;
+                case BuildDefenses: BuildDefenses(); break;
+    //            case AugmentTransport: AugmentTransport(); break;
+                case LookForPlayer: LookForPlayer(a, game); break;
+    //            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
+                case Invent: Invent(a); break;
+                case Craft: Craft(a); break;
+                case Steal: Steal(a, game); break;
+                case AttackAPlayer: AttackAPlayer(a, game);
+                    break;
+                case Study:
+                    // Gain exp into current skill perhaps..?
+                    int toGain = Dice.RollD3(2) + Get(Skill.Studious).Level();
+                    Log(LogTextID.studiesEXP, LogType.PROGRESS);
+                    GainEXP(toGain);
+                    break;
+                case ReduceEmissions: ReduceEmissions(); break;
+                default:
+                    System.out.println("Uncoded daily action");
+                    System.exit(15);
+            }
     }
 
     private void ReduceEmissions() {
@@ -783,7 +837,7 @@ public class Player extends Combatable implements Serializable {
         }
     }
 
-    private void AttackAPlayer(DAction da, Game game) {
+    private void AttackAPlayer(Action da, Game game) {
         // Check if a player was provided?
         String targetName = da.requiredArguments.get(0).value;
         Player p = game.GetPlayer(targetName);
@@ -818,7 +872,7 @@ public class Player extends Combatable implements Serializable {
         Log("TODO: Actual transport augmentation.", LogType.INFO);
         */
     }
-    private void Steal(DAction da, Game game) {
+    private void Steal(Action da, Game game) {
         String targetPlayerName = da.requiredArguments.get(0).value;
         Player p = game.GetPlayer(targetPlayerName);
         if (p == null) {
@@ -871,27 +925,21 @@ public class Player extends Combatable implements Serializable {
 //        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
 
-    void LookForPlayer(DAction da, Game game) {
+    void LookForPlayer(Action da, Game game) {
         // Determine chances.
         // Search query.
         // Found?
-        String name = this.da.requiredArguments.get(1).value;
+        String name = this.da.requiredArguments.get(0).value;
         Player player = null;
-        switch (this.da.requiredArguments.get(0).value)
-        {
-            default:
-            case "Exactly": player = game.GetPlayer(name); break;
-            case "Starts with":
-            case "StartsWith":
-                player = game.GetPlayer(name, false, true);
-                break;
-            case "Contains":
-                player = game.GetPlayer(name, true, false);
-                break;
-        }
+        // Try search for players now then.
+        player = game.GetPlayer(name);
+        if (player == null)
+            player = game.GetPlayer(name, false, true);
+        if (player == null)
+            player = game.GetPlayer(name, true, false);
         if (player == null) {
             int randInt = r.nextInt(100);
-            Log(LogTextID.searchPlayerFailed, LogType.ACTION_FAILURE);
+            Log(LogTextID.searchPlayerFailed, LogType.ACTION_FAILURE, name);
 //            Log("Despite searching, you were unable to find a player called "+name+".", LogType.ACTION_FAILURE);
             // Add chance to find random other players?
             if (randInt < 50) {
@@ -907,33 +955,39 @@ public class Player extends Combatable implements Serializable {
                 else // In-case you already know all the players in the game already.
                     return;
             }
-            else
-                return;
+            return;
         }
         FoundPlayer(name);
         Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+knownPlayerNames);
     }
 
-    private void FoundPlayer(String name) {
+    private void FoundPlayer(String playerName) {
+        if (knownPlayerNames == null)
+            knownPlayerNames = new EList<String>();
         for (int i = 0; i < knownPlayerNames.size(); ++i){
             String n = knownPlayerNames.get(i);
-            if (n.equals(name))
+            if (n.equals(playerName))
                 return; // Already know this player. o-o
         }
-        Log(LogTextID.foundPlayer, LogType.SUCCESS, name);
+        if (playerName.equals(this.name)){
+            Log(LogTextID.foundPlayerSelfLol, LogType.SUCCESS, playerName);
+        }
+        Log(LogTextID.foundPlayer, LogType.SUCCESS, playerName);
 //        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
-        knownPlayerNames.add(name);
+        knownPlayerNames.add(playerName);
     }
 
     private EList<String> KnownNamesSelfIncluded() {
         EList<String> knownNames = new EList<>();
+        if (knownPlayerNames == null)
+            knownPlayerNames = new EList<String>();
         for (int i = 0; i < knownPlayerNames.size(); ++i)
             knownNames.add(knownPlayerNames.get(i));
         knownNames.add(name);
         return knownNames;
     }
 
-    private void Craft(DAction da) {
+    private void Craft(Action da) {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
         // How many times to random.
         float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
@@ -1003,7 +1057,7 @@ public class Player extends Combatable implements Serializable {
         }
     }
 
-    private void Invent(DAction inventAction) {
+    private void Invent(Action inventAction) {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
         // How many times to random.
         float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
@@ -1508,7 +1562,7 @@ public class Player extends Combatable implements Serializable {
 
     public void ReviveRestart() {
         // Keep name, email, password, starting bonus, difficulty,
-        log.clear(); // Clear the log though?
+        log = new EList<Log>(); // Clear the log though?
         SetDefaultStats();        // reset the rest.
         AssignResourcesBasedOnDifficulty();        // Grant the starting bonus again.
         AssignResourcesBasedOnStartingBonus(); // Assign starting bonus.

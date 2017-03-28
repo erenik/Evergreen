@@ -101,11 +101,14 @@ public class EGTCPClient extends Thread
         player.cd.dailyActions.clear();
         // Generate some new actions.
         String actionsStr = "Actions: ";
+        System.out.println("Update EGTCPCLient");
+        /*
         for (int i = 0; i < 4; ++i) {
             DAction action = DAction.RandomAction(player);
             actionsStr += action+", ";
             player.cd.dailyActions.add(action.toString());
         }
+        */
         player.MarkLogMessagesAsReadByClient();         // Mark all log messages as read.
         System.out.println(actionsStr);
         player.DailyActionsAsString();

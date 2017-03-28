@@ -136,6 +136,11 @@ public class Log implements Serializable {
 
     public static void PrintLastLogMessages(EList<Log> log, int num) {
         EList<Log> logs = log;
+        if (logs == null){
+            System.out.println("Log.PrintLastLogMessages, null log, aborting");
+            new Exception().printStackTrace();
+            return;
+        }
         for (int i = logs.size() - num; i < logs.size(); ++i){
             if (i < 0)
                 continue;

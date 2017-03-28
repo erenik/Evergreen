@@ -294,5 +294,10 @@
     <string name="ok">OK</string>
     <string name="equip">Equip</string>
     <string name="startingBonusNone">No starting bonus was chosen.</string>
+    <string name="receivedPlayerResources">Player (arg) sent you (arg) units of (arg).</string>
+    <string name="sentPlayerResources">You sent player (arg) (arg) units of (arg).</string>
+    <string name="messageSentToPlayer">You sent a message to (arg).</string>
+    <string name="messageReceivedFromPlayer">You received a message from (arg): (arg)</string>
+    <string name="foundPlayerSelfLol">While looking for (arg), you realize that you have been searching for yourself all along. Maybe you will find your inner peace now.</string>
 
 </resources>

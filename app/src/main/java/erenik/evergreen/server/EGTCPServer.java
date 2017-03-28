@@ -525,6 +525,7 @@ public class EGTCPServer extends Thread {
 
     private void EvaluateCreateRequest(Socket sock, EGPacket pack) throws Exception {
         Player player = pack.GetPlayer();
+        player.name = player.name.trim(); // Trim whitespaces by default.
         Log("EvaluateCreateRequest: "+player.name);
         if (ActivePlayers() >= maxActivePlayers) {
             Reply(sock, EGPacket.error(EGResponseType.MaxActivePlayersReached).build());

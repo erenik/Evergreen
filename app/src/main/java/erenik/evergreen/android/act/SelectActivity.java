@@ -33,146 +33,103 @@ import erenik.evergreen.R;
 import erenik.evergreen.android.ui.EvergreenButton;
 
 
-public class SelectActivity extends EvergreenActivity
-{
+public class SelectActivity extends EvergreenActivity {
     static final int SELECT_ACTIVE_ACTION = 2;
     static final int SELECT_DAILY_ACTION = 0;
     static final int SELECT_SKILL = 1;
 
     EList<String> selected = new EList<String>();
     EList<Skill> selectedSkills = new EList<Skill>();
-    EList<DAction> selectedDActions = new EList<DAction>();
+    EList<Action> selectedActions = new EList<Action>();
     int buttonBgId = R.drawable.small_button;
     AAction activeAction = null;
+    int type = -1; // Integer used when launching the activity - to know if we are choosing DActions, Skills or AActions.
 
-    private final View.OnClickListener addItem = new View.OnClickListener()
-    {
+    private final View.OnClickListener addItem = new View.OnClickListener() {
         @Override
-        public void onClick(View v)
-        {
-            Button b = (Button)v;
-            String text = b.getText().toString();
-            if (type == SELECT_ACTIVE_ACTION){
-                // o-o
-                // Open display with further options
-                activeAction = AAction.GetFromString(text);
-                ViewGroup vg = (ViewGroup) findViewById(R.id.layoutQueue);
-                vg.removeAllViews();
-                switch (activeAction){
-                    case GiveResources:
-                        Spinner spinPlayer = new Spinner(getBaseContext());
-
-
-                        ArrayAdapter<String> adapter = new ArrayAdapter(getBaseContext(), android.R.layout.simple_spinner_item);
-                        //.createFromResource(this, arrayID, android.R.layout.simple_spinner_item);// Specify the layout to use when the list of choices appears
-                        // Add choices to the thingy.
-                        EList<String> choices = App.GetPlayer().knownPlayerNames;
-                        adapter.addAll(choices.asArrayList());
-                        adapter.setDropDownViewResource(R.layout.evergreen_spinner_dropdown_item);
-                        spinPlayer.setAdapter(adapter);// Apply the adapter to the spinner
-                        spinPlayer.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                activeAction.targetPlayer = (String) ((TextView)view).getText();
-                                System.out.println("Resource to give");
-                            }
-                            @Override public void onNothingSelected(AdapterView<?> parent) {}
-                        });
-                        vg.addView(spinPlayer);
-
-                        Spinner spin = new Spinner(getBaseContext());
-                        SetSpinnerArray(spin, R.array.historySetSizes);
-                        spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                activeAction.resourceToGive = (String) ((TextView)view).getText();
-                                System.out.println("Resource to give");
-                            }
-                            @Override public void onNothingSelected(AdapterView<?> parent) {}
-                        });
-                        vg.addView(spin);
-                        EditText et = new EditText(getBaseContext());
-                        et.setInputType(InputType.TYPE_CLASS_NUMBER);
-                        et.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                            @Override
-                            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                                activeAction.quantity = Float.parseFloat((String) v.getText());
-                                return false;
-                            }
-                        });
-                        vg.addView(et);
-                        break;
-                }
-                Button okButton = new Button(getBaseContext());
-                okButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // Verify arguments first?
-                        App.GetPlayer().cd.queuedActiveActions.add(activeAction);                            // Save it?
-                        App.DoQueuedActions();                            // Do it?
-                    }
-                });
-                vg.addView(okButton);
+        public void onClick(View v) {
+            Button b = (Button) v;
+            clicked(b);
+            String text = (String) b.getText();
+            Skill s = Skill.GetFromString(text);
+            if (s != null){
+                selected.add(text);
+                updateQueue();
                 return;
             }
-            if (type == SELECT_DAILY_ACTION) {
-                // Get action
-                DAction da = DAction.GetFromString(text);
-                if (da.requiredArguments.size() >= 1)
-                {
-                    // Open window to confirm addition of it.
-                    SelectDetailsDialogFragment sdf = new SelectDetailsDialogFragment();
-                    sdf.da = da;
-                    FragmentManager fragMan = getSupportFragmentManager();
-                    sdf.show(fragMan, "selectDactionDetails");
-                    return;
-                }
+            Action a = Action.GetFromString(text);
+            if (a == null) {
+                System.out.println("Action null, couldn't set properly D:");
+                return;
+            }
+            if (a.requiredArguments.size() >= 1) {
+                // Open window to confirm addition of it.
+                SelectDetailsDialogFragment sdf = new SelectDetailsDialogFragment();
+                sdf.a = a;
+                FragmentManager fragMan = getSupportFragmentManager();
+                sdf.show(fragMan, "selectDactionDetails");
+                return;
             }
             selected.add(text);
-            clicked(b.getText());
             updateQueue(); // Update queue gui.
         }
     };
+
+/*    Button okButton = new Button(getBaseContext());
+    okButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // Verify arguments first?
+            App.GetPlayer().cd.queuedActiveActions.add(activeAction);                            // Save it?
+            App.DoQueuedActions();                            // Do it?
+        }
+    });
+*/
+
     private final View.OnClickListener itemClicked = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
             Button b = (Button)v;
-            clicked(b.getText());
+            clicked(b);
         }
     };
 
-    private void clicked(CharSequence text) {
-        // Find it.
-        System.out.println("Clicked: "+text);
-        String s = text.toString().split(":")[0]; // First stuff before any eventual arguments.
-        DAction action = DAction.GetFromString(s);
-        if (action != null) {
-            dActionClicked(action, text.toString());
+    private void clicked(Button b) {
+        String text = (String) b.getText();
+        Skill s = Skill.GetFromString(text);
+        if (s != null){
+            skillClicked(s);
         }
-        Skill skill = Skill.GetFromString(s);
-        if (skill != null){
-            skillClicked(skill, text.toString());
+        Action a = Action.GetFromString(text);
+        if (a == null){
+            System.out.println("Clicked null-content button.");
+            return;
+        }
+        System.out.println("Clicked: "+a.text);
+        String string = a.toString().split(":")[0]; // First stuff before any eventual arguments.
+        if (a != null) {
+            ActionClicked(a);
         }
     }
 
-    private void skillClicked(Skill skill, String header) {
+    private void skillClicked(Skill skill) {
         TextView tvName = (TextView) findViewById(R.id.textViewItemName);
-        tvName.setText(header); // Show arguments here as well.
+        tvName.setText(skill.text); // Show arguments here as well.
         TextView desc = (TextView) findViewById(R.id.textViewDescription);
         desc.setText(skill.briefDescription);
     }
 
     // For displaying default title?
-    public void dActionClicked(DAction action)
-    {
-        dActionClicked(action, action.text);
+    public void ActionClicked(Action action){
+        ActionClicked(action, action.text);
     }
-    public void dActionClicked(DAction da, String header)
-    {
+    public void ActionClicked(Action a, String header){
         TextView tvName = (TextView) findViewById(R.id.textViewItemName);
         tvName.setText(header); // Show arguments here as well.
         TextView desc = (TextView) findViewById(R.id.textViewDescription);
-        desc.setText(da.description);
+        desc.setText(a.description);
     }
 
     private final View.OnClickListener clear = new View.OnClickListener()
@@ -262,12 +219,17 @@ public class SelectActivity extends EvergreenActivity
             if (type == SELECT_DAILY_ACTION) {
                 player.cd.dailyActions.clear();
                 for (int i = 0; i < selected.size(); ++i)
-                    player.cd.dailyActions.add(selected.get(i));                    // Just save it as Strings?
+                    player.cd.dailyActions.add(Action.ParseFrom(selected.get(i)));                    // Just save it as Strings?
             }
             else if (type == SELECT_SKILL) {
                 player.cd.skillTrainingQueue.clear();
                 for (int i = 0; i < selected.size(); ++i)
                     player.cd.skillTrainingQueue.add(selected.get(i));
+            }
+            else if (type == SELECT_ACTIVE_ACTION){
+                player.cd.queuedActiveActions.clear();
+                for (int i = 0; i < selected.size(); ++i)
+                    player.cd.queuedActiveActions.add(Action.ParseFrom(selected.get(i)));                    // Just save it as Strings?
             }
             App.SaveLocally(); // Save the updates first.
             // It will probably auto-save when returning to the main-screen. Do not do this here....
@@ -285,7 +247,6 @@ public class SelectActivity extends EvergreenActivity
             finish();
         }
     };
-    int type = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -339,12 +300,15 @@ public class SelectActivity extends EvergreenActivity
         Player p = App.GetPlayer();
         if (type == SELECT_DAILY_ACTION) {
             for (int i = 0; i < p.cd.dailyActions.size(); ++i)
-                selected.add(p.cd.dailyActions.get(i));
+                selected.add(p.cd.dailyActions.get(i).toString());
         }
-        else if (type == SELECT_SKILL)
-        {
+        else if (type == SELECT_SKILL) {
             for (int i = 0; i < p.cd.skillTrainingQueue.size(); ++i)
                 selected.add(p.cd.skillTrainingQueue.get(i));
+        }
+        if (type == SELECT_ACTIVE_ACTION) {
+            for (int i = 0; i < p.cd.queuedActiveActions.size(); ++i)
+                selected.add(p.cd.queuedActiveActions.get(i).toString());
         }
         // Update the queue
         updateQueue();
