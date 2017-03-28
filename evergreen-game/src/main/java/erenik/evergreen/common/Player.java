@@ -966,7 +966,8 @@ public class Player extends Combatable implements Serializable {
             else
                 return;
         }
-        FoundPlayer(player.name);
+        if (player != null)
+            FoundPlayer(player.name);
 //        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+cd.knownPlayerNames);
     }
 
