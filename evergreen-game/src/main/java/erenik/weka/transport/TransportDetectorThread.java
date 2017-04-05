@@ -20,8 +20,10 @@ import java.io.ObjectOutputStream;
 
 import erenik.evergreen.R;
 import erenik.util.EList;
+import erenik.weka.Settings;
 import erenik.weka.WClassifier;
 import weka.classifiers.trees.RandomForest;
+import weka.classifiers.trees.RandomTree;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
@@ -35,7 +37,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     SensorManager sensorManager;
 
     public WClassifier classifier = null,
-            accOnlyClassifier = null,
+           // accOnlyClassifier = null,
             gyroOnlyClassifier = null;
 
     private Sensor accSensor, gyroSensor;
@@ -79,16 +81,16 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         /// Set up sampling rate.
         EnableSensors();
 
-        if (!LoadClassifiers()) {
+    //    if (!LoadClassifiers()) {
             System.out.println("Creating and building classifiers...");
-            classifier = callingService.wekaMan.NewRandomForest("RandomForest", GetTrainingDataInputStream(), false);
-            accOnlyClassifier = callingService.wekaMan.NewRandomForest("RandomForest Acc only", GetTrainingDataInputStream(), true);
-        }
-        else {
-            System.out.println("Classifiers loaded.");
-        }
-
-
+            classifier = callingService.wekaMan.New(new RandomTree(), GetTrainingDataInputStream(), false);
+            // accOnlyClassifier = callingService.wekaMan.NewRandomForest("RandomForest Acc only", GetTrainingDataInputStream(), true);
+      //  }
+      //  else {
+        //    System.out.println("Classifiers loaded.");
+        //}
+        // New stats no matter if loaded or creating new...
+        classifier.NewClassificationStats(callingService.settings);
 
         /// Set up handler for iterated samplings. // Better just do it in the loop, though..?
         /*
@@ -115,12 +117,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 // Sleep. Disable callbacks for sensors, etc. for the time being.
                 DisableSensors();
                 callingService.Save(); // Save
-                int toSleepMs = 5000 * callingService.sleepSessions;
+                int toSleepMs = 5000 * callingService.settings.sleepSessions;
                 // Emulate what we just detected in between? Or skip it?
                 if (lastSavedSF != null) {
                     TransportType tt = TransportType.GetForString(lastSavedSF.transportString);
                     callingService.AddTransportOccurrence(new TransportOccurrence(tt, lastSavedSF.startTimeSystemMs, toSleepMs)); // Create an entry corresponding to the average value (i.e., the last modified result).
-                    classifier.valuesHistory = new EList<>();                    // Clear the history set.
+                    classifier.ResetValuesHistory();                    // Clear the history set.
                 }
                 try {
                     //                      System.out.println("Sleeping " + toSleepMs / 1000 + " seconds");
@@ -149,8 +151,8 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             objectIn = new ObjectInputStream(fileIn);
             classifier = (WClassifier) objectIn.readObject();
             System.out.println("Primary classifier loaded");
-            accOnlyClassifier = (WClassifier) objectIn.readObject();
-            System.out.println("Acc-only classifier loaded");
+        //    accOnlyClassifier = (WClassifier) objectIn.readObject();
+         //   System.out.println("Acc-only classifier loaded");
             fileIn.getFD().sync();
         } catch (FileNotFoundException fnfe){
             System.out.println("Couldn't open file, failed to load");
@@ -174,8 +176,8 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             objectOut = new ObjectOutputStream(fileOut);
             objectOut.writeObject(classifier);
             System.out.println("Primary classifier saved.");
-            objectOut.writeObject(accOnlyClassifier);
-            System.out.println("Acc-only classifier saved.");
+   //         objectOut.writeObject(accOnlyClassifier);
+     //       System.out.println("Acc-only classifier saved.");
             fileOut.getFD().sync();
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
@@ -238,9 +240,11 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     private void ClassifyInstances() {
 //        System.out.println("Classifier trained: "+callingService.classifier.IsTrained());
-        if (!classifier.IsTrained() ||
-                !accOnlyClassifier.IsTrained()) // Return if the classifiers are not trained yet.
+        if (!classifier.IsTrained()
+//                || !accOnlyClassifier.IsTrained()
+                ) // Return if the classifiers are not trained yet.
             return;
+
         if (!didSaveClassifiers){
             SaveClassifiers();
             didSaveClassifiers = true;
@@ -286,29 +290,29 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
                 // Predict which transport was chosen.
                 Instance inst = new DenseInstance(8);
-                inst.setDataset(classifier.trainingData); // Give link to data-set of attributes
+                inst.setDataset(classifier.TrainingData()); // Give link to data-set of attributes
                 inst.setValue(0, sfToClassify.accMin); // Acc Min
                 inst.setValue(1, sfToClassify.accMax); // Acc Max
                 inst.setValue(2, sfToClassify.accAvg); // Acc Avg
                 inst.setValue(3, sfToClassify.accStdev); // Avg Stdev
                 boolean evaluateGyro = sfToClassify.gyroAvg != 0; // Check if gyro data is available, if just 0, then use the acc-only classifier.
                 double result;
-                if (evaluateGyro) {
+//                if (evaluateGyro) {
                     inst.setValue(4, sfToClassify.gyroMin);
                     inst.setValue(5, sfToClassify.gyroMax);
                     inst.setValue(6, sfToClassify.gyroAvg);
                     inst.setValue(7, sfToClassify.gyroStdev);
-                    result = classifier.classifyInstance(inst);
-                }
-                else
-                    result = accOnlyClassifier.classifyInstance(inst);
-                double modified = classifier.ModifyResult(result, callingService.historySetSize, valuesHistory);                // Use the smoothing window
+                    result = classifier.ClassifyInstance(inst);
+  //              }
+//                else
+  //                  result = accOnlyClassifier.ClassifyInstance(inst);
+                double modified = classifier.ModifyResult(result, callingService.settings.historySetSize, valuesHistory);                // Use the smoothing window
                 // Save it.
-                TransportType tt = TransportType.GetForString(classifier.trainingData.classAttribute().value((int) modified));
+                TransportType tt = TransportType.GetForString(classifier.TrainingData().classAttribute().value((int) modified));
                 sfToClassify.transportString = tt.name();
                 callingService.AddTransportOccurrence(new TransportOccurrence(tt, sfToClassify.startTimeSystemMs, sfToClassify.durationMs));
-                System.out.println("Transport predicted (w/o. window): " + classifier.trainingData.classAttribute().value((int) modified) +
-                        " (" + classifier.trainingData.classAttribute().value((int) result) + ")" +
+                System.out.println("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
+                        " (" + classifier.TrainingData().classAttribute().value((int) result) + ")" +
                     " at "+sfToClassify.startTimeSystemMs+" "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs)+"ms ago");
                 finishedSensingFrames.add(sfToClassify); // Add the classified one to the array of sensing frames.
                 callingService.RecalcAverages();
@@ -519,11 +523,11 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     }
 
     public String GetTransportString(int value) {
-        if (classifier == null || classifier.trainingData == null)
+        if (classifier == null || classifier.TrainingData() == null)
             return "Null";
-        int numValues = classifier.trainingData.classAttribute().numValues();
+        int numValues = classifier.TrainingData().classAttribute().numValues();
         if (value < 0 || value >= numValues)
             return "";
-        return classifier.trainingData.classAttribute().value(value);
+        return classifier.TrainingData().classAttribute().value(value);
     }
 }

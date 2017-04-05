@@ -17,6 +17,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import erenik.util.EList;
+import erenik.weka.Settings;
 import erenik.weka.WClassifier;
 import erenik.weka.WekaManager;
 
@@ -58,19 +59,22 @@ public class TransportDetectionService extends Service {
         }
     };
 
+    public Settings settings = new Settings();
+    // Yeahhh.
+    private boolean forceAverageBeforeSleep = true;
 
     public void SetHistorySetSize(int newSize){
-        historySetSize = newSize;
-        System.out.println("History set size: "+historySetSize);
+        settings.historySetSize = newSize;
+        System.out.println("History set size: "+settings.historySetSize);
     }
     public void SetSleepSessions(int newVal) {
-        sleepSessions = newVal;
-        System.out.println("Sleep sessions: "+sleepSessions);
+        settings.sleepSessions = newVal;
+        System.out.println("Sleep sessions: "+settings.sleepSessions);
     }
 
-    int sleepSessions = 12; // 1 minute sleep
-    int historySetSize = 12; // 1 minute sampling
-    boolean forceAverageBeforeSleep = true; // Then sleep, if true.
+//    int sleepSessions = 12; // 1 minute sleep
+  //  int historySetSize = 12; // 1 minute sampling
+    //boolean forceAverageBeforeSleep = true; // Then sleep, if true.
 
 //    private EList<TransportOccurrence> transportOccurrences = new EList<>(); // All transport frame IDs
     public int msTotalTimeAnalyzedSinceThreadStart = 0; // o-o
@@ -295,10 +299,10 @@ public class TransportDetectionService extends Service {
     }
 
     public boolean ShouldSleep() {
-        if (sleepSessions <= 0)
+        if (settings.sleepSessions <= 0)
             return false;
         if (forceAverageBeforeSleep){
-            if (sensingFramesSinceLastSleep >= this.historySetSize){
+            if (sensingFramesSinceLastSleep >= settings.historySetSize){
                 // Do sleep.
                 return true;
             }

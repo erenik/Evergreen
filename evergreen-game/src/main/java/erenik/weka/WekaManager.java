@@ -61,6 +61,17 @@ public class WekaManager {
         return wc;
     }
 
+    public WClassifier New(AbstractClassifier classifier, InputStream fromArffDataInputStream, boolean accOnly) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(fromArffDataInputStream));	// read it with BufferedReader
+        Instances inst = GetInstancesFromReader(br, accOnly);
+        WClassifier wc = new WClassifier(classifier, classifier.getClass().getSimpleName());
+        s.trainingDataWhole = inst;
+        wc.SetSettings(s);
+        classifiers.add(wc);
+        wc.TrainAsync(inst); // Train using the instances. They are randomized and stratified first?
+        return wc;
+    }
+
 
     private WClassifier GetBestClassifier() {
         WClassifier best = classifiers.get(0);
@@ -442,6 +453,7 @@ public class WekaManager {
         classifiers.clear();;
         classifiers.add(wClassifier);
     }
+
 
 
     /*

@@ -63,6 +63,8 @@ public class WClassifier implements Serializable {
         currentSettings = new Settings();
         currentSettings.trainingDataWhole = (Instances) in.readObject();
         isTrained = in.readBoolean();
+
+        classificationStats = new EList<>();
     }
 
 
@@ -459,6 +461,14 @@ From Evaluation.java
                 System.out.println(", predicted: " + testData.classAttribute().value((int) pred)+" good: "+currentStats.good);
             }
         }
+    }
+
+    public void ResetValuesHistory() {
+        currentStats.valuesHistory = new EList<>();
+    }
+
+    public Instances TrainingData() {
+        return currentSettings.trainingDataFold;
     }
 
     private class ClassifierTrainer extends Thread {
