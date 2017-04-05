@@ -72,6 +72,7 @@ public class EString {
             case searchPlayer_foundAnother: id = R.string.searchPlayer_foundAnother; break;
             case craftingComplete: id = R.string.craftingComplete; break;
             case craftingProgressed: id = R.string.craftingProgressed; break;
+            case craftingFailedNullItem: id = R.string.craftingFailedNullItem; break;
             case inventFailed: id = R.string.inventFailed; break;
             case inventingOldThoughts: id = R.string.inventingOldThoughts; break;
             case inventSuccess: id = R.string.inventSuccess; break;
@@ -85,6 +86,11 @@ public class EString {
             case MessageReceivedFromPlayer: id = R.string.messageReceivedFromPlayer; break;
             case foundPlayerSelfLol: id = R.string.foundPlayerSelfLol; break;
             case searchPlayer_alreadyFound: id = R.string.searchPlayer_alreadyFound; break;
+            case searchPlayers_success: id = R.string.searchPlayers_success; break;
+            case searchPlayers_failed: id = R.string.searchPlayers_failed; break;
+            case playerParries: id = R.string.playerParries; break;
+            case gaveItemToPlayer: id = R.string.gaveItemToPlayer; break;
+            case receivedItemFromPlayer: id = R.string.receivedItemFromPlayer; break;
             default:
                 s = logTextID.name(); break;
         }

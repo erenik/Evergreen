@@ -29,6 +29,7 @@ public class Combatable extends Object
     public float runAwayAtHPPercentage = 0.25f; // IF a flee-er, default to run at 25%?
     public int fleeSkill = 0;
     public float fleeBonusFromTransport = 0;
+    public int parry = 0;
 
     public void PrepareForCombat(boolean defendingShelter) {
     }
@@ -37,13 +38,14 @@ public class Combatable extends Object
     boolean Attack(int attack)
     {
         int cr = defense - attack;
-        int min = 4, max = 24;
+        int numDice = 6;
+        int min = numDice, max = numDice * 6;
         float average = (min + max) / 2.f;
         // 2D6: 2-12 (12-2+1 -> 11 -> +/- 5 diff)
         // 3D6: 3-18 (18-3+1 -> 16 -> +/- 7.5 diff)
-        // 4D6: 4-24 (24-4+1 -> 21 -> +/- 10 diff of Att/Def spectrum)
-        int rollNeeded = (int)average + cr;
-        int roll = Dice.RollD6(4) + 1; // +1 bonus to incline it to hit more often than not. Many misses will maybe be boring.. ish?
+        // 4D6: 4-24 (24-4+1 -> 21 -> +/- 10 diff of Att/Def spectrum),
+        int rollNeeded = (int)average + cr; // 28/2 = 14 + CR. 6 to 36 - 30 range, so u can hit even if def - att is at 14 but not 15?
+        int roll = Dice.RollD6(numDice) + 1; // +1 bonus to incline it to hit more often than not. Many misses will maybe be boring.. ish?
         boolean hit = roll >= rollNeeded;
         return hit;
     }
@@ -93,8 +95,7 @@ public class Combatable extends Object
         return a;
     }
     /// Apply poisons, regen, remove debuffs, etc.
-    void NewTurn(Encounter enc)
-    {
+    void NewTurn(Encounter enc) {
         // Count down the snares/binds.
         for (int i = 0; i < ensnared.size(); ++i) {
             Tuple<Integer, Integer> t = ensnared.get(i);
@@ -114,31 +115,42 @@ public class Combatable extends Object
         }
     }
     /// Check HP?
-    /// Order this enemy to attack the player. Returns true if it kills the player.
+    /// Order this enemy to attack the player. Returns true if it kills the target.
     public boolean Attack(Combatable target, Encounter enc) {
+    //    enc.LogEnc(new Log(name+" attacks per turn: "+attacksPerTurn, LogType.INFO));
         for (int i = 0; i < attacksPerTurn; ++i) {
+  //          enc.LogEnc(new Log(name+" attacks "+target.name+"!", LogType.INFO));
             // Attack it? Will have bonus first round (first attempt).
             boolean hit = target.Attack(CurrentAttack());
+            // Evaluate if parrying occurs.
+            if (hit){
+                // Roll some D6's..!
+                float chanceToParry = target.parry + 3;
+                if (chanceToParry > 10)
+                    chanceToParry = 10; // Max 80% parry rate?
+                boolean parried = Dice.RollD6(2) < chanceToParry; // 2-12, less than the chance to parry?
+                if (parried) {
+                    enc.LogEnc(new Log(LogTextID.playerParries, LogType.INFO, target.name));
+                    hit = false;
+                }
+            }
             ++hitsAttempted;
-            if (!hit)
-            {
+            if (!hit) {
+//                enc.LogEnc(new Log("Miss!", LogType.INFO));
                 if (target.isPlayer && isPlayer) { // Both are players?
                     enc.LogEnc(new Log(LogTextID.playerPlayerAttackMiss, LogType.PLAYER_ATTACK_MISS, name, target.name));
-//                    enc.Log(name+" attacks "+target.name+" but misses.", LogType.ATTACK_MISS);
                 }
                 else
                     enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttackMiss : LogTextID.monsterPlayerAttackMiss, isPlayer? LogType.ATTACK_MISS : LogType.ATTACKED_MISS, name, target.name));
-//                    enc.Log(isPlayer ? "You attack the " + target.name + " but miss." : "The " + name + " attacks you but misses.", isPlayer ? LogType.ATTACK_MISS : LogType.ATTACKED_MISS);
                 continue;
             }
             int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
+      //      enc.LogEnc(new Log("Hit! "+damageDealt+" damage! HP now at "+target.hp, LogType.INFO));
             if (target.isPlayer && isPlayer) {
                 enc.LogEnc(new Log(LogTextID.playerPlayerAttack, LogType.PLAYER_ATTACK, name, target.name, damageDealt+""));
-//                enc.Log(name+" attacks "+target.name+" for "+damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage. Remaining HP: "+target.hp, LogType.ATTACK);
             }
             else
                 enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
-//                enc.Log(isPlayer ? "You attack the " + target.name + " for " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage." : "The " + name + " attacks you and deals " + damageDealt + " point" + (damageDealt > 1 ? "s" : "") + " of damage.",isPlayer ? LogType.ATTACK : LogType.ATTACKED);
             if (target.hp  <= 0){ // Killed player?
                 enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
                 return true;

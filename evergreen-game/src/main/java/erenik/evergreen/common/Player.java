@@ -59,9 +59,6 @@ public class Player extends Combatable implements Serializable {
         return cd;
     }
 
-
-
-
     // The client data as held, to reduce abuse..?
     public ClientData cd = new ClientData();
 
@@ -205,7 +202,7 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void writeTo(java.io.ObjectOutputStream out) throws IOException {
-        System.out.println("Player writeObject");
+       // System.out.println("Player writeObject");
         int version = VERSION_4_CREDENTIALS_ONLY; // 0 - Added active actions. 1- email
         out.writeInt(version);
         out.writeInt(gameID);
@@ -255,10 +252,10 @@ public class Player extends Combatable implements Serializable {
                 name = (String) in.readObject();
                 email = (String) in.readObject();
                 password = (String) in.readObject();
-                System.out.println("Player read - Credentials only");
+          //      System.out.println("Player read - Credentials only");
                 return true;
             }
-            System.out.println("Player read - All");
+          //  System.out.println("Player read - All");
 
             if (version >= VERSION_2_SYSMSG)
                 sysmsg = (String) in.readObject();
@@ -386,8 +383,7 @@ public class Player extends Combatable implements Serializable {
             maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
         return  maxHP;
     }
-    public boolean IsAlive()
-    {
+    public boolean IsAlive() {
         return GetInt(Stat.HP) > 0;
     }
     int Speed() {
@@ -422,8 +418,50 @@ public class Player extends Combatable implements Serializable {
         return att;
     }
     public int OnTransportAttack() {
-        return (int) (BaseAttack() + CurrentTransport().Get(TransportStat.SocialSupport));
+        return (int) (BaseAttack() + Get(TransportStat.SocialSupport));
     }
+    // Returns the weighted stat of transport bonuses.
+    public float Get(TransportStat stat) {
+        long totalSeconds = GetWeightedTransportSeconds();
+        if (totalSeconds == 0){
+            System.out.println("Total seconds 0! returning");
+            return 0;
+            // Randomize it?
+           // RandomizeTransportDurations();
+           // totalSeconds = GetWeightedTransportSeconds();
+            // totalSeconds =
+        }
+        System.out.println("totalSeconds: "+totalSeconds);
+        float totalWeighted = 0;
+        System.out.print("Ratios: ");
+        for (int i = 0; i < transports.size(); ++i){
+            Transport t = transports.get(i);
+            float ratio = t.secondsUsed / (float)totalSeconds * t.Get(TransportStat.Weight);
+            System.out.print(ratio+", ");
+            totalWeighted += ratio * t.Get(stat);
+        }
+        System.out.println();
+        System.out.println("Total weighted "+stat.name()+": "+totalWeighted);
+        return totalWeighted;
+    }
+
+    private long GetWeightedTransportSeconds() {
+        long secondsUsed = 0;
+        for (int i = 0; i < transports.size(); ++i){
+            Transport t = transports.get(i);
+            secondsUsed += t.secondsUsed * t.Get(TransportStat.Weight);
+        }
+        return secondsUsed;
+    }
+
+    private long GetTotalTransportSeconds() {
+        long secondsUsed = 0;
+        for (int i = 0; i < transports.size(); ++i){
+            secondsUsed += transports.get(i).secondsUsed;
+        }
+        return secondsUsed;
+    }
+
     /// Attack when in shelter? + shelter bonus, yo? or? D:
     public int ShelterAttack() {
         return BaseAttack() + GetInt(Stat.SHELTER_DEFENSE);
@@ -432,7 +470,7 @@ public class Player extends Combatable implements Serializable {
         return BaseDefense() + GetInt(Stat.SHELTER_DEFENSE);
     }
     public int OnTransportDefense() {
-        return (int) (BaseDefense() + CurrentTransport().Get(TransportStat.SocialSupport));
+        return (int) (BaseDefense() + Get(TransportStat.SocialSupport));
     }
     public int BaseDefense() {
         int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
@@ -537,8 +575,7 @@ public class Player extends Combatable implements Serializable {
         Log l = new Log(id, lt, arg1, arg2);
         AddLog(l);
     }
-
-    public Transport CurrentTransport() {
+    public Transport GetCurrentTransport() {
         for (int i = 0; i < transports.size(); ++i) {
             Transport t = transports.get(i);
             if (Get(Stat.CurrentTransport) == t.tt.ordinal())
@@ -554,6 +591,7 @@ public class Player extends Combatable implements Serializable {
         Adjust(Stat.TurnSurvived, 1);
         System.out.println("Turn: " + Get(Stat.TurnPlayed));
     }
+    static Random emissionsRand = new Random(System.currentTimeMillis());
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public void NextDay(Game game) {
         updatesFromClient.clear(); // Clear this array when new days are processed.
@@ -575,10 +613,11 @@ public class Player extends Combatable implements Serializable {
 
 
         // Bonuses for greening habits?
-        LogInfo(LogTextID.transportOfTheDay, CurrentTransport().tt.name());
-        float emissionsToGenerate = CurrentTransport().Get(TransportStat.EmissionsPerDay);
-        if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling.
-            // Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
+        LogInfo(LogTextID.transportOfTheDay, GetCurrentTransport().tt.name());
+        float emissionsToGenerate = Get(TransportStat.EmissionsPerDay);
+        emissionsToGenerate *= emissionsRand.nextFloat() * 0.5f + 0.75f;// Add some randomness to emissions-generation? +/-25%
+        //if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling?
+        // Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
         Adjust(Stat.EMISSIONS, emissionsToGenerate);
         // Yeah.
         Adjust(Stat.FOOD, -2);
@@ -602,10 +641,8 @@ public class Player extends Combatable implements Serializable {
  //       System.out.println("Exp gained: "+expToGain);
         GainEXP(expToGain);
 
-        // Analyze some chosen hours of activity. Generate events and stuff for each?
-        EvaluateActions(game);
-        /// Force the player to play through the generated events before they proceed.
-//        HandleGeneratedEvents();
+        EvaluateDailyActions(game); // Daily actions if any
+        ProcessQueuedActiveActions(game); // ActiveActions if any
 
         // Attacks of the evergreen?
         int everGreenTurn = (int) (TurnsSurvived()) % 16;
@@ -626,7 +663,7 @@ public class Player extends Combatable implements Serializable {
             listeners.get(i).OnPlayerNewDay(this);
 
         // Clear queue of daily actions to ensure people actually think what they will do? No?
-    //    dailyActions.clear();
+        cd.dailyActions.clear();
     }
 
     private void KnockOut() {
@@ -664,7 +701,7 @@ public class Player extends Combatable implements Serializable {
     float hoursPerAction  = 1.f;
     float foodHarvested = 0.0f;
     Action da;
-    void EvaluateActions(Game game) {
+    void EvaluateDailyActions(Game game) {
         t_starvingModifier = GetInt(Stat.HP) >= 0? 1.0f : 1 / (1 + Math.abs(Get(Stat.HP)) * 0.5f);
         // Have this increase with some skill?
         float hoursSimulated = 6.f;
@@ -700,7 +737,6 @@ public class Player extends Combatable implements Serializable {
         return formattedFloat;
     }
 
-
     void EvaluateAction(Action a, Game game) {
         float units = 1;
         String playerName = a.GetPlayerName();
@@ -708,9 +744,26 @@ public class Player extends Combatable implements Serializable {
         if (playerName != null)
             player = game.GetPlayer(playerName);
         /// THEN ACTIVE ACTIONS
-        if (a.aaType != null) {
-            System.out.println("EvaluationAction - Active action. "+a);
-            switch (a.aaType) {
+        if (a.ActiveAction() != null) {
+//            System.out.println("EvaluationAction - Active action. "+a);
+            switch (a.ActiveAction()) {
+                default:
+                    System.out.println("Unsure how to evaluate action: "+a);
+                    break;
+                case GiveItem:
+                    String itemName = a.Get(ActionArgument.Item).trim();
+                    Invention item = GetItemByName(itemName);
+                    if (player == null)
+                        return;
+                    if (item == null) {
+                        System.out.println("Couldn't find item by name: " + itemName);
+                        return;
+                    }
+                    cd.inventory.remove(item); // Do the transfer
+                    player.cd.inventory.add(item);
+                    LogInfo(LogTextID.gaveItemToPlayer, itemName, playerName); // Log it.
+                    player.LogInfo(LogTextID.receivedItemFromPlayer, itemName, playerName);
+                    break;
                 case GiveResources:
                     if (player == null) {
                         System.out.println("NULL player");
@@ -752,12 +805,12 @@ public class Player extends Combatable implements Serializable {
             return;
         }
 
-        if (a.daType != null)
-            switch (a.daType) {
+        if (a.DailyAction() != null)
+            switch (a.DailyAction()) {
                 case GatherFood:
                     units = Dice.RollD3(2);  // 2 to 6 base.
                     units += Get(Skill.Foraging).Level(); // + Foraging level constant?
-                    units += CurrentTransport().Get(TransportStat.ForagingBonus);
+                    units += Get(TransportStat.ForagingBonus);
                     units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
                     if (units < 1) units = 1; // Get at least 1.
                     units *= t_starvingModifier;
@@ -767,7 +820,7 @@ public class Player extends Combatable implements Serializable {
                     break;
                 case GatherMaterials:
                     units = Dice.RollD3(2); // 2 to 6 base.
-                    units += CurrentTransport().Get(TransportStat.MaterialGatheringBonus);
+                    units += Get(TransportStat.MaterialGatheringBonus);
                     units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
                     units *= t_starvingModifier;
                     units *= hoursPerAction;
@@ -789,6 +842,7 @@ public class Player extends Combatable implements Serializable {
                 case BuildDefenses: BuildDefenses(); break;
     //            case AugmentTransport: AugmentTransport(); break;
                 case LookForPlayer: LookForPlayer(a, game); break;
+                case LookForPlayers: LookForPlayers(game); break;
     //            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
                 case Invent: Invent(a); break;
                 case Craft: Craft(a); break;
@@ -806,6 +860,15 @@ public class Player extends Combatable implements Serializable {
                     System.out.println("Uncoded daily action");
                     System.exit(15);
             }
+    }
+
+    private Invention GetItemByName(String itemName) {
+        for (int i = 0; i < cd.inventory.size(); ++i){
+            Invention item = cd.inventory.get(i);
+            if (item.name.equals(itemName))
+                return item;
+        }
+        return null;
     }
 
     private void ReduceEmissions() {
@@ -894,7 +957,7 @@ public class Player extends Combatable implements Serializable {
         int roll = Dice.RollD6(2 + Get(Skill.Thief).Level());
         if (roll < 7) { // Failed and detected.
             Log(LogTextID.stealFailedDetected, LogType.ATTACK_MISS, targetPlayerName);
-            p.Log(LogTextID.playerTriedToStealFromYouFailedDetected, LogType.ATTACKED);
+            p.Log(LogTextID.playerTriedToStealFromYouFailedDetected, LogType.ATTACKED, name);
             /// Add stealing player into target player's list of known players, so that they may retaliate?
             p.FoundPlayer(name);
 
@@ -921,15 +984,48 @@ public class Player extends Combatable implements Serializable {
         // Calc success?
         String whatStolen = quantity+" units of "+stolenStat.name();
         Log(LogTextID.stealSuccess_whatName, LogType.ATTACK, formattedFloat(quantity, 2)+" units of "+stolenStat.name(), targetPlayerName);
-        p.Log(LogTextID.stolen, LogType.ATTACKED);
+        p.Log(LogTextID.stolen, LogType.ATTACKED, formattedFloat(quantity, 2)+" units of "+stolenStat.name());
 //        Log("Stole "+whatStolen+" from "+p.name+"!", LogType.ATTACK);
 //        p.Log("Player "+name+" stole "+whatStolen+" from you!", LogType.ATTACKED);
     }
 
+    private void LookForPlayers(Game game) {
+        int searchChances = (int) (hoursPerAction * 6); // Attempts per hour?
+        EList<String> playerNamesFound = new EList<>();
+        int failedAttempts = 0;
+        for (int i = 0; i < searchChances; ++i) {
+            int randInt = r.nextInt(100);
+            if (randInt > 90 - failedAttempts) { // 10% chance at each iteration, +1% or each failed attempt until success - reset to 10%.
+                failedAttempts = 0;
+                Player randomPlayer = game.RandomPlayer(KnownNamesSelfIncluded());
+                if (randomPlayer == null)
+                    return;
+                String newPlayer = randomPlayer.name;
+                if (newPlayer != null && newPlayer != name) {
+                    if (KnowsThisPlayer(newPlayer))
+                        return; // Skip it then.
+                    playerNamesFound.add(randomPlayer.name);
+                    //                    knownPlayerNames.add(newPlayer);
+                }
+            }
+            else
+                ++failedAttempts;
+
+        }
+        if (playerNamesFound.size() > 0){
+            Log(LogTextID.searchPlayers_success, LogType.SUCCESS, playerNamesFound.size()+"");
+            for (int i = 0; i < playerNamesFound.size(); ++i){
+                FoundPlayer(playerNamesFound.get(i));
+            }
+        }
+        else
+            Log(LogTextID.searchPlayers_failed, LogType.ACTION_NO_PROGRESS);
+        //        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+cd.knownPlayerNames);
+
+
+    }
+
     void LookForPlayer(Action da, Game game) {
-        // Determine chances.
-        // Search query.
-        // Found?
         String name = this.da.requiredArguments.get(0).value;
         name = name.trim();
         Player player = null;
@@ -1026,9 +1122,10 @@ public class Player extends Combatable implements Serializable {
                 toCraft = inv;
         }
         if (toCraft == null) {
+            Log(LogTextID.craftingFailedNullItem, LogType.ACTION_FAILURE);
             System.out.println("toCraft null, what did you wanna craft again?");
-            System.exit(15);
             return;
+            //            System.exit(15);
         }
         int progressRequired = toCraft.Get(InventionStat.ProgressRequiredToCraft);
         float progress = 0.0f;
@@ -1181,7 +1278,7 @@ public class Player extends Combatable implements Serializable {
 
     void Scout() {
         int speed = Speed(); //  1 base.
-        speed += CurrentTransport().Get(TransportStat.SpeedBonus); // + based on transport.
+        speed += Get(TransportStat.SpeedBonus); // + based on transport.
         speed += GetEquipped(InventionStat.ScoutingBonus); // Add scouting bonus from gear. e.g. +2
         // Randomize something each hour? Many things with speed?
         float speedBonus = (float) Math.pow(speed, 0.5f); // Square root we made earlier.
@@ -1381,12 +1478,12 @@ public class Player extends Combatable implements Serializable {
         c.attackDamage = Damage();
         c.attacksPerTurn = AttacksPerTurn();
         c.fleeSkill = Get(Skill.FleetRetreat).Level();
-        c.fleeBonusFromTransport = CurrentTransport().Get(TransportStat.FleeBonus);
+        c.fleeBonusFromTransport = Get(TransportStat.FleeBonus);
         c.ranAway = false; // Reset temporary variables such as fleeing.
+        c.parry = GetEquipped(InventingBonus.ParryBonus) + Get(Skill.Parrying).Level();
         consecutiveFleeAttempts = 0;
     }
-    private int AttacksPerTurn()
-    {
+    private int AttacksPerTurn() {
         int attacks = 1;
         attacks += (UnarmedCombatBonus() - 1) / 2;
         if (GetEquippedWeapon() != null)
@@ -1400,8 +1497,7 @@ public class Player extends Combatable implements Serializable {
         return cd.knownPlayerNames;
     }
 
-    public static Player NewAI(String name)
-    {
+    public static Player NewAI(String name) {
         Player p =  new Player();
         p.SetName(name);
         p.isAI = true;
@@ -1454,7 +1550,7 @@ public class Player extends Combatable implements Serializable {
     public int ProcessQueuedActiveActions(Game game){
         int numProcessed = 0;
         if (cd.queuedActiveActions.size() > 0)
-            System.out.println("Processing queued active actions: "+cd.queuedActiveActions.size());
+            ;// System.out.println("Processing queued active actions: "+cd.queuedActiveActions.size());
         for (int i = 0; i < cd.queuedActiveActions.size(); ++i){
             Action a = cd.queuedActiveActions.get(i);
             EvaluateAction(a, game);
@@ -1476,7 +1572,7 @@ public class Player extends Combatable implements Serializable {
         cd.dailyActions = clientPlayer.cd.dailyActions; // Copy over queued actions.
         cd.skillTrainingQueue = clientPlayer.cd.skillTrainingQueue; // Skill training queue.
         cd.queuedActiveActions = clientPlayer.cd.queuedActiveActions; // And queued active actions.
-        System.out.println("Queued Active actions: "+cd.queuedActiveActions.size());
+     //   System.out.println("Queued Active actions: "+cd.queuedActiveActions.size());
         if (log != null && clientPlayer.log != null) {
             for (int i = 0; i < log.size() && i < clientPlayer.log.size(); ++i) {
                 Log clientLog = clientPlayer.log.get(i);
@@ -1492,7 +1588,7 @@ public class Player extends Combatable implements Serializable {
             }
         }
         transports = clientPlayer.transports; // Copy over all transports.
-        System.out.println("SaveFromClient, transports: "+clientPlayer.TopTransportsAsString(3)); // Print the new transport data we received.
+    //    System.out.println("SaveFromClient, transports: "+clientPlayer.TopTransportsAsString(3)); // Print the new transport data we received.
         EList<Invention> equipped = clientPlayer.GetEquippedInventions();         // Equip those items as requested by the player as well.
         for (int i = 0; i < equipped.size(); ++i){
             Invention item = equipped.get(i);
@@ -1501,7 +1597,7 @@ public class Player extends Combatable implements Serializable {
                 System.out.println("ERROR: Mismatch in item IDs!");
             }
             else
-                System.out.println("Equipped: "+GetItemByID(item.GetID()).name);
+                ; // System.out.println("Equipped: "+GetItemByID(item.GetID()).name);
         }
 
     }
@@ -1635,13 +1731,7 @@ public class Player extends Combatable implements Serializable {
 
     // Prints the transports in the order of highest occurrence.
     public void PrintTopTransports(int topNum) {
-        System.out.println("Top "+topNum+":");
-        EList<Transport> sorted = TransportsSortedBySeconds();
-        long totalTimeSeconds = TotalTransportSeconds();
-        for (int i = 0; i < topNum; ++i){
-            Transport highest = sorted.get(i);
-            System.out.println(highest.tt.name()+" "+highest.secondsUsed/(float)totalTimeSeconds+"%, "+highest.secondsUsed+"s");
-        }
+        System.out.println(TopTransportsAsString(topNum));
     }
 
     private long TotalTransportSeconds() {
@@ -1673,13 +1763,13 @@ public class Player extends Combatable implements Serializable {
 
     // Returns e.g. "Idle: 3252s, Foot: 1235s, Car: 123s"
     public String TopTransportsAsString(int topNum){
-        System.out.println("Top "+topNum+":");
+     //   System.out.println("Top "+topNum+":");
         EList<Transport> to = TransportsSortedBySeconds();
         float totalTimeSeconds = TotalTransportSeconds();
         String s = "";
         for (int i = 0; i < topNum; ++i){
             Transport highest = to.get(i);;
-            String formatedPercentage = String.format(Locale.ENGLISH, "%.2f", highest.secondsUsed/totalTimeSeconds);
+            String formatedPercentage = String.format(Locale.ENGLISH, "%.2f", 100*highest.secondsUsed/totalTimeSeconds);
             s += ""+highest.tt.name()+": "+formatedPercentage+"%/ "+highest.secondsUsed+"s";
             if (i < topNum - 1)
                 s += ", ";

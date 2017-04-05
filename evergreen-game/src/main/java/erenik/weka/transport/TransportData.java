@@ -78,14 +78,14 @@ public class TransportData implements Serializable {
             last = data.get(data.size() - 1);
 
         // Duration between 2 occurrences?
-        long duration = last.startTimeMs + last.DurationMillis() - first.startTimeMs; // end time - start time = duration.
+        long duration = last.startTimeSystemMs + last.DurationMillis() - first.startTimeSystemMs; // end time - start time = duration.
      //   System.out.println(duration+" > "+MillisecondsPerHour+" = "+(duration > MillisecondsPerHour));
         if (duration > MillisecondsPerHour){
             System.out.println("Time to make an hour! MS duration: "+duration);
             // Make them into an hour.
             TransportData child = new TransportData(TimePeriod.Hour);
-            child.startTimeMs = first.startTimeMs;
-            child.endTimeMs = last.startTimeMs + last.DurationMillis();
+            child.startTimeMs = first.startTimeSystemMs;
+            child.endTimeMs = last.startTimeSystemMs + last.DurationMillis();
             this.children.add(child);
             // Move the raw data into this hour as well. Remove raw data in the next step when the hours are turned into days, or when we have at least 2 hours of data.
             child.data.addAll(data); // Move into here.
@@ -210,7 +210,7 @@ public class TransportData implements Serializable {
         EList<TransportOccurrence> newList = new EList<>();
         for (int i = 0; i < data.size(); ++i){   // Add from data here.
             TransportOccurrence to = data.get(i);
-            if (to.startTimeMs > thresholdTimeMs)
+            if (to.startTimeSystemMs > thresholdTimeMs)
                 newList.add(to);
         }
         for (int i = 0; i < children.size(); ++i){ // Add from children.

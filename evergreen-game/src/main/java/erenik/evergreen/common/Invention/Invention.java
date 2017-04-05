@@ -68,7 +68,7 @@ public class Invention implements Serializable {
                 return new Invention(inventionType).Blueprint();
         }
     }
-    public static Invention Construct(Invention invention) {
+    public static Invention Craft(Invention invention){
         switch (invention.type){
             case RangedWeapon:
             case Weapon:
@@ -77,8 +77,11 @@ public class Invention implements Serializable {
                 return new Invention(invention.type).Blueprint();
         }
     }
+    public static Invention MakeBlueprint(Invention invention) {
+        return Craft(invention).Blueprint();
+    }
     public Invention CraftInventionFromBlueprint() {
-        Invention inv = Invention.Construct(this);
+        Invention inv = Invention.Craft(this);
         inv.itemID = ++itemIDenumerator;
         // Copy over stats?
         inv.name = name;
@@ -134,6 +137,7 @@ public class Invention implements Serializable {
 
     public static Invention RandomWeapon(int qualityLevel) {
         Invention weap = new Invention(InventionType.Weapon);
+        weap = Invention.Craft(weap);
         weap.Set(InventionStat.QualityLevel, qualityLevel);
         weap.RandomizeDetails();
         return weap;
@@ -210,6 +214,7 @@ public class Invention implements Serializable {
             case Weapon: {
                 // Randomize weapon type? Stats vary with weapon type instead?
                 System.out.println("Shouldn't be here, subclass should handle this, type: "+this.type);
+                new Exception().printStackTrace();
                 System.exit(3);
                 return; // All should already be finalized for the weapon now.
             }

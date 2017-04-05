@@ -242,8 +242,8 @@ public class SelectDetailsDialogFragment extends DialogFragment {
             // Add error messages?
             TextView tv = new TextView(getContext());
             String text = "Unable to perform action. "+reason;
-            if (a.daType != null)
-                switch(a.daType) {
+            if (a.DailyAction() != null)
+                switch(a.DailyAction()) {
     //                case AugmentTransport:
                     case Craft:
                         text = "No craftable inventions found.";

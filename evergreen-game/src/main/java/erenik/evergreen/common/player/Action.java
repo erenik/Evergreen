@@ -3,7 +3,9 @@ package erenik.evergreen.common.player;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Random;
 
+import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.util.EList;
 
@@ -12,21 +14,32 @@ import erenik.util.EList;
  */
 
 public class Action{
-    public DAction daType = null; // Daily action.
-    public AAction aaType = null; // Active action
+    private DAction daType = null; // Daily action.
+    private AAction aaType = null; // Active action
 
-    Action(){};
-    public Action(DAction dailyActionType, EList<String> args){
-        daType = dailyActionType;
+    public DAction DailyAction(){return daType;};
+    public AAction ActiveAction() { return aaType; };
+
+    Action(){
         requiredArguments = new EList<>();
-        DAction.SetTextDescArgs(this);
+    };
+    public Action(DAction dailyActionType, EList<String> args){
+        SetDailyAction(dailyActionType);
         LoadArgs(args);
     }
     public Action(AAction activeActionType, EList<String> args){
-        aaType = activeActionType;
-        requiredArguments = new EList<>();
-        AAction.SetTextDescArgs(this);
+        SetActiveAction(activeActionType);
         LoadArgs(args);
+    }
+    void SetDailyAction(DAction type){
+        daType = type;
+        aaType = null;
+        UpdateTextDescArgs();
+    }
+    void SetActiveAction(AAction type){
+        aaType = type;
+        daType = null;
+        UpdateTextDescArgs();
     }
 
     void LoadArgs(EList<String> fromList){
@@ -96,10 +109,7 @@ public class Action{
         Action action = new Action();
         action.daType = DAction.GetFromString(type);
         action.aaType = AAction.GetFromString(type);
-        if (action.daType != null)
-            DAction.SetTextDescArgs(action);
-        else if (action.aaType != null)
-            AAction.SetTextDescArgs(action);
+        action.UpdateTextDescArgs();
         if (action.daType == null &&
                 action.aaType == null)
             return null;
@@ -119,6 +129,14 @@ public class Action{
             arg.value = argStr;
         }
         return action;
+    }
+    // Updates text, description and arguments based on what kind of an action this is - via DAction and AAction static methods.
+    public void UpdateTextDescArgs() {
+        requiredArguments = new EList<>();
+        if (daType != null)
+            DAction.SetTextDescArgs(this);
+        else if (aaType != null)
+            AAction.SetTextDescArgs(this);
     }
 
     public static Action GetFromString(String text) {
@@ -157,5 +175,98 @@ public class Action{
                 return aa.value;
         }
         return null;
+    }
+
+    static Random raction = new Random();
+
+    // Returns what...?
+    public boolean AddRandomArguments(Player forPlayer) {
+//        System.out.println("UPDATE - for client simulation");
+        if (requiredArguments == null)
+            return true;
+        for (int i = 0; i < requiredArguments.size(); ++i) {
+            ActionArgument aa = requiredArguments.get(i);
+            int index;
+            switch(aa) {
+                default:
+                    System.out.println("Unable to add argument for argument: "+aa.name());
+                    break;
+                case ResourceType:
+                    aa.value = ResourceType.values()[raction.nextInt(ResourceType.values().length)].name();
+                    break;
+                case ResourceQuantity:
+                    aa.value = ""+(raction.nextFloat()*5+1);
+                    break;
+//                case Transport:
+  //                  aa.value = forPlayer.transports.get(randomAction.nextInt(forPlayer.transports.size())).name();
+    //                break;
+                case Item:
+                    if (forPlayer.cd.inventory.size() <= 0)
+                        return false;
+                    aa.value = forPlayer.cd.inventory.get(raction.nextInt(forPlayer.cd.inventory.size())).name;
+                    break;
+                case Blueprint:
+                    if (forPlayer.cd.inventions.size() == 0)
+                        return false;
+                    aa.value = forPlayer.cd.inventions.get(raction.nextInt(forPlayer.cd.inventions.size())).name;
+                    break;
+                case Text:
+                    switch (raction.nextInt(4)){
+                        case 0: aa.value = "Hey there!"; break;
+                        case 1: aa.value = "Can you give me some food?"; break;
+                        default: aa.value = "Hello world."; break;
+                    }
+                    break;
+                case Player:
+                    if (forPlayer.cd.knownPlayerNames.size() == 0) {
+                    //    System.out.println("Doesn't know any other players, skipping.");
+                        return false;
+                    }
+                    aa.value = forPlayer.cd.knownPlayerNames.get(raction.nextInt(forPlayer.cd.knownPlayerNames.size()));
+                //    System.out.println("Random player added as target for action: "+this.text+" "+aa.value);
+                    break;
+                case PlayerName:
+                    aa.value = "Ere";                     // Search for any arbitrary letter combinations?
+                    break;
+                case InventionCategory:
+                    index = raction.nextInt(InventionType.values().length);
+                    System.out.println("index: "+index+" tot: "+InventionType.values().length);
+                    aa.value = InventionType.values()[index].text();
+                    System.out.println("Random invention category added: "+aa.value);
+                    break;
+                case InventionToCraft:
+                    if (forPlayer.cd.inventions.size() == 0)
+                        return false;
+                    index = raction.nextInt(forPlayer.cd.inventions.size());
+                    if (forPlayer.cd.inventions.size() == 0) {
+                        System.out.println("Doesn't have any inventions, skipping");
+                        return false;
+                    }
+                    aa.value = forPlayer.cd.inventions.get(index).name;
+                    break;
+            }
+        }
+        return true; // If e.g. it cannot add something, return false earlier.
+    }
+
+    public boolean HasValidArguments() {
+        for (int i = 0; i < requiredArguments.size(); ++i){
+            ActionArgument aa = requiredArguments.get(i);
+            switch (aa){
+                case InventionCategory:
+                case InventionToCraft:
+                case Player:
+                case PlayerName:
+                case Item:
+                case Text:
+                case ResourceType:
+                case ResourceQuantity:
+                    if (aa.value == null)
+                        return false;
+                    if (aa.value.length() == 0)
+                        return false;
+            }
+        }
+        return true;
     }
 }

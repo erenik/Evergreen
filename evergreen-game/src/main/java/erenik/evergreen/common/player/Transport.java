@@ -18,6 +18,7 @@ public class Transport implements Serializable {
     Transport(TransportType tt, float defProb) {
         this.tt = tt;
         defaultProbability = defProb;
+        SetDefaults();
     }
 
     public static EList<Transport> DefaultTransports(){
@@ -28,9 +29,10 @@ public class Transport implements Serializable {
         alt.add(new Transport(TransportType.Bus, 1));
         alt.add(new Transport(TransportType.Tram, 1));
         alt.add(new Transport(TransportType.Train, 1));
-        alt.add(new Transport(TransportType.Car, 2));
+        alt.add(new Transport(TransportType.Car, 3));
         alt.add(new Transport(TransportType.Boat, 1));
-        alt.add(new Transport(TransportType.Plane, 1));
+        alt.add(new Transport(TransportType.Plane, 0.5f));
+        alt.add(new Transport(TransportType.Subway, 1));
         return alt;
     }
 
@@ -62,8 +64,23 @@ public class Transport implements Serializable {
     public void SetDefaults() {
         for (int i = 0; i < TransportStat.values().length; ++i)
             stats[i] = TransportStat.values()[i].DefaultValue();
+        if (tt == null)
+            return;
+        Set(TransportStat.Weight, 1); // Default weight of 1 for non-IDLE.
         switch (tt)
         {
+            default:
+                System.out.println("Not implemented transport: "+name());
+                break;
+            case Idle:
+                Set(TransportStat.Weight, 0);
+                break;
+            case Boat:
+                Set(TransportStat.ForagingBonus, 5); // Fishing!
+                Set(TransportStat.MaterialGatheringBonus, -5);
+                Set(TransportStat.AmountEnemiesEncounteredRatio, 0.5f);
+                Set(TransportStat.EmissionsPerDay, 5);
+                break;
             case Foot:
                 Set(TransportStat.ForagingBonus, 2);
                 Set(TransportStat.AmountEnemiesEncounteredRatio, 0.75f);
@@ -77,17 +94,27 @@ public class Transport implements Serializable {
                 Set(TransportStat.EmissionsPerDay, -1);
                 break;
             case Bus:
-            case Tram:
                 Set(TransportStat.ForagingBonus, -2);
-                Set(TransportStat.MaterialGatheringBonus, 1);
-                Set(TransportStat.AmountEnemiesEncounteredRatio, 1.5f);
+                Set(TransportStat.MaterialGatheringBonus, -2);
+                Set(TransportStat.AmountEnemiesEncounteredRatio, 2.0f);
                 Set(TransportStat.SocialSupport, 1);
                 Set(TransportStat.SpeedBonus, 2);
                 Set(TransportStat.FleeBonus, 2);
                 Set(TransportStat.EmissionsPerDay, 3);
                 break;
+            case Tram:
+            case Subway:
+                Set(TransportStat.ForagingBonus, -3);
+                Set(TransportStat.MaterialGatheringBonus, -3);
+                Set(TransportStat.AmountEnemiesEncounteredRatio, 1.25f);
+                Set(TransportStat.SocialSupport, 1);
+                Set(TransportStat.SpeedBonus, 2);
+                Set(TransportStat.FleeBonus, 1);
+                Set(TransportStat.EmissionsPerDay, 1);
+                break;
             case Train:
                 Set(TransportStat.ForagingBonus, -3);
+                Set(TransportStat.MaterialGatheringBonus, -3);
                 Set(TransportStat.AmountEnemiesEncounteredRatio, 1.25f);
                 Set(TransportStat.SocialSupport, 2);
                 Set(TransportStat.SpeedBonus, 2);
@@ -95,8 +122,9 @@ public class Transport implements Serializable {
                 Set(TransportStat.EmissionsPerDay, 1);
                 break;
             case Car:
+                Set(TransportStat.ForagingBonus, -1);
                 Set(TransportStat.MaterialGatheringBonus, +2);
-                Set(TransportStat.AmountEnemiesEncounteredRatio, 1.75f);
+                Set(TransportStat.AmountEnemiesEncounteredRatio, 2.5f);
                 // No social support unless taking active action to ensure you have co-passengers.
                 Set(TransportStat.SpeedBonus, 4);
                 Set(TransportStat.FleeBonus, 3);
@@ -105,7 +133,9 @@ public class Transport implements Serializable {
             case Plane: // Nothing good, pretty much.
                 Set(TransportStat.MaterialGatheringBonus, -4);
                 Set(TransportStat.ForagingBonus, -4);
-                Set(TransportStat.AmountEnemiesEncounteredRatio, 2.f);
+                Set(TransportStat.AmountEnemiesEncounteredRatio, 3.5f);
+                Set(TransportStat.SpeedBonus, 4);
+                Set(TransportStat.FleeBonus, -3);
                 Set(TransportStat.EmissionsPerDay, 15);
                 break;
         }
@@ -115,8 +145,7 @@ public class Transport implements Serializable {
     {
         stats[s.ordinal()] = value;
     }
-    public float Get(TransportStat s)
-    {
+    public float Get(TransportStat s) {
         return stats[s.ordinal()];
     }
     public void Adjust(TransportStat s, float adjustment)

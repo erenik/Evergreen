@@ -211,40 +211,38 @@ public class Weapon extends Invention  implements Serializable {
 
     public void UpdateWeaponAdditionalEffect() {
         switch (Get(InventionStat.AdditionalEffect)) {
+            case -1: // No effect!
+                break;
             default:
-                System.out.println("Very cool");
-                /*
+  //              System.out.println("Very cool");
+//                new Exception().printStackTrace();
             case 0:
-                defenseBonus += 3;
-                parryBonus += 1;
+                Adjust(InventionStat.DefenseBonus, 3);
+                Adjust(InventionStat.ParryBonus, 1);
                 name = "Defender's " + name;
                 break;
             case 1:
-                attackBonus += 4;
-                atkDmgBonus += 2;
+                Adjust(InventionStat.AttackBonus, 4);
+                Adjust(InventionStat.AttackDamageBonus, 2);
                 name = "Warrior's " + name;
                 break;
             case 2:
-                atkDmgBonus += 5;
-                attackBonus += 2;
+                Adjust(InventionStat.AttackDamageBonus, 5);
+                Adjust(InventionStat.AttackBonus, 2);
                 name = "Berserker's " + name;
                 break;
             case 3:
-                parryBonus += 2;
-                defenseBonus += 1;
-                attackBonus += 1;
+                Adjust(InventionStat.ParryBonus, 2);
+                Adjust(InventionStat.DefenseBonus, 1);
+                Adjust(InventionStat.AttackBonus, 1);
                 name = "Duelist's " + name;
                 break;
             case 4:
-                bonusAttacksPerTurn = 1;
-                attackBonus -= 1;
-                atkDmgBonus -= 2;
+                Adjust(InventionStat.BonusAttacks, 1);
+                Adjust(InventionStat.AttackBonus, -1);
+                Adjust(InventionStat.AttackDamageBonus, -2);
                 name = "Swift" + name;
                 break;
-            default:
-                // Bad value, no additional effect.
-                break;
-                */
         }
     }
 }

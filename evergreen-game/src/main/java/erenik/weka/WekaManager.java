@@ -8,6 +8,7 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.classifiers.trees.RandomTree;
+import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
@@ -37,10 +38,11 @@ import weka.classifiers.evaluation.output.prediction.AbstractOutput;
 public class WekaManager {
     EList<WClassifier> classifiers = new EList<>();
 
-    Instances trainingData = null, // Always set before usage.
-            testData = null;
+//    Instances trainingData = null, // Always set before usage.
+  //          testData = null;
 
     EList<Integer> testedWindowSizes = new EList<>();
+    public Settings s = new Settings(); // Settings to use for tests/analysis.
 
     public WClassifier NewRandomForest(String name, String fromArffData){
         InputStream is = new ByteArrayInputStream(fromArffData.getBytes());        // convert String into InputStream
@@ -52,10 +54,10 @@ public class WekaManager {
         Instances inst = GetInstancesFromReader(br, accOnly);
         RandomForest rf = new RandomForest();
         WClassifier wc = new WClassifier(rf, name);
-        wc.trainingData = inst;
+        s.trainingDataWhole = inst;
+        wc.SetSettings(s);
         classifiers.add(wc);
-        wc.Train(inst); // Train using the instances. They are randomized and stratified first?
-        trainingData = inst;
+        wc.TrainAsync(inst); // Train using the instances. They are randomized and stratified first?
         return wc;
     }
 
@@ -64,7 +66,7 @@ public class WekaManager {
         WClassifier best = classifiers.get(0);
         for (int i = 1; i < classifiers.size(); ++i){
             WClassifier b = classifiers.get(i);
-            if (b.accuracy > best.accuracy)
+            if (b.Accuracy() > best.Accuracy())
                 best = b;
         }
         return best;
@@ -72,14 +74,15 @@ public class WekaManager {
 
     private void PrintResultsWindowTests(boolean printMinMaxErrors) {
         /// Print header.
-        System.out.printf("\t\t %1$13s\n", "Window sizes");
+        System.out.printf("\t\t %1$13s\n", "History set sizes, sleep samples: "+s.sleepSessions);
         System.out.printf("%1$13s", "Classifier");
 //            System.out.printf("\t%1$4s", 0);
         for (int i = 0; i < classifiers.size(); ++i){
             WClassifier wc = classifiers.get(i);
+            EList<ClassificationStats> cs = wc.GetClassificationStats();
             if (i == 0){ // First row, print header. remaining part.
-                for (int j = 0; j < wc.classificationStats.size(); ++j){
-                    System.out.printf("  Acc%1$2s", wc.classificationStats.get(j).historySetSize);
+                for (int j = 0; j < cs.size(); ++j){
+                    System.out.printf("  Acc%1$2s", cs.get(j).s.historySetSize);
                     if (printMinMaxErrors){
                         System.out.printf(" %1$4s", "MinE");
                         System.out.printf(" %1$4s", "MaxE");
@@ -89,9 +92,9 @@ public class WekaManager {
             }
             System.out.printf("\n%1$13s", wc.Name());
 //            System.out.printf("\t%1.3f", wc.accuracyNoWindow);      // Print acc without a window first.
-            for (int j = 0; j < wc.classificationStats.size(); ++j){
+            for (int j = 0; j < cs.size(); ++j){
                 // Print all stats for this run.
-                ClassificationStats ws = wc.classificationStats.get(j);
+                ClassificationStats ws = cs.get(j);
                 System.out.printf("  %1.3f", ws.accuracy);
                 if (printMinMaxErrors){
                     System.out.printf(" %4d", ws.minErrorsInSequence);
@@ -109,10 +112,10 @@ public class WekaManager {
         for (int i = startWindowSize; i <= stopWindowSize; ++i){
             TestClassifiers10FoldHistory(i);
             best = GetBestClassifier();
-            System.out.println("Best classifier: "+best.Name()+" acc: "+best.accuracy);
-            if (best.accuracy > bestAcc){
-                bestAcc = best.accuracy;
-                bestHistoryLength = historyLength;
+            System.out.println("Best classifier: "+best.Name()+" acc: "+best.Accuracy());
+            if (best.Accuracy() > bestAcc){
+                bestAcc = best.Accuracy();
+                bestHistoryLength = s.historySetSize;
             }
             PrintResultsWindowTests(true);
         }
@@ -128,7 +131,7 @@ public class WekaManager {
         for (int i = 0; i < classifiers.size(); ++i){
             WClassifier wc = classifiers.get(i);
             System.out.printf("\n%1$13s ", wc.Name());
-            System.out.printf("\t%1.3f", wc.accuracy);
+            System.out.printf("\t%1.3f", wc.Accuracy());
         }
         System.out.println();
     }
@@ -136,11 +139,8 @@ public class WekaManager {
     WClassifier currentClassifier = null; // Set before usage.
 
     /// 1 - print some details, 2 - print some more, 3 - print everything?
-    int verbosity = 0;
-    private boolean do10FoldCrossValidation = false;
+    static int verbosity = 0;
     //  private float accuracy = 0; // The accuracy of the last classifier test.
-
-    String[] options = null; // Set to non-Null if you wanna use it.
 
     // Populate the list with classifiers.
     public void Init(){
@@ -154,11 +154,8 @@ public class WekaManager {
     }
 
     public static void main(String[] args) throws IOException {
-        System.out.println("Very testing.");
-
-        WekaManager wekaMan = new WekaManager();
-        wekaMan.Init(); // Populate classifiers for random testing.
-        wekaMan.Test();
+        WClassifierTest test = new WClassifierTest();
+        test.Test();
     }
 
     /// Tries to fetch .arff data instances from target file.
@@ -167,9 +164,9 @@ public class WekaManager {
             Instances data = new Instances(reader);
             reader.close();
             // Remove the index 0 with time.
-            for (int i = 0; i < data.numAttributes(); ++i){
-                System.out.println("Attribute "+i+" : "+data.attribute(i).toString());
-            }
+//            for (int i = 0; i < data.numAttributes(); ++i){
+  //              System.out.println("Attribute "+i+" : "+data.attribute(i).toString());
+    //        }
             if (data.attribute(0).toString().contains("Time")){
                 data = RemoveColumn(1, data); // Remove the start-time?
             }
@@ -205,38 +202,6 @@ public class WekaManager {
         }
         return null;
     }
-    private void LoadBedogniData() {
-        Instances data = GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Bedogni_sorted_merged.arff");
-        trainingData = data;
-    }
-    private void LoadMyData(){
-        Instances data = GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether.arff");
-        trainingData = RemoveColumn(1, data);
-    }
-
-    public void Test() throws IOException {
-
-//        LoadBedogniData();
-        LoadMyData();
-        testData = trainingData; // Same test-data as training-data?
-
-        NaiveAnd10Fold();
-        try {
-            options = Utils.splitOptions("-I 100 -num-slots 1 -K 0 -M 1.0 -S 1");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        // Test with different history-window sizes.
-        float bestAcc = 0;
-        int bestHistoryLength = 0;
-        WClassifier best = null;
-        TestClassifiersHistory(3, 10);
-
-        //      System.out.println();
-        //    NaiveAnd10Fold();
-        //  System.out.println();
-        //NaiveAnd10Fold();
-    }
 
     // Default sets stuff.
     void UpdateSettings(int setting){
@@ -257,22 +222,22 @@ public class WekaManager {
         TestClassifiers();
         PrintResultsSimple();
         System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
-        do10FoldCrossValidation = true;
+        s.do10FoldCrossValidation = true;
         TestClassifiers();
         PrintResultsSimple();
-        do10FoldCrossValidation = false;
+        s.do10FoldCrossValidation = false;
     }
 
     void TestClassifiers10FoldTestsOnly(){
         System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
-        do10FoldCrossValidation = true;
+        s.do10FoldCrossValidation = true;
         TestClassifiers();
-        do10FoldCrossValidation = false;
+        s.do10FoldCrossValidation = false;
     }
 
 
     /// Column starting enumeration from 1, not 0.
-    private Instances RemoveColumn(int i, Instances data) {
+    protected Instances RemoveColumn(int i, Instances data) {
         Remove remove = new Remove();                         // new instance of filter
         try {
             String[] options = new String[2];
@@ -289,52 +254,21 @@ public class WekaManager {
     }
 
     /** Tests all classifiers for the previously set training data, window size, etc.
-     Performs 10-cross validation if the do10FoldCrossValidation-boolean has been set to true.
+        Performs 10-cross validation if the do10FoldCrossValidation-boolean has been set to true.
      */
     private void TestClassifiers() {
         for (int i = 0; i < classifiers.size(); ++i){
             currentClassifier = classifiers.get(i);
             UpdateSettings(0); // Update settings/options, to match the current classifier.
-            // Set options to the classifier, if any?
-            if (options != null)
-                try {
-                  //  currentClassifier.cls.setOptions(options);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    continue;
-                }
-
-            if (do10FoldCrossValidation){
-                DoTenFoldCrossValidation();
-                ClassificationStats cs = currentClassifier.GetStatsForHistoryLength(historyLength);
-                if (cs == null){
-                    // Create one.
-                    cs = new ClassificationStats();
-                    cs.historySetSize = historyLength;
-                    currentClassifier.classificationStats.add(cs);
-                }
-                cs.accuracy = currentClassifier.accuracy;
-                cs.minErrorsInSequence = currentClassifier.minErrorsInSequence;
-                cs.maxErrorsInSequence = currentClassifier.maxErrorsInSequence;
-                if (verbosity > 0)
-                    System.out.println("Adding accuracy: "+currentClassifier.accuracy+" minErr: "+currentClassifier.minErrorsInSequence+" maxErr: "+currentClassifier.maxErrorsInSequence);
-                else {
-                    currentClassifier.accuracyNoWindow = currentClassifier.accuracy;
-                }
-                continue;
-            }
-            if (!Train())
-                continue;
-            if (verbosity > 0)
-                System.out.println(" accuracy: "+currentClassifier.accuracy); // Accuracy of the tests.
+            currentClassifier.Test(s);
         }
     }
 
     EList<Double> valuesHistory = new EList();
-    int historyLength = 0;
 
+    /*
     public double ModifyResult(double value){
-        if (historyLength < 2) // Just return if history window is not active, i.e., less than 2 in size. 1 would be the same as giving the most recent value.
+        if (s.historySetSize < 2) // Just return if history window is not active, i.e., less than 2 in size. 1 would be the same as giving the most recent value.
             return value;
         valuesHistory.add(value); // Add it.
         // Remove old values if the history exceeds a certain length.
@@ -367,83 +301,150 @@ public class WekaManager {
         }
         return highestCount.x; // Return value of the value with highest count as counted in the history of recent values.
     }
+    */
 
-    private void TestClassifiers10FoldHistory(int historySize) {
-        historyLength = historySize;
+    public void TestClassifiers10FoldHistory(int historySize) {
+        s.historySetSize = historySize;
         testedWindowSizes.add(historySize);
-        System.out.println("Testing again, with history window active, size: "+historyLength);
+        System.out.println("Testing again, with history window active, size: "+s.historySetSize);
         TestClassifiers10FoldTestsOnly();
     }
 
-    private class Outputer extends AbstractOutput {
-        int ok = 0;
-        int total = 0;
-        Classifier cls;
-        float accuracy;
-        int verbosity = 0;
-
-        int errorsInARow = 0;
-
-        WekaManager wekaMan = null; // Refer to main class talking with the outputer.
-
-        Outputer(WekaManager wekaMan){
-            super();
-            this.wekaMan = wekaMan;
-            m_Buffer = new StringBuffer();
+    public void ClearStatsAndSettings() {
+        ResetSettings();
+        ClearStats();
+//        testData = trainingData; // Same test-data as training-data by default?
+    }
+    private void ResetSettings() {
+        s = new Settings();
+    }
+    public void ClearStats() {
+        for (int i = 0; i < classifiers.size(); ++i){
+            classifiers.get(i).ClearStats();
         }
-        @Override
-        public String globalInfo() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+    }
 
-        @Override
-        public String getDisplay() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+    /// Classifier selection.
+    public void UseRandomForest() {
+        classifiers.clear();
+        classifiers.add(new WClassifier(new RandomForest()));
+    }
+    public void UseRandomTree(){
+        classifiers.clear();
+        classifiers.add(new WClassifier(new RandomTree()));
+    }
+    public void UseBayesNet(){
+        classifiers.clear();
+        classifiers.add(new WClassifier(new BayesNet()));
+    }
+    public void UseNaiveBayes(){
+        classifiers.clear();
+        classifiers.add(new WClassifier(new NaiveBayes()));
+    }
+    public EList<WClassifier> UseTestClassifiersQuick() {
+        classifiers.clear();
+        EList<AbstractClassifier> alac = new EList();
+        alac.add(new NaiveBayes());
+        alac.add(new BayesNet());
+        alac.add(new RandomTree());
+//        alac.add(new RandomForest());
+        for (int i = 0; i < alac.size(); ++i)
+            classifiers.add(new WClassifier(alac.get(i)));
+        return classifiers;
+    }
+    public EList<WClassifier> UseTestClassifiers() {
+        classifiers.clear();
+        EList<AbstractClassifier> alac = new EList();
+        alac.add(new NaiveBayes());
+        alac.add(new BayesNet());
+        alac.add(new RandomTree());
+        alac.add(new RandomForest());
+        for (int i = 0; i < alac.size(); ++i)
+            classifiers.add(new WClassifier(alac.get(i)));
+        return classifiers;
+    }
 
-        @Override
-        protected void doPrintHeader() {
-            //        System.out.println("m_Buffer: "+m_Buffer.toString());
+    /// Returns accuracy.
+    void DoOwn10FoldCrossValidation(){
+        System.out.println("Traning data : "+s.trainingDataWhole.size());
+        s.do10FoldCrossValidation = true;
+        s.folds = 10;
+        for (int c = 0; c < classifiers.size(); ++c){
+            currentClassifier = classifiers.get(c);
+            currentClassifier.Test(s);
         }
-        @Override
-        protected void doPrintClassification(Classifier clsfr, Instance instnc, int i) throws Exception {
-            cls = clsfr;
-            double result = clsfr.classifyInstance(instnc);
-            result = wekaMan.ModifyResult(result); // If active, modifies result based on history values.
-            String resultStr = testData.classAttribute().value((int) result);
-            if (verbosity > 2)
-                System.out.println(clsfr.getClass().getSimpleName()+" "+instnc.toString()+" i "+i+" predicted: "+resultStr);
-            if (instnc.classValue() == result){ // Good result
-                ++ok;
-                if (errorsInARow > 0){
-                    if (errorsInARow > wekaMan.currentClassifier.maxErrorsInSequence)
-                        wekaMan.currentClassifier.maxErrorsInSequence = errorsInARow;
-                    if (errorsInARow < wekaMan.currentClassifier.minErrorsInSequence)
-                        wekaMan.currentClassifier.minErrorsInSequence = errorsInARow;
-                    errorsInARow = 0;
-                }
-            }
-            else { // Bad result
-                ++errorsInARow;
-            }
-            ++total;
-//                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-        //@Override
-        protected void doPrintClassification(double[] doubles, Instance instnc, int i) throws Exception {
-            //        System.out.println(doubles.toString()+" "+instnc.toString()+" i "+i);
-//                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+    }
 
-        @Override
-        protected void doPrintFooter() {
-            if (verbosity > 1)
-                System.out.println(cls.getClass().getSimpleName()+" OK: "+ok+" out of "+total+" ratio: "+ok/(float)total);
-            accuracy = ok / (float) total;
-            currentClassifier.accuracy = accuracy; // Save accuracy straight in the classifier for sorting/presenting later.
-        }
-    };
+    public static void NullifyGyroData(Instances testData) {
+        if (verbosity > 0)
+            System.out.println("Nullifying gyro data on test data.");
+        String before = "", after;
+        for (int i = 0; i < testData.numInstances(); ++i){
+            Instance inst = testData.get(i);
+            if (i % 500 == 0)
+                before = InstanceAsString(inst);
+            // Assume it is attribute 4, 5, 6 and 7, which it should be...
+            inst.setValue(4, 0);
+            inst.setValue(5, 0);
+            inst.setValue(6, 0);
+            inst.setValue(7, 0);
+            if (i % 500 == 0 && verbosity > 1)
+                System.out.println(before+" -> "+InstanceAsString(inst));
 
+        }
+    }
+
+    public static String InstanceAsString(Instance inst) {
+        String s = "";
+        for (int i = 0; i < inst.numAttributes(); ++i){
+            Attribute a = inst.attribute(i);
+            s += a.name()+" "+inst.value(i)+", ";
+        }
+        return s;
+    }
+
+    void PrintAllClassificationResults() {
+        PrintAllClassificationResults("");
+    }
+    void PrintAllClassificationResults(String format) {
+        System.out.println("Print all classification results");
+        for (int i = 0; i < classifiers.size(); ++i){
+            WClassifier wc = classifiers.get(i);
+            wc.PrintAll(format);
+        }
+    }
+
+
+    /// Tests the current classifiers against the set provided on the given path. Performs default filtration of the set.
+    public void TestAgainstSet(String setPath) {
+        String[] args = setPath.split("\\\\");
+        System.out.print("Testing against file: "+args[args.length - 1]+" settings: "+s);
+        s.testDataSource = setPath;
+        s.do10FoldCrossValidation = false;
+        Instances toTest = GetDataFromFile(setPath);
+        s.testDataWhole = toTest;
+        for (int i = 0; i < classifiers.size(); ++i){
+            WClassifier wc = classifiers.get(i);
+            wc.Test(s);
+        }
+        System.out.println();
+    }
+
+    void SetRandomizationDegree(float randomizationDegree) {
+        s.randomizationDegree = randomizationDegree;
+    }
+
+    public void UseClassifiers(EList<WClassifier> testClassifiers) {
+        classifiers = testClassifiers;
+    }
+
+    public void UseClassifier(WClassifier wClassifier) {
+        classifiers.clear();;
+        classifiers.add(wClassifier);
+    }
+
+
+    /*
     private float DoTenFoldCrossValidation() {
         // Randomizes input of trainging data, then performs cross-validation.
         Outputer out = new Outputer(this);
@@ -460,11 +461,20 @@ public class WekaManager {
         if (verbosity > 0)
             System.out.println(currentClassifier.Name()+" accuracy: "+out.accuracy);
         return accuracy;
-    }
+    }*/
 
     /// Call before predicting. Make sure currentClassifier and trainingData is set before. Returns false if it fails.
+    /*
     boolean Train(){
-        System.out.println("No.");
+        try {
+            currentClassifier.BuildClassifier(trainingData);
+//            System.out.println("Classifier trained");
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Failed to tran Classifier");
         return false;
-    }
+    }*/
+
 }

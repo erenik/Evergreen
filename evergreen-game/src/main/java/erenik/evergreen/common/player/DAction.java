@@ -16,7 +16,8 @@ public enum DAction {
     Scout,
     Recover,
     BuildDefenses,
-    LookForPlayer,
+    LookForPlayer, // o-o specific!
+    LookForPlayers, // Looks for anyone.
     Invent,
     Craft,
     Steal, // Name of player, yeah.
@@ -33,6 +34,7 @@ public enum DAction {
             case Recover: return "Recover";
             case BuildDefenses: return "Build defenses";
             case LookForPlayer: return "Look for player";
+            case LookForPlayers: return "Look for players";
             case Invent: return "Invent";
             case Craft: return "Craft";
             case Steal: return "Steal";
@@ -46,7 +48,7 @@ public enum DAction {
     static public void SetTextDescArgs(Action forAction){
         Action a = forAction;
         a.requiredArguments = new EList<>();
-        switch (a.daType){
+        switch (a.DailyAction()){
             case GatherFood: a.text = "Gather berries";a.description = "Gather Food. Run out of food and you will soon be starving!"; break;
             case GatherMaterials: a.text = "Gather materials"; a.description = "Gather Materials used for constructing defenses, inventing, crafting and augmenting things.";break;
             case Scout:
@@ -57,8 +59,10 @@ public enum DAction {
                 break;
             case BuildDefenses: a.text = "Build defenses"; a.description =  "Consume Materials to strengthen defenses.";
                 break;
-            case LookForPlayer: a.text = "Look for player"; a.description = "Attempt to look for a specific player, or just any player's shelter";
+            case LookForPlayer: a.text = "Look for player"; a.description = "Attempt to look for a specific player";
                 a.requiredArguments.add(ActionArgument.PlayerName);
+                break;
+            case LookForPlayers: a.text = "Look for players"; a.description = "Look for any survivor nearby";
                 break;
             case Invent: a.text = "Invent";
                 a.description  = "Invent new weapons, armor, items or shelter additions";
@@ -89,66 +93,27 @@ public enum DAction {
     }
 
     static Random randomAction = new Random(System.currentTimeMillis());
-    public static DAction RandomAction(Player forPlayer)
-    {
-        while (true) {
+    /// Generates a random daily action for the given player. Returns null if nothing could be generated.
+    public static Action RandomDailyAction(Player forPlayer) {
+        if (forPlayer.IsAlive() == false)
+            return null;
+        for(int i = 0; i < 10; ++i) { // Give N attempts per request.
             // Randomly select one.
-            DAction action = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
+            DAction dAction = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
+            Action action = new Action();
+            action.SetDailyAction(dAction);
             boolean ok = action.AddRandomArguments(forPlayer); // Retursn true if valid arguments could be added.
             if (!ok)
                 continue;
             // Check if the action has its requirements fulfilled?
-            if (!action.HasValidArguments())
+            if (!action.HasValidArguments()) {
+                System.out.println("Action "+dAction.name()+" has BAD arguments.");
                 continue;
+            }
             // Generate appropriate arguments based on the given player requesting them?
             return action;
         }
-    }
-    /// Adds randomly generated arguments for this given action, based on what the player has and knows.
-    private boolean AddRandomArguments(Player forPlayer) {
-        System.out.println("UPDATE - for client simulation");
-        /*
-        for (int i = 0; i < requiredArguments.size(); ++i) {
-            ActionArgument aa = requiredArguments.get(i);
-            int index;
-            switch(aa) {
-                case Transport:
-                    aa.value = forPlayer.transports.get(randomAction.nextInt(forPlayer.transports.size())).name();
-                    break;
-                case Player:
-                    if (forPlayer.knownPlayerNames.size() == 0) {
-                        System.out.println("Doesn't know any other players, skipping.");
-                        return false;
-                    }
-                    aa.value = forPlayer.knownPlayerNames.get(randomAction.nextInt(forPlayer.knownPlayerNames.size()));
-                    System.out.println("Random player added as target for action: "+name()+" "+aa.value);
-                    break;
-                case InventionCategory:
-                    index = randomAction.nextInt(InventionType.values().length);
-                    System.out.println("index: "+index+" tot: "+InventionType.values().length);
-                    aa.value = InventionType.values()[index].text();
-                    System.out.println("Random invention category added: "+aa.value);
-                    break;
-                case InventionToCraft:
-                    if (forPlayer.cd.inventions.size() == 0)
-                        return false;
-                    index = randomAction.nextInt(forPlayer.cd.inventions.size());
-                    if (forPlayer.cd.inventions.size() == 0) {
-                       System.out.println("Doesn't have any inventions, skipping");
-                        return false;
-                    }
-                    aa.value = forPlayer.cd.inventions.get(index).name;
-                    break;
-            }
-        }
-        // Check what the player currently has available.
-        switch(this) {
-            case AttackAPlayer:
-            case Steal:
-            case Invent:
-        }
-        */
-        return true; // If e.g. it cannot add something, return false earlier.
+        return null;
     }
 
     private boolean HasValidArguments() {

@@ -32,6 +32,9 @@ public class Encounter {
     int creepsKilled = 0, totalCreeps = 0, encounterExp = 0;
     int fleeExp = 0;
     int turn = -1;
+    boolean pvp = false;
+
+    static final int maxEnemyAttacksPerRound = 3;
 
     public EList<EncounterListener> listeners = new EList<>();
 
@@ -40,15 +43,20 @@ public class Encounter {
     }
     public Encounter(Player attacker, Player defender) {
         NewEncounter();
+        attacker.isAttacker = true;
+        defender.isAttacker = false;
+        pvp = true;
         attackers.add(attacker);
         defenders.add(defender);
+        combatants.add(attacker);
+        combatants.add(defender);
         PrepareForCombat();
     }
     private void PrepareForCombat() {
         EList<Player> players = GetInvolvedPlayers();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
-            p.PrepareForCombat(!p.isAttacker);
+            p.PrepareForCombat(!p.isAttacker); // Does what?
             p.runsAway = true;
             p.runAwayAtHPPercentage = 0.25f; // Should check the stats-preferences.
         }
@@ -120,7 +128,7 @@ public class Encounter {
         dice.dice *= et.encounterAmount;
         dice.bonus *= et.encounterAmount;
         int iAmount = dice.Roll();
-        iAmount *= attackedPlayer.CurrentTransport().Get(TransportStat.AmountEnemiesEncounteredRatio);
+        iAmount *= attackedPlayer.Get(TransportStat.AmountEnemiesEncounteredRatio);
         iAmount += attackedPlayer.Get(Stat.EMISSIONS) / 25;
         iAmount = Math.max(iAmount, 1);
         for (int i = 0; i < iAmount; ++i)
@@ -136,9 +144,14 @@ public class Encounter {
     /// Step-wise iterative Simulation
     public void Simulate() {
         PrepareForCombat(); // Prepare before simulation. Should make all prepared...
-        if (PlayersDead())
-            return; // Skip simulation if players already dead previously?
+        if (PlayersDead()){
+            if (pvp)
+                System.out.println("Ending combat prematurely? TRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
+            return;
+        }// Skip simulation if players already dead previously?
         System.out.println("Simulating encounter");
+        if (pvp)
+            System.out.println("PVP START!");
         /// Will vary based on EncounterActivity-type and equipped weapons etc.
         int defenderFreeAttacks = 1;
         // Start it?
@@ -191,6 +204,7 @@ public class Encounter {
         EList<Player> players = GetInvolvedPlayers();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
+            System.out.println("Player hp: "+p.hp);
             if (p.hp > 0)
                 return false;
         }
@@ -240,6 +254,7 @@ public class Encounter {
                 players.add((Player) comb);
             }
         }
+        System.out.println("NUM involved players: "+players.size());
         return players;
     }
 
@@ -253,13 +268,26 @@ public class Encounter {
     }
     // Evaluates a combat-round for one side of foes attacking another.
     void DoCombatRound(EList<Combatable> activeCombatants, EList<Combatable> opposingCombatants){
+        int numEnemiesAttacked = 0;
         for (int i = 0; i < activeCombatants.size(); ++i) {
             Combatable c = activeCombatants.get(i);
-            if (c.hp <= 0 || c.ranAway) // Skip those not relevant anymore - i.e. dead or ran away.
+            if (c instanceof Enemy) {
+                ++numEnemiesAttacked;
+                if (numEnemiesAttacked > maxEnemyAttacksPerRound) {
+               //     LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
+                    System.out.println("Skipping remaining "+(activeCombatants.size() - i)+" attackers this round");
+                    break;
+                }
+            }
+            // LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
+            if (c.hp <= 0 || c.ranAway) { // Skip those not relevant anymore - i.e. dead or ran away.
+           //     LogEnc(new Log("Skipping due to hp: "+c.hp+" for combatant "+c.name, LogType.INFO));
                 continue;
+            }
             // Flee? Under 25%?
             if (c.runsAway && (c.hp / c.maxHP) <  c.runAwayAtHPPercentage) {
-                System.out.println("Trying to run away!");
+             //   LogEnc(new Log(c.name+" tries to run away!", LogType.INFO));
+//                System.out.println("Trying to run away!");
                 int fleetRetreat = c.fleeSkill;
                 int fleeCR = (opposingCombatants.size()-1) / 2 - fleetRetreat - c.consecutiveFleeAttempts;
                 fleeCR -= c.fleeBonusFromTransport; // Decrease challenge rating with transport flee bonus.
@@ -279,7 +307,8 @@ public class Encounter {
             }
             Combatable target = GetTarget(opposingCombatants, c);
             if (target == null) {
-                System.out.println("Found no target, skipping");
+            //    LogEnc(new Log("Found no target, skipping", LogType.INFO));
+//                System.out.println("Found no target, skipping");
                 continue;
             }
             c.Attack(target, this);

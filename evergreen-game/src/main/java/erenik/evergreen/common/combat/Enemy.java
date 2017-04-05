@@ -16,15 +16,7 @@ public class Enemy extends Combatable
         attack = type.attack;
         defense = type.defense;
         exp = type.exp;
-        int turnBonus = (turn / 8) - level;
-
-        switch(type) // Set up the additional attributes that are specific.
-        {
-            case Shrub: ensnaring += 1 + turnBonus; break;
-            case Scavenger: initialAttackBonus = 1 + turnBonus; if (turn > 32) initialDamageBonus = 1; break;
-            case Rock: damageReflecting += 1 + turnBonus; receivedDamageMultiplier = 0.5f; break;
-            case Swarm: multiplies = 1; break;
-        }
+        type.UpdateDetails(this, turn);
         /// Scale up by emissions.
         attack += emissions / 12.5; // 8 times per 100
         defense += emissions / 20; // 5 times per 100

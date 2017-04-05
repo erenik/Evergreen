@@ -51,7 +51,7 @@ public class ClientData implements Serializable {
 
     /// SERIALIZABLE - DO NOT CHANGE METHOD PARAMS OR RETURN-TYPE
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-        System.out.println("ClientData writeObject");
+  //      System.out.println("ClientData writeObject");
         out.writeInt(totalLogMessagesOnServer);
 
         out.writeObject(statArr);
@@ -74,7 +74,7 @@ public class ClientData implements Serializable {
     }
     /// SERIALIZABLE - DO NOT CHANGE METHOD PARAMS OR RETURN-TYPE
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
-        System.out.println("ClientData readObject");
+//        System.out.println("ClientData readObject");
         Init();
 
         totalLogMessagesOnServer = in.readInt();

@@ -1,5 +1,9 @@
 package erenik.evergreen.android.act;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -23,6 +27,7 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import org.w3c.dom.Text;
 
+import java.io.Serializable;
 import java.sql.Array;
 import java.text.NumberFormat;
 import erenik.util.EList;
@@ -47,6 +52,7 @@ public class TransportUsage  extends EvergreenActivity {
     GraphView graphTransportDurations = null;
 
     long secondsToDisplayInGraph = 300;
+    BroadcastReceiver broadcastReceiver = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -91,8 +97,8 @@ public class TransportUsage  extends EvergreenActivity {
         final SharedPreferences sp = App.GetPreferences();
         final String PREF_HISTORY_SET = "HistorySet";
         final String PREF_SLEEP_SESSIONS = "SleepSessions";
-        int historySetSize = sp.getInt(PREF_HISTORY_SET, 3);
-        int sleepSessions = sp.getInt(PREF_SLEEP_SESSIONS, 3);
+        int historySetSize = sp.getInt(PREF_HISTORY_SET, 12);
+        int sleepSessions = sp.getInt(PREF_SLEEP_SESSIONS, 12);
 
         spinner = (Spinner) findViewById(R.id.spinnerHistorySetSize);
         SetSpinnerArray(spinner, R.array.historySetSizes);
@@ -142,6 +148,19 @@ public class TransportUsage  extends EvergreenActivity {
 
         /// Query next sampling.
         QueueUpdate();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AddBroadcastReceiver(); // Add broadcast receiver for all upcoming updates.
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+        broadcastReceiver = null;
 
     }
 
@@ -168,30 +187,50 @@ public class TransportUsage  extends EvergreenActivity {
         tv = (TextView) findViewById(R.id.textView_currentTransport);
         tv.setText(service.CurrentTransport());
 
-        // Update the log - only when button is pressed?
-        ViewGroup vg = (ViewGroup) findViewById(R.id.layoutTransportLogs);
-        vg.removeAllViews();
-        EList<SensingFrame> sfs = service.GetLastSensingFrames(12 * 3); // The past 3 minutes?
-        for (int i = 0; i < sfs.size(); ++i){
-            TextView tv2 = new TextView(getBaseContext());
-            SensingFrame sf = sfs.get(i);
-            long ms = sf.StartTimeMs();
-            long seconds = ms / 1000;
-            long minutes = seconds / 60;
-            long hours = minutes / 60;
-            long days = hours / 24;
-            long hour = hours % 24,
-                    minute = minutes % 60,
-                    second = seconds % 60;
-            tv2.setText(hour+":"+minute+":"+second+" "+sf.shortString());
-            vg.addView(tv2);
-        }
+        // Request last x sensing frames.
+        Intent intent = new Intent(getBaseContext(), TransportDetectionService.class);
+        intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_LAST_SENSING_FRAMES);
+        intent.putExtra(TransportDetectionService.NUM_FRAMES, 12 * 3);
+        startService(intent);
 
+        // Request last x sensing frames.
+        intent = new Intent(getBaseContext(), TransportDetectionService.class);
+        intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS);
+        intent.putExtra(TransportDetectionService.DATA_SECONDS, secondsToDisplayInGraph);
+        startService(intent);
+    }
 
+    private void AddBroadcastReceiver() {
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_ATTACH_DATA); // Intent.ACTION_ATTACH_DATA
+        if (broadcastReceiver == null)
+            broadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    //              System.out.println("BroadcastReceiver onReceive: "+intent);
+                    int request = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
+                    Serializable data = intent.getSerializableExtra(TransportDetectionService.SERIALIZABLE_DATA);
+    //                System.out.println("Req/Res: "+request+" data: "+data);
+                    switch (request){
+                        case -1: break;
+                        case TransportDetectionService.GET_LAST_SENSING_FRAMES:
+                            EList<SensingFrame> sfs = (EList<SensingFrame>) data;
+                            UpdateLog(sfs);
+                            break;
+                        case TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS:
+                            EList<TransportOccurrence> to = (EList<TransportOccurrence>) data;
+                            UpdateGraphWithStats(to);
+                            break;
+                    }
+                }
+            };
+        getBaseContext().registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    private void UpdateGraphWithStats(final EList<TransportOccurrence> stats) {
         /// Update it with total time for now? or past 5 mins?
         graphTransportDurations.removeAllSeries(); // Remove old data from graph.
-        final EList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
-
+//        final EList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
+        System.out.println("Update graph with stats: "+stats.size());
         long max = 10;
         for (int i = 0; i < stats.size(); ++i){
             final BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
@@ -212,7 +251,7 @@ public class TransportUsage  extends EvergreenActivity {
             series.setValueDependentColor(new ValueDependentColor<DataPoint>() {
                 @Override
                 public int get(DataPoint data) {
-                    TransportType trans = TransportType.GetFromString(service.GetTransportString((int)data.getX()));
+                    TransportType trans = TransportType.GetFromString(TransportDetectionService.GetTransportString((int)data.getX()));
                     return Color.rgb(trans.r, trans.g, trans.b);
                 }
             });
@@ -246,5 +285,25 @@ public class TransportUsage  extends EvergreenActivity {
                 }
             }
         });
+    }
+
+    void UpdateLog(EList<SensingFrame> sfs ){
+        ViewGroup vg = (ViewGroup) findViewById(R.id.layoutTransportLogs);
+        vg.removeAllViews();
+//        = service.GetLastSensingFrames(12 * 3); // The past 3 minutes?
+        for (int i = 0; i < sfs.size(); ++i){
+            TextView tv2 = new TextView(getBaseContext());
+            SensingFrame sf = sfs.get(i);
+            long ms = sf.StartTimeSystemMs();
+            long seconds = ms / 1000;
+            long minutes = seconds / 60;
+            long hours = minutes / 60;
+            long days = hours / 24;
+            long hour = hours % 24,
+                    minute = minutes % 60,
+                    second = seconds % 60;
+            tv2.setText(hour+":"+minute+":"+second+" "+sf.shortString());
+            vg.addView(tv2);
+        }
     }
 }

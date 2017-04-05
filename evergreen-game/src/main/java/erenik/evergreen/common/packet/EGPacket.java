@@ -414,7 +414,7 @@ public class EGPacket {
                 System.out.println("0 bytes read from stream.");
                 return null;
             }
-            System.out.println("read "+bytesRead+" bytes");
+//            System.out.println("read "+bytesRead+" bytes");
             EGPacket pack = EGPacket.packetFromBytes(buff);
       //      System.out.println("Got packet: "+pack);
             return pack;
@@ -430,7 +430,7 @@ public class EGPacket {
         }
         EGPacket reply = ReadFromSocket(socketSentOn);
         if (reply != null) {
-            System.out.println("Got a reply: " + reply);
+//            System.out.println("Got a reply: " + reply);
             replies.add(reply);
         }
     }

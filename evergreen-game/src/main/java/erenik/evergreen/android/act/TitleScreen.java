@@ -83,6 +83,14 @@ public class TitleScreen extends EvergreenActivity {
                 findViewById(R.id.layout_loadGameButtons).setVisibility(View.INVISIBLE);
             }
         });
+        findViewById(R.id.button_menu).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), MenuActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
         findViewById(R.id.button_tryLoad).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

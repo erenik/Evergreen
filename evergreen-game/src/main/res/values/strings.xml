@@ -300,5 +300,11 @@
     <string name="messageReceivedFromPlayer">You received a message from (arg): (arg)</string>
     <string name="foundPlayerSelfLol">While looking for (arg), you realize that you have been searching for yourself all along. Maybe you will find your inner peace now.</string>
     <string name="searchPlayer_alreadyFound">Search for player: You already know (arg).</string>
+    <string name="craftingFailedNullItem">Could not craft as item was not specified.</string>
+    <string name="searchPlayers_success">You found (arg) survivors while out.</string>
+    <string name="searchPlayers_failed">You were unable to find any new survivors today.</string>
+    <string name="playerParries">(arg) parries the attack!</string>
+    <string name="gaveItemToPlayer">You gave the (arg) to (arg).</string>
+    <string name="receivedItemFromPlayer">You received a (arg) from (arg).</string>
 
 </resources>

@@ -407,10 +407,12 @@ public class EGTCPServer extends Thread {
     }
 
     private void EvaluateLoadRequest(Socket sock, EGPacket pack) throws Exception {
-       System.out.println("Evaluate request: LOAD");
-        if (!CheckCredentials(pack.GetPlayer(), sock))
+    //   System.out.println("Evaluate request: LOAD");
+        if (!CheckCredentials(pack.GetPlayer(), sock)) {
+            System.out.println("Evaluate request: LOAD - bad credentials.");
             return;
-        System.out.println("Credentials OK, replying");
+        }
+   //     System.out.println("Credentials OK, replying");
         Player playerInSystem = GetPlayerInSystem(pack.GetPlayer());
         Reply(sock, EGResponse.clientPlayerData(playerInSystem).build());            // Reply the player in system.
     }
@@ -583,8 +585,8 @@ public class EGTCPServer extends Thread {
     /// Saves player log to file, within logs directory.
     void SavePlayerLog(Player player) {
         EList<LogType> filter = new EList<>();
-        filter.add(LogType.ATTACK_MISS);
-        filter.add(LogType.ATTACKED_MISS);
+//        filter.add(LogType.ATTACK_MISS);
+  //      filter.add(LogType.ATTACKED_MISS);
         player.SaveLog(filter, folderString);
     }
 

@@ -41,7 +41,7 @@ public enum LogTextID {
     stealFailedDetected, playerTriedToStealFromYouFailedDetected, stealFailed, somethingAmiss, stealSuccess_whatName, stolen,
     searchPlayerFailed, foundPlayer,
     searchPlayer_foundAnother,
-    craftingComplete, craftingProgressed,
+    craftingComplete, craftingProgressed, craftingFailedNullItem,
     inventFailed, inventingOldThoughts, inventSuccess,
     scoutFoodStashes, scoutMatStashes,
     buildDefensesProgress, defensesReachedLevel,
@@ -54,6 +54,6 @@ public enum LogTextID {
     MessageSentToPlayer, // Player name only,
     MessageReceivedFromPlayer,
     foundPlayerSelfLol,
-    searchPlayer_alreadyFound,  // Player name, message contents.
+    searchPlayer_alreadyFound, searchPlayers_success, searchPlayers_failed, playerParries, gaveItemToPlayer, receivedItemFromPlayer,  // Player name, message contents.
 
 }

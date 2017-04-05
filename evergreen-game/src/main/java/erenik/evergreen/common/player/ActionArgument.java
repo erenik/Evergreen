@@ -16,6 +16,8 @@ public enum ActionArgument
     TextSearchType,
     ResourceType,
     ResourceQuantity,
+    Item, // Item to give, or the ID of it..?
+    Blueprint,
     Text, // Free-text.
     TreatyType, // For treaties
     ReceivedMessage, // Received messages -> Any type.

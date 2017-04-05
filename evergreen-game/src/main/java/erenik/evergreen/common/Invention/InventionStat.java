@@ -31,7 +31,7 @@ public enum InventionStat {
     AttackDamageBonus(0),
     DefenseBonus(0),
     BonusAttacks(0),
-    ParryBonus(0),
+    ParryBonus(0), // Works how?
     /// Ranged attacks.
     RangedAttackBonus(0), RangedDamageBonus(0),
     /// Tool stats

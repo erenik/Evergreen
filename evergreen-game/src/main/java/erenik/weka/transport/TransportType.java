@@ -16,7 +16,8 @@ public enum TransportType {
     Train(100, 150, 255),
     Car(175, 100, 50), // Higher chance, typical commuter?
     Boat(0, 50, 255), // Will probably not be used, but eh...?
-    Plane(255, 50, 50); // Only triggerable by user analysis?
+    Plane(255, 50, 50),
+    Subway(50, 50, 50); // Only triggerable by user analysis?
 
     TransportType(int r, int g, int b) {
         this.r = r;

@@ -2,8 +2,10 @@ package erenik.evergreen.android.act;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,6 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import erenik.evergreen.Game;
@@ -111,6 +114,8 @@ public class EvergreenActivity extends AppCompatActivity
 //        setSystemUiVisibility(SYSTEM_UI_FLAG_FULLSCREEN);
         // Store common shit here?
         App.OnActivityCreated(this);  // Setup system callbacks as/if needed.
+
+
     }
     /* After creation, Cause hideControls of system controls after 500 ms? */
     @Override
@@ -133,6 +138,11 @@ public class EvergreenActivity extends AppCompatActivity
         }
         UpdateLog(); // Update log after subclass has adjusted how it should be presented.
         UpdateBackground();
+
+        // Launch the transport-sensing service if not already running.
+        Intent serviceIntent = new Intent(getBaseContext(), TransportDetectionService.class);
+        serviceIntent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.START_SERVICE);
+        getBaseContext().startService(serviceIntent);
     }
 
     protected void UpdateBackground() {
@@ -259,13 +269,39 @@ public class EvergreenActivity extends AppCompatActivity
 
     protected boolean SaveToServer() {
         ShowProgressBar();
-        // Load this player?
-        Player player = App.GetPlayer();
-        /// Extract transport information from the TransportDetectorService and add its summary data into player.
         int secondsToAnalyze = 3600 * 24; // 24 hours?
+
+        Intent intent = new Intent(getBaseContext(), TransportDetectionService.class);
+        intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS);
+        intent.putExtra(TransportDetectionService.DATA_SECONDS, secondsToAnalyze);
+        startService(intent);
+
+        IntentFilter intentFilter = new IntentFilter(); // Intent.ACTION_ATTACH_DATA
+        getBaseContext().registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                System.out.println("BroadcastReceiver onReceive: "+intent);
+//                if (intent.getClass() instanceof TransportDetectionService)
+                Serializable data = intent.getSerializableExtra(TransportDetectionService.DATA_SECONDS);
+                System.out.println("Yeahhhh: "+data);
+            }
+        }, intentFilter);
+
+        // TODO: Fix this.
+/*
+        Player player = App.GetPlayer();
         player.UpdateTransportMinutes(TransportDetectionService.GetInstance().GetTotalStatsForDataSeconds(secondsToAnalyze));
         System.out.println("Saving to server, ");// Connect to server.
         player.PrintTopTransports(3);
+
+        // SErvice Intent send stuffs.
+//        player.UpdateTransportMinutes(TransportDetectionService.GetInstance().GetTotalStatsForDataSeconds(secondsToAnalyze));
+
+        // Wait until we receive a response to actually save?
+
+
+        // Load this player?
+        /// Extract transport information from the TransportDetectorService and add its summary data into player.
         EGRequest req = EGRequest.Save(player);
         req.addReceiverListener(new EGPacketReceiverListener() {
                 @Override
@@ -280,6 +316,7 @@ public class EvergreenActivity extends AppCompatActivity
                 }
             });
         App.Send(req);//        req.WaitForResponse(1000); // No waiting allowed. Use callbacks only!
+        */
         return true;
     }
     /// Performs default actions for some responses, such as removing the active player if the data is no longer valid (e.g. old player/game ID).

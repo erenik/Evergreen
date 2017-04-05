@@ -17,6 +17,7 @@ import erenik.evergreen.common.auth.Auth;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.EList;
+import erenik.util.FileUtil;
 import erenik.util.Json;
 import erenik.util.Tuple;
 
@@ -105,11 +106,11 @@ public class Game implements Serializable {
     }
 
     private void writeTo(java.io.ObjectOutputStream out) throws IOException {
-        System.out.println("Game writeObject");
+  //      System.out.println("Game writeObject");
         out.writeObject(gameID);
         out.writeInt(updateIntervalSeconds);
         logEnumerator.writeTo(out);
-        System.out.println("logEnumerator saved at "+logEnumerator.value);
+//        System.out.println("logEnumerator saved at "+logEnumerator.value);
         // Save num players.
         int numPlayers = players.size();
         out.writeInt(numPlayers);
@@ -119,8 +120,8 @@ public class Game implements Serializable {
             p.sendAll = Player.SEND_ALL; // Save everything by default.
             p.sendLogs = Player.SEND_ALL; // Send all logs to file.
             p.writeTo(out);
-            System.out.println("Player "+p.name+" last log messages");
-            Log.PrintLastLogMessages(p.log, 5);
+//            System.out.println("Player "+p.name+" last log messages");
+  //          Log.PrintLastLogMessages(p.log, 5);
         }
     }
     private boolean readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
@@ -150,7 +151,7 @@ public class Game implements Serializable {
                 break;
             }
         }
-        System.out.println("Loaded "+players.size()+" players");
+//        System.out.println("Loaded "+players.size()+" players");
         return true;
     }
 
@@ -169,19 +170,19 @@ public class Game implements Serializable {
 //        if (!players.contains(App.GetPlayer()))
   //          players.add(App.GetPlayer());
         if (players.size() == 0) {
-            System.out.println("Game.NextDay: No players, doing nothing");
+            Log("Game.NextDay: No players, doing nothing");
             return 0;
         }
         int activePlayers = ActivePlayers();
         if (activePlayers == 0){
-            System.out.println("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
+            Log("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
             return 0;
         }
         if (UpdatesSinceLastDay() == 0){
-            System.out.println("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day.");
+            Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day.");
             return 0;
         }
-        System.out.println("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
+        LogAndPrint("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
         int numSimulated = 0;
         for (int i = 0; i < players.size(); ++i)
         {
@@ -355,16 +356,21 @@ public class Game implements Serializable {
     }
 
     int gameTimeMs = 0;
-    public void Update(long milliseconds)
-    {
+    public void Update(long milliseconds) {
         gameTimeMs += milliseconds;
-        int thresholdMs = updateIntervalSeconds * 1000;
+        int thresholdMs = updateIntervalSeconds * 100; // Should be * 1000
         if (gameTimeMs > thresholdMs) {        // check if next day should come.
-            NextDay();
-            // Save to file.
-            Save();
+            if (NextDay() != 0)
+                Save(); // Save to file.
             gameTimeMs -= thresholdMs;
         }
+    }
+    private void Log(String msg){
+        FileUtil.AppendWithTimeStampToFile("logs", "game"+GameID()+".txt", msg);
+    }
+    private void LogAndPrint(String msg){
+        Log(msg);
+        System.out.println(msg);
     }
     // Returns null if all known player names are already known.
     public Player RandomPlayer(EList<String> knownPlayerNames) {
@@ -377,13 +383,13 @@ public class Game implements Serializable {
         Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 10; ++i) {
             int playerIndex = r.nextInt(players.size());
-            System.out.println("player index: "+playerIndex);
+  //          System.out.println("player index: "+playerIndex);
             Player randPlayer = players.get(playerIndex);
             boolean alreadyKnown = false;
             for (int j = 0; j < knownPlayerNames.size(); ++j) {
                 String name = randPlayer.name;
                 String name2 = knownPlayerNames.get(j);
-                System.out.println(name+" =? "+name2);
+//                System.out.println(name+" =? "+name2);
                 if (name.equals(name2)) {
                     alreadyKnown = true;
                     break;

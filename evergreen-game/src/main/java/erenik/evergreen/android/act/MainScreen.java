@@ -170,9 +170,6 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         int[] ids = new int[]{R.id.buttonIconAttack, R.id.buttonIconDefense, R.id.buttonIconEmissions, R.id.buttonIconFood, R.id.buttonIconMaterials, R.id.buttonIconHP};
         for (int i = 0; i < ids.length; ++i)
             findViewById(ids[i]).setOnClickListener(viewStatDetails);
-        // Launch the transport-sensing service if not already running.
-        Intent serviceIntent = new Intent(getBaseContext(), TransportDetectionService.class);
-        getBaseContext().startService(serviceIntent);
 
         // Check for updates if returning to this screen?
         CheckForUpdates();

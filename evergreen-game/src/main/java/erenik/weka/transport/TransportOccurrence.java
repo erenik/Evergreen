@@ -3,6 +3,8 @@ package erenik.weka.transport;
 import java.io.IOException;
 import java.io.Serializable;
 
+import erenik.util.EList;
+
 /**
  * Created by Emil on 2017-03-06.
  */
@@ -16,29 +18,29 @@ public class TransportOccurrence implements Serializable {
         this.dt = dt;
     }
 
-    TransportOccurrence(TransportType transport, long startTimeMs, long durationMs){
+    TransportOccurrence(TransportType transport, long startTimeSystemMs, long durationMs){
         this.transport = transport;
-        this.startTimeMs = startTimeMs;
+        this.startTimeSystemMs = startTimeSystemMs;
         this.duration = durationMs;
         this.dt = DurationType.Milliseconds;
     }
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(transport);
-        out.writeLong(startTimeMs);
+        out.writeLong(startTimeSystemMs);
         out.writeLong(duration);
         out.writeFloat(ratioUsed);
         out.writeInt(dt.ordinal());
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         transport = (TransportType) in.readObject();
-        startTimeMs = in.readLong();
+        startTimeSystemMs = in.readLong();
         duration = in.readLong();
         ratioUsed = in.readFloat();
         dt = DurationType.values()[in.readInt()]; // Read in the ordinal and use it as index.
     }
 
     public TransportType transport;
-    long startTimeMs; // Time stamp when the measuring window started.
+    long startTimeSystemMs; // Time stamp when the measuring window started.
     public long duration; // Duration in milliseconds for this occurrence.
     public DurationType dt = DurationType.Unknown; // Default milliseconds?
     public float ratioUsed; // percentage, decimal form 0.0 to 1.0
@@ -72,5 +74,13 @@ public class TransportOccurrence implements Serializable {
                 System.out.println("Bad dt");
                 System.exit(3);
         }
+    }
+
+    public static long TotalTimeMs(EList<TransportOccurrence> transportOccurrences) {
+        long totDur = 0;
+        for (int i = 0; i < transportOccurrences.size(); ++i){
+            totDur += transportOccurrences.get(i).DurationMillis();
+        }
+        return totDur;
     }
 }

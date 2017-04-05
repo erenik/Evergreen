@@ -2,6 +2,8 @@ package erenik.weka.transport;
 
 import android.app.Activity;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -10,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -24,25 +27,37 @@ import erenik.weka.WekaManager;
 
 public class TransportDetectionService extends Service {
 
+    /** use with putExtra int when requesting the service.
+     * Available commands are "StartService" which just starts data-collection.
+     * "GetTotalStatsForDataSeconds" - which requests data for given amount of seconds - must be specified in a separate putExtra int with DATA_SECONDS
+    */
+    public static final String REQUEST_TYPE = "RequestType",
+        DATA_SECONDS = "DataSeconds", // Argument, Long
+            NUM_FRAMES = "NumFrames", // Argument, Int
+            SERIALIZABLE_DATA = "SerializableData"; // Argument, Serializable
+    public static final int START_SERVICE = 0, // Request-types.
+        GET_TOTAL_STATS_FOR_DATA_SECONDS = 1,
+            GET_LAST_SENSING_FRAMES = 2;
+
     private static TransportDetectionService instance = null;
     WekaManager wekaMan = null;
-    TransportDetectorThread dataSamplerThread = null;
+    static TransportDetectorThread dataSamplerThread = null;
+    private int totalSensingFramesGathered = 0;
+    private int sensingFramesSinceLastSleep = 0;
+    /// For requests via Intents. If non-null, send a broadcast with the data for the given seconds and reset this to 0.
+    long totalStatSecondsRequested = 0;
+    int numLastSensingFramesRequested = 0;
 
-    public EList<SensingFrame> GetLastSensingFrames(int maxNum){
-        EList<SensingFrame> sfs = new EList<>();
-        for (int i = dataSamplerThread.sensingFrames.size() - 1; i >= 0; --i){
-            SensingFrame frame = new SensingFrame();
-            SensingFrame sf2 = dataSamplerThread.sensingFrames.get(i);
-            frame.startTimeMs = sf2.startTimeMs;
-            frame.accAvg = sf2.accAvg;
-            frame.gyroAvg = sf2.gyroAvg;
-            frame.transportString = sf2.transportString;
-            sfs.add(frame);
-            if (sfs.size() >= maxNum)
-                return sfs; // Return early.. lol.
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            System.out.println("Received: "+intent);
+            String status = intent.getStringExtra("STATUS");
+            System.out.println("Status: "+status);
+            intent.getSerializableExtra("");
         }
-        return sfs;
-    }
+    };
+
 
     public void SetHistorySetSize(int newSize){
         historySetSize = newSize;
@@ -53,13 +68,10 @@ public class TransportDetectionService extends Service {
         System.out.println("Sleep sessions: "+sleepSessions);
     }
 
-    int sleepSessions = 3;
-    int historySetSize = 3; // Do 5 samples, calc average
+    int sleepSessions = 12; // 1 minute sleep
+    int historySetSize = 12; // 1 minute sampling
     boolean forceAverageBeforeSleep = true; // Then sleep, if true.
 
-    public WClassifier classifier = null,
-        accOnlyClassifier = null,
-        gyroOnlyClassifier = null;
 //    private EList<TransportOccurrence> transportOccurrences = new EList<>(); // All transport frame IDs
     public int msTotalTimeAnalyzedSinceThreadStart = 0; // o-o
 
@@ -73,9 +85,33 @@ public class TransportDetectionService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null){ // Wtf even?
+            return super.onStartCommand(intent, flags, startId);
+        }
         /// Uhhh.. Idk.
-        System.out.println("onStartCommand");
-        StartDetection();
+        int cmd = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
+        if (cmd == -1){
+            System.out.println("Lacking request type int extra.");
+            new Exception().printStackTrace();
+            return super.onStartCommand(intent, flags, startId);
+        }
+//        System.out.println("onStartCommand: "+cmd);
+        switch (cmd)
+        {
+            case START_SERVICE:
+                StartDetection();
+                System.out.println("Starting up TransportDetectionService");
+                break;
+            case GET_TOTAL_STATS_FOR_DATA_SECONDS:
+                totalStatSecondsRequested = intent.getLongExtra(TransportDetectionService.DATA_SECONDS, 0);
+            //    System.out.println("Data for "+totalStatSecondsRequested+" requested.");
+                break;
+            case GET_LAST_SENSING_FRAMES:
+                numLastSensingFramesRequested = intent.getIntExtra(TransportDetectionService.NUM_FRAMES, 0);
+  //              System.out.println("Requested "+numLastSensingFramesRequested+" last sensing frames");
+                break;
+        }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -141,15 +177,20 @@ public class TransportDetectionService extends Service {
             transportData = (TransportData) objectIn.readObject();
 //            transportData.PrintAllData();
             fileIn.getFD().sync();
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
+        } catch (FileNotFoundException fnfe){
+            System.out.println("File not found, loading saved data failed.");
+//            fnfe.printStackTrace();
+            return false;
         }
-        catch (IOException e) {
+        catch(InvalidClassException ice){
+            ice.printStackTrace();
+            return false;
+        }
+        catch (Exception e){
             e.printStackTrace();
             return false;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
+        }
+        finally {
             if (objectIn != null) {
                 try {
                     objectIn.close();
@@ -186,6 +227,7 @@ public class TransportDetectionService extends Service {
 
     static int lastMinute = 0, lastHour = 0, lastDay = 0;
 
+    // Does what..?
     public void RecalcAverages() {
         // Check the array.
 //        msTotalTimeAnalyzedSinceThreadStart;
@@ -233,16 +275,20 @@ public class TransportDetectionService extends Service {
     }
 
 
-    private EList<TransportOccurrence> GetDataSeconds(int nrOfSecondsToInclude) {
+    EList<TransportOccurrence> GetDataSeconds(long nrOfSecondsToInclude) {
         EList<TransportOccurrence> newArr = new EList<>();
         long nowMs = System.currentTimeMillis();
         long msToInclude = nrOfSecondsToInclude * 1000;
-        long thresh = nowMs - msToInclude;
+        long threshMs = nowMs - msToInclude;
         EList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nrOfSecondsToInclude);
+        System.out.println("transportOccurrences: "+transportOccurrences.size()+" corresponding to: "+TransportOccurrence.TotalTimeMs(transportOccurrences)+"ms");
         for (int i = transportOccurrences.size() - 1; i >= 0; --i){ // Search from the newest occurrence of data and backwards, grab all where start time is after the threshold period.
             TransportOccurrence to = transportOccurrences.get(i);
-            if (to.startTimeMs < thresh)
+            long timeDiff = to.startTimeSystemMs - threshMs;
+            if (timeDiff < 0) {
+                System.out.println("Data " + timeDiff + "ms too old");
                 break; // Break loop if too old data.
+            }
             newArr.add(to);
         }
         return newArr;
@@ -252,7 +298,7 @@ public class TransportDetectionService extends Service {
         if (sleepSessions <= 0)
             return false;
         if (forceAverageBeforeSleep){
-            if (classifier.valuesHistory.size() >= this.historySetSize){
+            if (sensingFramesSinceLastSleep >= this.historySetSize){
                 // Do sleep.
                 return true;
             }
@@ -277,7 +323,7 @@ public class TransportDetectionService extends Service {
         return lastEntry.transport.name();
     }
 
-    private EList<TransportOccurrence> GetTotalStatsForData(EList<TransportOccurrence> transportOccurrences) {
+    EList<TransportOccurrence> GetTotalStatsForData(EList<TransportOccurrence> transportOccurrences) {
         // New array of 0s for each transport.
         EList<TransportOccurrence> totalTransportDurationUsages = new EList<>();
         int durationTotalMs = 0;
@@ -308,24 +354,28 @@ public class TransportDetectionService extends Service {
 
 
     /// Returns an array with one entry for each transport, that holds sums of the duration of each transport, as well as the ratio of each within.
-    public EList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
+    EList<TransportOccurrence> GetTotalStatsForDataSeconds(long dataSecondsToAnalyze) {
         long dataMillisecondsToAnalyze = dataSecondsToAnalyze * 1000;
         long nowMs = System.currentTimeMillis();
         EList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nowMs - dataMillisecondsToAnalyze);
         return GetTotalStatsForData(transportOccurrences);
     }
 
-    public String GetTransportString(int value) {
-        if (classifier == null || classifier.trainingData == null)
-            return "Null";
-        int numValues = classifier.trainingData.classAttribute().numValues();
-        if (value < 0 || value >= numValues)
-            return "";
-        return classifier.trainingData.classAttribute().value(value);
+    public static String GetTransportString(int value) {
+        return dataSamplerThread.GetTransportString(value);
     }
 
-    public void AddTransportOccurrence(TransportOccurrence transportOccurrence) {
+    void AddTransportOccurrence(TransportOccurrence transportOccurrence) {
         transportData.AddData(transportOccurrence, null); // Add it to the object which will be presisted between sessions and interruptions.
     }
 
+    void OnSensingFrameFinished() {
+        ++totalSensingFramesGathered;
+        ++sensingFramesSinceLastSleep;
+    }
+
+    void OnSleep() {
+        sleeping = true; // Flag as sleeping
+        sensingFramesSinceLastSleep = 0;
+    }
 }

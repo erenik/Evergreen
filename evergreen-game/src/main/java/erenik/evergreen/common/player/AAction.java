@@ -3,8 +3,10 @@ package erenik.evergreen.common.player;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.Serializable;
+import java.util.Random;
 
 import erenik.evergreen.common.Invention.Invention;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
 import erenik.util.EList;
@@ -15,6 +17,8 @@ import erenik.util.EList;
 public enum AAction {
     GiveResources,
     SendMessage,
+    GiveItem, // Oh, yeah!
+    GiveBlueprint,
 //     ReadReceivedMessages,
 //     RequestResources,
 //    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
@@ -57,6 +61,8 @@ public enum AAction {
 //            case ReadReceivedMessages: return "Read received messages";
             case GiveResources: return "Give resources";
             case SendMessage: return "Send message";
+            case GiveItem: return "Give item";
+            case GiveBlueprint: return "Give blueprint";
         }
         return null;
     }
@@ -64,14 +70,10 @@ public enum AAction {
 //            case CoTransport: return "Co-Transport";
 
     public static void SetTextDescArgs(Action action) {
-        action.text = GetText(action.aaType);
+        action.text = GetText(action.ActiveAction());
         Action a = action;
         a.requiredArguments = new EList<>();
-        switch (action.aaType){
-/*            case ReadReceivedMessages: a.description = "Reads/processes one of the messages or requests that you have received from other players";
-                a.requiredArguments.add(ActionArgument.ReceivedMessage);
-                break;
-  */
+        switch (action.ActiveAction()){
             case GiveResources: a.description = "Gives resources to target player";
                 a.requiredArguments.add(ActionArgument.Player);
                 a.requiredArguments.add(ActionArgument.ResourceType);
@@ -81,13 +83,39 @@ public enum AAction {
                 a.requiredArguments.add(ActionArgument.Player);
                 a.requiredArguments.add(ActionArgument.Text);
                 break;
-
-//            case RequestResources:
-  //              , "Request resources from target player", new ActionArgument[]{ActionArgument.Player,ActionArgument.ResourceType, ActionArgument.ResourceQuantity}),
+            case GiveItem: a.description = "Give an item to some player";
+                a.requiredArguments.add(ActionArgument.Item);
+                break;
+            case GiveBlueprint: a.description = "Give an invention blueprint to some player";
+                a.requiredArguments.add(ActionArgument.Blueprint);
+                break;
         }
         //   ExploreAbandonedShelter("Explore Abandoned shelter", "Explores one of the shelters you've found previously. It may yield resources, but could also contain "),
 //    ExplorePlayerInhabitedShelter("Explore Inhabited shelter", "Explores one of the inhabited shelters you found previously"),
 //            case CoTransport: (, "Share a transport with target player, reducing emissions and increasing social support bonuses if you get attacked during transport.", ActionArgument.Player),
+    }
+
+    static Random randomAction = new Random(System.currentTimeMillis());
+    public static Action RandomActiveAction(Player forPlayer) {
+        if (forPlayer.IsAlive() == false)
+            return null;
+        for(int i = 0; i < 10; ++i) { // Give N attempts per request.
+            // Randomly select one.
+            AAction aAction = AAction.values()[randomAction.nextInt(AAction.values().length * 5) % AAction.values().length];
+            Action action = new Action();
+            action.SetActiveAction(aAction);
+            boolean ok = action.AddRandomArguments(forPlayer); // Retursn true if valid arguments could be added.
+            if (!ok)
+                continue;
+            // Check if the action has its requirements fulfilled?
+            if (!action.HasValidArguments()) {
+                System.out.println("Action "+action.ActiveAction().name()+" has BAD arguments.");
+                continue;
+            }
+            // Generate appropriate arguments based on the given player requesting them?
+            return action;
+        }
+        return null;
     }
 
     class Argument
