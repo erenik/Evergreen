@@ -14,6 +14,7 @@ import weka.filters.unsupervised.attribute.Add;
  */
 
 public class TransportData implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private static final long SecondsInAYear = 31557600;
     private static final long MillisecondsInAYear = 31557600000L;

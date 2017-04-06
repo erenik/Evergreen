@@ -14,6 +14,8 @@ import erenik.util.EList;
  * Created by Emil on 2016-10-31.
  */ /// For the player game-log. To be color-coded etc.?
 public class Log implements Serializable {
+    private static final long serialVersionUID = 1L;
+
 
     /** True for all Log-objects created earlier.
      * Those with this flag as false use the new Log-type where an enumerated text-ID is used

@@ -128,7 +128,11 @@ public class TransportUsage  extends EvergreenActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (view == null)
+                    return;
                 TextView tv = (TextView)view;
+                if (tv == null)
+                    return; // Was crashing below.
                 int val = Integer.parseInt((String) tv.getText());
                 SharedPreferences.Editor e = sp.edit();
                 e.putInt(PREF_SLEEP_SESSIONS, val);
@@ -230,7 +234,7 @@ public class TransportUsage  extends EvergreenActivity {
         /// Update it with total time for now? or past 5 mins?
         graphTransportDurations.removeAllSeries(); // Remove old data from graph.
 //        final EList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
-        System.out.println("Update graph with stats: "+stats.size());
+       // System.out.println("Update graph with stats: "+stats.size());
         long max = 10;
         for (int i = 0; i < stats.size(); ++i){
             final BarGraphSeries<DataPoint> series = new BarGraphSeries<>();

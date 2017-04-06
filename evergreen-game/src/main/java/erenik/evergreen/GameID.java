@@ -17,6 +17,8 @@ import java.io.Serializable;
  */
 
 public class GameID implements Serializable{
+    private static final long serialVersionUID = 1L;
+
     public static int BadID = -1;
     public static int LocalGame = 0;
     public static int GlobalGame = 1; // Refers to any of the above, depends on test mode.

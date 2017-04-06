@@ -21,7 +21,7 @@ public class Simulator
 
     EList<Game> games = new EList<>();
     // Local game for singleplayer. Default has some NPCs, or no?
-    Game localGame = new Game();
+    Game localGame = Game.LocalGame();
 
     private Simulator()
     {

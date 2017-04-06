@@ -32,6 +32,7 @@ import erenik.util.Tuple;
  * Created by Emil on 2016-12-10.
  */
 public class Game implements Serializable {
+    private static final long serialVersionUID = 1L;
     public Game(){
         logEnumerator = new Enumerator();
         Log.logIDEnumerator = logEnumerator; // Set it.
@@ -178,8 +179,11 @@ public class Game implements Serializable {
             Log("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
             return 0;
         }
-        if (UpdatesSinceLastDay() == 0){
-            Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day.");
+        if (IsLocalGame()){ // Local game, check when last new-day was pressed..? Demand at least 1 min?
+            System.out.println("Check time?");
+        }
+        else if (UpdatesSinceLastDay() == 0){
+            Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day. GameID: "+GameID());
             return 0;
         }
         LogAndPrint("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
@@ -204,6 +208,10 @@ public class Game implements Serializable {
             }
   */      }
         return numSimulated;
+    }
+
+    private boolean IsLocalGame() {
+        return GameID() == GameID.LocalGame;
     }
 
     /// Player updates since last day.
@@ -367,6 +375,7 @@ public class Game implements Serializable {
     }
     private void Log(String msg){
         FileUtil.AppendWithTimeStampToFile("logs", "game"+GameID()+".txt", msg);
+        System.out.println("Log: "+msg);
     }
     private void LogAndPrint(String msg){
         Log(msg);
@@ -431,4 +440,10 @@ public class Game implements Serializable {
     }
 
     String fileName(){ return DefaultPath(gameID.id); }
+
+    public static Game LocalGame() {
+        Game game = new Game();
+        game.gameID.id = GameID.LocalGame;
+        return game;
+    }
 }

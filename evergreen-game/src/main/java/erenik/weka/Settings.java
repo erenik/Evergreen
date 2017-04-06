@@ -11,7 +11,7 @@ public class Settings {
     public Instances trainingDataWhole = null; // Whole data to be used for the test.
     public Instances trainingDataFold = null; // Used for the actual tests / folds.
     // If true, will use testDataWhole and partition it, otherwise it will do predictions straight on the test-data.
-    public boolean do10FoldCrossValidation = false;
+    public boolean doNFoldCrossValidation = false;
     // For N-fold cross-validation.
     public int folds = 10, fold = 0; // The current fold.
     // Data to test for N-fold cross-validation.
@@ -21,7 +21,8 @@ public class Settings {
     String[] options = null; // Set to non-Null if you wanna use it.
 
     /// If true, assumes Idle if gyroStdev and accStdev are both null.
-    boolean useNaiveIdleCheck = true;
+    boolean useNaiveIdleCheck = false;
+    float naiveIdleThreshold = 0.01f;
 
     /// Size of history set for smoothing results (take away high-frequency noise).
     public int historySetSize = 0;
@@ -37,18 +38,31 @@ public class Settings {
     boolean gyroscopeOnly = false;
     /// For further info.
     public String testDataSource = "";
+    // TODO: Add a button/toggle for this in any UI that uses the service?
+    public boolean normalizeAcceleration = true; // If true, divides accMin, accMax and accAvg by accAvg before training and testing.
 
     //    @override
     public String toString(){
         return "hss "+historySetSize+" ss"+sleepSessions+" rd"+randomizationDegree+" aO"+accelerometerOnly+" 0G"+nullifyGyroDataDuringPrediction;
     }
 
+
     void CopyFrom(Settings s) {
+        this.useNaiveIdleCheck = s.useNaiveIdleCheck;
+        this.naiveIdleThreshold = s.naiveIdleThreshold;
+        this.folds = s.folds;
         this.historySetSize = s.historySetSize;
         this.sleepSessions = s.sleepSessions;
         this.randomizationDegree = s.randomizationDegree;
         this.forceAverageBeforeSleep = s.forceAverageBeforeSleep;
         this.accelerometerOnly = s.accelerometerOnly;
         this.nullifyGyroDataDuringPrediction = s.nullifyGyroDataDuringPrediction;
+        this.normalizeAcceleration = s.normalizeAcceleration;
+    }
+
+    Settings Clone(){
+        Settings s = new Settings();
+        s.CopyFrom(this);
+        return s;
     }
 }

@@ -108,26 +108,39 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            ClassifyInstances();
-            System.out.println("Iter Second "+((System.currentTimeMillis() / 1000) % 60));
+            boolean classifiersTrained = ClassifyInstances();
+            if (!classifiersTrained) {
+                System.out.println("Iter Second " + ((System.currentTimeMillis() / 1000) % 60));
+                System.out.println("Should sleep? " + callingService.ShouldSleep());
+            }
             /// Check how many occurrences we have calculated now, should we sleep?
-            System.out.println("Should sleep? "+callingService.ShouldSleep());
             if (callingService.ShouldSleep()) {
                 System.out.println("Sleeping for a bit...");
                 // Sleep. Disable callbacks for sensors, etc. for the time being.
                 DisableSensors();
                 callingService.Save(); // Save
-                int toSleepMs = 5000 * callingService.settings.sleepSessions;
+                int secondsToSleep = 5 * callingService.settings.sleepSessions; // int toSleepMs = 5000 * callingService.settings.sleepSessions;
+                long msToSleep = secondsToSleep * 1000;
                 // Emulate what we just detected in between? Or skip it?
                 if (lastSavedSF != null) {
                     TransportType tt = TransportType.GetForString(lastSavedSF.transportString);
-                    callingService.AddTransportOccurrence(new TransportOccurrence(tt, lastSavedSF.startTimeSystemMs, toSleepMs)); // Create an entry corresponding to the average value (i.e., the last modified result).
-                    classifier.ResetValuesHistory();                    // Clear the history set.
+                    callingService.AddTransportOccurrence(new TransportOccurrence(tt, lastSavedSF.startTimeSystemMs, secondsToSleep * 1000)); // Create an entry corresponding to the average value (i.e., the last modified result).
+                //    classifier.ResetValuesHistory();                    // Clear the history set... or?
                 }
                 try {
                     //                      System.out.println("Sleeping " + toSleepMs / 1000 + " seconds");
                     callingService.OnSleep();
-                    Thread.sleep(toSleepMs);
+                    long totalTimeSlept = 0;
+                    long sleepStartMs = System.currentTimeMillis();
+                    for (int i = 0; i < secondsToSleep; ++i) {
+                        Thread.sleep(1000); // Sleep the second.
+                        EvaluateRequests(); // Reply to requests if there are any.
+                        totalTimeSlept = System.currentTimeMillis() - sleepStartMs;
+                        if (totalTimeSlept > msToSleep) {
+                            System.out.println("Overslept by "+(totalTimeSlept - msToSleep)+"ms");
+                            break;
+                        }
+                    }
                     callingService.sleeping = false;
 //                        System.out.println("Sleeping done");
                 } catch (Exception e) {
@@ -238,16 +251,17 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     static boolean didSaveClassifiers = false;
 
-    private void ClassifyInstances() {
+    private boolean ClassifyInstances() {
 //        System.out.println("Classifier trained: "+callingService.classifier.IsTrained());
         if (!classifier.IsTrained()
 //                || !accOnlyClassifier.IsTrained()
                 ) // Return if the classifiers are not trained yet.
-            return;
+            return false;
 
         if (!didSaveClassifiers){
-            SaveClassifiers();
-            didSaveClassifiers = true;
+            // Just wasting time...
+           // SaveClassifiers();
+           // didSaveClassifiers = true;
         }
 
         EList<SensingFrame> toCheckAgain = new EList<>();
@@ -323,6 +337,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         /// Clear array of sensing frames as it has been evaluated.... wat.
 //        finishedSensingFrames.clear();
         sensingFrames = toCheckAgain; // Replace old list with new list of those frames which were not evaluated now.
+        return true;
     }
 
     /// Query next sampling.

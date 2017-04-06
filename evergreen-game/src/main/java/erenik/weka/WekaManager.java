@@ -1,5 +1,6 @@
 package erenik.weka;
 
+import erenik.util.FileUtil;
 import erenik.util.Tuple;
 import weka.attributeSelection.StartSetHandler;
 import weka.classifiers.AbstractClassifier;
@@ -180,7 +181,9 @@ public class WekaManager {
     //        }
             if (data.attribute(0).toString().contains("Time")){
                 data = RemoveColumn(1, data); // Remove the start-time?
+                System.out.println("num Attrs: "+data.numAttributes());
             }
+            /*
             if (accOnly){
                 for (int i = 0; i < data.numAttributes(); ++i){
                     String name = data.attribute(i).toString();
@@ -190,7 +193,7 @@ public class WekaManager {
                         System.out.println("Removing column: "+name);
                     }
                 }
-            }
+            }*/
             data.setClassIndex(data.numAttributes() - 1);            // setting class attribute to the last index - Transports.
             System.out.println("Loaded "+data.size()+" data instances");
             return data;
@@ -227,23 +230,23 @@ public class WekaManager {
      //   } catch (Exception e){e.printStackTrace();}
     }
 
-
+/*
     void NaiveAnd10Fold(){
         System.out.println("Performing Naive test of same training data as testing data.");
         TestClassifiers();
         PrintResultsSimple();
         System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
-        s.do10FoldCrossValidation = true;
+        s.doNFoldCrossValidation = true;
         TestClassifiers();
         PrintResultsSimple();
-        s.do10FoldCrossValidation = false;
+        s.doNFoldCrossValidation = false;
     }
-
+*/
     void TestClassifiers10FoldTestsOnly(){
         System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
-        s.do10FoldCrossValidation = true;
+        s.doNFoldCrossValidation = true;
         TestClassifiers();
-        s.do10FoldCrossValidation = false;
+        s.doNFoldCrossValidation = false;
     }
 
 
@@ -256,7 +259,15 @@ public class WekaManager {
             options[1] = i+""; // Integer to string for the index.
             remove.setOptions(options);                           // set options
             remove.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
+//            System.out.println("Num attrs: "+data.numAttributes());
             Instances newData = Filter.useFilter(data, remove);   // apply filter
+            System.out.println("Removed a column, new attrs: "+newData.numAttributes());
+            if (newData.numAttributes() == 9 ||
+                    newData.numAttributes() == 5)
+                return newData;
+            System.out.println("Bad number of columns, or what do you say?");
+            new Exception().printStackTrace();;
+            System.exit(14);
             return newData; // Just copy it over after it's done.
         } catch (Exception e) {
             e.printStackTrace();
@@ -336,9 +347,10 @@ public class WekaManager {
     }
 
     /// Classifier selection.
-    public void UseRandomForest() {
+    public EList<WClassifier> UseRandomForest() {
         classifiers.clear();
         classifiers.add(new WClassifier(new RandomForest()));
+        return classifiers;
     }
     public void UseRandomTree(){
         classifiers.clear();
@@ -361,7 +373,7 @@ public class WekaManager {
 //        alac.add(new RandomForest());
         for (int i = 0; i < alac.size(); ++i)
             classifiers.add(new WClassifier(alac.get(i)));
-        return classifiers;
+        return classifiers.clone();
     }
     public EList<WClassifier> UseTestClassifiers() {
         classifiers.clear();
@@ -376,10 +388,9 @@ public class WekaManager {
     }
 
     /// Returns accuracy.
-    void DoOwn10FoldCrossValidation(){
-        System.out.println("Traning data : "+s.trainingDataWhole.size());
-        s.do10FoldCrossValidation = true;
-        s.folds = 10;
+    void DoOwnNFoldCrossValidation(){
+        System.out.println("Training data : "+s.trainingDataWhole.size());
+        s.doNFoldCrossValidation = true;
         for (int c = 0; c < classifiers.size(); ++c){
             currentClassifier = classifiers.get(c);
             currentClassifier.Test(s);
@@ -414,24 +425,12 @@ public class WekaManager {
         return s;
     }
 
-    void PrintAllClassificationResults() {
-        PrintAllClassificationResults("");
-    }
-    void PrintAllClassificationResults(String format) {
-        System.out.println("Print all classification results");
-        for (int i = 0; i < classifiers.size(); ++i){
-            WClassifier wc = classifiers.get(i);
-            wc.PrintAll(format);
-        }
-    }
-
-
     /// Tests the current classifiers against the set provided on the given path. Performs default filtration of the set.
     public void TestAgainstSet(String setPath) {
         String[] args = setPath.split("\\\\");
         System.out.print("Testing against file: "+args[args.length - 1]+" settings: "+s);
         s.testDataSource = setPath;
-        s.do10FoldCrossValidation = false;
+        s.doNFoldCrossValidation = false;
         Instances toTest = GetDataFromFile(setPath);
         s.testDataWhole = toTest;
         for (int i = 0; i < classifiers.size(); ++i){
@@ -450,8 +449,24 @@ public class WekaManager {
     }
 
     public void UseClassifier(WClassifier wClassifier) {
-        classifiers.clear();;
+        classifiers.clear();
         classifiers.add(wClassifier);
+    }
+
+    String fileToAppendTo = "";
+    public void AppendToFile(String file, String text) {
+        fileToAppendTo = file;
+        FileUtil.AppendWithTimeStampToFile("HH:mm:ss", ".", fileToAppendTo, text);
+    }
+    public void AppendToFile(String text) {
+        if (fileToAppendTo.length() > 0) {
+            AppendToFile(fileToAppendTo, text);
+            System.out.println(text);
+        }
+    }
+
+    public void ClearSettings() {
+        ResetSettings();
     }
 
 

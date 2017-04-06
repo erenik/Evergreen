@@ -9,6 +9,7 @@ import java.io.Serializable;
  */
 public class Enumerator implements Serializable{
     public long value = 0;
+    private static final long serialVersionUID = 1L;
 
     public void writeTo(java.io.ObjectOutputStream out) throws IOException {
         out.writeLong(value);

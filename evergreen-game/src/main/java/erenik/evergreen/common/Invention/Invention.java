@@ -16,6 +16,8 @@ import static erenik.evergreen.common.Invention.InventionType.RangedWeapon;
  * Created by Emil on 2016-11-01.
  */
 public class Invention implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /// Level of quality/ranking of the invented item. This will grant some bonuses. From 0 to 5ish?
     public String name = "NoName";
     public InventionType type;

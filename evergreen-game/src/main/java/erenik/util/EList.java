@@ -7,6 +7,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import erenik.evergreen.common.logging.Log;
 
@@ -15,6 +16,8 @@ import erenik.evergreen.common.logging.Log;
  * Created by Emil on 2017-03-25.
  */
 public class EList<cls> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     ArrayList<cls> arrL = new ArrayList<>();
 
     public EList() {
@@ -62,6 +65,13 @@ public class EList<cls> implements Serializable {
             es.writeTo(out);
         }
         return true;
+    }
+
+    public EList clone(){
+        EList<cls> newL = new EList<>();
+        for (int i = 0; i < arrL.size(); ++i)
+            newL.add(arrL.get(i));
+        return newL;
     }
 
     /*
@@ -138,5 +148,9 @@ public class EList<cls> implements Serializable {
 
     public EList<cls> subList(int startIndex) {
         return subList(startIndex, arrL.size());
+    }
+
+    public void swap(int index1, int index2) {
+        Collections.swap(arrL, index1, index2);
     }
 }

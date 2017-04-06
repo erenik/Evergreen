@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import erenik.evergreen.GameID;
 import erenik.evergreen.common.packet.OnPacketReplyListener;
 import erenik.evergreen.common.player.Config;
 import erenik.util.EList;
@@ -143,6 +144,13 @@ public class TitleScreen extends EvergreenActivity {
 
     private void LoadPlayerAndHeadToMainScreenOnSuccess() {
         System.out.println("LoadPlayerAndHeadToMainScreenOnSuccess..");
+        if (App.GetPlayer().GameID() == GameID.LocalGame){
+            // Head on over to main-screen right away.
+            System.out.println("Player created in local game, heading to main screen right away.");
+            GoToMainScreen();
+            return;
+        }
+
         LoadPlayerData(App.GetPlayer(), new OnPacketReplyListener(){
             @Override
             public void onSuccess(){

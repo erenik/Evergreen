@@ -10,6 +10,8 @@ import erenik.util.EList;
  */
 
 public class TransportOccurrence implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     TransportOccurrence(){}
 
     public TransportOccurrence(TransportType transport, long duration, DurationType dt){

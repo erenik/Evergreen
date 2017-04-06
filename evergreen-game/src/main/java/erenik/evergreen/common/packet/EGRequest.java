@@ -93,6 +93,8 @@ public class EGRequest extends EGPacket {
     }
 
     public static class ExtraArgs implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         public Player player; // The player object used for authentication/verifying.
         /// Used for FetchLogs
         public int startIndex;

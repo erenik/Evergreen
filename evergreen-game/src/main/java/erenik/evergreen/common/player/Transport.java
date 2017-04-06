@@ -14,6 +14,8 @@ import erenik.weka.transport.TransportType;
  * Created by Emil on 2016-11-11.
  */
 public class Transport implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     Transport() {}
     Transport(TransportType tt, float defProb) {
         this.tt = tt;

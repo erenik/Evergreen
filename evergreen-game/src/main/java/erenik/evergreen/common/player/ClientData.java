@@ -19,6 +19,8 @@ import erenik.util.EList;
 
 // Data modifiable and viewable by the client - any client.
 public class ClientData implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public ClientData(){
         Init();
     }

@@ -47,15 +47,42 @@ public class WClassifierTest {
     EList<WClassifier> testClassifiers = new EList<>();
     Instances trainingData = null;
 
-    int maxSleepHistoryToTest = 50;
+    String file = "WClassifierTest_output.txt";
+    void AppendToFile(String text){
+        wekaMan.AppendToFile(file, text);
+    }
 
+    int minHistoryToTest = 0;
+    int maxHistoryToTest = 10;
+    int historyStep = 1;
     public void DoAllTests(){
         testClassifiers = wekaMan.UseTestClassifiersQuick();
-        maxSleepHistoryToTest = 10;
+        testClassifiers = wekaMan.UseTestClassifiers();
+       // testClassifiers = wekaMan.UseRandomForest();
+//        maxSleepHistoryToTest = 10;
+        minHistoryToTest = 0;
+        maxHistoryToTest = 51;
+        historyStep = 10;
 
-        testAlgorithmsIdleCheckVsWithout();
-        testAlgorithms();
+        AppendToFile("WClassifierTest - all tests");
+
+        wekaMan.s.folds = 2;
+  //      wekaMan.s.useNaiveIdleCheck = true;
+        wekaMan.s.naiveIdleThreshold = 0.01f;
+        wekaMan.s.normalizeAcceleration = false;
+
+//        wekaMan.s.useNaiveIdleCheck = false;
+  //      wekaMan.s.naiveIdleThreshold = 0;
+
         testAlgorithmsHistorySetSizeOwn();
+        wekaMan.s.normalizeAcceleration = true;
+        testAlgorithmsHistorySetSizeOwn();
+
+//        testAlgorithmsIdleCheckVsWithout();
+  //      testAlgorithmsHistorySetSizeOwn();
+
+  //      testAlgorithms();
+        /*
         testAlgorithmsHistorySetSizeBedogni();
 //        testAlgorithmsHistorySetSize();
         testAlgorithmsOnlyWhereGyroDataIsPresent();
@@ -66,6 +93,7 @@ public class WClassifierTest {
         testOwnPrediction();
         //testRandomForest();
         testOwnPrediction(3);
+        */
     }
 
     void LoadBedogniData() {
@@ -74,26 +102,49 @@ public class WClassifierTest {
         trainingData = wekaMan.s.trainingDataWhole;
     }
     void LoadMyData(){
-        Instances data = wekaMan.GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether_PlanesMerged.arff");
-        wekaMan.s.trainingDataWhole = wekaMan.RemoveColumn(1, data);
+        wekaMan.s.trainingDataWhole = wekaMan.GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether_PlanesMerged.arff");
         trainingData = wekaMan.s.trainingDataWhole;
+        // Remove time? - already removed.
+//        wekaMan.s.trainingDataWhole = wekaMan.RemoveColumn(1, data);
+//        System.out.println("num Attrs: "+wekaMan.s.trainingDataWhole.numAttributes());
     }
 
     private void testAlgorithmsIdleCheckVsWithout() {
-        Begin("TEST - Naïve Idle check - with and without");
-        wekaMan.ClearStatsAndSettings();
+        Begin("TEST - Naive Idle check - with and without");
+        ClearStatsAndSettings();
         LoadMyData();
         UseTestClassifiers();
         wekaMan.s.useNaiveIdleCheck = false;
-        wekaMan.DoOwn10FoldCrossValidation();
+        wekaMan.DoOwnNFoldCrossValidation();
         System.out.println("Without idle check");
-        wekaMan.PrintAllClassificationResults("name\t\tacc");
+        String format = "name acc good idle total nit";
+        PrintAllClassificationResults(format);
 
-        wekaMan.ClearStats();
+        ClearStats();
         wekaMan.s.useNaiveIdleCheck = true;
-        wekaMan.DoOwn10FoldCrossValidation();
+        wekaMan.DoOwnNFoldCrossValidation();
         System.out.println("With idle check");
-        wekaMan.PrintAllClassificationResults("name\t\tacc");
+        PrintAllClassificationResults(format);
+
+        ClearStats();
+        for (int i = 0; i < 7; ++i){
+            wekaMan.s.useNaiveIdleCheck = true;
+            wekaMan.s.naiveIdleThreshold = 0.25f * (i+1);
+            wekaMan.DoOwnNFoldCrossValidation();
+            System.out.println("With idle thresh "+wekaMan.s.naiveIdleThreshold);
+        }
+        PrintAllClassificationResults(format);
+    }
+
+    private void ClearStats() {
+        for (int i = 0; i < testClassifiers.size(); ++i){
+            testClassifiers.get(i).ClearStats();
+        }
+    }
+
+    private void ClearStatsAndSettings() {
+        wekaMan.ClearStatsAndSettings();
+        ClearStats();
     }
 
     private void UseTestClassifiers() {
@@ -105,36 +156,48 @@ public class WClassifierTest {
     }
 
     public void Begin(String s){
-        System.out.println("\n"+s);
+        AppendToFile(s);
+        if (wekaMan.s.doNFoldCrossValidation)
+            AppendToFile("Using "+wekaMan.s.folds+" folds for N-fold cross-validation.");
+//        System.out.println("\n"+s);
     }
+
 
     public void testAlgorithms(){
         Begin("TEST - algorithms on own data.");
         wekaMan.ClearStatsAndSettings();
         LoadMyData();
         UseTestClassifiers();
-        wekaMan.DoOwn10FoldCrossValidation();
-        wekaMan.PrintAllClassificationResults("name\t\tacc");
+        wekaMan.DoOwnNFoldCrossValidation();
+        PrintAllClassificationResults("name acc good idle total");
     }
 
     public void testAlgorithmsHistorySetSizeOwn(){
+        Begin("TEST - History set size");
+        ClearStats();
+        LoadMyData();
+        UseTestClassifiers();
+        wekaMan.DoOwnNFoldCrossValidation();
+        System.out.println("Without idle check");
         LoadMyData();
         testAlgorithmsHistorySetSize();
+        PrintAllClassificationResults("name acc hss good total idle nit folds tt pt normAcc");
     }
     public void testAlgorithmsHistorySetSizeBedogni(){
         LoadBedogniData();
         testAlgorithmsHistorySetSize();
     }
-
+    /// Only vary the history set size,
     public void testAlgorithmsHistorySetSize(){
-        Begin("TEST - algorithms on own data, history set size and various classifiers.");
+        Begin("TEST - algorithms on own data, history set size and various classifiers: "+testClassifiers.size());
         // Testing SleepHistory with RandomForest.
-        for (int i = 0; i < testClassifiers.size(); ++i){
-            wekaMan.ClearStatsAndSettings();
-            SetTrainingData();
-            wekaMan.UseClassifier(testClassifiers.get(i));
-            wekaMan.s.forceAverageBeforeSleep = true;
-            TestClassifiersSleepHistory(1, 0, maxSleepHistoryToTest);
+        for (int j = minHistoryToTest; j <= maxHistoryToTest; j += historyStep) {
+            switch (j) {
+                case 1:
+                case 2:
+                    continue;
+            }
+            wekaMan.TestClassifiers10FoldHistory(j);
         }
     }
 
@@ -148,13 +211,13 @@ public class WClassifierTest {
             wekaMan.s.sleepSessions = i;
             for (int j = historySetSizeMin; j <= historySetSizeMax; ++j){
                 wekaMan.TestClassifiers10FoldHistory(j);
-                PrintClassifiersHistorySleep();
+               // PrintClassifiersHistorySleep();
             }
         }
     }
 
     private void PrintClassifiersHistorySleep() {
-        EList<WClassifier> classifiers = wekaMan.classifiers;
+        EList<WClassifier> classifiers = testClassifiers;
         for (int j = 0; j < classifiers.size(); ++j){
             classifiers.get(j).PrintHistorySleep();
         }
@@ -166,8 +229,8 @@ public class WClassifierTest {
         wekaMan.s.onlyWhereGyroDataIsPresent = true;
         LoadMyData();
         UseTestClassifiers();
-        wekaMan.DoOwn10FoldCrossValidation();
-        wekaMan.PrintAllClassificationResults();
+        wekaMan.DoOwnNFoldCrossValidation();
+        PrintAllClassificationResults();
     }
 
     public void testAlgorithmsAccOnly(){
@@ -176,8 +239,8 @@ public class WClassifierTest {
         wekaMan.s.accelerometerOnly = true;
         LoadMyData();
         UseTestClassifiers();
-        wekaMan.DoOwn10FoldCrossValidation();
-        wekaMan.PrintAllClassificationResults();
+        wekaMan.DoOwnNFoldCrossValidation();
+        PrintAllClassificationResults();
     }
     public void testAlgorithmsGyroOnly() {
         Begin("TEST - algorithms on own data, Gyroscope-data only (both training/testing)");
@@ -185,8 +248,8 @@ public class WClassifierTest {
         wekaMan.s.gyroscopeOnly = true;
         LoadMyData();
         UseTestClassifiers();
-        wekaMan.DoOwn10FoldCrossValidation();
-        wekaMan.PrintAllClassificationResults();
+        wekaMan.DoOwnNFoldCrossValidation();
+        PrintAllClassificationResults();
     }
 
 
@@ -196,8 +259,8 @@ public class WClassifierTest {
         wekaMan.s.nullifyGyroDataDuringPrediction = true;
         LoadMyData();
         UseTestClassifiers();
-        wekaMan.DoOwn10FoldCrossValidation();
-        wekaMan.PrintAllClassificationResults();
+        wekaMan.DoOwnNFoldCrossValidation();
+        PrintAllClassificationResults();
     }
 
     public void testOwnDataVsBedogni(){
@@ -206,13 +269,13 @@ public class WClassifierTest {
         LoadMyData();
         UseTestClassifiers();
         wekaMan.TestAgainstSet("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Bedogni_all.arff");
-        wekaMan.PrintAllClassificationResults();
+        PrintAllClassificationResults();
 
         wekaMan.ClearStatsAndSettings();
         LoadBedogniData();
         UseTestClassifiers();
         wekaMan.TestAgainstSet("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether.arff");
-        wekaMan.PrintAllClassificationResults();
+        PrintAllClassificationResults();
     }
 
     public void testOwnPrediction(){
@@ -238,7 +301,7 @@ public class WClassifierTest {
             wekaMan.TestAgainstSet("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Filepersample\\Iris Vaasa to Umea boat.arff");
             wekaMan.TestAgainstSet("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Filepersample\\ReinholdB_Plane 0317.arff");
         }
-        wekaMan.PrintAllClassificationResults();
+        PrintAllClassificationResults();
     }
 
     /*
@@ -277,5 +340,38 @@ public class WClassifierTest {
         }
     }
     */
+
+    void PrintAllClassificationResults() {
+        PrintAllClassificationResults("");
+    }
+    void PrintAllClassificationResults(String format) {
+        /// Fetch all stats.
+        EList<ClassificationStats> stats = new EList<>();
+        for (int i = 0; i < testClassifiers.size(); ++i)
+            stats.addAll(testClassifiers.get(i).GetClassificationStats());
+
+        /// Sort them? By accuracy?
+        for (int i = 0; i < stats.size(); ++i){
+            for (int j = i + 1; j < stats.size(); ++j){
+                ClassificationStats cs = stats.get(i);
+                ClassificationStats cs2 = stats.get(j);
+                if (cs2.accuracy > cs.accuracy) {
+//                    System.out.println("Cs2: "+cs2.good+" better than "+cs.good);
+                    stats.swap(i, j);
+                }
+            }
+        }
+
+        String s = "Print all classification results";
+        s += "\n"+ClassificationStats.printFormatHeader(format);
+        s += "\n==========================================================================";
+        for (int i = 0; i < stats.size(); ++i){
+            ClassificationStats cs = stats.get(i);
+            s += "\n"+cs.printFormat(format);
+//            WClassifier wc = testClassifiers.get(i);
+  //          s += "\n"+wc.AllStatsAsString(format);
+        }
+        AppendToFile(s);
+    }
 
 }

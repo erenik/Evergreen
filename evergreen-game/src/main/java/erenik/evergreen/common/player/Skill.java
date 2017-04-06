@@ -29,6 +29,8 @@ public enum Skill implements Serializable
 /*
 */
     ;
+    private static final long serialVersionUID = 1L;
+
     Skill()
     {
         this.text = "textToReplace";
@@ -39,9 +41,6 @@ public enum Skill implements Serializable
         this.expRequired = expRequired;
         this.briefDescription = briefDescription;
     }
-    
-    // Serialization version.
-    public static final long serialVersionUID = 1L;
  
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeFloat(totalExp);

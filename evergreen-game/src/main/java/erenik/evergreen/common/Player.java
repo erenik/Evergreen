@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 
 import erenik.evergreen.Game;
+import erenik.evergreen.GameID;
 import erenik.evergreen.Simulator;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
@@ -47,6 +48,8 @@ import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
  * Created by Emil on 2016-10-25.
  */
 public class Player extends Combatable implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public void UpdateFrom(ClientData cd) { // Client-side.
         long idSeen = (long) Get(Config.LatestLogMessageIDSeen); // Those configs that we may have manipulated during updates, save them....!
         this.cd = cd; // Just assign it, should be fine. NO!
@@ -122,9 +125,6 @@ public class Player extends Combatable implements Serializable {
     float t_starvingModifier = 1;
     float t_materialModifier = 1; // Same as starving, lowers when negative (debt) on action requirements of materials.
 
-    // Serialization version.
-    public static final long serialVersionUID = 1L;
-    
     Invention GetEquipped(InventionType queryType) {
         EList<Invention> equipped = GetEquippedInventions();
         for (int i = 0; i < equipped.size(); ++i) {
@@ -207,7 +207,8 @@ public class Player extends Combatable implements Serializable {
         out.writeInt(version);
         out.writeInt(gameID);
         out.writeInt(sendAll);
-        if (sendAll == CREDENTIALS_ONLY){             // Then send only the credentials..
+
+        if (sendAll == CREDENTIALS_ONLY && gameID != GameID.LocalGame){             // Then send only the credentials..
             out.writeObject(name);
             out.writeObject(email);
             out.writeObject(password);
@@ -252,7 +253,11 @@ public class Player extends Combatable implements Serializable {
                 name = (String) in.readObject();
                 email = (String) in.readObject();
                 password = (String) in.readObject();
-          //      System.out.println("Player read - Credentials only");
+                if (gameID == GameID.LocalGame) {
+                    System.out.println("Player read - Credentials only - in local game....?");
+                    new Exception("Player read with only credentials in local game").printStackTrace();
+                    return false;
+                }
                 return true;
             }
           //  System.out.println("Player read - All");
@@ -1856,6 +1861,10 @@ public class Player extends Combatable implements Serializable {
 
     public void ClearLog() {
         log = new EList<Log>();
+    }
+
+    public int GameID() {
+        return gameID;
     }
 
     public enum StartingBonus{

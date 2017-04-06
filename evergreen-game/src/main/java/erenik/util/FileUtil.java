@@ -13,6 +13,11 @@ import java.util.Date;
  */
 
 public class FileUtil {
+    /// e.g. "yyyy-MM-dd_HH:mm:ss"
+    public static void AppendWithTimeStampToFile(String timeFormat, String folderStrng, String fileName, String s){
+        String dateStrNow = new SimpleDateFormat(timeFormat).format(new Date());
+        AppendToFile(folderStrng, fileName, dateStrNow+" "+s);
+    }
     public static void AppendWithTimeStampToFile(String folderStrng, String fileName, String s){
         String dateStrNow = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
         AppendToFile(folderStrng, fileName, dateStrNow+" "+s);

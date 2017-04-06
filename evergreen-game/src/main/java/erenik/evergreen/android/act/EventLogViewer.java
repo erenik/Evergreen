@@ -102,7 +102,11 @@ public class EventLogViewer extends EvergreenActivity {
                 // Update initial contents.
                 maxLogLinesInEventLog = 500;
                 focusLastLogMessageUponUpdate = true; // Scroll to the bottom.
-                RequestLogMessages(num, 0);
+                if (App.IsLocalGame()) {
+                    UpdateLog();                    // Just update the log immediately?
+                }
+                else
+                    RequestLogMessages(num, 0);
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
