@@ -78,6 +78,11 @@ public class EGRequest extends EGPacket {
         return new EGRequest(EGRequestType.RestartSameCharacter, player.toByteArr());
     }
 
+    public static EGPacket TurnSurvived(Player forPlayer){
+        forPlayer.sendAll = Player.CREDENTIALS_ONLY;
+        return new EGRequest(EGRequestType.TurnSurvived, forPlayer.toByteArr());
+    }
+
     public static EGPacket FetchWholeLog(Player player) {
         player.sendAll = Player.CREDENTIALS_ONLY;
         byte[] bytes = player.toByteArr();

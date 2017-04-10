@@ -177,6 +177,16 @@ public class Game implements Serializable {
 
     static int numNextDaysSkipped = 0;
 
+    boolean ShouldPrintDaysSkipped(){
+        if (numNextDaysSkipped < 100 && numNextDaysSkipped % 10 == 0)
+            return true;
+        if (numNextDaysSkipped < 1000 && numNextDaysSkipped % 100 == 0)
+            return true;
+        if (numNextDaysSkipped < 1000 && numNextDaysSkipped % 1000 == 0)
+            return true;
+        return false;
+    }
+
     /// returns num of player characters simulated.
     public int NextDay() {
         Log.logIDEnumerator = logEnumerator; // Set log enumerator for this session.
@@ -184,21 +194,25 @@ public class Game implements Serializable {
 //        if (!players.contains(App.GetPlayer()))
   //          players.add(App.GetPlayer());
         if (players.size() == 0) {
-            Log("Game.NextDay: No players, doing nothing");
+            if (ShouldPrintDaysSkipped())
+                Log("Game.NextDay: No players, doing nothing");
             ++numNextDaysSkipped;
             return 0;
         }
         int activePlayers = ActivePlayers();
         if (activePlayers == 0){
-            Log("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
+            if (ShouldPrintDaysSkipped())
+                Log("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
             ++numNextDaysSkipped;
             return 0;
         }
         if (IsLocalGame()){ // Local game, check when last new-day was pressed..? Demand at least 1 min?
-            Printer.out("Check time?");
+            if (ShouldPrintDaysSkipped())
+                Printer.out("Check time?");
         }
         else if (UpdatesSinceLastDay() == 0){
-            Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day. GameID: "+GameID());
+            if (ShouldPrintDaysSkipped())
+                Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day. GameID: "+GameID());
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

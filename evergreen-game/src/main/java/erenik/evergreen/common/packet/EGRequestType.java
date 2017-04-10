@@ -20,13 +20,14 @@ public enum EGRequestType {
     RestartSameCharacter("RestartSameCharacter"),
     FetchWholeLog("FetchWholeLog"),
     FetchLog("FetchLog"),
-    LogLength("LogLength"),; // To keep name, difficulty, etc.
+    LogLength("LogLength"),
+    TurnSurvived("TurnSurvived"), // Requests the Stat.TurnSurvived for the player. Reply is the Stat as an Integer.
+    ; // To keep name, difficulty, etc.
     EGRequestType(String header)
     {
         this.text = header;
     }
-    static EGRequestType fromString(String fromString)
-    {
+    static EGRequestType fromString(String fromString) {
          //       Printer.out("EGRequestType.fromString");
         for (int i = 0; i < EGRequestType.values().length; ++i)
             if (EGRequestType.values()[i].text.equals(fromString))
