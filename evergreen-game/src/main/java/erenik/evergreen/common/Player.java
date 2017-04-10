@@ -1542,6 +1542,8 @@ public class Player extends Combatable implements Serializable {
     private boolean FindRandomPlayer(int numRandomAttempts, Game game) {
         for (int i = 0; i < numRandomAttempts; ++i){
             Player p = game.RandomLivingPlayer(cd.knownPlayerNames);
+            if (p == null)
+                continue;
             if (KnowsThisPlayer(p.name))
                 continue;
             FoundPlayer(p);
@@ -1703,7 +1705,7 @@ public class Player extends Combatable implements Serializable {
             return;
         }
         cd.inventory.add(invention);
-        LogInfo(LogTextID.obtainedItem);
+        LogInfo(LogTextID.obtainedItem, invention.name);
     }
 
     @Override
