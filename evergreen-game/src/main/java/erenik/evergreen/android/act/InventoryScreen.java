@@ -13,12 +13,11 @@ import erenik.util.Printer;
  */
 
 public class InventoryScreen extends EvergreenActivity {
-    public enum ReqCode {
-        DisplayWeapons,
-        DisplayArmors,
-        DisplayTools,
-        DisplayAll,
-    };
+    public static final int DisplayWeapons = 0,
+        DisplayArmors = 1,
+        DisplayTools = 2,
+        DisplayAll = 3;
+    public static final String DisplayFilter = "DisplayFilter"; // For the ordinals of the above.
     /// Populate the inventory.
     InventionType typeRelevant = InventionType.Weapon;
 
@@ -27,34 +26,38 @@ public class InventoryScreen extends EvergreenActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
         // Check reqID?
-        int reqCode = getIntent().getIntExtra("ReqCode", 0);
-        ReqCode rc = ReqCode.values()[reqCode];
-        Printer.out("Req code: "+reqCode+" rc: "+rc);
-        switch (rc){
+        int reqCode = getIntent().getIntExtra(DisplayFilter, 0);
+        Printer.out("Req code: "+reqCode);
+        switch (reqCode){
             case DisplayWeapons: typeRelevant = InventionType.Weapon; break;
             case DisplayArmors: typeRelevant = InventionType.Armor; break;
             case DisplayTools: typeRelevant = InventionType.Tool; break;
+            case DisplayAll:
+            default:
+                typeRelevant = InventionType.Any; break;
         }
 
         UpdateList();
         findViewById(R.id.buttonWeapons).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                typeRelevant = InventionType.Weapon;
+                SetFilter(InventionType.Weapon);
                 UpdateList();
             }
         });
         findViewById(R.id.buttonArmor).setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                typeRelevant = InventionType.Armor;
+                SetFilter(InventionType.Armor);
+//                typeRelevant = InventionType.Armor;
                 UpdateList();
             }
         });
         findViewById(R.id.buttonTools).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                typeRelevant = InventionType.Tool;
+                SetFilter(InventionType.Tool);
+//                typeRelevant = InventionType.Tool;
                 UpdateList();
             }
         });
@@ -64,6 +67,13 @@ public class InventoryScreen extends EvergreenActivity {
                 finish();
             }
         });
+    }
+
+    private void SetFilter(InventionType givenFilter) {
+        if (typeRelevant == givenFilter)
+            typeRelevant = InventionType.Any;
+        else
+            typeRelevant = givenFilter;
     }
 
     @Override

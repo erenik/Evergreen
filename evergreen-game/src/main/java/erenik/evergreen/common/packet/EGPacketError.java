@@ -9,5 +9,7 @@ public enum EGPacketError {
     CouldNotEstablishConnection,
     ConnectionTimedOut,
     NoResponse,
-    BadVersion,
+    BadVersion,;
+
+    public String extraText = "";
 }

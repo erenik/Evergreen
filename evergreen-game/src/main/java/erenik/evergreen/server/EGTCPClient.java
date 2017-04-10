@@ -129,7 +129,7 @@ public class EGTCPClient extends Thread
             dActionsStr += action+", ";
             player.cd.dailyActions.add(action);
         }
-        for (int i = 0; i < 2; ++i){
+        for (int i = 0; i < 1; ++i){
             Action action = AAction.RandomActiveAction(player);
             if (action == null)
                 continue;

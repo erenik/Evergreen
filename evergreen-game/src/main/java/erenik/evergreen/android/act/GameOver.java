@@ -88,4 +88,10 @@ public class GameOver extends EvergreenActivity {
         focusLastLogMessageUponUpdate = true;
     }
     // Delayed, make buttons visible?
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UpdateLog();
+    }
 }

@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.Display;
 
 import java.io.FileInputStream;
@@ -22,11 +20,9 @@ import erenik.evergreen.GameID;
 import erenik.evergreen.android.act.EvergreenActivity;
 import erenik.evergreen.android.act.GameOver;
 import erenik.evergreen.common.Player;
-import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.packet.EGPacket;
-import erenik.evergreen.common.packet.EGPacketCommunicator;
 import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
@@ -56,25 +52,12 @@ public class App {
     static private EList<Player> players = new EList<>();
     // Player, should be put or created into the list of players, based on what was loaded upon start-up.
     static private Player player = null;
-    static private EGPacketCommunicator comm = null;
     /// Used during creation of new characters ONLY. After creation the integer should be checked with the player object itself.
     public static int gameID = GameID.BadID;
     // public static boolean isLocalGame = false,
      //       isMultiplayerGame = false; // Set upon start.
 
-
-    static void InitCommunicator(){
-        comm = new EGPacketCommunicator();
-        // Do some initial tests to see which IP to use? no?
-
-
-//        comm.SetServerIP("192.168.0.11"); // Home/local address
-//        comm.SetServerIP("10.104.33.248"); // School address
-        comm.SetServerIP("www.erenik.com"); // Public address
-    }
-
-    static public Player GetPlayer()
-    {
+    static public Player GetPlayer() {
         return player;
     }
 
@@ -117,10 +100,8 @@ public class App {
         return false;
     };
 
-    public static int GetColorForLogType(LogType t)
-    {
-        switch(t)
-        {
+    public static int GetColorForLogType(LogType t) {
+        switch(t) {
             case ATTACK: return R.color.attack;
             case ATTACKED_MISS:
             case ACTION_FAILURE:
@@ -139,8 +120,17 @@ public class App {
                 return R.color.attacked;
             case EVENT: return R.color.event;
             case PROBLEM_NOTIFICATION: return R.color.problemNotification;
+            case PLAYER_ATTACK:
+                return R.color.orange;
+            case PLAYER_ATTACKED_ME: return R.color.attacked;
+            case PLAYER_ATTACK_MISS:
+                return R.color.grey80;
+            case PLAYER_ATTACKED_ME_BUT_MISSED: return R.color.grey90;
+            default:
+                Printer.out("Using default color");
+                return R.color.grey50;
         }
-        return R.color.black;
+//        return R.color.black;
     }
 
     /// No filter, all is shown.
@@ -276,6 +266,7 @@ public class App {
             // Write # of players?
             for (int i = 0; i < players.size(); ++i) {
                 Player p = players.get(i);
+                p.sendAll = Player.SEND_ALL; // Save everything locally.
                 objectOut.writeObject(p);
             }
             fileOut.getFD().sync();
@@ -448,22 +439,13 @@ public class App {
         currentActivity.Toast("Active action queued.");
     }
 
-    /// Sends the packet to its destination - probably the default server?
-    static int handlerUpdateDelayMs = 20;
-    static Handler packetHandler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            if (comm.CheckForUpdates() > 0)
-                packetHandler.sendMessageDelayed(new Message(), handlerUpdateDelayMs); // Update every second?
-            return true;
+    public static void Send(EGPacket pack){
+        if (currentActivity == null) {
+            Printer.out("Current activity null, failed to sent packet.");
         }
-    });
-    public static void Send(EGPacket pack) {
-        if (comm == null)
-            InitCommunicator();
-        comm.Send(pack);
-        packetHandler.sendMessageDelayed(new Message(), handlerUpdateDelayMs); // Update every second?
+        Network.Send(pack, currentActivity);
     }
+
 
 
     public static void SetPlayers(EList<Player> players) {

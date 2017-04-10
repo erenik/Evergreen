@@ -40,6 +40,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.text.SimpleDateFormat;
+
+import erenik.evergreen.common.player.Stat;
 import erenik.util.EList;
 import java.util.Date;
 import erenik.util.EList;
@@ -132,6 +134,9 @@ public class EGTCPServer extends Thread {
             if (args[i].equals("-maxActivePlayers")) {
                 serv.maxActivePlayers = iarg;
                 Log("Max active players set: "+serv.maxActivePlayers, INFO);
+            }
+            if (args[i].equals("-secondsPerDay")){
+                Game.secondsPerDay = iarg;
             }
         }
         if (args.length > 2) {
@@ -301,6 +306,13 @@ public class EGTCPServer extends Thread {
         if (pack instanceof EGRequest)
             req = (EGRequest) pack;
         switch(pack.ReqType()) {
+            case TurnSurvived: {
+                Player p = pack.GetPlayer();
+                if (CheckCredentials(p, sock)){
+                    Reply(sock, EGResponse.TurnsSurvived(GetPlayerInSystem(p).Get(Stat.TurnSurvived)).build());
+                }
+                break;
+            }
             case Save: { // Player as POJO in body
                 EvaluateSaveRequest(sock, pack);
                 break;
@@ -397,8 +409,10 @@ public class EGTCPServer extends Thread {
     private void EvaluateSaveRequest(Socket sock, EGPacket pack) throws Exception {
         Player player = pack.GetPlayer();
         Player playerInSystem = GetPlayerInSystem(player);
-        if (!CheckCredentials(player, sock))
+        if (!CheckCredentials(player, sock)) {
+            Printer.out("EvaluateSaveRequest Bad credentials");
             return;
+        }
         playerInSystem.SaveFromClient(player); // Save configured content from the client.
         LogPlayerStats("PlayerSave: "+playerInSystem.name+", Transports: "+playerInSystem.TopTransportsAsString(5));
         Game game = GetGameById(playerInSystem.gameID);
@@ -511,6 +525,7 @@ public class EGTCPServer extends Thread {
         Player exists = game.GetPlayer(player.name);
         if (exists != null){
             // Restart it then?
+            exists.PrepareForTotalRestart(); // Clear old items as well, yo.
             exists.ReviveRestart();
             Reply(sock, EGPacket.player(exists).build()); // Notify success with the updated stats n stuff.
             return;

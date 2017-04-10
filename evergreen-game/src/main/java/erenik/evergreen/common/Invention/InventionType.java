@@ -12,7 +12,7 @@ public enum InventionType
     Any(0), // Used as a wild-card.
     Weapon(3),
     Armor(2),
-    RangedWeapon(1), // Actually refers to certain kinds of weapons.
+   // RangedWeapon(1), // Actually refers to certain kinds of weapons.
   //  ShelterAddition(2),
 //    VehicleUpgrade(2),
     Tool(2);
@@ -30,7 +30,7 @@ public enum InventionType
             case Any: return "Any";
             case Armor:
             case Weapon: return name();
-            case RangedWeapon: return "Ranged Weapon";
+     //       case RangedWeapon: return "Ranged Weapon";
   //          case ShelterAddition: return "Shelter Addition";
   //          case VehicleUpgrade: return "Vehicle Upgrade";
             case Tool: return "Tool";

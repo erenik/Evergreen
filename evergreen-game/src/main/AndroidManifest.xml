@@ -20,6 +20,7 @@
         android:theme="@style/Evergreen">
 
         <service android:name="erenik.weka.transport.TransportDetectionService" />
+        <service android:name=".android.BackgroundUpdateService" />
 
         <activity android:name="erenik.evergreen.android.act.EvergreenActivity" android:exported="true" />
         <activity android:name="erenik.evergreen.android.act.TitleScreen" android:label="@string/app_name"> <!-- Main start-up activity when launching the app. Performs checks and then auto-loads or shows initial menus. -->

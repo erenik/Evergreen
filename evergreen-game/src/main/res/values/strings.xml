@@ -323,5 +323,15 @@
     <string name="ordinaryClothes">Ordinary clothes</string>
     <string name="parrying">Parrying: </string>
     <string name="inventory">Inventory</string>
+    <string name="targetStunned">(arg) is stunned!</string>
+    <string name="entHatred">The forest stirs as if in anger.</string>
+    <string name="tailWhip">The (arg) whips its tail at (arg) and deals (arg) points of damage.</string>
+    <string name="tailWhipMiss">The (arg) whips its tail at (arg) but misses.</string>
+    <string name="breathAttack">The (arg) uses its breath attack on (arg), dealing (arg) points of damage.</string>
+    <string name="breathAttackMiss">The (arg) uses its breath attack on (arg) but misses.</string>
+    <string name="gaiaHeal">The (arg) heals itself. (arg) hit points are restored.</string>
+    <string name="slashOfHeavens">The (arg) uses Slash of Heavens on (arg). It strikes true, dealing (arg) points of damage.</string>
+    <string name="slashOfHeavensPartial">The (arg) uses Slash of Heavens on (arg). It only hits partially, dealing (arg) points of damage.</string>
+    <string name="recycled">Recycled (arg). Gained (arg) materials back from recycling.</string>
 
 </resources>

@@ -49,10 +49,10 @@ public class ResultsScreen extends EvergreenActivity  {
             int textSize = 18;
             int drawableLeftSide = 0;
             Log l = p.log.get(i);
-            Printer.out("l "+l.LogID()+" t: "+l.TextID().name());
+//            Printer.out("l "+l.LogID()+" t: "+l.TextID().name());
             if (l.LogID() <= lastLogMessageIDSeen)
                 continue;
-            Printer.out("l.LogID(): "+l);
+  //          Printer.out("l.LogID(): "+l);
             l.displayedToEndUser = 1;
             lastID = l.LogID();
             TextView viewToAdd = null;

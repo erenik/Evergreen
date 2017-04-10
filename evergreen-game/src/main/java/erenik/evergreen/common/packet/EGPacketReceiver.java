@@ -65,7 +65,7 @@ public class EGPacketReceiver extends Thread
                     if (pack.replies.size() > 0){
                         //         Printer.out("Got a reply?");
                         // Check last reply time?
-                        long msAgo = System.currentTimeMillis() - pack.LastReply().receiveTime;
+                        long msAgo = System.currentTimeMillis() - pack.LastReply().receiveTimeMs;
                         if (msAgo > 3000){ // Wait at most 1 second more for each packet received on the socket.
                            // Printer.out("Last response was "+msAgo+"ms ago, removing this packet now from the listener.");
                             remove = true;
@@ -100,7 +100,7 @@ public class EGPacketReceiver extends Thread
                     reply.informedListeners = true;
                 }
             }
-            if (pack.sendTime > System.currentTimeMillis() + 3000) { // Wait at most 10 seconds for all replies from a specific packet, then discard it from the array to be checked further.
+            if (System.currentTimeMillis() - pack.sendTimeMs >  10000) { // Wait at most 10 seconds for all replies from a specific packet, then discard it from the array to be checked further.
                 packetsToBeUpdated.remove(pack);
                 --i;
             }

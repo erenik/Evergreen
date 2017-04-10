@@ -31,6 +31,7 @@ public abstract class Combatable extends Object
     public int fleeSkill = 0;
     public float fleeBonusFromTransport = 0;
     public int parry = 0;
+    public int stunnedRounds = 0;
 
     public void PrepareForCombat(boolean defendingShelter) {
     }
@@ -53,14 +54,14 @@ public abstract class Combatable extends Object
     /* Inflicts damage. This may be adjusted by implementers, but should mostly apply it straight to HP.
        Returns the damage inflicted (>0)
     */
-    int InflictDamage(int damage, Combatable attacker) {
+    int InflictDamage(int damage, Combatable attacker, Encounter enc) {
         damage *= receivedDamageMultiplier;
         float php = hp;
         int iDamage = Math.round(damage);
         if (iDamage < 1)
             iDamage = 1; // Minimum 1.
-        attacker.OnDealtDamage(this, iDamage);
-        OnReceivedDamage(attacker, iDamage);
+        attacker.OnDealtDamage(this, iDamage, enc);
+        OnReceivedDamage(attacker, iDamage, enc);
         hp -= iDamage;
    //     Printer.out("Damage taken: "+damage+" hp reduced from "+php+" to "+hp);
         return damage;
@@ -68,8 +69,12 @@ public abstract class Combatable extends Object
 
     protected abstract void OnKilled(Combatable targetYouKilled);
     protected abstract void OnDied(Combatable attackerWhoKilledYou);
-    protected abstract void OnDealtDamage(Combatable target, int damage);
-    protected abstract void OnReceivedDamage(Combatable fromAttacker, int damage);
+    protected abstract void OnDealtDamage(Combatable target, int damage, Encounter enc);
+    protected abstract void OnReceivedDamage(Combatable fromAttacker, int damage, Encounter enc);
+    // By default, just call DefaultAttack(target,enc); Returns true if it kills the target.
+    public abstract boolean Attack(Combatable target, Encounter enc);
+
+
     /*{
         Printer.out("Combatable.OnKilled, has to be overridden");
         new Exception().printStackTrace();
@@ -101,59 +106,68 @@ public abstract class Combatable extends Object
         return defense - ensnared.size();
     }
     /// Current Attack value.
-    int CurrentAttack()
-    {
+    int CurrentAttack() {
         int a = attack - ensnared.size();
         a += (hitsAttempted == 0? initialAttackBonus : 0); // Add attack bonus if it's the first attack, and there exists any such bonus..?
         a -= consecutiveFleeAttempts; // Decreases when trying to flee.
         return a;
     }
+
+    void DoAttackRound(Combatable target, Encounter enc){
+        for (int i = 0; i < attacksPerTurn; ++i)
+            Attack(target, enc);
+    }
+
+    /// Would you hit? or miss?
+    boolean AttackHit(Combatable target, int attackValue, boolean allowParry, Encounter enc){
+        boolean hit = target.Attack(CurrentAttack());
+        // Evaluate if parrying occurs.
+        if (hit){
+            // Roll some D6's..!
+            float chanceToParry = target.parry + 3;
+            if (chanceToParry > 10)
+                chanceToParry = 10; // Max 80% parry rate?
+            boolean parried = Dice.RollD6(2) < chanceToParry; // 2-12, less than the chance to parry?
+            if (parried) {
+                enc.LogEnc(new Log(LogTextID.playerParries, LogType.INFO, target.name));
+                hit = false;
+            }
+        }
+        return hit;
+    }
+
     /// Check HP?
     /// Order this enemy to attack the player. Returns true if it kills the target.
-    public boolean Attack(Combatable target, Encounter enc) {
-    //    enc.LogEnc(new Log(name+" attacks per turn: "+attacksPerTurn, LogType.INFO));
-        for (int i = 0; i < attacksPerTurn; ++i) {
-  //          enc.LogEnc(new Log(name+" attacks "+target.name+"!", LogType.INFO));
-            // Attack it? Will have bonus first round (first attempt).
-            boolean hit = target.Attack(CurrentAttack());
-            // Evaluate if parrying occurs.
-            if (hit){
-                // Roll some D6's..!
-                float chanceToParry = target.parry + 3;
-                if (chanceToParry > 10)
-                    chanceToParry = 10; // Max 80% parry rate?
-                boolean parried = Dice.RollD6(2) < chanceToParry; // 2-12, less than the chance to parry?
-                if (parried) {
-                    enc.LogEnc(new Log(LogTextID.playerParries, LogType.INFO, target.name));
-                    hit = false;
-                }
-            }
-            ++hitsAttempted;
-            if (!hit) {
-//                enc.LogEnc(new Log("Miss!", LogType.INFO));
-                if (target.isPlayer && isPlayer) { // Both are players?
-                    enc.LogEnc(new Log(LogTextID.playerPlayerAttackMiss, LogType.PLAYER_ATTACK_MISS, name, target.name));
-                }
-                else
-                    enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttackMiss : LogTextID.monsterPlayerAttackMiss, isPlayer? LogType.ATTACK_MISS : LogType.ATTACKED_MISS, name, target.name));
-                continue;
-            }
-            int damageDealt = target.InflictDamage(attackDamage.Roll(), this);
-      //      enc.LogEnc(new Log("Hit! "+damageDealt+" damage! HP now at "+target.hp, LogType.INFO));
-            if (target.isPlayer && isPlayer) {
-                enc.LogEnc(new Log(LogTextID.playerPlayerAttack, LogType.PLAYER_ATTACK, name, target.name, damageDealt+""));
+    public boolean DefaultAttack(Combatable target, Encounter enc) {
+        boolean hit = AttackHit(target, CurrentAttack(), true, enc);
+        ++hitsAttempted;
+        if (!hit) {
+            if (target.isPlayer && isPlayer) { // Both are players?
+                enc.LogEnc(new Log(LogTextID.playerPlayerAttackMiss, LogType.PLAYER_ATTACK_MISS, name, target.name));
             }
             else
-                enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
-            if (target.hp  <= 0){ // Killed player?
-                if (target.isPlayer && isPlayer)
-                    enc.LogEnc(new Log(LogTextID.playerDefeatedPlayer, LogType.INFO, name, target.name));
-                else
-                    enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
-                target.OnDied(this); // Do post-defeat actions.
-                OnKilled(target);
-                return true;
-            }
+                enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttackMiss : LogTextID.monsterPlayerAttackMiss, isPlayer? LogType.ATTACK_MISS : LogType.ATTACKED_MISS, name, target.name));
+            return false;
+        }
+        int damageDealt = target.InflictDamage(attackDamage.Roll(), this, enc);
+  //      enc.LogEnc(new Log("Hit! "+damageDealt+" damage! HP now at "+target.hp, LogType.INFO));
+        if (target.isPlayer && isPlayer) {
+            enc.LogEnc(new Log(LogTextID.playerPlayerAttack, LogType.PLAYER_ATTACK, name, target.name, damageDealt+""));
+        }
+        else
+            enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
+        if (target.hp  <= 0){ // Killed player?
+            if (target.isPlayer && isPlayer)
+                enc.LogEnc(new Log(LogTextID.playerDefeatedPlayer, LogType.INFO, name, target.name));
+            else
+                enc.LogEnc(new Log(
+                        isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer,
+                        isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED,
+                        name,
+                        target.name));
+            target.OnDied(this); // Do post-defeat actions.
+            OnKilled(target);
+            return true;
         }
         return false;
     }
@@ -184,7 +198,7 @@ public abstract class Combatable extends Object
     int hitsAttempted = 0;
 
     /// EList of status effects for this current fight.
-    EList<Tuple<Integer,Integer>> ensnared = new EList<Tuple<Integer, Integer>>(); // May be stacked, hence the list. 1st integer is Att/Def loss, 2nd is # of turns it is lost.
+    public EList<Tuple<Integer,Integer>> ensnared = new EList<Tuple<Integer, Integer>>(); // May be stacked, hence the list. 1st integer is Att/Def loss, 2nd is # of turns it is lost.
 
     float numDefeatedThisFightAttackBonus = 0, numDefeatedThisGameAttackBonus = 0;
     public Dice attackDamage = new Dice(1, 0, 1);
@@ -206,6 +220,8 @@ public abstract class Combatable extends Object
                 pThis.LogInfo(LogTextID.ensnaredWoreOff, pThis.name);
             }
         }
+        if (stunnedRounds >= 0)
+            --stunnedRounds;
     }
 
 };

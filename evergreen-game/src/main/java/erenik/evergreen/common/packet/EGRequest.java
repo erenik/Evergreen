@@ -54,6 +54,7 @@ public class EGRequest extends EGPacket {
         return eg;
     }
     public static EGRequest Save(Player player) {
+        player.sendAll = Player.SEND_ALL; // Ensure everything is sent.......
         player.sendLogs = Player.SEND_NO_LOG_MESSAGES;
        // Printer.out("EGRequest.Save, SEND_CLIENT_SEEN_MESSAGES");
         EGRequest eg = new EGRequest(EGRequestType.Save, player.toByteArr());
@@ -78,7 +79,7 @@ public class EGRequest extends EGPacket {
         return new EGRequest(EGRequestType.RestartSameCharacter, player.toByteArr());
     }
 
-    public static EGPacket TurnSurvived(Player forPlayer){
+    public static EGRequest TurnSurvived(Player forPlayer){
         forPlayer.sendAll = Player.CREDENTIALS_ONLY;
         return new EGRequest(EGRequestType.TurnSurvived, forPlayer.toByteArr());
     }

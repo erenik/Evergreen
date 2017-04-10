@@ -44,6 +44,7 @@ public class Transport implements Serializable {
     public float defaultProbability = 0;
     /// Seconds this transport has been used/identified/classified as being used.
     public long secondsUsed = 0;
+    public boolean accelerometerOnly = false; // If the seconds used - analyzed - have been primarily or only from accelerometer samples and no Gyro samples - might affect accuracy and QoE.
 
     float[] stats = new float[TransportStat.values().length];
 
@@ -55,12 +56,14 @@ public class Transport implements Serializable {
         out.writeFloat(defaultProbability);
         out.writeLong(secondsUsed);
         out.writeObject(stats);
+        out.writeBoolean(accelerometerOnly);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
         tt = (TransportType) in.readObject();
         defaultProbability = in.readFloat();
         secondsUsed = in.readLong();
         stats = (float[]) in.readObject();
+        accelerometerOnly = in.readBoolean();
     }
 
     /// CAll after creation of an instance of a transport.

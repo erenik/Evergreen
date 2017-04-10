@@ -32,6 +32,7 @@ public enum EGResponseType {
     LogMessages("LogMessages"),
     NumLogMessages("NumLogMessages"),
     PlayerClientData("PlayerClientData"), // The general but minimal data needed to see the status of this player (stats, gear, skills)
+    TurnsSurvived("TurnsSurvived"),
     ;
     EGResponseType(String displayText)
     {

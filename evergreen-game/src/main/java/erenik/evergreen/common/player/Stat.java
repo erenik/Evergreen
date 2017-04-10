@@ -24,6 +24,7 @@ public enum Stat {
     NestsOfTheEvergreen(0), // Enemy strongholds that you've found.
     UNALLOCATED_EXP(20), // Free exp to be distributed among any skill when the player pleases.
     CurrentTransport(-1),
+    EntHatred(0), // They don't like getting killed much.
 //    RandomPlayerFound(0), // Random player to be found. Requires connection to server to get which one you find.
 ;
 

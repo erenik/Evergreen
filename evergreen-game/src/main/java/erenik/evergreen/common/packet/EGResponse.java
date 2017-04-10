@@ -2,6 +2,7 @@ package erenik.evergreen.common.packet;
 
 import erenik.evergreen.common.Player;
 import erenik.util.Byter;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-03-23.
@@ -31,6 +32,15 @@ public class EGResponse extends EGPacket {
         EGResponse eg = new EGResponse(EGResponseType.PlayerClientData, Byter.toByteArray(playerInSystem.GetClientData()));
         return eg;
     }
-
-
+    public static EGPacket TurnsSurvived(float turns) {
+        float turnsSurvived = turns;
+        EGResponse eg = new EGResponse(EGResponseType.TurnsSurvived, Byter.toByteArray(turns));
+        float turnsRead = (float) Byter.toObject(eg.body);
+        Printer.out("Turns written: "+turns+" read: "+turnsRead);
+        if (turns != turnsRead) {
+            new Exception().printStackTrace();
+            System.exit(15);
+        }
+        return eg;
+    }
 }

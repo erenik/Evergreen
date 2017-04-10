@@ -38,6 +38,11 @@
     <color name="mainTextNew">#fffff8d5</color>
     <color name="iconTextColor">#ff89e850</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="grey50">#FF888888</color>
+    <color name="orange">#FFFFAA77</color>
+    <color name="grey70">#FF999999</color>
+    <color name="grey80">#FFAAAAAA</color>
+    <color name="grey90">#FFBCBCBC</color>
 
     <!-- Old values
     dedbcb

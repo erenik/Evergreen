@@ -23,6 +23,7 @@ public enum InventionStat {
     // IF -1, is bad, should be randomized before proceeding to details.
     SubType(-1),
     Equipped(-1), // non-negative to signify which player has it equipped. 0 for localhost player, 1+ for multiplayer player games. -1 if not equipped.
+    ToRecyle(0), // If 1, will be recycled next time a save occurs. Some materials may be reimbursed then.
     AdditionalEffect(-1),
     IsRanged(0), // If 1, is true.
     AttackBonus(0),
@@ -50,7 +51,9 @@ public enum InventionStat {
 //    Catalyst(0),
   //  Compressor(0), // + Speed, + Flee
     CraftingBonus(0),
-    ForagingBonus(0);
+    ForagingBonus(0),
+    Concussive(0), // Stun-chance :)
+    ;
     public int defaultValue = 0;
     InventionStat(int defaultValue)
     {

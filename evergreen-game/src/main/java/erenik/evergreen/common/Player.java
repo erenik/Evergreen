@@ -45,10 +45,12 @@ import java.util.logging.Logger;
 import static erenik.evergreen.common.Invention.InventionStat.CraftingBonus;
 import static erenik.evergreen.common.Invention.InventionStat.Equipped;
 import static erenik.evergreen.common.Invention.InventionStat.InventingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.MaterialCost;
 import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
 import static erenik.evergreen.common.Invention.InventionStat.QualityLevel;
 import static erenik.evergreen.common.Invention.InventionStat.ScoutingBonus;
 import static erenik.evergreen.common.Invention.InventionStat.StealthBonus;
+import static erenik.evergreen.common.Invention.InventionStat.ToRecyle;
 
 /**
  * Created by Emil on 2016-10-25.
@@ -392,13 +394,18 @@ public class Player extends Combatable implements Serializable {
         return 0;
     }
 
+    public float HP(){
+        return Get(Stat.HP);
+    }
 
+    // This should be used instead of Get(Stat.MAX_HP) ?
     public int MaxHP() {
         int maxHP = GetInt(Stat.MAX_HP);
         for (int i = 0; i < Get(SkillType.Survival).Level(); ++i)
             maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
         return  maxHP;
     }
+
     public boolean IsAlive() {
         return GetInt(Stat.HP) > 0;
     }
@@ -460,7 +467,7 @@ public class Player extends Combatable implements Serializable {
         for (int i = 0; i < transports.size(); ++i){
             Transport t = transports.get(i);
             float ratio = t.secondsUsed / (float)totalSeconds * t.Get(TransportStat.Weight);
-            System.out.print(String.format("%.2f", ratio)+", ");
+            System.out.print(String.format(Locale.ENGLISH, "%.2f", ratio)+", ");
             totalWeighted += ratio * t.Get(stat);
         }
         Printer.out();
@@ -541,10 +548,14 @@ public class Player extends Combatable implements Serializable {
     }
     public void Adjust(Stat s, float amount) {
         cd.statArr[s.ordinal()] += amount;
-        if (s == Stat.HP && cd.statArr[s.ordinal()] <= 0) {
-            Printer.out("Died, informing listeners");
-            for (int i = 0; i < listeners.size(); ++i)
-                listeners.get(i).OnPlayerDied(this);
+        if (s == Stat.HP){
+            float value = cd.statArr[s.ordinal()];
+            ClampHP();
+            if (cd.statArr[s.ordinal()] <= 0) {
+                Printer.out("Died, informing listeners");
+                for (int i = 0; i < listeners.size(); ++i)
+                    listeners.get(i).OnPlayerDied(this);
+            }
         }
     }
     // Getter for main stats.
@@ -707,8 +718,6 @@ public class Player extends Combatable implements Serializable {
         if (Get(Stat.Lives) <= 0){ // Fully dead?
             return;
         }
-//        Adjust(Statistic.TimesKnockedOut, 1); // Already updated elsewhere.
-        Set(Stat.HP, Get(Stat.MAX_HP) * (0.5f + 0.05f * Get(SkillType.Survival).Level())); // Reset HP to 25% of max. + 5% per level in Survival?
         float lossPerKO = Difficulty.LossRatio((int) Get(Config.Difficulty));
         float newRate = 1 - lossPerKO;
         Set(Stat.FOOD, Get(Stat.FOOD) * newRate); // Reduce food and materials
@@ -723,13 +732,8 @@ public class Player extends Combatable implements Serializable {
                 Adjust(Statistic.SkillLevelDowns, 1);
             }
         }
-        /// Lose inventions? No.
-///        for (int i = 0; i < cd.inventions.size(); ++i){
-   //     }
-        /// Lose items? ... Too many variables.
-        // if (Stat.SHELTER_DEFENSE > )
-  //          Set(Stat.SHELTER_DEFENSE, Get(Stat.SHELTER_DEFENSE) - 1);
-        // Reduce other stuff?
+        /// Adjust max HP after skills have potentially been lowered.
+        Set(Stat.HP, MaxHP() * (0.5f + 0.05f * Get(SkillType.Survival).Level())); // Reset HP to 25% of max. + 5% per level in Survival?
         LogInfo(LogTextID.secondLife);
     }
 
@@ -950,7 +954,7 @@ public class Player extends Combatable implements Serializable {
                 case Study:
                     // Gain exp into current skill perhaps..?
                     int toGain = Dice.RollD3(2) + Get(SkillType.Studious).Level();
-                    Log(LogTextID.studiesEXP, LogType.PROGRESS);
+                    Log(LogTextID.studiesEXP, LogType.PROGRESS, ""+toGain);
                     GainEXP(toGain);
                     break;
                 case ReduceEmissions: ReduceEmissions(); break;
@@ -1665,6 +1669,8 @@ public class Player extends Combatable implements Serializable {
         c.fleeBonusFromTransport = Get(TransportStat.FleeBonus);
         c.ranAway = false; // Reset temporary variables such as fleeing.
         c.parry = GetEquipped(InventingBonus.ParryBonus) + Get(SkillType.Parrying).Level();
+        c.stunnedRounds = 0;
+        c.ensnared.clear();
         consecutiveFleeAttempts = 0;
     }
 
@@ -1712,6 +1718,7 @@ public class Player extends Combatable implements Serializable {
     protected void OnDied(Combatable attackerWhoKilledYou) {
         Adjust(Statistic.TimesKnockedOut, 1);
         Set(Stat.TurnSurvived, 0); // Every time you're knocked out, reset the turn-survived counter so that the player won't be slaughtered again by AI at least.
+        Set(Stat.EntHatred, Get(Stat.EntHatred) *  1 - Difficulty.LossRatio((int) Get(Config.Difficulty))); // Reduce ent-hatred based on difficulty, i.e. easiest 98% reduced, next-hardest 50% reduced
         // Check if we will be revived afterwards?
         if (!IsAlive()){ // If truly not alive anymore, inform all listeners.
             for (int i = 0; i < listeners.size(); ++i) {
@@ -1722,13 +1729,30 @@ public class Player extends Combatable implements Serializable {
     }
 
     @Override
-    protected void OnDealtDamage(Combatable target, int damage) {
+    protected void OnDealtDamage(Combatable target, int damage, Encounter enc) {
         Adjust(Statistic.TotalDamageDealt, damage);
+        Invention weapon =  GetEquippedWeapon();
+        if (weapon != null){
+            int consussive = weapon.Get(InventionStat.Concussive);
+            if (consussive > 0){
+                if (Dice.RollD6(2) + consussive >= 12){
+                    // Stun it for 1D3 + concussive rounds?
+                    target.stunnedRounds = Dice.RollD3(1) + 1; //2-4, 1st will disappear instantly, so 1-3 rounds in practice.
+                    enc.LogEnc(new Log(LogTextID.targetStunned, LogType.ENC_INFO, target.name));
+                }
+            }
+        }
     }
 
     @Override
-    protected void OnReceivedDamage(Combatable fromTarget, int damage) {
+    protected void OnReceivedDamage(Combatable fromTarget, int damage, Encounter enc) {
         Adjust(Statistic.TotalDamageTaken, damage);
+    }
+
+    @Override
+    public boolean Attack(Combatable target, Encounter enc) {
+        // Add more actions later perhaps... such as the ranged weapons...? o.O
+        return DefaultAttack(target, enc);
     }
 
     private int AttacksPerTurn() {
@@ -1849,7 +1873,33 @@ public class Player extends Combatable implements Serializable {
                 Adjust(Statistic.EquipmentChanges, 1);
             }
         }
+        // Check all to be recycled?
+        EList<Invention> toBeRecycled = clientPlayer.GetGearToBeRecycled();
+        for (int i = 0; i < toBeRecycled.size(); ++i){
+            Invention clientItem = toBeRecycled.get(i);
+            int clientIndex = clientPlayer.cd.inventory.indexOf(clientItem);
+            Invention itemHere = GetItemByIndex(clientIndex);
+            if (itemHere == null){
+                Printer.out("Bad index to be recycled");
+                continue;
+            }
+            // Recycle it!
+            cd.inventory.remove(itemHere);
+            int resourcesGained = 2 + Get(SkillType.Recycling).Level();
+            Adjust(Stat.AccumulatedEmissions, -1); // Reduce emissions by 1 when doing this.
+            LogInfo(LogTextID.recycled, itemHere.name, ""+resourcesGained);
+        }
 
+    }
+
+    private EList<Invention> GetGearToBeRecycled() {
+        EList<Invention> invs = new EList<>();
+        for (int i = 0; i < cd.inventory.size(); ++i){
+            Invention inv = cd.inventory.get(i);
+            if (inv.Get(ToRecyle) == 1)
+                invs.add(inv);
+        }
+        return invs;
     }
 
     private Log GetLog(long id) {
@@ -1941,12 +1991,18 @@ public class Player extends Combatable implements Serializable {
         Set(Stat.BASE_DEFENSE, Stat.BASE_DEFENSE.defaultValue + multiplier);
         Set(Stat.Lives, Difficulty.Lives(diff));
         // Heal HP.
-        Set(Stat.HP, Get(Stat.MAX_HP));
+        Set(Stat.HP, MaxHP());
     }
 
     /// Just 6 - Difficulty.
     public int BonusFromDifficulty() {
         return (int) (6 - Get(Config.Difficulty));
+    }
+
+
+    public void PrepareForTotalRestart(){
+        cd.inventory.clear();
+        cd.inventionBlueprints.clear();
     }
 
     public void ReviveRestart() {
@@ -1970,14 +2026,18 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void UpdateTransportMinutes(EList<TransportOccurrence> transportOccurrences) {
-        // Clear the array.
-        for (int i = 0; i < transports.size(); ++i)
+        for (int i = 0; i < transports.size(); ++i)         // Clear the array.
             transports.get(i).secondsUsed = 0;
         for (int i = 0; i < transportOccurrences.size(); ++i){
             TransportOccurrence to = transportOccurrences.get(i);
             Printer.out(to.transport.name()+" dur: "+to.DurationSeconds()+"s ratio: "+to.ratioUsed);
             long durS = to.DurationSeconds();
-            Get(to.transport).secondsUsed += durS;
+            Transport transport = Get(to.transport);
+            if (transport == null) {
+                Printer.out("No such transpot such as "+to.transport.name());
+                continue;
+            }
+            transport.secondsUsed += durS;
         }
     }
 
@@ -1986,6 +2046,7 @@ public class Player extends Combatable implements Serializable {
             if (transports.get(i).tt.ordinal() == transport.ordinal())
                 return transports.get(i);
         }
+        Printer.out("Couldn't get transport: "+transport.name());
         return null;
     }
 

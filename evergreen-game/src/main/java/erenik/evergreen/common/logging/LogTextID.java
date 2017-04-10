@@ -60,5 +60,6 @@ public enum LogTextID {
     gaveBlueprintToPlayer, receivedBlueprintFromPlayer,
     playerNotAliveAnymore,
     ensnared, ensnaredWoreOff, multiplies, sendPlayerResourcesFailed, playerDied, skillLeveledDown, playerDefeatedPlayer, obtainedItem, obtainedBlueprint, scoutFoundItems,
+    targetStunned, entHatred, tailWhip, tailWhipMiss, breathAttack, breathAttackMiss, gaiaHeal, slashOfHeavens, slashOfHeavensPartial, recycled,
 
 }

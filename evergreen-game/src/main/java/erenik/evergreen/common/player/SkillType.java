@@ -87,4 +87,7 @@ public enum SkillType {
     }
 
 
+    public int MaxLevel() {
+        return expRequired.length;
+    }
 }

@@ -46,7 +46,7 @@ public class ItemDetails extends EvergreenActivity {
         UpdateUI();
         switch (item.type){
             case Weapon:
-            case RangedWeapon:
+//            case RangedWeapon:
             case Armor:
             case Tool:
                 ShowEquipButton();
@@ -75,6 +75,34 @@ public class ItemDetails extends EvergreenActivity {
 //                HideEquipButton();
             }
         });
+
+        UpdateRecyleButtonTest();
+        findViewById(R.id.buttonRecycle).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (item.Get(InventionStat.ToRecyle) == 0){
+                    Printer.out("To be recycled.!");
+                    item.Set(InventionStat.ToRecyle, 1);
+                    Toast("Set for recycling: "+item.name);
+                    return;
+                } else {
+                    item.Set(InventionStat.ToRecyle, 0);
+                    Toast("Recycling undone");
+                }
+                UpdateRecyleButtonTest();
+//                HideEquipButton();
+            }
+        });
+    }
+
+    private void UpdateRecyleButtonTest() {
+        int toRecycle = item.Get(InventionStat.ToRecyle);
+        Button b = (Button) findViewById(R.id.buttonRecycle);
+        if (toRecycle == 1)
+            b.setText("Undo recycle");
+        else
+            b.setText("Recycle");
+
     }
 
     void UpdateEquipButtonText(){

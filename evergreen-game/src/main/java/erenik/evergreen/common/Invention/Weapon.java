@@ -84,10 +84,10 @@ public class Weapon extends Invention  implements Serializable {
     void SetMain(String name, int numDice, int diceType, int dmgBonus, int atkBonus, int numAttacks){
         this.name = name;
         // Save stats accordingly.
-        Set(InventionStat.AttackDamageDiceType, diceType);
         Set(InventionStat.AttackDamageDice, numDice);
-        Set(InventionStat.AttackBonus, atkBonus);
+        Set(InventionStat.AttackDamageDiceType, diceType);
         Set(InventionStat.AttackDamageBonus, dmgBonus);
+        Set(InventionStat.AttackBonus, atkBonus);
         Set(InventionStat.BonusAttacks, numAttacks - 1);
     }
     void SetDefensive(int defBonus, int parryBonus){
@@ -131,28 +131,30 @@ public class Weapon extends Invention  implements Serializable {
         int additionalEffectDice = 0;
         switch (wt) {
             // Knives n daggers. // 1D3+1, 3 att, 1 attack/round
-            case Knife: SetMain("Knife", 1, 3, 1, 3, 2);  break;
-            case Dagger: SetMain("Dagger", 1, 3, 2, 4, 2); break;
+            case Knife: SetMain("Knife", 1, 3, 1, 4, 3 + qualityLevel / 2);  break; // 1d3 + 1, +4 attack, 3 attacks per round
+            case Dagger: SetMain("Dagger", 1, 3, 2, 3, 2 + qualityLevel / 2); break; // 1d3 + 2, +3 attack, 2 attacks per round
             default:
                 // Sword-type weapons // 1D3+1, 3 att, 1 attack/round
-            case Sword: SetMain("Gladius", 1, 6, 4, 5, 1);
-                SetDefensive(0, 1 + qualityLevel / 2); break;
-            case Longsword: SetMain("Longsword", 1, 8, 6, 2, 1);
-                SetDefensive(0, 2 + qualityLevel / 5);
+            case Sword: SetMain("Gladius", 1, 6, 4, 5, 1 + qualityLevel / 2); // 1d6 + 4, +5 attack
+                SetDefensive(0, 1 + qualityLevel / 2); break; // Parrying, yay!
+            case Longsword: SetMain("Longsword", 1, 8, 6, 2, 1); // 1d8 + 6, +2 attack,
+                SetDefensive(0, 2 + qualityLevel / 5); // Parrying, yay!
                 break;
             /// Club-type weapons.
-            case Club: SetMain("Club", 2, 3, 2, 3, 1);
+            case Club: SetMain("Club", 2, 3, 2, 3, 1 + qualityLevel / 2); // 2d3 + 2, +3 attack,
+                Set(InventionStat.Concussive, 1 + qualityLevel / 2); // Gives chance to stun!
                 break;
-            case GreatClub: SetMain("Heavy club", 2, 5, 4, 1, 1);
+            case GreatClub: SetMain("Heavy club", 2, 5, 4, 1, 1 +  qualityLevel / 3); // 2d5 + 4, +1 attack
+                Set(InventionStat.Concussive, 2 + qualityLevel / 2); // Gives chance to stun!
                 break;
-            case Sledgehammer: SetMain("Sledgehammer", 2, 6, 7, -1, 1);
+            case Sledgehammer: SetMain("Sledgehammer", 2, 6, 7, -1, 1); // 2d6 + 7, -1 attack
+                Set(InventionStat.Concussive, 3 + qualityLevel / 2); // Gives chance to stun!
                 break;
             // Axe-type weapons
-            case Axe: SetMain("Axe", 1, 8, 4, 6, 1);
+            case Axe: SetMain("Axe", 1, 8, 4, 6, 1); // 1d8 + 4, +6 attack, Just pure damage here.
                 break;
-            case GreatAxe: SetMain("Great Axe", 1, 12, 6, 5, 1);
+            case GreatAxe: SetMain("Great Axe", 1, 12, 6, 5, 1); // 1d12 + 6, +5 attack
                 break;
-
             // Ranged weapons/
             case Boomerang: SetRanged("Boomerang", 1, 6, 1, 1, 2); break;
             case ShortBow: SetRanged("Short Bow", 1, 3, (int)(1 + qualityLevel * 0.5f), 1 + qualityLevel, 3); break;

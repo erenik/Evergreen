@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Random;
 
 import erenik.evergreen.common.Enumerator;
@@ -40,6 +41,7 @@ public class Game implements Serializable {
     public static int GAME_VERSION = 2;
 
     private static final long serialVersionUID = 1L;
+    public static int secondsPerDay = 60; // The hard-coded. Default 1 minute per round, can be set via command-line arg in Server code now, -simulationTime
     private int day = 0;
 
     public Game(){
@@ -405,7 +407,7 @@ public class Game implements Serializable {
     long dayStartTimeMs = 0;
     /// Return true if a new day occurred.
     public boolean Update(long milliseconds) {
-        updateIntervalSeconds = 60; // 60 seconds hard-coded, yeahhhhh/ change to be updatable via command-line args later?
+        updateIntervalSeconds = secondsPerDay; // Can set via command-line, -secondsPerDay 60
         int msPerDayInGame = updateIntervalSeconds * 1000; // Should be * 1000
         if (System.currentTimeMillis() > dayStartTimeMs + msPerDayInGame) {        // check if next day should come.
             if (NextDay() != 0) {
@@ -543,7 +545,7 @@ public class Game implements Serializable {
                 +"\n=============================================================\n";
         for (int i = 0; i < SkillType.values().length; ++i){
             skillStatisticsString += "\n"+String.format("%20s", SkillType.values()[i])+" "+String.format("%6s", (int)skillStatistics[0][i])
-                    +"   "+String.format("%.2f", (skillStatistics[1][i] / (float)ActivePlayers()))
+                    +"   "+String.format(Locale.ENGLISH, "%.2f", (skillStatistics[1][i] / (float)ActivePlayers()))
                     +" "+String.format("%6s", (int)skillStatistics[2][i]);
         }
 
@@ -561,7 +563,7 @@ public class Game implements Serializable {
             }
             statsStatisticsString += "\n"+String.format("%20s", Stat.values()[i].name())
                     +" "+String.format("%4s", ""+(int) statStatistics[0][i])
-                    +" "+String.format("%5s", ""+ String.format("%.1f", statStatistics[1][i]))
+                    +" "+String.format(Locale.ENGLISH, "%5s", ""+ String.format("%.1f", statStatistics[1][i]))
                     +" "+String.format("%4s", ""+(int) statStatistics[2][i]);
         }
 

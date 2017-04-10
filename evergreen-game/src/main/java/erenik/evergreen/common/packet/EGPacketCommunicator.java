@@ -19,8 +19,7 @@ public class EGPacketCommunicator {
         this.port = port;
     }
 
-    public void Send(EGPacket packet)
-    {
+    public void Send(EGPacket packet) {
         sender.QueuePacket(packet, ip, port);
         if (sender.isAlive() == false) {
             sender.start();
@@ -44,8 +43,14 @@ public class EGPacketCommunicator {
     }
     /// Returns non-0 if there are more updates to be had later.
     public int CheckForUpdates() {
-        int updatesToGet = sender.CheckForUpdates();
-        updatesToGet += receiver.CheckForUpdates();
+        int updatesToGet = 0;
+        if (sender != null)
+            updatesToGet += sender.CheckForUpdates();
+        if (receiver != null)
+            updatesToGet += receiver.CheckForUpdates();
+        if (updatesToGet > 0){
+//            Printer.out("Updates to get: "+updatesToGet);
+        }
         return updatesToGet;
     }
 }

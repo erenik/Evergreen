@@ -20,7 +20,6 @@ import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
 import static erenik.evergreen.common.Invention.InventionStat.ScavengingBonus;
 import static erenik.evergreen.common.Invention.InventionStat.ScoutingBonus;
 import static erenik.evergreen.common.Invention.InventionStat.SubType;
-import static erenik.evergreen.common.Invention.InventionType.RangedWeapon;
 
 
 /**
@@ -74,7 +73,7 @@ public class Invention implements Serializable {
 
     public static Invention NewBlueprint(InventionType inventionType) {
         switch (inventionType){
-            case RangedWeapon:
+  //          case RangedWeapon:
             case Weapon:
                 return new Weapon().Blueprint();
             default:
@@ -83,7 +82,7 @@ public class Invention implements Serializable {
     }
     public static Invention Craft(Invention invention){
         switch (invention.type){
-            case RangedWeapon:
+//            case RangedWeapon:
             case Weapon:
                 return new Weapon().Blueprint();
             default:
@@ -168,8 +167,11 @@ public class Invention implements Serializable {
         return tool;
     }
 
-    public int Get(InventionStat stat)
-    {
+    public int Get(InventionStat stat) {
+        if (stat.ordinal() >= stats.length) {
+            Printer.out("Array index out of bounds for stat! Bad/old version?");
+            return -1;
+        }
         return stats[stat.ordinal()];
     }
     public void Set(InventionStat stat, int value) {
@@ -183,9 +185,9 @@ public class Invention implements Serializable {
             case Weapon:
                 inventionSubType = WeaponType.Random();; // Keep it within.
                 break;
-            case RangedWeapon:
-                inventionSubType = WeaponType.RandomRanged();
-                break;
+    //        case RangedWeapon:
+      //          inventionSubType = WeaponType.RandomRanged();
+        //        break;
             case Tool:
                 inventionSubType = r.nextInt(ToolType.values().length+1) % ToolType.values().length; // Keep it yeaahhhh.
                 break;
@@ -227,7 +229,7 @@ public class Invention implements Serializable {
             RandomizeSubType();
         Set(InventionStat.DefenseBonus, 0);
         switch(this.type) {
-            case RangedWeapon:
+//            case RangedWeapon:
             case Weapon: {
                 // Randomize weapon type? Stats vary with weapon type instead?
                 Printer.out("Shouldn't be here, subclass should handle this, type: "+this.type);

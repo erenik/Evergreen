@@ -219,6 +219,13 @@ public class SelectActivity extends EvergreenActivity {
             layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
             ll.setLayoutParams(layoutParams);
             ll.setBackgroundResource(buttonBgId);
+            if (type == SELECT_SKILL){
+                SkillType selectedSkillType = selectedSkills.get(i);
+                int skillLevel = App.GetPlayer().Get(selectedSkillType).Level();
+                if (skillLevel == SkillType.values()[i].MaxLevel()) // Capped level?
+                    skillLevel = 9;
+                ll.setBackgroundResource(GetDrawableForSkillLevel(skillLevel));
+            }
             vg.addView(ll);
 
             // Make a button out of it.
@@ -323,6 +330,8 @@ public class SelectActivity extends EvergreenActivity {
         tv = (TextView) findViewById(R.id.textViewSelectTitle);
         tv.setText(header);
 
+        Player p = App.GetPlayer();
+
         /// Populate the available items.
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutItems);
         for (int i = 0; i < itemNames.size(); ++i)
@@ -332,13 +341,19 @@ public class SelectActivity extends EvergreenActivity {
             b.setText(itemNames.get(i));
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, App.GetScreenSize().y / 12);
             layoutParams.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.listSelectionMargin));
-            b.setBackgroundResource(buttonBgId);
+            if (type == SELECT_SKILL){
+                int skillLevel = p.Get(SkillType.values()[i]).Level();
+                if (skillLevel == SkillType.values()[i].MaxLevel()) // Capped level?
+                    skillLevel = 9;
+                b.setBackgroundResource(GetDrawableForSkillLevel(skillLevel));
+            }
+            else
+                b.setBackgroundResource(buttonBgId);
             b.setLayoutParams(layoutParams);
             vg.addView(b);
             b.setOnClickListener(addItem);
         }
         // Load from player.
-        Player p = App.GetPlayer();
         if (type == SELECT_DAILY_ACTION) {
             selectedActions = p.cd.dailyActions;
         }
@@ -356,5 +371,21 @@ public class SelectActivity extends EvergreenActivity {
         findViewById(R.id.buttonConfirm).setOnClickListener(confirm);
         findViewById(R.id.buttonClear).setOnClickListener(clear);
         findViewById(R.id.buttonCancel).setOnClickListener(cancel);
+    }
+
+    private int GetDrawableForSkillLevel(int skillLevel) {
+        int id = R.drawable.skill_button_level_0;
+        switch (skillLevel){
+            case 1: id = R.drawable.skill_button_level_1; break;
+            case 2: id = R.drawable.skill_button_level_2; break;
+            case 3: id = R.drawable.skill_button_level_3; break;
+            case 4: id = R.drawable.skill_button_level_4; break;
+            case 5: id = R.drawable.skill_button_level_5; break;
+            case 6: id = R.drawable.skill_button_level_6; break;
+            case 7: id = R.drawable.skill_button_level_7; break;
+            case 8: id = R.drawable.skill_button_level_8; break;
+            case 9: id = R.drawable.skill_button_level_9; break;
+        }
+        return id;
     }
 }

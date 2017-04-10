@@ -289,10 +289,10 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     //                continue;
       //          }
                 if (Math.abs(sfToClassify.accMagns.size() - averageAccSamples) > averageAccSamples * 0.2f) {
-                    Printer.out("Acc samples "+sfToClassify.accMagns.size()+" avg: "+averageAccSamples);
+                  //  Printer.out("Acc samples "+sfToClassify.accMagns.size()+" avg: "+averageAccSamples);
                 }
                 if (Math.abs(sfToClassify.gyroMagns.size() - averageGyroSamples) > averageGyroSamples * 0.2f) {
-                    Printer.out("Gyro samples "+sfToClassify.gyroMagns.size()+" avg: "+averageGyroSamples);
+                  //  Printer.out("Gyro samples "+sfToClassify.gyroMagns.size()+" avg: "+averageGyroSamples);
                 }
                 if (sfToClassify.startTimeSystemMs < System.currentTimeMillis() - 15 * 60 * 1000){
                     // Older than 15 mins ago? Then discard it.
@@ -300,14 +300,14 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                     continue;
                 }
                 if (sfToClassify.accMagns.size() < 15 || sfToClassify.gyroMagns.size() < 15){
-                    Printer.out("Post-poning classification of sensing frame with insufficient samples (<15): "+sfToClassify.accMagns.size()+", "+sfToClassify.gyroMagns.size());
+                  //  Printer.out("Post-poning classification of sensing frame with insufficient samples (<15): "+sfToClassify.accMagns.size()+", "+sfToClassify.gyroMagns.size());
                     sfToClassify.transportString = "Insufficient samples";
                     ++sfToClassify.postPoned;
                     if (sfToClassify.postPoned < 3) // Only consider evaluating it 3 times, since if we are here anyway, then we should have received some samples within 15 seconds..?
                         toCheckAgain.add(sfToClassify);
                     continue;
                 }
-                Printer.out("Classifying SF");
+//                Printer.out("Classifying SF");
 
                 averageAccSamples = averageAccSamples * 0.9f + sfToClassify.accMagns.size() * 0.1f;
                 averageGyroSamples = averageGyroSamples * 0.9f + sfToClassify.gyroMagns.size() * 0.1f;
@@ -339,9 +339,9 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 TransportType tt = TransportType.GetForString(classifier.TrainingData().classAttribute().value((int) modified));
                 sfToClassify.transportString = tt.name();
                 callingService.AddTransportOccurrence(new TransportOccurrence(tt, sfToClassify.startTimeSystemMs, sfToClassify.durationMs));
-                Printer.out("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
-                        " (" + classifier.TrainingData().classAttribute().value((int) result) + ")" +
-                    " at "+sfToClassify.startTimeSystemMs+" "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs)+"ms ago");
+              //  Printer.out("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
+                //  " (" + classifier.TrainingData().classAttribute().value((int) result) + ")" +
+                //    " at "+sfToClassify.startTimeSystemMs+" "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs)+"ms ago");
                 finishedSensingFrames.add(sfToClassify); // Add the classified one to the array of sensing frames.
                 callingService.RecalcAverages();
                 ++classified;
@@ -413,7 +413,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             sensingFrame.startTimeGyroSensorMs = lastGyroTimestamp;
             toSaveIntoArrayForClassification.startTimeSystemMs = System.currentTimeMillis() - 5000;
             lastSavedSF = toSaveIntoArrayForClassification;
-            Printer.out("Frame "+sensingFrames.size()+" finished, "+toSaveIntoArrayForClassification);
+//            Printer.out("Frame "+sensingFrames.size()+" finished, "+toSaveIntoArrayForClassification);
             sensingFrames.add(toSaveIntoArrayForClassification);
             callingService.OnSensingFrameFinished();
         //    finishedSensingFrames.add(finishedOne); // Add to list of all those recently finished...?

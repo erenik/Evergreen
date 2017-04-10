@@ -1,6 +1,9 @@
 package erenik.evergreen.android.act;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
@@ -13,14 +16,20 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+import java.io.Serializable;
+
 import erenik.evergreen.GameID;
+import erenik.evergreen.android.BackgroundUpdateService;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
+import erenik.util.EList;
 import erenik.util.Printer;
+import erenik.weka.transport.SensingFrame;
 import erenik.weka.transport.TransportDetectionService;
+import erenik.weka.transport.TransportOccurrence;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -37,6 +46,19 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         UpdateUI(); // Always update GUI upon resuming.
         if (checkOnUpdatesOnResume)
             SaveChangesAndCheckForUpdates(); // Check for updates?
+        // Pause service to check for updates.
+        Intent serviceIntent = new Intent(getBaseContext(), BackgroundUpdateService.class);
+        serviceIntent.putExtra(BackgroundUpdateService.REQUEST_TYPE, BackgroundUpdateService.STOP_SERVICE);
+        getBaseContext().startService(serviceIntent);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Start service to check for updates.
+        Intent serviceIntent = new Intent(getBaseContext(), BackgroundUpdateService.class);
+        serviceIntent.putExtra(BackgroundUpdateService.REQUEST_TYPE, BackgroundUpdateService.START_SERVICE);
+        getBaseContext().startService(serviceIntent);
     }
 
     /**
@@ -159,6 +181,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getBaseContext(), InventoryScreen.class);
+                intent.putExtra(InventoryScreen.DisplayFilter, InventoryScreen.DisplayAll);
                 startActivity(intent);
             }
         });
@@ -172,7 +195,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             findViewById(ids[i]).setOnClickListener(viewStatDetails);
 
         // Check for updates if returning to this screen?
-        SaveChangesAndCheckForUpdates();
+     //   SaveChangesAndCheckForUpdates();
     }
     /// Add check so we don't double check when state changes happen and at least 2 functions call this at the same time..?
     static long lastCheckMs = 0;
@@ -192,7 +215,46 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             Printer.out("CheckForUpdates - skipping since we checked it like 5 seconds ago, yo.");
             return;
         }
-        RequestClientData();
+        final long secondsPerDay = 60 * 60 * 24;
+        Printer.out("Requesting TransportDetectionService for data seconds: "+secondsPerDay);
+
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_ATTACH_DATA); // Create the broadcast receiver that will intercept the data sent by the service.
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //              Printer.out("BroadcastReceiver onReceive: "+intent);
+                int request = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
+                Serializable data = intent.getSerializableExtra(TransportDetectionService.SERIALIZABLE_DATA);
+                //                Printer.out("Req/Res: "+request+" data: "+data);
+                switch (request){
+                    default:
+                    case -1: break;
+                    case TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS:
+                        long dataSeconds = intent.getLongExtra(TransportDetectionService.DATA_SECONDS, 0);
+                        if (dataSeconds == secondsPerDay) {
+                            EList<TransportOccurrence> transportOccurences = (EList<TransportOccurrence>) data;
+                            Player player = App.GetPlayer();
+                            player.UpdateTransportMinutes(transportOccurences);
+                            Printer.out("Got transport data from service, now preparing to save to server");// Connect to server.
+                            player.PrintTopTransports(3);
+                            RequestClientData();
+                        }
+                        else {
+                            Printer.out("Service replied data-seconds not requested: "+dataSeconds);
+                        }
+                        break;
+                }
+                // Unregister ourselves after each save, or it will become a big fffff mess.
+                getBaseContext().unregisterReceiver(this);
+            }
+        };
+        getBaseContext().registerReceiver(broadcastReceiver, intentFilter);
+
+        // Request last x sensing frames.
+        Intent intent = new Intent(getBaseContext(), TransportDetectionService.class);
+        intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS);
+        intent.putExtra(TransportDetectionService.DATA_SECONDS, secondsPerDay); // 60 seconds, 60 minutes, 24 hours
+        startService(intent);
     }
 
 /*    private void OnPlayerUpdated() {

@@ -2,6 +2,8 @@ package erenik.evergreen.common.packet;
 
 import erenik.util.EList;
 import erenik.util.EList;
+import erenik.util.Printer;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +20,7 @@ public class EGPacketSender extends Thread {
     private EList<EGPacket> packetsToReceiveUpdates = new EList<>();
     public void QueuePacket(EGPacket pack, String ip, int port) {
         pack.SetDest(ip, port); // Set dest.
+        pack.sendTimeMs = System.currentTimeMillis(); // Set it to now.
         packetsToSend.add(pack); // Add to list.
         // TODO: Make sure thread is started?
         assert(threadStarted);
@@ -26,8 +29,19 @@ public class EGPacketSender extends Thread {
     }
     /// Checks for updates and informs listeners on old packets. Returns number of packets left to receive updates.
     public int CheckForUpdates(){
+        long now = System.currentTimeMillis();
         for (int i = 0; i < packetsToReceiveUpdates.size(); ++i){
             EGPacket pack = packetsToReceiveUpdates.get(i);
+           // Printer.out("Send time: "+pack.sendTimeMs +" diff: "+(now - pack.sendTimeMs));
+            if (now - pack.sendTimeMs > 10000){ // Allow 10 seconds before deeming it a failure.
+                if (pack.replies.size() > 0){
+                    pack.error = EGPacketError.NoError; // If we have at least 1 reply, consider it a success.
+                }
+                else {
+                    pack.error = EGPacketError.NoResponse; // discard it anyway?
+                    pack.error.extraText = "Req: "+pack.ReqType().name();
+                }
+            }
             if (pack.error == null)
                 continue;
             boolean good = false;

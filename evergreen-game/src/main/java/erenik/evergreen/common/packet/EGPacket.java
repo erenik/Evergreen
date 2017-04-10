@@ -65,8 +65,8 @@ public class EGPacket {
     /// EList of receiving listeners, to interpret any response that is received..?
     private EList<EGPacketReceiverListener> receiverListeners = new EList<>();
     public long lastAttemptSystemMillis = System.currentTimeMillis();
-    public long receiveTime = 0; // Sys curr Millis.
-    public long sendTime = 0;
+    public long receiveTimeMs = 0; // Sys curr Millis.
+    public long sendTimeMs = 0;
     public boolean informedListeners = false;
 
     public EGResponseType LastError(){return lastError;};
@@ -132,7 +132,7 @@ public class EGPacket {
         EList<Log> lm = new EList();
         lm.addAll(logMessages);
         Printer.out("Replying "+lm.size()+" logMessages, printing the last 5");
-        Log.PrintLastLogMessages(lm, 5);
+        Log.PrintLastLogMessages(lm, 3);
         EGPacket pack = new EGPacket(EGResponseType.LogMessages);
 
         ObjectOutputStream out = null;
@@ -315,7 +315,7 @@ public class EGPacket {
             }
         }
 //        Printer.out("argN found: "+argN);
-        pack.receiveTime = System.currentTimeMillis(); // Received timestamp.
+        pack.receiveTimeMs = System.currentTimeMillis(); // Received timestamp.
         if (pack.type != null)
             return pack;
         return null;        
@@ -388,7 +388,7 @@ public class EGPacket {
             OutputStream out = socketSentOn.getOutputStream();
             out.write(total); // Print the string.
             out.flush();
-            sendTime = System.currentTimeMillis();
+            sendTimeMs = System.currentTimeMillis();
             return true; // Success. Sent well.
         } catch (java.net.ConnectException e){
             Printer.out("Could not connect to given address: "+address+", port: "+portN);

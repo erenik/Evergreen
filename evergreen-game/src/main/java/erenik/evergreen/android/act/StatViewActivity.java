@@ -80,12 +80,12 @@ public class StatViewActivity extends EvergreenActivity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(getBaseContext(), InventoryScreen.class);
-                InventoryScreen.ReqCode reqCode = InventoryScreen.ReqCode.DisplayAll;
+                int reqCode = InventoryScreen.DisplayAll;
                 switch (statType){
-                    case BASE_ATTACK: reqCode = InventoryScreen.ReqCode.DisplayWeapons; break;
-                    case BASE_DEFENSE: reqCode = InventoryScreen.ReqCode.DisplayArmors; break;
+                    case BASE_ATTACK: reqCode = InventoryScreen.DisplayWeapons; break;
+                    case BASE_DEFENSE: reqCode = InventoryScreen.DisplayArmors; break;
                 }
-                i.putExtra("ReqCode", reqCode.ordinal());
+                i.putExtra(InventoryScreen.DisplayFilter, reqCode);
                 startActivity(i);
             }
         });

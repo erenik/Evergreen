@@ -155,6 +155,10 @@ public class Encounter {
         Printer.out("Simulating encounter");
         if (pvp)
             Printer.out("PVP START!");
+
+        // If attacks of the evergreen - allow ranged weapons...?
+
+
         /// Will vary based on EncounterActivity-type and equipped weapons etc.
         int defenderFreeAttacks = 1;
         // Start it?
@@ -339,18 +343,20 @@ public class Encounter {
         int numEnemiesAttacked = 0;
         for (int i = 0; i < activeCombatants.size(); ++i) {
             Combatable c = activeCombatants.get(i);
-            if (c instanceof Enemy) {
-                ++numEnemiesAttacked;
-                if (numEnemiesAttacked > maxEnemyAttacksPerRound) {
-               //     LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
-                    Printer.out("Skipping remaining "+(activeCombatants.size() - i)+" attackers this round");
-                    break;
-                }
-            }
+            if (c.stunnedRounds > 0) // No movement while stunned. Inform if player?
+                continue;
             // LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
             if (c.hp <= 0 || c.ranAway) { // Skip those not relevant anymore - i.e. dead or ran away.
            //     LogEnc(new Log("Skipping due to hp: "+c.hp+" for combatant "+c.name, LogType.INFO));
                 continue;
+            }
+            if (c instanceof Enemy) { /// Skip those dead first before incrementing num attacked.. the dead don't usually attack...
+                ++numEnemiesAttacked;
+                if (numEnemiesAttacked > maxEnemyAttacksPerRound) {
+                    //     LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
+                    Printer.out("Skipping remaining "+(activeCombatants.size() - i)+" attackers this round");
+                    break;
+                }
             }
             // Flee? Under 25%?
             if (c.runsAway && (c.hp / c.maxHP) <  c.runAwayAtHPPercentage) {
@@ -445,7 +451,7 @@ public class Encounter {
             totalEnemies = 1;
         int iAmount = totalEnemies;
         for (int i = 0; i < iAmount; ++i) {
-            Enemy e = new Enemy(enemyType, totalEmissions, turnCreated);
+            Enemy e = new Enemy(enemyType, totalEmissions, turnCreated, this);
             e.isAttacker = true;
             AddCombatant(e);
         }
@@ -525,5 +531,13 @@ public class Encounter {
             defenders.add(player);
         if (!combatants.contains(player))
             combatants.add(player);
+    }
+
+    public float GetTotal(Stat stat) {
+        float total = 0;
+        for (int i = 0; i < GetInvolvedPlayers().size(); ++i){
+            total += GetInvolvedPlayers().get(i).Get(stat);
+        }
+        return total;
     }
 }

@@ -18,9 +18,12 @@ public enum LogType
     SUCCESS, OtherDamage,
     ENC_INFO, // Other info in encounters. status effects, etc.
     Error,
-    PLAYER_ATTACK, PLAYER_ATTACK_MISS,
-    DEFEATED_ENEMY, DEFEATED;
-
+    PLAYER_ATTACK, // Attacking player, attacked player, damage
+    PLAYER_ATTACK_MISS, // Attacking player, attacked player
+    PLAYER_ATTACKED_ME, // Same as those 2 above, but other colors later.
+    PLAYER_ATTACKED_ME_BUT_MISSED, // Same as those 2 above, but other colors later.
+    DEFEATED_ENEMY, DEFEATED,
+    ;
     /*
     int HexColor()
     {

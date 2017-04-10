@@ -104,6 +104,16 @@ public class EString {
             case obtainedBlueprint: id = R.string.obtainedBlueprint; break;
             case obtainedItem: id = R.string.obtainedItem; break;
             case scoutFoundItems: id = R.string.scoutFoundItems; break;
+            case targetStunned: id = R.string.targetStunned; break;
+            case entHatred: id = R.string.entHatred; break;
+            case tailWhip: id = R.string.tailWhip; break;
+            case tailWhipMiss: id = R.string.tailWhipMiss; break;
+            case breathAttack: id = R.string.breathAttack; break;
+            case breathAttackMiss: id = R.string.breathAttackMiss; break;
+            case gaiaHeal: id = R.string.gaiaHeal; break;
+            case slashOfHeavens: id = R.string.slashOfHeavens; break;
+            case slashOfHeavensPartial: id = R.string.slashOfHeavensPartial; break;
+            case recycled: id = R.string.recycled; break;
             default:
                 s = logTextID.name(); break;
         }

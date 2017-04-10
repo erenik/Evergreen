@@ -2,6 +2,7 @@ package erenik.evergreen.common.player;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Locale;
 
 import erenik.util.EList;
 import erenik.util.Printer;
@@ -73,7 +74,7 @@ public enum Statistic implements Serializable {
         String s = "\n"+header+
                 "\n============================================================================";
         for (int j = 0; j < statistics.length; ++j){
-            s += "\n- "+Format(Statistic.values()[j].name(),25)+": "+String.format("%7d", statistics[j]);
+            s += "\n- "+Format(Statistic.values()[j].name(),25)+": "+String.format(Locale.ENGLISH, "%7d", statistics[j]);
         }
         return s;
     }
