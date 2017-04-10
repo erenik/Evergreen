@@ -290,7 +290,7 @@ public class Game implements Serializable {
     {
         EList<Game> games = new EList<>();
 //        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
-        games.add(Game.UpdatesEverySeconds(60, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
+        games.add(Game.UpdatesEveryMinutes(3, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
   //      games.add(Game.UpdatesEveryMinutes(60, GameID.GlobalGame_60Minutes, "60 minutes"));
 
