@@ -143,7 +143,7 @@ public class StatViewActivity extends EvergreenActivity {
                 ((TextView)findViewById(R.id.tvEquippedArmor)).setText(armor != null? armor.name : getString(R.string.ordinaryClothes));
                 ((TextView)findViewById(R.id.tvDefenseWhenOut)).setText(""+player.BaseDefense());
                 ((TextView)findViewById(R.id.tvDefenseWhenInShelter)).setText(""+player.ShelterDefense());
-                ((TextView)findViewById(R.id.tvParryingBonus)).setText(""+player.GetEquipped(InventionStat.ParryBonus) + player.Get(SkillType.Parrying).Level());
+                ((TextView)findViewById(R.id.tvParryingBonus)).setText(""+(player.GetEquipped(InventionStat.ParryBonus) + player.Get(SkillType.Parrying).Level()));
 //                ((TextView)findViewById(R.id.tvAttackDamage)).setText
                 typeRelevant = InventionType.Armor;
                 break;

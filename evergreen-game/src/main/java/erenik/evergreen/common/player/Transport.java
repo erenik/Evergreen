@@ -151,6 +151,11 @@ public class Transport implements Serializable {
         stats[s.ordinal()] = value;
     }
     public float Get(TransportStat s) {
+        if (s.ordinal() >= stats.length || s.ordinal() < 0){
+            Printer.out("Unable to get Transport stat, ordinal "+s.ordinal()+" exceeds array length: "+stats.length);
+            new Exception().printStackTrace();
+            return 0;
+        }
         return stats[s.ordinal()];
     }
     public void Adjust(TransportStat s, float adjustment)

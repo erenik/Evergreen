@@ -290,7 +290,7 @@ public class Game implements Serializable {
     {
         EList<Game> games = new EList<>();
 //        games.add(Game.UpdatesEverySeconds(10, GameID.GlobalGame_10Seconds, "10 seconds"));
-        games.add(Game.UpdatesEveryMinutes(3, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
+        games.add(Game.UpdatesEveryMinutes(1, GameID.GlobalGame, "60 seconds")); // Changed ID to be the default one.
 //        games.add(Game.UpdatesEveryMinutes(10, GameID.GlobalGame_10Minutes, "10 minutes"));
   //      games.add(Game.UpdatesEveryMinutes(60, GameID.GlobalGame_60Minutes, "60 minutes"));
 
@@ -381,6 +381,7 @@ public class Game implements Serializable {
     long dayStartTimeMs = 0;
     /// Return true if a new day occurred.
     public boolean Update(long milliseconds) {
+        updateIntervalSeconds = 60; // 60 seconds hard-coded, yeahhhhh/ change to be updatable via command-line args later?
         int msPerDayInGame = updateIntervalSeconds * 1000; // Should be * 1000
         if (System.currentTimeMillis() > dayStartTimeMs + msPerDayInGame) {        // check if next day should come.
             if (NextDay() != 0) {
