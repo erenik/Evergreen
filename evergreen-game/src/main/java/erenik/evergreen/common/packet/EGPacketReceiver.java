@@ -42,7 +42,7 @@ public class EGPacketReceiver extends Thread
                 if (packetsWaitingForReponses.size() == 0)
                     Thread.sleep(10);
                 for (int i = 0; i < packetsWaitingForReponses.size(); ++i) {
-                  //  System.out.println("Waiting for response...");
+                  //  Printer.out("Waiting for response...");
                     EGPacket pack = packetsWaitingForReponses.get(i);
                     pack.CheckForReply();
                     boolean remove = false;
@@ -55,7 +55,7 @@ public class EGPacketReceiver extends Thread
                     pack.lastAttemptSystemMillis = System.currentTimeMillis();
                     pack.timeWaitedForReplyMs += diff;
                     // Wait time out?
-//                    System.out.println("pack.timeWaited "+pack.timeWaitedForReplyMs+" timeout "+pack.replyTimeout);
+//                    Printer.out("pack.timeWaited "+pack.timeWaitedForReplyMs+" timeout "+pack.replyTimeout);
                     if (pack.timeWaitedForReplyMs > pack.replyTimeout){
                         pack.lastError = EGResponseType.ReplyTimeoutReached;
                         remove = true;
@@ -63,11 +63,11 @@ public class EGPacketReceiver extends Thread
                     }
                     // Reply received,
                     if (pack.replies.size() > 0){
-                        //         System.out.println("Got a reply?");
+                        //         Printer.out("Got a reply?");
                         // Check last reply time?
                         long msAgo = System.currentTimeMillis() - pack.LastReply().receiveTime;
                         if (msAgo > 3000){ // Wait at most 1 second more for each packet received on the socket.
-                           // System.out.println("Last response was "+msAgo+"ms ago, removing this packet now from the listener.");
+                           // Printer.out("Last response was "+msAgo+"ms ago, removing this packet now from the listener.");
                             remove = true;
                         }
                         else { // Wait some more if we already had replies...
@@ -76,7 +76,7 @@ public class EGPacketReceiver extends Thread
                     }
                     if (remove) {
                         packetsWaitingForReponses.remove(pack); // Remove from receiving queue.
-//                        System.out.println("Removing packet from receiver queue.");
+//                        Printer.out("Removing packet from receiver queue.");
                         --i;
                         continue;
                     }

@@ -9,6 +9,7 @@ import java.util.Date;
 
 import erenik.evergreen.common.Enumerator;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-10-31.
@@ -22,27 +23,27 @@ public class Log implements Serializable {
      * and arguments are provided to fill in the gaps, so to speak, depending on the locale
      * and language chosen by the end-user.
     */
-    boolean stringBasicVersion = true;
+//    boolean stringBasicVersion = true;
     // 0 - Not displayed, 1 - Displayed at client, 2 - confirmed at server.
     public int displayedToEndUser = 0;
 
-    public boolean BasicStringVersion() { return stringBasicVersion;};
+//    public boolean BasicStringVersion() { return stringBasicVersion;};
     // Empty
     public Log(){}
     /// String and Type, type determines varous filtering and color-coding schemes.
-    public Log(String s, LogType t) {
+    /*public Log(String s, LogType t) {
         logID = ++logIDEnumerator.value;
         text = s;
         type = t;
         date = new Date();
-    }
+    }*/
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t) {
         logID = ++logIDEnumerator.value;
         this.ltid = ltid;
         this.type = t;
         date = new Date();
-        stringBasicVersion = false;
+//        stringBasicVersion = false;
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1) {
@@ -51,7 +52,7 @@ public class Log implements Serializable {
         this.type = t;
         date = new Date();
         this.args.add(arg1);
-        stringBasicVersion = false;
+  //      stringBasicVersion = false;
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1, String arg2) {
@@ -61,7 +62,7 @@ public class Log implements Serializable {
         date = new Date();
         this.args.add(arg1);
         this.args.add(arg2);
-        stringBasicVersion = false;
+    //    stringBasicVersion = false;
     }
     /// String and Type, type determines varous filtering and color-coding schemes.
     public Log(LogTextID ltid, LogType t, String arg1, String arg2, String arg3) {
@@ -72,7 +73,7 @@ public class Log implements Serializable {
         this.args.add(arg1);
         this.args.add(arg2);
         this.args.add(arg3);
-        stringBasicVersion = false;
+    //    stringBasicVersion = false;
     }
     public Log(LogTextID ltid, LogType t, EList<String> args) {
         logID = ++logIDEnumerator.value;
@@ -80,13 +81,13 @@ public class Log implements Serializable {
         this.type = t;
         date = new Date();
         this.args = args;
-        stringBasicVersion = false;
+     //   stringBasicVersion = false;
     }
 
     @Override
     public String toString() {
-        if (stringBasicVersion)
-            return this.text;
+//        if (stringBasicVersion)
+  //          return this.text;
         String s = ltid.name();
         if (args.size() > 0)
             s += " args: ";
@@ -98,7 +99,7 @@ public class Log implements Serializable {
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(date);
-        out.writeObject(text);
+     //   out.writeObject(text);
         out.writeInt(type.ordinal());
         out.writeInt(ltid.ordinal());
         out.writeInt(args.size());
@@ -106,13 +107,13 @@ public class Log implements Serializable {
             out.writeObject(args.get(i));
         }
 //        out.writeObject(args); // Write it as an array instead of EList! Supposedly safer. http://stackoverflow.com/questions/20275623/type-safety-unchecked-cast-from-object-to-arraylistmyvariable
-        out.writeBoolean(stringBasicVersion);
+    //    out.writeBoolean(stringBasicVersion);
         out.writeInt(displayedToEndUser);
         out.writeLong(logID);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         date = (Date) in.readObject();
-        text = (String) in.readObject();
+//        text = (String) in.readObject();
         type = LogType.values()[in.readInt()];
         ltid = LogTextID.values()[in.readInt()];
         int numArgs = in.readInt();
@@ -122,7 +123,7 @@ public class Log implements Serializable {
             args.add(str);
         }
 //        args = (EList<String>) in.readObject();
-        stringBasicVersion = in.readBoolean();
+     //   stringBasicVersion = in.readBoolean();
         displayedToEndUser = in.readInt();
         logID = in.readLong();
     }
@@ -140,7 +141,7 @@ public class Log implements Serializable {
     EList<String> args = new EList<>();
     /// Main stats.
     Date date = new Date(); // Time-stamp of this log message.
-    public String text = "";
+   // public String text = "";
     public LogType type = LogType.Undefined;
     private long logID = -1;     // The actual ID of this specific message, to synchronize properly between client and server and reduce bandwidth consumption for saving/loading procedures.
 
@@ -153,7 +154,7 @@ public class Log implements Serializable {
     public static void PrintLastLogMessages(EList<Log> log, int num) {
         EList<Log> logs = log;
         if (logs == null){
-            System.out.println("Log.PrintLastLogMessages, null log, aborting");
+            Printer.out("Log.PrintLastLogMessages, null log, aborting");
             new Exception().printStackTrace();
             return;
         }
@@ -161,7 +162,7 @@ public class Log implements Serializable {
             if (i < 0)
                 continue;
             Log l = logs.get(i);
-            System.out.println("Log msg "+l.LogID()+" index"+i+" "+l);
+            Printer.out("Log msg "+l.LogID()+" index"+i+" "+l);
         }
 
     }
@@ -178,7 +179,7 @@ public class Log implements Serializable {
                 }
             }
             if (!show) {
-                System.out.println("Skipping message "+l.LogID()+" "+l);
+                Printer.out("Skipping message "+l.LogID()+" "+l);
                 continue;
             }
             newList.add(l);

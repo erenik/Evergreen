@@ -52,8 +52,13 @@ public enum LogTextID {
     ReceivedPlayerResources, // Player, quantity, type,
     SentPlayerResources, // Player, quantity, type,
     MessageSentToPlayer, // Player name only,
-    MessageReceivedFromPlayer,
+    MessageReceivedFromPlayer, // Player name, message contents.
     foundPlayerSelfLol,
-    searchPlayer_alreadyFound, searchPlayers_success, searchPlayers_failed, playerParries, gaveItemToPlayer, receivedItemFromPlayer,  // Player name, message contents.
+    searchPlayer_alreadyFound, searchPlayers_success, searchPlayers_failed, playerParries,
+    // Give and take.
+    gaveItemToPlayer, receivedItemFromPlayer,
+    gaveBlueprintToPlayer, receivedBlueprintFromPlayer,
+    playerNotAliveAnymore,
+    ensnared, ensnaredWoreOff, multiplies, sendPlayerResourcesFailed, playerDied, skillLeveledDown, playerDefeatedPlayer, obtainedItem, obtainedBlueprint, scoutFoundItems,
 
 }

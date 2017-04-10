@@ -49,7 +49,7 @@
 //
 //    @Override
 //    protected void doPrintHeader() {
-////        System.out.println("m_Buffer: "+m_Buffer.toString());
+////        Printer.out("m_Buffer: "+m_Buffer.toString());
 //    }
 ////    @Override
 ////    protected void doPrintClassification(Classifier clsfr, Instance instnc, int i) throws Exception {
@@ -81,13 +81,13 @@
 ////        //result = wekaMan.ModifyResult(result); // If active, modifies result based on history values.
 ////        lastSampleValue = result;
 ////        if (TestData() == null){
-////            System.out.println("Test data null");
+////            Printer.out("Test data null");
 ////            new Exception().printStackTrace();
 ////            return;
 ////        }
 ////        String resultStr = TestData().classAttribute().value((int) result);
 ////        if (verbosity > 2)
-////            System.out.println(clsfr.getClass().getSimpleName()+" "+instnc.toString()+" i "+i+" predicted: "+resultStr);
+////            Printer.out(clsfr.getClass().getSimpleName()+" "+instnc.toString()+" i "+i+" predicted: "+resultStr);
 ////        if (instnc.classValue() == result) // Good result
 ////            Good();
 ////        else // Bad result
@@ -100,14 +100,14 @@
 //    }
 ////    @Override
 //    protected void doPrintClassification(double[] doubles, Instance instnc, int i) throws Exception {
-////        System.out.println(doubles.toString()+" "+instnc.toString()+" i "+i);
+////        Printer.out(doubles.toString()+" "+instnc.toString()+" i "+i);
 ////                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 //    }
 //
 //    @Override
 //    protected void doPrintFooter() {
 //        if (verbosity > 1)
-//            System.out.println(cls.getClass().getSimpleName()+" OK: "+ok+" out of "+total+" ratio: "+ok/(float)total);
+//            Printer.out(cls.getClass().getSimpleName()+" OK: "+ok+" out of "+total+" ratio: "+ok/(float)total);
 //        accuracy = ok / (float) total;
 //     //   classifier.accuracy = accuracy; // Save accuracy straight in the classifier for sorting/presenting later.
 //    }

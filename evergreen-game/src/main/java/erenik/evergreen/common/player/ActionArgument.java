@@ -23,7 +23,7 @@ public enum ActionArgument
     ReceivedMessage, // Received messages -> Any type.
     ; // Contains, Exactly, StartsWith
     /// Value passed by user when queueing.
-    public String value;
+    public String value = "";
     // Settings.
     // for PlayerName, is can be 0 for EXACT matches, 1 for StartsWith and 2 for Contains. To be added later?
     int settings;

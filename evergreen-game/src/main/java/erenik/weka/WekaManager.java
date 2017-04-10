@@ -1,6 +1,7 @@
 package erenik.weka;
 
 import erenik.util.FileUtil;
+import erenik.util.Printer;
 import erenik.util.Tuple;
 import weka.attributeSelection.StartSetHandler;
 import weka.classifiers.AbstractClassifier;
@@ -114,7 +115,7 @@ public class WekaManager {
                 }
             }
         }
-        System.out.println();
+        Printer.out();
     }
 
     private void TestClassifiersHistory(int startWindowSize, int stopWindowSize) {
@@ -124,7 +125,7 @@ public class WekaManager {
         for (int i = startWindowSize; i <= stopWindowSize; ++i){
             TestClassifiers10FoldHistory(i);
             best = GetBestClassifier();
-            System.out.println("Best classifier: "+best.Name()+" acc: "+best.Accuracy());
+            Printer.out("Best classifier: "+best.Name()+" acc: "+best.Accuracy());
             if (best.Accuracy() > bestAcc){
                 bestAcc = best.Accuracy();
                 bestHistoryLength = s.historySetSize;
@@ -132,9 +133,9 @@ public class WekaManager {
             PrintResultsWindowTests(true);
         }
         if (best == null)
-            System.out.println("No best classifier could be determined (error)");
+            Printer.out("No best classifier could be determined (error)");
         else
-            System.out.println("Best accuracy "+bestAcc+" for history "+bestHistoryLength+" and classifier "+best.Name());
+            Printer.out("Best accuracy "+bestAcc+" for history "+bestHistoryLength+" and classifier "+best.Name());
     }
 
     private void PrintResultsSimple() {
@@ -145,7 +146,7 @@ public class WekaManager {
             System.out.printf("\n%1$13s ", wc.Name());
             System.out.printf("\t%1.3f", wc.Accuracy());
         }
-        System.out.println();
+        Printer.out();
     }
 
     WClassifier currentClassifier = null; // Set before usage.
@@ -177,11 +178,11 @@ public class WekaManager {
             reader.close();
             // Remove the index 0 with time.
 //            for (int i = 0; i < data.numAttributes(); ++i){
-  //              System.out.println("Attribute "+i+" : "+data.attribute(i).toString());
+  //              Printer.out("Attribute "+i+" : "+data.attribute(i).toString());
     //        }
             if (data.attribute(0).toString().contains("Time")){
                 data = RemoveColumn(1, data); // Remove the start-time?
-                System.out.println("num Attrs: "+data.numAttributes());
+                Printer.out("num Attrs: "+data.numAttributes());
             }
             /*
             if (accOnly){
@@ -190,12 +191,12 @@ public class WekaManager {
                     if (name.contains("gyro")){
                         data = RemoveColumn(i, data);
                         --i;
-                        System.out.println("Removing column: "+name);
+                        Printer.out("Removing column: "+name);
                     }
                 }
             }*/
             data.setClassIndex(data.numAttributes() - 1);            // setting class attribute to the last index - Transports.
-            System.out.println("Loaded "+data.size()+" data instances");
+            Printer.out("Loaded "+data.size()+" data instances");
             return data;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -224,7 +225,7 @@ public class WekaManager {
 //            if (currentClassifier.cls instanceof RandomForest) {
   //              options = Utils.splitOptions("");
                 // -P Size of each bag, as a percentage of the training set size. (default 100)
-//                System.out.println("Updated settings for Random Forest...");}
+//                Printer.out("Updated settings for Random Forest...");}
 // //else if (currentClassifier.cls instanceof RandomTree){options = Utils.splitOptions("");} else options = Utils.splitOptions("");
 //                options = Utils.splitOptions("-I 100 -num-slots 1 -K 0 -M 1.0 -S 1");
      //   } catch (Exception e){e.printStackTrace();}
@@ -232,10 +233,10 @@ public class WekaManager {
 
 /*
     void NaiveAnd10Fold(){
-        System.out.println("Performing Naive test of same training data as testing data.");
+        Printer.out("Performing Naive test of same training data as testing data.");
         TestClassifiers();
         PrintResultsSimple();
-        System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
+        Printer.out("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
         s.doNFoldCrossValidation = true;
         TestClassifiers();
         PrintResultsSimple();
@@ -243,7 +244,7 @@ public class WekaManager {
     }
 */
     void TestClassifiers10FoldTestsOnly(){
-        System.out.println("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
+        Printer.out("\nPerforming Ten-fold cross-validation tests on chosen classifiers.");
         s.doNFoldCrossValidation = true;
         TestClassifiers();
         s.doNFoldCrossValidation = false;
@@ -259,13 +260,13 @@ public class WekaManager {
             options[1] = i+""; // Integer to string for the index.
             remove.setOptions(options);                           // set options
             remove.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
-//            System.out.println("Num attrs: "+data.numAttributes());
+//            Printer.out("Num attrs: "+data.numAttributes());
             Instances newData = Filter.useFilter(data, remove);   // apply filter
-            System.out.println("Removed a column, new attrs: "+newData.numAttributes());
+            Printer.out("Removed a column, new attrs: "+newData.numAttributes());
             if (newData.numAttributes() == 9 ||
                     newData.numAttributes() == 5)
                 return newData;
-            System.out.println("Bad number of columns, or what do you say?");
+            Printer.out("Bad number of columns, or what do you say?");
             new Exception().printStackTrace();;
             System.exit(14);
             return newData; // Just copy it over after it's done.
@@ -328,7 +329,7 @@ public class WekaManager {
     public void TestClassifiers10FoldHistory(int historySize) {
         s.historySetSize = historySize;
         testedWindowSizes.add(historySize);
-        System.out.println("Testing again, with history window active, size: "+s.historySetSize);
+        Printer.out("Testing again, with history window active, size: "+s.historySetSize);
         TestClassifiers10FoldTestsOnly();
     }
 
@@ -389,7 +390,7 @@ public class WekaManager {
 
     /// Returns accuracy.
     void DoOwnNFoldCrossValidation(){
-        System.out.println("Training data : "+s.trainingDataWhole.size());
+        Printer.out("Training data : "+s.trainingDataWhole.size());
         s.doNFoldCrossValidation = true;
         for (int c = 0; c < classifiers.size(); ++c){
             currentClassifier = classifiers.get(c);
@@ -399,7 +400,7 @@ public class WekaManager {
 
     public static void NullifyGyroData(Instances testData) {
         if (verbosity > 0)
-            System.out.println("Nullifying gyro data on test data.");
+            Printer.out("Nullifying gyro data on test data.");
         String before = "", after;
         for (int i = 0; i < testData.numInstances(); ++i){
             Instance inst = testData.get(i);
@@ -411,7 +412,7 @@ public class WekaManager {
             inst.setValue(6, 0);
             inst.setValue(7, 0);
             if (i % 500 == 0 && verbosity > 1)
-                System.out.println(before+" -> "+InstanceAsString(inst));
+                Printer.out(before+" -> "+InstanceAsString(inst));
 
         }
     }
@@ -437,7 +438,7 @@ public class WekaManager {
             WClassifier wc = classifiers.get(i);
             wc.Test(s);
         }
-        System.out.println();
+        Printer.out();
     }
 
     void SetRandomizationDegree(float randomizationDegree) {
@@ -461,7 +462,7 @@ public class WekaManager {
     public void AppendToFile(String text) {
         if (fileToAppendTo.length() > 0) {
             AppendToFile(fileToAppendTo, text);
-            System.out.println(text);
+            Printer.out(text);
         }
     }
 
@@ -486,7 +487,7 @@ public class WekaManager {
             Logger.getLogger(WekaManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (verbosity > 0)
-            System.out.println(currentClassifier.Name()+" accuracy: "+out.accuracy);
+            Printer.out(currentClassifier.Name()+" accuracy: "+out.accuracy);
         return accuracy;
     }*/
 
@@ -495,12 +496,12 @@ public class WekaManager {
     boolean Train(){
         try {
             currentClassifier.BuildClassifier(trainingData);
-//            System.out.println("Classifier trained");
+//            Printer.out("Classifier trained");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Failed to tran Classifier");
+        Printer.out("Failed to tran Classifier");
         return false;
     }*/
 

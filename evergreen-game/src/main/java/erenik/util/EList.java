@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import erenik.evergreen.common.combat.Combatable;
 import erenik.evergreen.common.logging.Log;
 
 /**
@@ -25,6 +26,10 @@ public class EList<cls> implements Serializable {
 
     public EList(cls[] values) {
         addAll(values);
+    }
+
+    public <otherClass> EList(EList<otherClass> compatibleList) {
+        addAllCompatible(compatibleList);
     }
 
     public void add(cls obj) {
@@ -89,6 +94,11 @@ public class EList<cls> implements Serializable {
         for (int i = 0; i < values.length; ++i)
             arrL.add(values[i]);
     }
+    private <otherClass> void addAllCompatible(EList<otherClass> compatibleList) {
+        for (int i = 0; i < compatibleList.size(); ++i)
+            arrL.add((cls) compatibleList.get(i));
+    }
+
 
     public int size() {
         return arrL.size();

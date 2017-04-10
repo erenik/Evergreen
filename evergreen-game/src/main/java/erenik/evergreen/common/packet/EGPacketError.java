@@ -9,4 +9,5 @@ public enum EGPacketError {
     CouldNotEstablishConnection,
     ConnectionTimedOut,
     NoResponse,
+    BadVersion,
 }

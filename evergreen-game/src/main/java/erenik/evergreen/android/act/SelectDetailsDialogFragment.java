@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import erenik.evergreen.common.player.AAction;
 import erenik.evergreen.common.player.Action;
+import erenik.evergreen.common.player.SkillType;
 import erenik.util.EList;
 
 import erenik.evergreen.android.App;
@@ -29,15 +30,17 @@ import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.Transport;
+import erenik.util.Printer;
 import erenik.weka.transport.TransportType;
 
 import erenik.util.EList;
 
 /**
+ * Used for...
  * Created by Emil on 2016-10-30.
  */
 public class SelectDetailsDialogFragment extends DialogFragment {
-    Action a = null;
+    Action action = null;
 
     Player player = App.GetPlayer();
     EList<View> argumentViews = new EList<>();
@@ -48,39 +51,32 @@ public class SelectDetailsDialogFragment extends DialogFragment {
         public void onClick(DialogInterface dialog, int id)
         {
             Activity act = getActivity();
-            System.out.println("Activity: "+act.toString());
+            Printer.out("Activity: "+act.toString());
             if (act instanceof SelectActivity) {
-                // Update GUI of main activity.
-                SelectActivity sa = (SelectActivity) act;
-                // Hide system buttons?
-                sa.setupFullscreenFlags(); // Remove stuff?
-                String text = a.text;
-                // Fetch arguments as set in the ui?
-                if (argumentViews.size() > 0)
-                    text += ": ";
-                for (int i = 0; i < argumentViews.size(); ++i)
-                {
+                SelectActivity sa = (SelectActivity) act;   // Update GUI of main activity.
+                sa.setupFullscreenFlags(); // Remove stuff?                 // Hide system buttons?
+                for (int i = 0; i < argumentViews.size(); ++i) {
                     View v = argumentViews.get(i);
-                    System.out.println("View: "+v.toString());
+                    Printer.out("View: "+v.toString());
+                    String valueSet = "";
                     if (v instanceof Spinner) {
                         Spinner s = (Spinner) v;
-                        String t = s.getSelectedItem().toString();
-                        System.out.println("Selected text: "+t);
-                        text += t;
+                        valueSet = s.getSelectedItem().toString();
                     }
-                    else if (v instanceof EditText)
-                    {
+                    else if (v instanceof EditText) {
                         EditText et = (EditText) v;
-                        String s = et.getText().toString();
-                        System.out.println("text: "+s);
-                        text += s;
+                        valueSet = et.getText().toString();
+                        if (valueSet.length() > 128)
+                            valueSet = valueSet.substring(0, 128); // Substring if too long :) max 100 chars per message?
                     }
-                    if (i < argumentViews.size() - 1)
-                        text += ", ";
+                    if (action.requiredArguments.size() < i)
+                        continue;
+                    Printer.out("Argument: "+action.requiredArguments.get(i).name()+" value: "+valueSet);
+                    action.requiredArguments.get(i).value = valueSet;
                 }
-                // Add the text?
-                sa.selected.add(text);
-                sa.ActionClicked(a);
+                // Add the text?\
+                sa.selectedActions.add(action);
+                sa.ActionClicked(action, false);
                 sa.updateQueue(); // Update queue gui.
             }
         }
@@ -92,7 +88,7 @@ public class SelectDetailsDialogFragment extends DialogFragment {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         String header = "Action details:";
-        header = "Details: "+a.text;
+        header = "Details: "+action.text;
         /*
         switch(da)
         {
@@ -130,9 +126,9 @@ public class SelectDetailsDialogFragment extends DialogFragment {
         possible = true;
         String reason = "";
         EList<View> tempList = new EList<>();
-        for (int ra = 0; ra < a.requiredArguments.size(); ++ra) {
+        for (int ra = 0; ra < action.requiredArguments.size(); ++ra) {
             boolean numbersOnly = false;
-            ActionArgument aarg = a.requiredArguments.get(ra);
+            ActionArgument aarg = action.requiredArguments.get(ra);
             EList<String> choices = new EList<String>();
             switch(aarg)
             {
@@ -149,7 +145,7 @@ public class SelectDetailsDialogFragment extends DialogFragment {
                     */
                 case Player:
                     choices = player.KnownPlayerNames();
-                    System.out.println("known players: "+choices.size());
+                    Printer.out("known players: "+choices.size());
                     if (choices.size() == 0) {
                         possible = false;
                         reason = "No known players.";
@@ -173,11 +169,11 @@ public class SelectDetailsDialogFragment extends DialogFragment {
                     choices = InventionType.GetStrings();
                     break;
                 case InventionToCraft:
-                    System.out.println("InventionToCraft");
-                    for (int j = 0; j < player.cd.inventions.size(); ++j) {
-                        Invention inv = player.cd.inventions.get(j);
+                    Printer.out("InventionToCraft");
+                    for (int j = 0; j < player.cd.inventionBlueprints.size(); ++j) {
+                        Invention inv = player.cd.inventionBlueprints.get(j);
                         if (inv.IsCraftable()) {
-                            System.out.println("inv: "+inv.name);
+                            Printer.out("inv: "+inv.name);
                             choices.add(inv.name);
                         }
                     }
@@ -187,7 +183,7 @@ public class SelectDetailsDialogFragment extends DialogFragment {
                     }
                     break;
                 case SkillToStudy:
-                    choices = Skill.Names();
+                    choices = SkillType.Names();
                     break;
                 case ResourceType:
                     choices = new EList<>();
@@ -201,8 +197,31 @@ public class SelectDetailsDialogFragment extends DialogFragment {
                 case Text:
                     textInput = true;
                     break;
+                case Item:
+                    Printer.out("Select Item");
+                    for (int ii = 0; ii < player.cd.inventory.size(); ++ii){
+                        Invention item = player.cd.inventory.get(ii);
+                        choices.add(item.name);
+                    }
+                    if (choices.size() == 0){
+                        possible = false;
+                        reason = "No items available.";
+                    }
+                    break;
+                case Blueprint:
+                    Printer.out("Select blueprint");
+                    for (int bi = 0; bi < player.cd.inventionBlueprints.size(); ++bi){
+                        Invention blueprint = player.cd.inventionBlueprints.get(bi);
+                        choices.add(blueprint.name);
+                    }
+                    if (choices.size() == 0){
+                        possible = false;
+                        reason = "No blueprints available.";
+                    }
+                    break;
                 default:
-                    System.out.println("Bad thing to select from: "+aarg.name());
+                    Printer.out("Bad thing to select from: "+aarg.name());
+                    new Exception().printStackTrace();
                     System.exit(4);
             }
             LinearLayout.LayoutParams selectionLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1.f);
@@ -242,8 +261,8 @@ public class SelectDetailsDialogFragment extends DialogFragment {
             // Add error messages?
             TextView tv = new TextView(getContext());
             String text = "Unable to perform action. "+reason;
-            if (a.DailyAction() != null)
-                switch(a.DailyAction()) {
+            if (action.DailyAction() != null)
+                switch(action.DailyAction()) {
     //                case AugmentTransport:
                     case Craft:
                         text = "No craftable inventions found.";

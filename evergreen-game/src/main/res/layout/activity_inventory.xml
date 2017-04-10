@@ -20,6 +20,7 @@
         <erenik.evergreen.android.ui.EvergreenButton
             style="@style/Evergreen.Button.MainScreenBottom" android:text="@string/tools" android:id="@+id/buttonTools" />
     </LinearLayout>
+    <!--
     <LinearLayout style="@style/Evergreen.Layout">
         <erenik.evergreen.android.ui.EvergreenTextView
             style="@style/Evergreen.Text" android:text="Sort by" />
@@ -30,7 +31,7 @@
         <erenik.evergreen.android.ui.EvergreenButton
             style="@style/Evergreen.Button.MainScreenBottom" android:text="Date" android:id="@+id/buttonSortByDate" />
     </LinearLayout>
-
+-->
     <erenik.evergreen.android.ui.EvergreenTextView
         style="@style/Evergreen.TextBigger" android:text="@string/relevantGear" />
     <!-- Main content when desc text invisible -->

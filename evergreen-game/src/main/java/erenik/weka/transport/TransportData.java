@@ -6,6 +6,7 @@ import erenik.util.EList;
 import java.util.Arrays;
 
 import erenik.evergreen.common.player.Transport;
+import erenik.util.Printer;
 import weka.filters.unsupervised.attribute.Add;
 
 /**
@@ -49,10 +50,10 @@ public class TransportData implements Serializable {
     public void PrintAllData() {
         if (this.timePeriodContained != TimePeriod.AllData)
             return;
-        System.out.println("TransportData "+timePeriodContained.name()+" id "+timePeriodID);
-        System.out.println(" startTimeMs"+startTimeMs+" endTimeMs "+endTimeMs);
-        System.out.println(" children: "+children.size()+" dataPoints: "+data.size());
-        System.out.println(" hours: "+Hours().size());
+        Printer.out("TransportData "+timePeriodContained.name()+" id "+timePeriodID);
+        Printer.out(" startTimeMs"+startTimeMs+" endTimeMs "+endTimeMs);
+        Printer.out(" children: "+children.size()+" dataPoints: "+data.size());
+        Printer.out(" hours: "+Hours().size());
         for (int i = 0; i < children.size(); ++i){
             children.get(i).PrintAllData();
         }
@@ -80,9 +81,9 @@ public class TransportData implements Serializable {
 
         // Duration between 2 occurrences?
         long duration = last.startTimeSystemMs + last.DurationMillis() - first.startTimeSystemMs; // end time - start time = duration.
-     //   System.out.println(duration+" > "+MillisecondsPerHour+" = "+(duration > MillisecondsPerHour));
+     //   Printer.out(duration+" > "+MillisecondsPerHour+" = "+(duration > MillisecondsPerHour));
         if (duration > MillisecondsPerHour){
-            System.out.println("Time to make an hour! MS duration: "+duration);
+            Printer.out("Time to make an hour! MS duration: "+duration);
             // Make them into an hour.
             TransportData child = new TransportData(TimePeriod.Hour);
             child.startTimeMs = first.startTimeSystemMs;

@@ -19,6 +19,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.Simulator;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
+import erenik.util.Printer;
 import erenik.weka.transport.TransportDetectionService;
 
 /**
@@ -28,12 +29,14 @@ import erenik.weka.transport.TransportDetectionService;
 public class MainScreen extends EvergreenActivity //AppCompatActivity
 {
     Simulator simulator = Simulator.getSingleton();
+    private boolean checkOnUpdatesOnResume = false; // Add a config for this in some options-screen?
 
     @Override
     protected void onResume() {
         super.onResume();
         UpdateUI(); // Always update GUI upon resuming.
-        CheckForUpdates(); // Check for updates?
+        if (checkOnUpdatesOnResume)
+            SaveChangesAndCheckForUpdates(); // Check for updates?
     }
 
     /**
@@ -61,10 +64,10 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         public void onClick(View v) {
             Player player = App.GetPlayer();
             player.lastEditSystemMs = System.currentTimeMillis(); // Update so auto-loaded works for the most recently-played player-character. :)
-            System.out.println("Next day! GameID: "+player.gameID);
+            Printer.out("Next day! GameID: "+player.gameID);
             // Local game? less to think about.
             if (player.gameID == GameID.LocalGame) {
-                System.out.println("Requesting player: "+player.name);
+                Printer.out("Requesting player: "+player.name);
                 int playersSimulated = simulator.RequestNextDay(player, true);
                 focusLastLogMessageUponUpdate = false;
                 if (playersSimulated <= 0) { // If not a new day, no need to update GUI, etc.
@@ -81,62 +84,52 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         }
     };
 
-    long lastSaveTry = 0;
-    void SaveChangesAndCheckForUpdates(){
-        long now = System.currentTimeMillis();
-        if (now < lastSaveTry + 1000) {
-            System.out.println("Skipping saving, try again in a second.");
-            return;
-        }
-        lastSaveTry = now;
-        Toast("Saving changes/Checking for updates...");
-        SaveToServer();
-    }
-
     private void PresentSystemMessageIfNewOne() {
         Player player = App.GetPlayer();
         final String sysmsg = player.sysmsg;
         if (sysmsg == null)
             return;
-        if (!sysmsg.equals(LastDisplayedSystemMessage())){
-            if (sysmsg.length() < 3)
-                return; // Nothing to present really.
-            // New one? present it.
-            TextView tv = (TextView)findViewById(R.id.textView_sysMsg);
-            tv.setText(sysmsg);
-            if (sysmsg.contains("http")){
-                tv.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        System.out.println("Very clickable, yo.");
-                        int urlStartIndex = sysmsg.indexOf("http");
-                        String url = sysmsg.substring(urlStartIndex);
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(browserIntent);
-                    }
-                });
-            }
-            findViewById(R.id.layout_sysmsg).setVisibility(View.VISIBLE);
-            UpdateBackgroundView(findViewById(R.id.layout_sysmsg));
-            findViewById(R.id.button_sysmsgConfirm).setOnClickListener(new View.OnClickListener() {
+        if (sysmsg.equals(LastDisplayedSystemMessage())){
+            return;
+        }
+
+        if (sysmsg.length() < 3)
+            return; // Nothing to present really.
+        // New one? present it.
+        TextView tv = (TextView)findViewById(R.id.textView_sysMsg);
+        tv.setText(sysmsg);
+        if (sysmsg.contains("http")){
+            tv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    SetLastDisplayedSystemMessage(sysmsg);
-                    findViewById(R.id.layout_sysmsg).setVisibility(View.INVISIBLE);
+                    int urlStartIndex = sysmsg.indexOf("http");
+                    String url = sysmsg.substring(urlStartIndex);
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(browserIntent);
                 }
             });
-//            SetLastDisplayedSysMsg(sysmsg);
         }
+        findViewById(R.id.layout_sysmsg).setVisibility(View.VISIBLE);
+        UpdateBackgroundView(findViewById(R.id.layout_sysmsg));
+        findViewById(R.id.button_sysmsgConfirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SetLastDisplayedSystemMessage(sysmsg);
+                findViewById(R.id.layout_sysmsg).setVisibility(View.INVISIBLE);
+            }
+        });
+//            SetLastDisplayedSysMsg(sysmsg);
     }
 
     private final String SYS_MSG_KEY = "EG_SYS_MSG";
     private String LastDisplayedSystemMessage() {
         SharedPreferences sp = App.GetPreferences();
+        Printer.out("Previous message: "+sp.getString(SYS_MSG_KEY, ""));
         return sp.getString(SYS_MSG_KEY, "");
     }
     private void SetLastDisplayedSystemMessage(String msg){
         SharedPreferences sp = App.GetPreferences();
-        sp.edit().putString(SYS_MSG_KEY, msg).commit(); // Set new message and save.
+        sp.edit().putString(SYS_MSG_KEY, msg).apply(); // Set new message and save.
     }
 
     /// Main init function
@@ -162,6 +155,13 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         findViewById(R.id.buttonChooseActiveAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseAction).setOnClickListener(selectActionSkill);
         findViewById(R.id.buttonChooseSkill).setOnClickListener(selectActionSkill);
+        findViewById(R.id.inventory).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), InventoryScreen.class);
+                startActivity(intent);
+            }
+        });
         Button buttonNextDay = (Button) findViewById(R.id.nextDay);
         buttonNextDay.setOnClickListener(nextDay);
         buttonNextDay.setText(App.IsLocalGame()? "Next day" : "Save/Update");
@@ -172,23 +172,24 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             findViewById(ids[i]).setOnClickListener(viewStatDetails);
 
         // Check for updates if returning to this screen?
-        CheckForUpdates();
+        SaveChangesAndCheckForUpdates();
     }
     /// Add check so we don't double check when state changes happen and at least 2 functions call this at the same time..?
     static long lastCheckMs = 0;
-    void CheckForUpdates(){
+    /// Saves changes and checks for updates in one go - 1 packet with SavePlayer, after which it may query for log messages if the server notifies that new log-messages are available.
+    void SaveChangesAndCheckForUpdates(){
         long now = System.currentTimeMillis();
         if (now < lastCheckMs + 5000) { // OK.
-            System.out.println("Skipping check since we already checked 5 second ago.");
+            Printer.out("Skipping check since we already checked 5 second ago.");
             return;
         }
         lastCheckMs = now;
         if (App.IsLocalGame()){ // Then don't
-            System.out.println("Local game. Skipping checking updates.");
+            Printer.out("Local game. Skipping checking updates.");
             return;
         }
         if (System.currentTimeMillis() < App.GetPlayer().lastSaveTimeSystemMs + 15000) {
-            System.out.println("CheckForUpdates - skipping since we checked it like 5 seconds ago, yo.");
+            Printer.out("CheckForUpdates - skipping since we checked it like 5 seconds ago, yo.");
             return;
         }
         RequestClientData();
@@ -205,7 +206,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             switch(view.getId()) {
                 case R.id.buttonIconAttack: statType = Stat.BASE_ATTACK.ordinal(); break;
                 case R.id.buttonIconDefense: statType = Stat.BASE_DEFENSE.ordinal(); break;
-                case R.id.buttonIconEmissions: statType = Stat.EMISSIONS.ordinal(); break;
+                case R.id.buttonIconEmissions: statType = Stat.AccumulatedEmissions.ordinal(); break;
                 case R.id.buttonIconFood: statType = Stat.FOOD.ordinal(); break;
                 case R.id.buttonIconMaterials: statType = Stat.MATERIALS.ordinal(); break;
                 case R.id.buttonIconHP: statType = Stat.HP.ordinal(); break;
@@ -236,7 +237,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         SetText(R.id.textViewMaterials, player.GetInt(Stat.MATERIALS)+"");
         SetText(R.id.textViewAttack, (int) player.AggregateAttackBonus()+"");
         SetText(R.id.textViewDefense, (int) player.AggregateDefenseBonus()+"");
-        SetText(R.id.textViewEmissions, player.GetInt(Stat.EMISSIONS) + "");
+        SetText(R.id.textViewEmissions, player.GetInt(Stat.AccumulatedEmissions) + "");
         UpdateActiveActionButton();
         UpdateDailyActionButton();
         UpdateSkillButton();
@@ -281,7 +282,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         Player player = App.GetPlayer();
         int type = requestCode;
-        System.out.println("onActivityResult called, req: "+requestCode+" code: " + resultCode);
+        Printer.out("onActivityResult called, req: "+requestCode+" code: " + resultCode);
         if (resultCode < 0)
             return;
         switch(type)

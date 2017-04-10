@@ -10,6 +10,7 @@ import android.util.TypedValue;
 import android.widget.TextView;
 
 import erenik.evergreen.R;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-11-12.
@@ -78,7 +79,7 @@ public class EvergreenTextView extends TextView {
 //    @Override
     public void setValues(float[] values){
         // Do stuff calculating
-        System.out.println("wat");
+        Printer.out("wat");
     }
     // When text changes, set the force resize flag to true and reset the text size.
     @Override

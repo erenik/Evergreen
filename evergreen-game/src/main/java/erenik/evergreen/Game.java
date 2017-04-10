@@ -15,10 +15,14 @@ import erenik.evergreen.common.Enumerator;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.auth.Auth;
 import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.player.Skill;
+import erenik.evergreen.common.player.SkillType;
 import erenik.evergreen.common.player.Stat;
+import erenik.evergreen.common.player.Statistic;
 import erenik.util.EList;
 import erenik.util.FileUtil;
 import erenik.util.Json;
+import erenik.util.Printer;
 import erenik.util.Tuple;
 
 // import erenik.evergreen.android.App;
@@ -32,7 +36,12 @@ import erenik.util.Tuple;
  * Created by Emil on 2016-12-10.
  */
 public class Game implements Serializable {
+    /// Sent along as first argument with EGPacket. If bad, should tell clients to update their games.
+    public static int GAME_VERSION = 2;
+
     private static final long serialVersionUID = 1L;
+    private int day = 0;
+
     public Game(){
         logEnumerator = new Enumerator();
         Log.logIDEnumerator = logEnumerator; // Set it.
@@ -107,11 +116,13 @@ public class Game implements Serializable {
     }
 
     private void writeTo(java.io.ObjectOutputStream out) throws IOException {
-  //      System.out.println("Game writeObject");
+  //      Printer.out("Game writeObject");
         out.writeObject(gameID);
+        out.writeInt(day);
+        out.writeLong(dayStartTimeMs); // Start time of the latest day-determines when next day should be evaluated.
         out.writeInt(updateIntervalSeconds);
         logEnumerator.writeTo(out);
-//        System.out.println("logEnumerator saved at "+logEnumerator.value);
+//        Printer.out("logEnumerator saved at "+logEnumerator.value);
         // Save num players.
         int numPlayers = players.size();
         out.writeInt(numPlayers);
@@ -121,30 +132,32 @@ public class Game implements Serializable {
             p.sendAll = Player.SEND_ALL; // Save everything by default.
             p.sendLogs = Player.SEND_ALL; // Send all logs to file.
             p.writeTo(out);
-//            System.out.println("Player "+p.name+" last log messages");
+//            Printer.out("Player "+p.name+" last log messages");
   //          Log.PrintLastLogMessages(p.log, 5);
         }
     }
     private boolean readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
-//        System.out.println("Game readObject");
+//        Printer.out("Game readObject");
         gameID = (GameID) in.readObject();
+        day = in.readInt();
+        dayStartTimeMs = in.readLong();
         updateIntervalSeconds =  in.readInt();
         logEnumerator.readFrom(in);
-//        System.out.println("logEnumerator loaded to "+logEnumerator.value);
+//        Printer.out("logEnumerator loaded to "+logEnumerator.value);
         // Load num players.
         players = new EList<>();
         int numPlayers = in.readInt();
-//        System.out.println("Game readObject - before players");
+//        Printer.out("Game readObject - before players");
         for (int i = 0; i < numPlayers; ++i) {
             Player player = new Player();
             try {
-//                System.out.println("Game readObject - player "+i);
+//                Printer.out("Game readObject - player "+i);
                 if (player.readFrom(in)) {
                     players.add(player);
-//                    System.out.println("Loaded player "+player.name);
+//                    Printer.out("Loaded player "+player.name);
                 }
                 if (player.sendAll != Player.SEND_ALL) {
-                    System.out.println("Incomplete player saved. WTF?");
+                    Printer.out("Incomplete player saved. WTF?");
                     continue;
                 }
             } catch (ClassNotFoundException e) {
@@ -152,7 +165,7 @@ public class Game implements Serializable {
                 break;
             }
         }
-//        System.out.println("Loaded "+players.size()+" players");
+//        Printer.out("Loaded "+players.size()+" players");
         return true;
     }
 
@@ -166,6 +179,7 @@ public class Game implements Serializable {
     /// returns num of player characters simulated.
     public int NextDay() {
         Log.logIDEnumerator = logEnumerator; // Set log enumerator for this session.
+        dayStartTimeMs = System.currentTimeMillis();
 
         // TODO: Add default player as needed? Elsewhere?
 //        if (!players.contains(App.GetPlayer()))
@@ -180,13 +194,14 @@ public class Game implements Serializable {
             return 0;
         }
         if (IsLocalGame()){ // Local game, check when last new-day was pressed..? Demand at least 1 min?
-            System.out.println("Check time?");
+            Printer.out("Check time?");
         }
         else if (UpdatesSinceLastDay() == 0){
             Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day. GameID: "+GameID());
             return 0;
         }
-        LogAndPrint("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size());
+        LogAndPrint("Game.NextDay, "+gameID.name+" day "+day+" players "+activePlayers+"/"+players.size());
+        ++day;
         int numSimulated = 0;
         for (int i = 0; i < players.size(); ++i)
         {
@@ -196,14 +211,14 @@ public class Game implements Serializable {
             if (p.IsAlive() == false)
                 continue;
             if (activePlayers < 3)
-                System.out.println(p.Name()+" next day..");
+                Printer.out(p.Name()+" next day..");
             ++numSimulated;
             p.Adjust(Stat.HP, -0.2f); // Everybody is dying.
             p.NextDay(this);
             p.lastEditSystemMs = System.currentTimeMillis();
             // Save?
 /*            if (p.lastSaveTimeSystemMs < p.lastEditSystemMs) {
-                System.out.println("SAving again yow");
+                Printer.out("SAving again yow");
                 p.SaveLog();
             }
   */      }
@@ -238,16 +253,16 @@ public class Game implements Serializable {
     public Player GetPlayer(String name, boolean contains, boolean startsWith) {
         if (name == null)
             return null;
-        System.out.println("Looking for "+name);
+        Printer.out("Looking for "+name);
         for (int i = 0; i < players.size(); ++i)
         {
             Player p = players.get(i);
             if (contains && p.Name().contains(name)) {
-                System.out.println("Player "+i+" contains? "+p.Name());
+                Printer.out("Player "+i+" contains? "+p.Name());
                 return p;
             }if (startsWith && p.Name().startsWith(name))
         {
-            System.out.println("Player "+i+" startsWith? "+p.Name());
+            Printer.out("Player "+i+" startsWith? "+p.Name());
             return p;
         }
         }
@@ -255,13 +270,13 @@ public class Game implements Serializable {
     }
     public Player GetPlayer(String name) {
         if (name == null){
-            System.out.println("Player.GetPlayer with null name, wtf");
+            Printer.out("Player.GetPlayer with null name, wtf");
             return null;
         }
         name = name.trim();
         for (int i = 0; i < players.size(); ++i) {
             Player p = players.get(i);
-//            System.out.println("Player "+i+" name equals? "+p.Name());
+//            Printer.out("Player "+i+" name equals? "+p.Name());
             if (p.Name().equals(name))
                 return p;
             if (p.Name().compareToIgnoreCase(name) == 0){
@@ -291,7 +306,7 @@ public class Game implements Serializable {
         player.email = "emil_hedemalm@hotmail.com";
         player.password = Auth.Encrypt("1234", Auth.DefaultKey);
         player.gameID = GameID();
-        System.out.println("Adding default player");
+        Printer.out("Adding default player");
         AddPlayer(player);
     }
 
@@ -344,9 +359,9 @@ public class Game implements Serializable {
                 else if (key.equals("updateIntervalSeconds"))
                     updateIntervalSeconds = (int) Integer.parseInt(strVal);
                 else if (key.equals("numPlayers"))
-                    System.out.println("numPlayers "+value);
+                    Printer.out("numPlayers "+value);
                 else
-                    System.out.println("Bad key-value pair: "+key+" value: "+value);
+                    Printer.out("Bad key-value pair: "+key+" value: "+value);
             }
        /* }
         catch (JSONException e) {
@@ -363,42 +378,47 @@ public class Game implements Serializable {
         Save();
     }
 
-    int gameTimeMs = 0;
-    public void Update(long milliseconds) {
-        gameTimeMs += milliseconds;
-        int thresholdMs = updateIntervalSeconds * 100; // Should be * 1000
-        if (gameTimeMs > thresholdMs) {        // check if next day should come.
-            if (NextDay() != 0)
+    long dayStartTimeMs = 0;
+    /// Return true if a new day occurred.
+    public boolean Update(long milliseconds) {
+        int msPerDayInGame = updateIntervalSeconds * 1000; // Should be * 1000
+        if (System.currentTimeMillis() > dayStartTimeMs + msPerDayInGame) {        // check if next day should come.
+            if (NextDay() != 0) {
                 Save(); // Save to file.
-            gameTimeMs -= thresholdMs;
+                return true;
+            }
         }
+        return false;
     }
+
     private void Log(String msg){
         FileUtil.AppendWithTimeStampToFile("logs", "game"+GameID()+".txt", msg);
-        System.out.println("Log: "+msg);
+        Printer.out("Log: "+msg);
     }
     private void LogAndPrint(String msg){
         Log(msg);
-        System.out.println(msg);
+        Printer.out(msg);
     }
     // Returns null if all known player names are already known.
-    public Player RandomPlayer(EList<String> knownPlayerNames) {
+    public Player RandomLivingPlayer(EList<String> knownPlayerNames) {
         /// 10 random chances.
         if (players.size() == 0) {
-            System.out.println("Game has 0 players. WAT");
+            Printer.out("Game has 0 players. WAT");
             System.exit(444);
             return null;
         }
         Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 10; ++i) {
             int playerIndex = r.nextInt(players.size());
-  //          System.out.println("player index: "+playerIndex);
+  //          Printer.out("player index: "+playerIndex);
             Player randPlayer = players.get(playerIndex);
+            if (randPlayer.IsAlive() == false)
+                continue;
             boolean alreadyKnown = false;
             for (int j = 0; j < knownPlayerNames.size(); ++j) {
                 String name = randPlayer.name;
                 String name2 = knownPlayerNames.get(j);
-//                System.out.println(name+" =? "+name2);
+//                Printer.out(name+" =? "+name2);
                 if (name.equals(name2)) {
                     alreadyKnown = true;
                     break;
@@ -416,7 +436,7 @@ public class Game implements Serializable {
         EList<Player> alp = new EList<>();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
-            System.out.println(p.email+" == "+email+"? "+p.email.equals(email)+" "
+            Printer.out(p.email+" == "+email+"? "+p.email.equals(email)+" "
                     +p.password+" == "+password+"? "+p.password.equals(password)+ " len: "+p.password.length()+" "+password.length());
             if (p.email.equals(email) && p.password.equals(password))
                 alp.add(p);
@@ -428,7 +448,7 @@ public class Game implements Serializable {
         EList<Player> alp = new EList<>();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
-            System.out.println(p.email+" == "+email+"? "+p.email.equals(email));
+            Printer.out(p.email+" == "+email+"? "+p.email.equals(email));
             if (p.email.equals(email))
                 alp.add(p);
         }
@@ -445,5 +465,92 @@ public class Game implements Serializable {
         Game game = new Game();
         game.gameID.id = GameID.LocalGame;
         return game;
+    }
+
+    public void PrintGlobalPlayerStatistics() {
+        long[] statistics = new long[Statistic.values().length];
+        int longestTurnSurvived = 0;
+
+        // [0] - Total, [1] - Average of those alive, [2] - Max level of those alive.
+        float[][] skillStatistics = new float[3][SkillType.values().length];
+        /// 0 min, 1 average, 2 max
+        float[][] statStatistics = new float[3][Stat.values().length];
+        for (int i = 0; i < Stat.values().length; ++i)
+            statStatistics[0][i] = 100000000;
+
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            if (p.IsAlive() && p.Get(Stat.TurnSurvived) > longestTurnSurvived)
+                longestTurnSurvived = (int) p.Get(Stat.TurnSurvived);
+            if (p.IsAlive()) {
+            }
+            for (int j = 0; j < p.cd.skills.size(); ++j) {
+                Skill s = p.cd.skills.get(j);
+                int skillIndex = s.GetSkillType().ordinal();
+                int skillLevel = s.Level();
+//                Printer.out("skills Level "+s.Level());
+                skillStatistics[0][skillIndex] += skillLevel;
+                if (!p.IsAlive())
+                    continue;
+                if (skillLevel > skillStatistics[2][skillIndex])
+                    skillStatistics[2][skillIndex] = skillLevel;
+                skillStatistics[1][skillIndex] += skillLevel;
+            }
+            for (int j = 0; j < p.cd.statArr.length; ++j){
+                float statValue = p.cd.statArr[j];
+                switch (Stat.values()[j]){
+                    case BASE_ATTACK: statValue = p.BaseAttack(); break;
+                    case BASE_DEFENSE: statValue = p.BaseDefense(); break;
+                }
+                if (p.IsAlive()) {
+                    statStatistics[1][j] += statValue;
+                    if (statValue > statStatistics[2][j])
+                        statStatistics[2][j] = statValue;
+                    if (statValue < statStatistics[0][j])
+                        statStatistics[0][j] = statValue;
+                }
+            }
+//            Statistic.Print("Player statistics for: "+p.name, p.cd.statistics);
+            statistics = Statistic.Add(statistics, p.cd.statistics);
+        }
+        String skillStatisticsString = "\nSkills breakdown. alive players: "+ActivePlayers()
+                +"\n"+String.format("%20s", "Skill name")+" "+String.format("%6s", "Total")+" "+String.format("%6s", "Average")+" "+String.format("%6s", "Highest")
+                +"\n=============================================================\n";
+        for (int i = 0; i < SkillType.values().length; ++i){
+            skillStatisticsString += "\n"+String.format("%20s", SkillType.values()[i])+" "+String.format("%6s", (int)skillStatistics[0][i])
+                    +"   "+String.format("%.2f", (skillStatistics[1][i] / (float)ActivePlayers()))
+                    +" "+String.format("%6s", (int)skillStatistics[2][i]);
+        }
+
+        String statsStatisticsString = "\nStats breakdown, alive players: "+ActivePlayers()
+                +"\n"+String.format("%20s", "Stat")
+                +" "+String.format("%4s", "AMin")
+                +" "+String.format("%5s", "AAvg")
+                +" "+String.format("%4s", "AMax")
+                +"\n====================================================";
+        for (int i = 0; i < Stat.values().length; ++i){
+            statStatistics[1][i] /= ActivePlayers();
+            switch (Stat.values()[i]){
+                case SHELTER_DEFENSE_PROGRESS:
+                    continue;
+            }
+            statsStatisticsString += "\n"+String.format("%20s", Stat.values()[i].name())
+                    +" "+String.format("%4s", ""+(int) statStatistics[0][i])
+                    +" "+String.format("%5s", ""+ String.format("%.1f", statStatistics[1][i]))
+                    +" "+String.format("%4s", ""+(int) statStatistics[2][i]);
+        }
+
+
+
+        FileUtil.AppendWithTimeStampToFile("logs", "TurnStatistics", Statistic.Print("Global player summary stats for day: "+day+" longestTurnSurvived and still alive: " +longestTurnSurvived
+                +"\nPlayers: "+ActivePlayers()+"/"+players.size()
+                , statistics)+skillStatisticsString+statsStatisticsString);
+    }
+
+    public void OnPlayerDied(Player player) {
+        for (int i = 0; i < players.size(); ++i){
+            Player p = players.get(i);
+            p.OnPlayerDied(player);
+        }
     }
 }

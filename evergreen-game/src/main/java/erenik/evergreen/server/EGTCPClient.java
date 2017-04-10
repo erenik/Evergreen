@@ -3,6 +3,7 @@ package erenik.evergreen.server;
 import erenik.evergreen.common.player.AAction;
 import erenik.evergreen.common.player.Action;
 import erenik.evergreen.common.player.Skill;
+import erenik.evergreen.common.player.SkillType;
 import erenik.util.EList;
 import erenik.util.EList;
 import java.util.Random;
@@ -22,6 +23,7 @@ import erenik.evergreen.common.player.Config;
 import erenik.evergreen.common.player.DAction;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.NameGenerator;
+import erenik.util.Printer;
 import erenik.weka.transport.TransportType;
 
 /**
@@ -44,26 +46,35 @@ public class EGTCPClient extends Thread
         LaunchClients(3);
     }
     public static void LaunchClients(int num) {
-        System.out.println("Launching "+num+" clients.");
+        Printer.out("Launching "+num+" clients.");
         for (int i = 0; i < num; ++i) {
             /// By default, launch 2 clients?
             EGTCPClient client = new EGTCPClient();
             client.start(); // Start thread.
         }
     }
+    int msNoPlayers = 0;
     public void run() {
+        int sleepTimeMs = 5000;
         try {
             GetGamesList();            // Fetch games list.
             while(true) {
                 comm.CheckForUpdates(); // Yeah.
+                if (players.size() == 0) {
+                    Printer.out("No players to update");
+                    msNoPlayers += sleepTimeMs;
+                    if (msNoPlayers > 15000) {
+                        break;
+                    }
+                }
                 UpdatePlayers();            // Update states of players until done.
-                Thread.sleep(5000); // Sleep a second between each update?
+                Thread.sleep(sleepTimeMs); // Sleep a second between each update?
             }
         } catch (Exception ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         log.add("Stopping");
-        System.out.println("Stopping server.");
+        Printer.out("Stopping server.");
     }
 
     private void UpdatePlayers() {
@@ -72,48 +83,45 @@ public class EGTCPClient extends Thread
             final Player player = players.get(i);
             if (player.IsAlive() == false)
                 continue;
-            System.out.println("Client updating player "+player.name);
+//            Printer.out("Client updating player "+player.name);
             UpdatePlayer(player);
 
             EGPacket pack = EGRequest.Save(player);
             pack.addReceiverListener(new EGPacketReceiverListener() {
                 @Override
                 public void OnReceivedReply(EGPacket reply) {
-                    switch (reply.ResType())
-                    {
+                    switch (reply.ResType()) {
                         case Player:
                         case OK:
-                            System.out.println("Update received");
+                            Printer.out("Update received");
                             player.fromByteArr(reply.GetBody());
                             break;
                         case PlayerClientData:
                             player.cd = reply.GetClientData();
-                            System.out.println("EGTCPClient: Client received PlayerClientData");
+//                            Printer.out("EGTCPClient: Client received PlayerClientData");
                             break;
                         default:
-                            System.out.println("EGTCPClient: Error loading, "+reply.ResType().name());
+                            Printer.out("EGTCPClient: Error loading, "+reply.ResType().name());
                             break;
                     }
                 }
-
                 @Override
                 public void OnError(EGPacketError error) {
-                    System.out.println("EGPAcketError: "+error.name());
+                    Printer.out("EGPacketError: "+error.name());
                 }
             });
             comm.Send(pack);
         }
     }
     Random skillRandom = new Random(System.currentTimeMillis());
-    Random transportRand = new Random(System.currentTimeMillis());
     /// Wat.
-    private void UpdatePlayer(Player player) {
+    private void UpdatePlayer(final Player player) {
         // Do some change.
         player.cd.dailyActions.clear();
         // Generate some new actions.
         String dActionsStr = "",
             aActionsStr = "";
-        System.out.println("Update EGTCPCLient - generate dailyActions");
+//        Printer.out("Update EGTCPCLient - generate dailyActions");
         for (int i = 0; i < 4; ++i) { // Generate some random actions.
             Action action = DAction.RandomDailyAction(player);
             if (action == null)
@@ -128,20 +136,32 @@ public class EGTCPClient extends Thread
             aActionsStr += action+", ";
             player.cd.queuedActiveActions.add(action);
         }
-        System.out.println("Update EGTCPCLient - save to server");
+//        Printer.out("Update EGTCPCLient - save to server");
         player.MarkLogMessagesAsReadByClient();         // Mark all log messages as read.
-        System.out.println("DActions: "+dActionsStr);
-        System.out.println("AActions: "+aActionsStr);
+  //      Printer.out("DActions: "+dActionsStr);
+    //    Printer.out("AActions: "+aActionsStr);
         player.Equip(player.RandomItem());  // Equip random item to test that sub-system as well.
         player.cd.skillTrainingQueue.clear();
-        player.cd.skillTrainingQueue.add(Skill.values()[skillRandom.nextInt(Skill.values().length) % Skill.values().length].text); // Learn random skills?
-        // Emulate various transports.
-        for (int i = 0; i < player.transports.size(); ++i) // Generate some other seconds of various degrees.
-            player.transports.get(i).secondsUsed = 0;
-        player.transports.get(TransportType.Idle.ordinal()).secondsUsed = 3600;
-        for (int i = 0; i < 5; ++i) // Generate some other seconds of various degrees.
-            player.transports.get(transportRand.nextInt(player.transports.size()) % player.transports.size()).secondsUsed += 3600 / (i + 1); // 3600, 1800, 1200, 900, etc.
+        player.cd.skillTrainingQueue.add(SkillType.values()[skillRandom.nextInt(SkillType.values().length) % SkillType.values().length].text); // Learn random skills?
+        player.RandomizeGenerateTransportUsageData();
         // Save/send to server.
+        EGPacket save = EGRequest.Save(player);
+        save.addReceiverListener(new EGPacketReceiverListener() {
+            @Override
+            public void OnReceivedReply(EGPacket reply) {
+                switch (reply.ResType()){
+                    default:
+                        Printer.out("ResType: "+reply.ResType().name());
+                }
+            }
+            @Override
+            public void OnError(EGPacketError error) {
+                Printer.out("Save failed: "+error.name());
+                Printer.out("Unregistering this player from EGTCPClient thread.");
+                players.remove(player);
+                return;
+            }
+        });
         comm.Send(EGRequest.Save(player));
     }
 
@@ -153,30 +173,31 @@ public class EGTCPClient extends Thread
             Game game = games.get(i);
             player.gameID = game.GameID();
             player.Set(Config.StartingBonus, Player.StartingBonus.values()[r.nextInt(Player.StartingBonus.values().length)].ordinal()); // Set starting bonus.
-            player.Set(Config.Difficulty, r.nextInt(6));
+            player.Set(Config.Difficulty, r.nextInt(6)); // Randomize player difficulty.
             EGPacket pack = EGRequest.CreatePlayer(player);
             pack.addReceiverListener(new EGPacketReceiverListener() {
                 @Override
                 public void OnReceivedReply(EGPacket reply) {
                     EGResponseType resT = reply.ResType();
                     if (resT == null) {
-                        System.out.println("Reply packet: " + reply);
+                        Printer.out("Reply packet: " + reply);
                         return;
                     }
                     switch (resT) {
                         case Player:
                         case OK:
                             players.add(player);
-                            System.out.println("Player registered successfully!");
+                            Printer.out("Player registered successfully!");
                             break;
                         default:
-                            System.out.println("An error occurred. Player not added to list of players: "+resT.name());
+                            Printer.out("An error occurred. Player not added to list of players: "+resT.name());
                             break;
                     }
                 }
                 @Override
                 public void OnError(EGPacketError error) {
-                    System.out.println("EGPAcketError: "+error.name());
+                    Printer.out("EGPacketError: "+error.name());
+                    msNoPlayers += 5000; // For each error, go to closing this thread.
                 }
             });
             comm.Send(pack);
@@ -184,12 +205,12 @@ public class EGTCPClient extends Thread
     }
 
     private void GetGamesList() {
-        System.out.println("Requesting games list");
+        Printer.out("Requesting games list");
         EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
         pack.addReceiverListener(new EGPacketReceiverListener() {
             @Override
             public void OnReceivedReply(EGPacket reply) {
-                System.out.println("Reply received");
+                Printer.out("Reply received");
                 if (games.size() == 0) {
                     games = reply.parseGamesList();
                     CreatePlayersInAllGames(); // Create players.
@@ -198,7 +219,7 @@ public class EGTCPClient extends Thread
 
             @Override
             public void OnError(EGPacketError error) {
-                System.out.println("EGPAcketError: "+error.name());
+                Printer.out("EGPAcketError: "+error.name());
             }
         });
         comm.Send(pack);
@@ -207,10 +228,10 @@ public class EGTCPClient extends Thread
     EList<String> log = new EList<>();
     public void PrintLog()
     {
-        System.out.println("\nServer log:\n---------------");
+        Printer.out("\nServer log:\n---------------");
         for (int i = 0; i < log.size(); ++i)
         {
-            System.out.println(log.get(i));
+            Printer.out(log.get(i));
         }
     }
 

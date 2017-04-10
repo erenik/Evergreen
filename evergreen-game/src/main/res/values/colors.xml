@@ -12,7 +12,8 @@
     <color name="attacked">#FFfa4431</color>    <!-- Old attacked colors : f88000 -->
     <color name="event">#FFEEEECC</color>
     <color name="success">#FFF0F0DD</color>
-    <color name="progress">#FFAA8888</color>
+    <color name="progress">#FFBB9999</color>
+    <color name="actionNoProgress">#FFAA8888</color>
     <color name="problemNotification">#FFFF8500</color>
     <color name="attackMiss">#FFAAAAAA</color>
     <color name="attack">#FFEEEEEE</color>

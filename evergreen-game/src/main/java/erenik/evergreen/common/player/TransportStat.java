@@ -11,7 +11,7 @@ public enum TransportStat {
     FleeBonus, // + to flee in combats.
     AmountEnemiesEncounteredRatio, // +% enemies encountered when out scouting, looking for players, etc.
     SocialSupport, // +Attack & Defense bonus from other passengers.
-    Weight, // The weight used when weighing all transports together. E.g. Idle has lower to not reduce all transports' effects totally.
+    Weight // The weight used when weighing all transports together. E.g. Idle has lower to not reduce all transports' effects totally.
     ;
 
     public float DefaultValue() {

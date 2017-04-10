@@ -11,40 +11,36 @@ public enum Finding {
     Nothing,
     Food,
     Materials,
-    RandomPlayerShelter,
+    RandomPlayer, // Random player!
     AbandonedShelter,
     EnemyStronghold,
-    FoodHotSpot, MaterialsDepot;
-    public String GetEventText()
-    {
+    FoodHotSpot,
+    MaterialsDepot,
+    RandomItem;
+    public String GetEventText() {
         switch(this)
         {
             case RandomEncounter: return "You encounter enemies during your activities which attack you.";
             case AttacksOfTheEvergreen: return "As night falls the spawns of the Evegreen assault your shelter!";
-            case AbandonedShelter: return "You find a seemingly abandoned shelter.";
-            case RandomPlayerShelter: return "You find a seemingly inhabited shelter";
+      //      case AbandonedShelter: return "You find a seemingly abandoned shelter.";
+        //    case RandomPlayerShelter: return "You find a seemingly inhabited shelter";
         }
         return "Not implemented: "+this.toString();
     }
-    public String Question()
-    {
-        switch(this)
-        {
-
+    public String Question() {
+        switch(this) {
             case RandomEncounter:
             case AttacksOfTheEvergreen:
                 return "\n\nDo you want to play the event now?";
-            case AbandonedShelter:
-            case RandomPlayerShelter:
-                return "\n\nDo you want to explore it now?";
+          //  case AbandonedShelter:
+            //case RandomPlayerShelter:
+              //  return "\n\nDo you want to explore it now?";
             default:
                 return "BadQuestion";
         }
     }
-    public boolean Skippable()
-    {
-        switch(this)
-        {
+    public boolean Skippable() {
+        switch(this) {
             case AttacksOfTheEvergreen:
             case RandomEncounter:
                 return false;

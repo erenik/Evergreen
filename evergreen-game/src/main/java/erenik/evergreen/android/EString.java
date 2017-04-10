@@ -32,6 +32,7 @@ public class EString {
             case defensesReachedLevel: id = R.string.defensesReachedLevel; break;
             case materialShortageAffectingProgress: id = R.string.materialShortage; break;
             case skillLeveledUp: id = R.string.skillLeveledUp; break;
+            case skillLeveledDown: id = R.string.skillLeveledDown; break;
 
             case playerPlayerAttack: id = R.string.playerPlayerAttack; break;
             case playerMonsterAttack: id = R.string.playerMonsterAttack; break;
@@ -41,6 +42,7 @@ public class EString {
             case playerMonsterAttackMiss: id = R.string.playerMonsterAttackMiss; break;
             case playerVanquishedMonster: id = R.string.playerVanquishedMonster; break;
             case monsterKnockedOutPlayer: id = R.string.monsterKnockedOutPlayer; break;
+            case playerDefeatedPlayer: id = R.string.playerDefeatedPlayer; break;
             case secondLife: id = R.string.secondLife; break;
             case startingBonusFood: id = R.string.startingBonusFood; break;
             case startingBonusMaterials: id = R.string.startingBonusMaterials; break;
@@ -91,6 +93,17 @@ public class EString {
             case playerParries: id = R.string.playerParries; break;
             case gaveItemToPlayer: id = R.string.gaveItemToPlayer; break;
             case receivedItemFromPlayer: id = R.string.receivedItemFromPlayer; break;
+            case gaveBlueprintToPlayer: id = R.string.gaveBlueprintToPlayer; break;
+            case receivedBlueprintFromPlayer: id = R.string.receivedBlueprintFromPlayer; break;
+            case playerNotAliveAnymore: id = R.string.playerNotAliveAnymore; break;
+            case ensnared: id = R.string.ensnared; break;
+            case ensnaredWoreOff: id = R.string.ensnaredWoreOff; break;
+            case multiplies: id = R.string.multiplies; break;
+            case sendPlayerResourcesFailed: id = R.string.sendPlayerResourcesFailed; break;
+            case playerDied: id = R.string.playerDied; break;
+            case obtainedBlueprint: id = R.string.obtainedBlueprint; break;
+            case obtainedItem: id = R.string.obtainedItem; break;
+            case scoutFoundItems: id = R.string.scoutFoundItems; break;
             default:
                 s = logTextID.name(); break;
         }

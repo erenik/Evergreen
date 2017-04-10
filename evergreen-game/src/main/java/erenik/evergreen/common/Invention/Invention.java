@@ -7,8 +7,19 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import erenik.util.Dice;
+import erenik.util.Printer;
 
+import static erenik.evergreen.common.Invention.InventionStat.AttackBonus;
 import static erenik.evergreen.common.Invention.InventionStat.Blueprint;
+import static erenik.evergreen.common.Invention.InventionStat.CraftingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.DefenseBonus;
+import static erenik.evergreen.common.Invention.InventionStat.Equipped;
+import static erenik.evergreen.common.Invention.InventionStat.ForagingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.InventingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
+import static erenik.evergreen.common.Invention.InventionStat.ScavengingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.ScoutingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.SubType;
 import static erenik.evergreen.common.Invention.InventionType.RangedWeapon;
 
 
@@ -21,7 +32,7 @@ public class Invention implements Serializable {
     /// Level of quality/ranking of the invented item. This will grant some bonuses. From 0 to 5ish?
     public String name = "NoName";
     public InventionType type;
-    int inventionSubType = -1; // Used for weapons only, to remember which type was generated? Used for the iterative/upgrade invention feature as well.
+   // int inventionSubType = -1; // Used for weapons only, to remember which type was generated? Used for the iterative/upgrade invention feature as well.
     int additionalEffect = -1; // Used for weapons only.
     /// Returns the item ID for crafted items, should be the same on client and server-side, so can be used for equipping/using items easily.
     public long GetID(){ return itemID; };
@@ -34,8 +45,8 @@ public class Invention implements Serializable {
             defenseBonus = 0, parryBonus = 0, bonusAttacksPerTurn = 0;
     int additionalEffectDice = 0;
     // For ranged gear.
-    int rangedAttackBonus = 0, rangedAtkDmgBonus = 0;
-    int harvestBonus = 0, scavBonus = 0, recoBonus = 0, constBonus = 0, inventBonus = 0, scoutBonus = 0;
+//    int rangedAttackBonus = 0, rangedAtkDmgBonus = 0;
+//    int harvestBonus = 0, scavBonus = 0, recoBonus = 0, constBonus = 0, inventBonus = 0, scoutBonus = 0;
 
     protected Invention(InventionType type) {
         SetDefaults();
@@ -93,11 +104,11 @@ public class Invention implements Serializable {
     }
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-//        System.out.println("Invention writeObject");
+//        Printer.out("Invention writeObject");
         writeObjectToStream(out);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-  //      System.out.println("Invention readObject");
+  //      Printer.out("Invention readObject");
         readObjectFromStream(in);
     }
     protected void writeObjectToStream(java.io.ObjectOutputStream out) throws IOException{
@@ -167,6 +178,7 @@ public class Invention implements Serializable {
 
     public int RandomizeSubType() {
         Random r = new Random(System.nanoTime());
+        int inventionSubType = -1;
         switch(this.type) {
             case Weapon:
                 inventionSubType = WeaponType.Random();; // Keep it within.
@@ -181,11 +193,11 @@ public class Invention implements Serializable {
                 inventionSubType = r.nextInt(ArmorType.values().length+1) % ArmorType.values().length;
                 break;
             default:
-                System.out.println("Bad type, cannot determine sub-type. Type: "+this.type.name());
+                Printer.out("Bad type, cannot determine sub-type. Type: "+this.type.name());
                 System.exit(4);
         }
         Set(InventionStat.SubType, inventionSubType);
-        System.out.println("Sub-type set to: "+inventionSubType+" type: "+this.type);
+        Printer.out("Sub-type set to: "+inventionSubType+" type: "+this.type);
         UpdateDetails();
         return inventionSubType;
     }
@@ -193,7 +205,7 @@ public class Invention implements Serializable {
     public void RandomizeDetails() {
         // Fetch all details from the array? Just quality level?
         qualityLevel = Get(InventionStat.QualityLevel);
-        inventionSubType = Get(InventionStat.SubType);
+        int inventionSubType = Get(InventionStat.SubType);
         type = InventionType.values()[Get(InventionStat.Type)];
         if (inventionSubType == -1)
             RandomizeSubType();
@@ -210,44 +222,67 @@ public class Invention implements Serializable {
 
     /// Updates all stats, based on provided quality level, type, subtype and possibly sub-sub-type.
     public void UpdateDetails() {
-        System.out.println("Updating deatils.");
+       // Printer.out("Updating deatils.");
+        if (Get(SubType) < 0)
+            RandomizeSubType();
+        Set(InventionStat.DefenseBonus, 0);
         switch(this.type) {
             case RangedWeapon:
             case Weapon: {
                 // Randomize weapon type? Stats vary with weapon type instead?
-                System.out.println("Shouldn't be here, subclass should handle this, type: "+this.type);
+                Printer.out("Shouldn't be here, subclass should handle this, type: "+this.type);
                 new Exception().printStackTrace();
                 System.exit(3);
                 return; // All should already be finalized for the weapon now.
             }
             case Armor:
-                ArmorType armorType = ArmorType.values()[inventionSubType];
+                ArmorType armorType = ArmorType.values()[Get(SubType)];
                 switch (armorType){
-                    case Head: name = "Helmet"; break;
+                    case FightingGear:
+                        name = "Fighter's armor";
+                        Set(DefenseBonus, 3 + qualityLevel);
+                        Set(AttackBonus, 0 + qualityLevel); // Yeah.
+                        Set(ParryBonus, 1 + qualityLevel / 3);
+                        break;
+                    case InventingGear:
+                        name = "Inventor's garb";
+                        Set(InventingBonus, 2 + qualityLevel);
+                        Set(CraftingBonus, 1 + qualityLevel / 2); // Side-bonus.
+                        Set(DefenseBonus, 2 + qualityLevel / 2);
+                        break;
+                    case CraftingGear:
+                        name = "Crafter's garb";
+                        Set(CraftingBonus, 2 + qualityLevel);
+                        Set(InventingBonus, 1 + qualityLevel / 2); // Side-bonus
+                        Set(DefenseBonus, 2 + qualityLevel / 2);
+                        break;
+                    case ForagingGear:
+                        name = "Forager's garb";
+                        Set(ForagingBonus, 2 + qualityLevel);
+                        Set(ScavengingBonus, 1 + qualityLevel);
+                        Set(DefenseBonus, 2 + qualityLevel / 2);
+                        break;
+                    case ScoutingGear:
+                        name = "Scout's garb";
+                        Set(ScoutingBonus, 2 + qualityLevel);
+                        Set(DefenseBonus, 2 + qualityLevel / 2);
+                        Set(InventionStat.StealthBonus, 1 + qualityLevel / 2); // Side-bonus
+                        break;
+                    case StealthGear:
+                        name = "Stealth gear";
+                        Set(InventionStat.StealthBonus, 2 + qualityLevel); // Primary bonus
+                        Set(ScoutingBonus, 1 + qualityLevel / 2); // Side-bonus
+                        Set(DefenseBonus, 2 + qualityLevel / 2);
+                        break;
+/*                    case Head: name = "Helmet"; break;
                     case Body: name = "Body Armor"; break;
                     case Hands: name = "Gloves"; break;
                     case Legs: name = "Breeches"; break;
                     case Feet: name = "Greaves"; break;
-                }
-                switch(qualityLevel) {
-                    case 0:
-                        name = "Crude " + name;
-                        defenseBonus += 1;
-                        break;
-                    case 1:
-                        name = "Rough " + name;
-                        defenseBonus += 2;
-                        break;
-                    case 2:
-                        defenseBonus += 3;
-                        break;
-                    case 3: // Polished?
-                        name = name+" +1";
-                        defenseBonus += 4;
-                        break;
-                    default:
-                        name = name+" +2";
-                        defenseBonus += 5;
+  */                  default:
+                        Printer.out("Undefined ArmorType");
+                        new Exception().printStackTrace();
+                        System.exit(5);
                         break;
                 }
                 break;
@@ -264,60 +299,79 @@ public class Invention implements Serializable {
             // Vehicle upgrades not used for now.
 //            case VehicleUpgrade: Set(InventionStat.Catalyst, Dice.RollD3(1) + qualityLevel);name = "Catalyst";break;
             default:
-                System.out.println("Lacking code in Invention.RandomizeDetails");
+                Printer.out("Lacking code in Invention.RandomizeDetails");
                 System.exit(5);
                 break;
         }
-        /// Add quality bonuses as numbers to the name to make it obvious.
-        if (qualityLevel > 0 && type != InventionType.Weapon &&
-                type != InventionType.Armor && type != RangedWeapon) {
-            name = name + " +" + qualityLevel;
+        switch(qualityLevel) {
+            case 0:
+                name = "Crude " + name;
+                break;
+            case 1:
+                name = "Rough " + name;
+                break;
+            case 2:
+                break;
+            case 3: // Polished?
+                name = name+" +1";
+                break;
+            case 4: // Polished?
+                name = name+" +2";
+                break;
+            default:
+                name = name+" +3";
+                break;
         }
         // Ranged stats
-        Set(InventionStat.RangedAttackBonus, rangedAttackBonus);
-        Set(InventionStat.RangedDamageBonus, rangedAtkDmgBonus);
+//        Set(InventionStat.RangedAttackBonus, rangedAttackBonus);
+  //      Set(InventionStat.RangedDamageBonus, rangedAtkDmgBonus);
         // Tools stats
-        Set(InventionStat.HarvestBonus, harvestBonus);
-        Set(InventionStat.ScavengingBonus, scavBonus); // Material searching
-        Set(InventionStat.RecoveryBonus, recoBonus);
-        Set(InventionStat.ConstructionBonus, constBonus);
-        Set(InventionStat.InventingBonus, inventBonus);
-        Set(InventionStat.ScoutingBonus, scoutBonus);
     }
     private void DetermineToolDetails() {
-        ToolType tt = ToolType.values()[inventionSubType];
+        if (Get(SubType) == -1){
+            RandomizeSubType();
+        }
+        ToolType tt = ToolType.values()[Get(SubType)];
         switch (tt) {
             case HarvesterKit:
-                harvestBonus += 2 + qualityLevel;
-                name = "Harvester kit";
+                Set(InventionStat.ForagingBonus, 2 + qualityLevel);
+                name = "Harvesting tools";
                 break;
             case ScavengingKit:
-                scavBonus += 2 + qualityLevel;
-                name = "Scavenging kit";
+                Set(InventionStat.ScavengingBonus, 2 + qualityLevel);
+                name = "Scavenging tools";
                 break;
             case FirstAidKit:
-                recoBonus += 2 + qualityLevel;
+                Set(InventionStat.RecoveryBonus, 2 + qualityLevel);
                 name = "First aid kit";
                 break;
             case ConstructionToolsKit:
-                constBonus += 2 + qualityLevel;
+                Set(InventionStat.ConstructionBonus, 2 + qualityLevel);
                 name = "Construction tools kit";
                 break;
+            case CraftersKit:
+                Set(InventionStat.CraftingBonus, 2 + qualityLevel);
+                name = "Craftman's tools";
+                break;
             case InventorsKit:
-                inventBonus += 2 + qualityLevel;
+                Set(InventionStat.InventingBonus, 2 + qualityLevel);
                 name = "Inventor's kit";
                 break;
             case ScoutsKit:
-                scoutBonus += 2 + qualityLevel;
-                name = "Scout's kit";
+                Set(InventionStat.ScoutingBonus, 2 + qualityLevel);
+                name = "Scouting set";
                 break;
             default:
-                System.out.println("BAd");
+                Printer.out("BAd");
                 System.exit(14);
         }
     }
 
     public int AttackBonus() {
         return Get(InventionStat.AttackBonus);
+    }
+
+    public boolean IsEquipped() {
+        return Get(Equipped) >= 0;
     }
 }

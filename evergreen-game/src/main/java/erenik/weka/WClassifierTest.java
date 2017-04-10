@@ -3,6 +3,7 @@ package erenik.weka;
 import java.io.IOException;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
@@ -31,9 +32,9 @@ public class WClassifierTest {
         WClassifier best = null;
         TestClassifiersHistory(3, 10);
 
-        //      System.out.println();
+        //      Printer.out();
         //    NaiveAnd10Fold();
-        //  System.out.println();
+        //  Printer.out();
         //NaiveAnd10Fold();
     }*/
 
@@ -57,7 +58,7 @@ public class WClassifierTest {
     int historyStep = 1;
     public void DoAllTests(){
         testClassifiers = wekaMan.UseTestClassifiersQuick();
-        testClassifiers = wekaMan.UseTestClassifiers();
+        //testClassifiers = wekaMan.UseTestClassifiers();
        // testClassifiers = wekaMan.UseRandomForest();
 //        maxSleepHistoryToTest = 10;
         minHistoryToTest = 0;
@@ -70,6 +71,10 @@ public class WClassifierTest {
   //      wekaMan.s.useNaiveIdleCheck = true;
         wekaMan.s.naiveIdleThreshold = 0.01f;
         wekaMan.s.normalizeAcceleration = false;
+
+        MergePlane();
+//        MergeWheelRail();
+  //      MergePublicTransport();
 
 //        wekaMan.s.useNaiveIdleCheck = false;
   //      wekaMan.s.naiveIdleThreshold = 0;
@@ -96,17 +101,42 @@ public class WClassifierTest {
         */
     }
 
+    private void MergePlane() {
+        MergeConvert("PlaneT", "Bus"); // Like a slow bus or train?
+        MergeConvert("PlaneC", "Plane");
+        MergeConvert("PlaneL", "Plane");
+    }
+
+    private void MergePublicTransport() {
+        MergeConvert("Bus", "PublicTransport");
+        MergeConvert("Train", "PublicTransport");
+        MergeConvert("Tram", "PublicTransport");
+        MergeConvert("Subway", "PublicTransport");
+    }
+
+    private void MergeWheelRail() {
+        MergeConvert("Car", "WheelTransport");
+        MergeConvert("Bus", "WheelTransport");
+        MergeConvert("Train", "RailTransport");
+        MergeConvert("Tram", "RailTransport");
+        MergeConvert("Subway", "RailTransport");
+    }
+
+    private void MergeConvert(String className, String newClassName) {
+        wekaMan.s.classConversions.add(new ClassConversion(className, newClassName));
+    }
+
     void LoadBedogniData() {
         Instances data = wekaMan.GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Bedogni_sorted_merged.arff");
         wekaMan.s.trainingDataWhole = data;
         trainingData = wekaMan.s.trainingDataWhole;
     }
     void LoadMyData(){
-        wekaMan.s.trainingDataWhole = wekaMan.GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether_PlanesMerged.arff");
+        wekaMan.s.trainingDataWhole = wekaMan.GetDataFromFile("D:\\Dropbox\\PERCCOM mine\\Thesis\\Samples\\Hedemalm_alltogether.arff");
         trainingData = wekaMan.s.trainingDataWhole;
         // Remove time? - already removed.
 //        wekaMan.s.trainingDataWhole = wekaMan.RemoveColumn(1, data);
-//        System.out.println("num Attrs: "+wekaMan.s.trainingDataWhole.numAttributes());
+//        Printer.out("num Attrs: "+wekaMan.s.trainingDataWhole.numAttributes());
     }
 
     private void testAlgorithmsIdleCheckVsWithout() {
@@ -116,14 +146,14 @@ public class WClassifierTest {
         UseTestClassifiers();
         wekaMan.s.useNaiveIdleCheck = false;
         wekaMan.DoOwnNFoldCrossValidation();
-        System.out.println("Without idle check");
+        Printer.out("Without idle check");
         String format = "name acc good idle total nit";
         PrintAllClassificationResults(format);
 
         ClearStats();
         wekaMan.s.useNaiveIdleCheck = true;
         wekaMan.DoOwnNFoldCrossValidation();
-        System.out.println("With idle check");
+        Printer.out("With idle check");
         PrintAllClassificationResults(format);
 
         ClearStats();
@@ -131,7 +161,7 @@ public class WClassifierTest {
             wekaMan.s.useNaiveIdleCheck = true;
             wekaMan.s.naiveIdleThreshold = 0.25f * (i+1);
             wekaMan.DoOwnNFoldCrossValidation();
-            System.out.println("With idle thresh "+wekaMan.s.naiveIdleThreshold);
+            Printer.out("With idle thresh "+wekaMan.s.naiveIdleThreshold);
         }
         PrintAllClassificationResults(format);
     }
@@ -159,7 +189,7 @@ public class WClassifierTest {
         AppendToFile(s);
         if (wekaMan.s.doNFoldCrossValidation)
             AppendToFile("Using "+wekaMan.s.folds+" folds for N-fold cross-validation.");
-//        System.out.println("\n"+s);
+//        Printer.out("\n"+s);
     }
 
 
@@ -178,7 +208,7 @@ public class WClassifierTest {
         LoadMyData();
         UseTestClassifiers();
         wekaMan.DoOwnNFoldCrossValidation();
-        System.out.println("Without idle check");
+        Printer.out("Without idle check");
         LoadMyData();
         testAlgorithmsHistorySetSize();
         PrintAllClassificationResults("name acc hss good total idle nit folds tt pt normAcc");
@@ -206,7 +236,7 @@ public class WClassifierTest {
     }
 
     void TestClassifiersSleepHistory(int maxSleepSamples, int historySetSizeMin, int historySetSizeMax) {
-        System.out.println("Testing classifiers Sleep samples vs. History Set size on accuracy.");
+        Printer.out("Testing classifiers Sleep samples vs. History Set size on accuracy.");
         for (int i = 0; i < maxSleepSamples; ++i){
             wekaMan.s.sleepSessions = i;
             for (int j = historySetSizeMin; j <= historySetSizeMax; ++j){
@@ -332,10 +362,10 @@ public class WClassifierTest {
                 inst.setValue(7, d2 - d);
                 double value = wc.cls.classifyInstance(inst);
                 double modified = wc.ModifyResult(value);
-                System.out.println("value: "+value+" modified: "+modified+", "+instances.classAttribute().value((int)modified));
+                Printer.out("value: "+value+" modified: "+modified+", "+instances.classAttribute().value((int)modified));
             }
         }catch (Exception e){
-            System.out.println("Exception e: "+e.getMessage());
+            Printer.out("Exception e: "+e.getMessage());
             fail();
         }
     }
@@ -356,22 +386,27 @@ public class WClassifierTest {
                 ClassificationStats cs = stats.get(i);
                 ClassificationStats cs2 = stats.get(j);
                 if (cs2.accuracy > cs.accuracy) {
-//                    System.out.println("Cs2: "+cs2.good+" better than "+cs.good);
+//                    Printer.out("Cs2: "+cs2.good+" better than "+cs.good);
                     stats.swap(i, j);
                 }
             }
         }
 
+        String bestConfusionMatrix = "";
         String s = "Print all classification results";
         s += "\n"+ClassificationStats.printFormatHeader(format);
         s += "\n==========================================================================";
         for (int i = 0; i < stats.size(); ++i){
             ClassificationStats cs = stats.get(i);
             s += "\n"+cs.printFormat(format);
+            if (i == 0)
+                bestConfusionMatrix += ""+cs.confusionMatrixAsString();
 //            WClassifier wc = testClassifiers.get(i);
   //          s += "\n"+wc.AllStatsAsString(format);
         }
-        AppendToFile(s);
+        AppendToFile(s+"\nConfusion matrix for best result: "+
+                "\n=========================================================================="+
+                bestConfusionMatrix);
     }
 
 }

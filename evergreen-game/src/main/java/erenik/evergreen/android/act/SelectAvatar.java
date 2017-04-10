@@ -13,6 +13,7 @@ import android.widget.TableLayout;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-02-23.
@@ -37,11 +38,11 @@ public class SelectAvatar  extends EvergreenActivity {
         int imagesInRow = 0;
         int imagesPerRow = 2;
         buttons.clear();
-        for (int i = 0; i < 10; ++i){
+        for (int i = 0; i < App.AvatarIDs(); ++i){
             Point p = App.GetScreenSize();
             int height = p.y / 3;
             int width = (p.x - 30) / imagesPerRow;
-            System.out.println("height: "+height+" width: "+width);
+            Printer.out("height: "+height+" width: "+width);
 
             if (llRow == null) {
                 imagesInRow = 0;
@@ -72,14 +73,14 @@ public class SelectAvatar  extends EvergreenActivity {
                     // Return
                     ImageButton ib = (ImageButton) v;
                     Drawable d = ib.getDrawable();
-                    System.out.println("Drawable: "+d.toString());
+                    Printer.out("Drawable: "+d.toString());
                     int result = -1;
                     for (int i = 0; i < buttons.size(); ++i){
                         AvatarButton ab = buttons.get(i);
                         if (v == ab.button)
                             result = ab.index;
                     }
-                    System.out.println("Result: "+result);
+                    Printer.out("Result: "+result);
                     setResult(result);
                     finish(); // Go back, yo.
                 }

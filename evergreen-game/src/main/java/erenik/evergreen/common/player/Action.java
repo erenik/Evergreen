@@ -8,6 +8,7 @@ import java.util.Random;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /** Parent class of all actions?
  * Created by Emil on 2017-03-28.
@@ -44,7 +45,7 @@ public class Action{
 
     void LoadArgs(EList<String> fromList){
         if (fromList == null) {
-            System.out.println(" null list");
+            Printer.out(" null list");
             return;
         }
         for (int i = 0; i < fromList.size() && i < requiredArguments.size(); ++i){
@@ -125,7 +126,7 @@ public class Action{
             ++argumentsParsed;
 
             ActionArgument arg = action.requiredArguments.get(j);
-            System.out.println("Arg: "+arg.toString()+" Argstr: "+argStr);
+            Printer.out("Arg: "+arg.toString()+" Argstr: "+argStr);
             arg.value = argStr;
         }
         return action;
@@ -151,7 +152,7 @@ public class Action{
             return new Action(aa, args);
         if (da != null)
             return new Action(da, args);
-        System.out.println("Couldn't find action by name: "+textNoComma);
+        Printer.out("Couldn't find action by name: "+textNoComma);
         new Exception().printStackTrace();
         return null;
     }
@@ -181,7 +182,7 @@ public class Action{
 
     // Returns what...?
     public boolean AddRandomArguments(Player forPlayer) {
-//        System.out.println("UPDATE - for client simulation");
+//        Printer.out("UPDATE - for client simulation");
         if (requiredArguments == null)
             return true;
         for (int i = 0; i < requiredArguments.size(); ++i) {
@@ -189,7 +190,7 @@ public class Action{
             int index;
             switch(aa) {
                 default:
-                    System.out.println("Unable to add argument for argument: "+aa.name());
+                    Printer.out("Unable to add argument for argument: "+aa.name());
                     break;
                 case ResourceType:
                     aa.value = ResourceType.values()[raction.nextInt(ResourceType.values().length)].name();
@@ -206,9 +207,9 @@ public class Action{
                     aa.value = forPlayer.cd.inventory.get(raction.nextInt(forPlayer.cd.inventory.size())).name;
                     break;
                 case Blueprint:
-                    if (forPlayer.cd.inventions.size() == 0)
+                    if (forPlayer.cd.inventionBlueprints.size() == 0)
                         return false;
-                    aa.value = forPlayer.cd.inventions.get(raction.nextInt(forPlayer.cd.inventions.size())).name;
+                    aa.value = forPlayer.cd.inventionBlueprints.get(raction.nextInt(forPlayer.cd.inventionBlueprints.size())).name;
                     break;
                 case Text:
                     switch (raction.nextInt(4)){
@@ -219,30 +220,30 @@ public class Action{
                     break;
                 case Player:
                     if (forPlayer.cd.knownPlayerNames.size() == 0) {
-                    //    System.out.println("Doesn't know any other players, skipping.");
+                    //    Printer.out("Doesn't know any other players, skipping.");
                         return false;
                     }
                     aa.value = forPlayer.cd.knownPlayerNames.get(raction.nextInt(forPlayer.cd.knownPlayerNames.size()));
-                //    System.out.println("Random player added as target for action: "+this.text+" "+aa.value);
+                //    Printer.out("Random player added as target for action: "+this.text+" "+aa.value);
                     break;
                 case PlayerName:
                     aa.value = "Ere";                     // Search for any arbitrary letter combinations?
                     break;
                 case InventionCategory:
                     index = raction.nextInt(InventionType.values().length);
-                    System.out.println("index: "+index+" tot: "+InventionType.values().length);
+                    Printer.out("index: "+index+" tot: "+InventionType.values().length);
                     aa.value = InventionType.values()[index].text();
-                    System.out.println("Random invention category added: "+aa.value);
+                    Printer.out("Random invention category added: "+aa.value);
                     break;
                 case InventionToCraft:
-                    if (forPlayer.cd.inventions.size() == 0)
+                    if (forPlayer.cd.inventionBlueprints.size() == 0)
                         return false;
-                    index = raction.nextInt(forPlayer.cd.inventions.size());
-                    if (forPlayer.cd.inventions.size() == 0) {
-                        System.out.println("Doesn't have any inventions, skipping");
+                    index = raction.nextInt(forPlayer.cd.inventionBlueprints.size());
+                    if (forPlayer.cd.inventionBlueprints.size() == 0) {
+                        Printer.out("Doesn't have any inventions, skipping");
                         return false;
                     }
-                    aa.value = forPlayer.cd.inventions.get(index).name;
+                    aa.value = forPlayer.cd.inventionBlueprints.get(index).name;
                     break;
             }
         }

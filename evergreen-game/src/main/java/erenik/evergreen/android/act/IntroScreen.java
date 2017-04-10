@@ -10,6 +10,7 @@ import android.widget.TextView;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.R;
+import erenik.util.Printer;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -25,7 +26,7 @@ public class IntroScreen extends EvergreenActivity
         @Override
         public void onClick(View v)
         {
-            System.out.println("ontouchListener view: "+v.toString());
+            Printer.out("ontouchListener view: "+v.toString());
             ImageView iv = (ImageView) findViewById(R.id.imageViewIntroOverlay);
             int id = v.getId();
             if (id == R.id.nextButton)
@@ -50,7 +51,7 @@ public class IntroScreen extends EvergreenActivity
                         textView.setText(getString(R.string.introText3));
                         break;
                     default: { // Load next view.
-                        System.out.println("Starting new activity");
+                        Printer.out("Starting new activity");
                         Intent i = new Intent(getBaseContext(), CreateCharacter.class);
                         startActivity(i);
                         finish();

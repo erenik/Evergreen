@@ -5,6 +5,8 @@ import java.io.UnsupportedEncodingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import erenik.util.Printer;
 // import java.util.Base64;
 
 public class dangel_auth {
@@ -66,17 +68,17 @@ public class dangel_auth {
         {
             System.out.print(" "+(int) encrypted[i]);
         }
-        System.out.println();
-        System.out.println("ENCRYPTED: " + encrypted);
+        Printer.out();
+        Printer.out("ENCRYPTED: " + encrypted);
         byte[] decrypted = decrypt(key.getBytes(("UTF-8")), initVector.getBytes(("UTF-8")), encrypted);
         String outputString = new String(decrypted);
-        System.out.println("DECRYPTED: " + outputString);
+        Printer.out("DECRYPTED: " + outputString);
         if (outputString.equals(testString))
         {
-            System.out.println("EQUALS");
+            Printer.out("EQUALS");
         }
         else
-            System.out.println("NOT EQUALSSS!!!!!");
+            Printer.out("NOT EQUALSSS!!!!!");
 
     }
 

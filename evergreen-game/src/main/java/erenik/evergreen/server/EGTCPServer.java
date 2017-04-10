@@ -43,6 +43,8 @@ import java.text.SimpleDateFormat;
 import erenik.util.EList;
 import java.util.Date;
 import erenik.util.EList;
+import erenik.util.Printer;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,7 +78,7 @@ public class EGTCPServer extends Thread {
     }
     static void Log(String s, String logType){
         AppendToServerLogFile(s);
-        System.out.println(logType+": "+s);
+        Printer.out(logType+": "+s);
     }
     static void AppendToServerLogFile(String s) {
         // Create folder if needed?
@@ -113,11 +115,12 @@ public class EGTCPServer extends Thread {
 
     public static void main(String[] args) throws Exception {
         // Load settings from file.
+        Printer.printToFile = true;
 
         EGTCPServer serv = new EGTCPServer();
         int numAIs = 5, iarg = 0;
         for (int i = 0; i < args.length; ++i){
-//            System.out.println("args "+i+": "+args[i]);
+//            Printer.out("args "+i+": "+args[i]);
             if (i >= args.length - 1)
                 continue;
             String arg = args[i+1];
@@ -163,15 +166,16 @@ public class EGTCPServer extends Thread {
         Host();
         /// Host server.
         long lastUpdateMs = System.currentTimeMillis();
-        while (stopHosting == false)
-        {
+        while (stopHosting == false) {
             long nowMs = System.currentTimeMillis();
             long diffMs = nowMs - lastUpdateMs;
             AcceptClients(diffMs);
             if (sockets.size() > 0)
                 ReadIncomingData();
             for (int i = 0; i < games.size(); ++i) {
-                games.get(i).Update(diffMs);
+                Game g = games.get(i);
+                if (g.Update(diffMs))
+                    g.PrintGlobalPlayerStatistics();
             }
             lastUpdateMs = nowMs;
         }
@@ -253,10 +257,10 @@ public class EGTCPServer extends Thread {
                 --i;
                 continue;
             }
-//            System.out.println("BytesRead: "+bytesRead);
-  //          System.out.println("Packet received?");
+//            Printer.out("BytesRead: "+bytesRead);
+  //          Printer.out("Packet received?");
             EGPacket pack = EGPacket.packetFromBytes(readBuffer);
-    //        System.out.println("Packet received: "+pack);
+    //        Printer.out("Packet received: "+pack);
             if (pack == null) {
                 Log("Packet null: ");
                 Reply(sock, EGPacket.error(EGResponseType.BadRequest).build()); // Reply with error String.
@@ -265,7 +269,7 @@ public class EGTCPServer extends Thread {
                 continue;
             }
             ++packetsReceived;
-   //         System.out.println("Packet type: "+pack.Type().text);
+   //         Printer.out("Packet type: "+pack.Type().text);
             // Check requests and evaluate them.
             if (pack.Type() == EGPacketType.Request) {
                 try {
@@ -280,7 +284,7 @@ public class EGTCPServer extends Thread {
             }
         }
        // if (incData == false)
-         //   System.out.println("?");
+         //   Printer.out("?");
     }
     static void Reply(Socket sock, byte[] packetContents) {
         try {
@@ -320,7 +324,7 @@ public class EGTCPServer extends Thread {
                 break;
             case FetchLog:{
                 EGRequest.ExtraArgs fla = req.parseExtraArgs();
-                System.out.println("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size());
+                Printer.out("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size());
                 if (CheckCredentials(fla.player, sock)){
                     Reply(sock, EGResponse.logMessages(GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.numMsgsFromStartIndex - 1, fla.oldestLogIDToInclude)).build());
                 }
@@ -370,7 +374,7 @@ public class EGTCPServer extends Thread {
   //              subList.add(playerInSystem.log.get(j));
             EGPacket pack = EGPacket.logMessages(subList);
             Reply(sock, pack.build());
-            System.out.println("Replied packet with logmessages "+startIndex+" to "+endIndex);
+            Printer.out("Replied packet with logmessages "+startIndex+" to "+endIndex);
         }
     }
 
@@ -378,14 +382,14 @@ public class EGTCPServer extends Thread {
     private boolean CheckCredentials(Player player, Socket sock) {
         Player playerInSystem = GetPlayerInSystem(player); // Does it equate an existing player?
         if (playerInSystem == null){
-            System.out.println("Credentials not ok, no such player");
+            Printer.out("Credentials not ok, no such player");
             Reply(sock, EGPacket.error(EGResponseType.NoSuchPlayer).build()); // No?
             return false;
         }
         if (player.CredentialsMatch(playerInSystem)) { // Passwords etc. match?
             return true;
         }
-        System.out.println("Credentials not ok, bad password");
+        Printer.out("Credentials not ok, bad password");
         Reply(sock, EGPacket.error(EGResponseType.BadPassword).build());
         return false;
     }
@@ -407,12 +411,12 @@ public class EGTCPServer extends Thread {
     }
 
     private void EvaluateLoadRequest(Socket sock, EGPacket pack) throws Exception {
-    //   System.out.println("Evaluate request: LOAD");
+    //   Printer.out("Evaluate request: LOAD");
         if (!CheckCredentials(pack.GetPlayer(), sock)) {
-            System.out.println("Evaluate request: LOAD - bad credentials.");
+            Printer.out("Evaluate request: LOAD - bad credentials.");
             return;
         }
-   //     System.out.println("Credentials OK, replying");
+   //     Printer.out("Credentials OK, replying");
         Player playerInSystem = GetPlayerInSystem(pack.GetPlayer());
         Reply(sock, EGResponse.clientPlayerData(playerInSystem).build());            // Reply the player in system.
     }
@@ -437,7 +441,7 @@ public class EGTCPServer extends Thread {
         }
         String str = new String(buffer);
         str = str.trim(); // Trim whitespaces trailing and starting.
-//        System.out.println("Sysmsg: "+str);
+//        Printer.out("Sysmsg: "+str);
         return str;
     }
 
@@ -449,7 +453,7 @@ public class EGTCPServer extends Thread {
 
         String[] strarr = bodyAsString.split("\n");
         for (int i = 0; i < strarr.length; ++i)
-            System.out.println("arr: "+strarr[i]);
+            Printer.out("arr: "+strarr[i]);
         if (strarr.length < 2) {
             Reply(sock, EGPacket.error(EGResponseType.ParseError).build());
             return;
@@ -565,6 +569,9 @@ public class EGTCPServer extends Thread {
             @Override
             public void OnPlayerDied(Player player) {
                 SavePlayerLog(player);
+                // Force all other players to forget this player? Inform them of the death?
+                Game g = GetGameById(player.gameID);
+                g.OnPlayerDied(player);
             }
             @Override
             public void OnPlayerNewDay(Player player) {

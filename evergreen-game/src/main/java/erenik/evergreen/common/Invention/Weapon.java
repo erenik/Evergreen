@@ -10,6 +10,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import erenik.util.Dice;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-02-26.
@@ -26,7 +27,7 @@ public class Weapon extends Invention  implements Serializable {
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("Testing out Weapon Save/Load.");
+        Printer.out("Testing out Weapon Save/Load.");
         String path = "weaponTest.save";
 
         Weapon weapon = new Weapon(); // Create a random weapon.
@@ -35,7 +36,7 @@ public class Weapon extends Invention  implements Serializable {
 
         Invention trySaveThis = weapon;
         String path2 = "weaponAsInventionTest";
-        System.out.println("Weapon as inv: "+trySaveThis);
+        Printer.out("Weapon as inv: "+trySaveThis);
         File file = new File(path2);
         FileOutputStream fos = new FileOutputStream(file);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -48,13 +49,13 @@ public class Weapon extends Invention  implements Serializable {
         ObjectInputStream ois = new ObjectInputStream(fis);
         Object obj = ois.readObject();
         if (obj instanceof Weapon){
-            System.out.println("Is weapon");
+            Printer.out("Is weapon");
             Weapon loadedWeapon = (Weapon) obj;
-            System.out.println("Weapon: "+loadedWeapon);
+            Printer.out("Weapon: "+loadedWeapon);
         }
     }
     void SaveLoadFile(String path) throws Exception{
-        System.out.println("Weapon: "+this);
+        Printer.out("Weapon: "+this);
         File file = new File(path);
         FileOutputStream fos = new FileOutputStream(file);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -67,9 +68,9 @@ public class Weapon extends Invention  implements Serializable {
         ObjectInputStream ois = new ObjectInputStream(fis);
         Object obj = ois.readObject();
         if (obj instanceof Weapon){
-            System.out.println("Is weapon");
+            Printer.out("Is weapon");
             Weapon loadedWeapon = (Weapon) obj;
-            System.out.println("Weapon: "+loadedWeapon);
+            Printer.out("Weapon: "+loadedWeapon);
         }
     }
 
@@ -113,11 +114,11 @@ public class Weapon extends Invention  implements Serializable {
 
 
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-//        System.out.println("Weapon writeObject");
+//        Printer.out("Weapon writeObject");
         writeObjectToStream(out);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-  //      System.out.println("Weapon readObject");
+  //      Printer.out("Weapon readObject");
         readObjectFromStream(in);
     }
     private void readObjectNoData() throws ObjectStreamException {
@@ -216,7 +217,7 @@ public class Weapon extends Invention  implements Serializable {
             case -1: // No effect!
                 break;
             default:
-  //              System.out.println("Very cool");
+  //              Printer.out("Very cool");
 //                new Exception().printStackTrace();
             case 0:
                 Adjust(InventionStat.DefenseBonus, 3);

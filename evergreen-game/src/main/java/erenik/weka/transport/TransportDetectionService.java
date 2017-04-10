@@ -17,6 +17,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 import erenik.weka.Settings;
 import erenik.weka.WClassifier;
 import erenik.weka.WekaManager;
@@ -52,9 +53,9 @@ public class TransportDetectionService extends Service {
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("Received: "+intent);
+            Printer.out("Received: "+intent);
             String status = intent.getStringExtra("STATUS");
-            System.out.println("Status: "+status);
+            Printer.out("Status: "+status);
             intent.getSerializableExtra("");
         }
     };
@@ -65,11 +66,11 @@ public class TransportDetectionService extends Service {
 
     public void SetHistorySetSize(int newSize){
         settings.historySetSize = newSize;
-        System.out.println("History set size: "+settings.historySetSize);
+        Printer.out("History set size: "+settings.historySetSize);
     }
     public void SetSleepSessions(int newVal) {
         settings.sleepSessions = newVal;
-        System.out.println("Sleep sessions: "+settings.sleepSessions);
+        Printer.out("Sleep sessions: "+settings.sleepSessions);
     }
 
 //    int sleepSessions = 12; // 1 minute sleep
@@ -95,24 +96,24 @@ public class TransportDetectionService extends Service {
         /// Uhhh.. Idk.
         int cmd = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
         if (cmd == -1){
-            System.out.println("Lacking request type int extra.");
+            Printer.out("Lacking request type int extra.");
             new Exception().printStackTrace();
             return super.onStartCommand(intent, flags, startId);
         }
-//        System.out.println("onStartCommand: "+cmd);
+//        Printer.out("onStartCommand: "+cmd);
         switch (cmd)
         {
             case START_SERVICE:
                 StartDetection();
-                System.out.println("Starting up TransportDetectionService");
+                Printer.out("Starting up TransportDetectionService");
                 break;
             case GET_TOTAL_STATS_FOR_DATA_SECONDS:
                 totalStatSecondsRequested = intent.getLongExtra(TransportDetectionService.DATA_SECONDS, 0);
-            //    System.out.println("Data for "+totalStatSecondsRequested+" requested.");
+            //    Printer.out("Data for "+totalStatSecondsRequested+" requested.");
                 break;
             case GET_LAST_SENSING_FRAMES:
                 numLastSensingFramesRequested = intent.getIntExtra(TransportDetectionService.NUM_FRAMES, 0);
-  //              System.out.println("Requested "+numLastSensingFramesRequested+" last sensing frames");
+  //              Printer.out("Requested "+numLastSensingFramesRequested+" last sensing frames");
                 break;
         }
 
@@ -129,14 +130,14 @@ public class TransportDetectionService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        System.out.println("TransportDetectionService onCreate");
-//        StartDetection();
+        Printer.out("TransportDetectionService onCreate");
+        StartDetection();
         instance = this;
     }
 
     @Override
     public void onDestroy() {
-        System.out.println("onDestroy called D:");
+        Printer.out("onDestroy called D:");
         Save();
         super.onDestroy();
         instance = null;
@@ -164,7 +165,7 @@ public class TransportDetectionService extends Service {
                     objectOut.close();
                 } catch (IOException e2) {
                     // do nowt
-                    System.out.println("Failed to save");
+                    Printer.out("Failed to save");
                     return false;
                 }
             }
@@ -182,7 +183,7 @@ public class TransportDetectionService extends Service {
 //            transportData.PrintAllData();
             fileIn.getFD().sync();
         } catch (FileNotFoundException fnfe){
-            System.out.println("File not found, loading saved data failed.");
+            Printer.out("File not found, loading saved data failed.");
 //            fnfe.printStackTrace();
             return false;
         }
@@ -200,7 +201,7 @@ public class TransportDetectionService extends Service {
                     objectIn.close();
                 } catch (IOException e2) {
                     // do nowt
-                    System.out.println("Failed to save");
+                    Printer.out("Failed to save");
                     return false;
                 }
             }
@@ -209,10 +210,6 @@ public class TransportDetectionService extends Service {
     }
 
     private void StartDetection() {
-        /// Load data if saved, assuming the service had been killed earlier?
-        LoadSavedData();
-        if (transportData == null)
-            transportData = TransportData.BuildPrimaryTree();
 
         // Create it.
         if (wekaMan == null)
@@ -269,12 +266,12 @@ public class TransportDetectionService extends Service {
     }
 
     private void PrintData(String headerText, EList<TransportOccurrence> transportOccurrences) {
-        System.out.println(headerText+" nr samples: "+transportOccurrences.size());
+        Printer.out(headerText+" nr samples: "+transportOccurrences.size());
         // New array of 0s for each transport.
         EList<TransportOccurrence> totalTransportDurationUsages = GetTotalStatsForData(transportOccurrences);
         for (int i = 0; i < totalTransportDurationUsages.size(); ++i){
             TransportOccurrence to = totalTransportDurationUsages.get(i); // Just print it.
-            System.out.println(" "+to.transport.name()+" # "+to.DurationSeconds()+"s, % "+to.ratioUsed);
+            Printer.out(" "+to.transport.name()+" # "+to.DurationSeconds()+"s, % "+to.ratioUsed);
         }
     }
 
@@ -285,12 +282,12 @@ public class TransportDetectionService extends Service {
         long msToInclude = nrOfSecondsToInclude * 1000;
         long threshMs = nowMs - msToInclude;
         EList<TransportOccurrence> transportOccurrences = transportData.GetDataSeconds(nrOfSecondsToInclude);
-        System.out.println("transportOccurrences: "+transportOccurrences.size()+" corresponding to: "+TransportOccurrence.TotalTimeMs(transportOccurrences)+"ms");
+        Printer.out("transportOccurrences: "+transportOccurrences.size()+" corresponding to: "+TransportOccurrence.TotalTimeMs(transportOccurrences)+"ms");
         for (int i = transportOccurrences.size() - 1; i >= 0; --i){ // Search from the newest occurrence of data and backwards, grab all where start time is after the threshold period.
             TransportOccurrence to = transportOccurrences.get(i);
             long timeDiff = to.startTimeSystemMs - threshMs;
             if (timeDiff < 0) {
-                System.out.println("Data " + timeDiff + "ms too old");
+                Printer.out("Data " + timeDiff + "ms too old");
                 break; // Break loop if too old data.
             }
             newArr.add(to);
@@ -351,7 +348,7 @@ public class TransportDetectionService extends Service {
                 continue;
             }
             to.ratioUsed = to.DurationMillis() / (float) durationTotalMs;
-            //        System.out.println(" "+classifier.trainingData.classAttribute().value(i)+" # "+to.durationMs+"ms, % "+to.ratioUsed);
+            //        Printer.out(" "+classifier.trainingData.classAttribute().value(i)+" # "+to.durationMs+"ms, % "+to.ratioUsed);
         }
         return totalTransportDurationUsages;
     }

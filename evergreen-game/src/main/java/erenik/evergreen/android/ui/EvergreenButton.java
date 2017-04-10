@@ -68,8 +68,7 @@ public class EvergreenButton extends Button {
         SetDefaults(context);
         mTextSize = getTextSize();
     }
-    void SetDefaults(Context context)
-    {
+    void SetDefaults(Context context) {
         // Just set background color and text color automagically.
         setBackgroundResource(R.drawable.small_button);
         setTextColor(ContextCompat.getColor(context, R.color.mainButtonTextColor));

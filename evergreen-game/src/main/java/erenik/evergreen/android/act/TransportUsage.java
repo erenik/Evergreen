@@ -36,6 +36,7 @@ import java.util.Queue;
 import erenik.evergreen.R;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.player.Transport;
+import erenik.util.Printer;
 import erenik.weka.transport.SensingFrame;
 import erenik.weka.transport.TransportDetectionService;
 import erenik.weka.transport.TransportOccurrence;
@@ -74,7 +75,7 @@ public class TransportUsage  extends EvergreenActivity {
                 TextView tv = (TextView)view;
                 if (tv != null) {
                     String text = (String) tv.getText();
-                    System.out.println("Selected: " + tv.getText());
+                    Printer.out("Selected: " + tv.getText());
                     long unitInSeconds = 1;
                     if (text.contains("minute")) unitInSeconds = 60;
                     if (text.contains("hour")) unitInSeconds = 3600;
@@ -83,7 +84,7 @@ public class TransportUsage  extends EvergreenActivity {
                     String p = text.split(" ")[0];
                     int durationUnits = Integer.parseInt(p);
                     long totalTimeSeconds = durationUnits * unitInSeconds;
-                    System.out.println("New period of observation: "+totalTimeSeconds+" seconds");
+                    Printer.out("New period of observation: "+totalTimeSeconds+" seconds");
                     secondsToDisplayInGraph = totalTimeSeconds;
                 }
             }
@@ -158,16 +159,18 @@ public class TransportUsage  extends EvergreenActivity {
     protected void onResume() {
         super.onResume();
         AddBroadcastReceiver(); // Add broadcast receiver for all upcoming updates.
+        QueueUpdate();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(broadcastReceiver);
-        broadcastReceiver = null;
-
+        // broadcastReceiver = null;
+        doUpdates = false;
     }
 
+    boolean doUpdates = true;
     private void QueueUpdate() {
         iterationHandler.postDelayed(new Runnable() {
             @Override
@@ -175,10 +178,16 @@ public class TransportUsage  extends EvergreenActivity {
                 Iterate();
             }
         }, updateDelayMs);
+        doUpdates = true;
     }
 
     void Iterate(){
+        if (!doUpdates) {
+            Printer.out("Stopped requesting updates");
+            return;
+        }
         QueueUpdate(); // Queue update before any return statements later.
+
         final TransportDetectionService service = TransportDetectionService.GetInstance();
         TextView tv = (TextView) findViewById(R.id.textView_sensorState);
         if (service == null){
@@ -210,10 +219,10 @@ public class TransportUsage  extends EvergreenActivity {
             broadcastReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    //              System.out.println("BroadcastReceiver onReceive: "+intent);
+                    //              Printer.out("BroadcastReceiver onReceive: "+intent);
                     int request = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
                     Serializable data = intent.getSerializableExtra(TransportDetectionService.SERIALIZABLE_DATA);
-    //                System.out.println("Req/Res: "+request+" data: "+data);
+    //                Printer.out("Req/Res: "+request+" data: "+data);
                     switch (request){
                         case -1: break;
                         case TransportDetectionService.GET_LAST_SENSING_FRAMES:
@@ -221,8 +230,14 @@ public class TransportUsage  extends EvergreenActivity {
                             UpdateLog(sfs);
                             break;
                         case TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS:
-                            EList<TransportOccurrence> to = (EList<TransportOccurrence>) data;
-                            UpdateGraphWithStats(to);
+                            long dataSeconds = intent.getLongExtra(TransportDetectionService.DATA_SECONDS, 0);
+                            if (dataSeconds == secondsToDisplayInGraph) {
+                                EList<TransportOccurrence> to = (EList<TransportOccurrence>) data;
+                                UpdateGraphWithStats(to);
+                            }
+                            else {
+                                Printer.out("Service replied data-seconds not requested: "+dataSeconds);
+                            }
                             break;
                     }
                 }
@@ -234,14 +249,14 @@ public class TransportUsage  extends EvergreenActivity {
         /// Update it with total time for now? or past 5 mins?
         graphTransportDurations.removeAllSeries(); // Remove old data from graph.
 //        final EList<TransportOccurrence> stats = service.GetTotalStatsForDataSeconds(secondsToDisplayInGraph);
-       // System.out.println("Update graph with stats: "+stats.size());
+       // Printer.out("Update graph with stats: "+stats.size());
         long max = 10;
         for (int i = 0; i < stats.size(); ++i){
             final BarGraphSeries<DataPoint> series = new BarGraphSeries<>();
             TransportOccurrence to = stats.get(i);
             if (to.DurationSeconds() <= 0)
                 continue;
-//            System.out.println("To: "+to.transport+" "+to.durationMs);
+//            Printer.out("To: "+to.transport+" "+to.durationMs);
             // Add it?
             long seconds = to.DurationSeconds();
             if (seconds > max)

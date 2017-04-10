@@ -11,6 +11,6 @@ public enum ToolType {
     ConstructionToolsKit,
     InventorsKit,
     ScoutsKit,
-    ;
+    CraftersKit;
 
 }

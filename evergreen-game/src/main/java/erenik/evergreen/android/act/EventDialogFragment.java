@@ -13,6 +13,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.encounter.EncounterListener;
 import erenik.evergreen.common.player.Finding;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -22,12 +23,12 @@ public class EventDialogFragment extends DialogFragment
     public Finding type = Finding.Nothing;
     EncounterActivity encounterActivity = new EncounterActivity();
 
-    Encounter enc = new Encounter();
+    Encounter enc = new Encounter(0);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("onCreate");
+        Printer.out("onCreate");
     }
 
     @Override
@@ -70,7 +71,7 @@ public class EventDialogFragment extends DialogFragment
                     public void onClick(DialogInterface dialog, int id) {
                         /// Set that the user clicked yes -> Offer next event after this one finishes.
                         Player player = App.GetPlayer();
-                        System.out.println("event type: "+type.GetEventText());
+                        Printer.out("event type: "+type.GetEventText());
                         switch (type) {
                             case AttacksOfTheEvergreen:
                                 AttacksOfTheEvergreen();
@@ -78,12 +79,12 @@ public class EventDialogFragment extends DialogFragment
                             case RandomEncounter:
                                 RandomEncounter(player);
                                 break;
-                            case AbandonedShelter:
-                                enc.AbandonedShelter();
-                                break;
-                            case RandomPlayerShelter:
-                                enc.RandomPlayerShelter();
-                                break;
+//                            case AbandonedShelter:
+  //                              enc.AbandonedShelter();
+    //                            break;
+                           // case RandomPlayerShelter:
+                             //   enc.RandomPlayerShelter();
+                               // break;
                             default:
                                 throw new NullPointerException();
                         }

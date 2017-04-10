@@ -1,5 +1,6 @@
 package erenik.evergreen;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-11-06.
@@ -14,7 +15,7 @@ public class StringUtils {
             if (i < list.size() - 1)
                 s += glue;
         }
-        System.out.println("join: "+s);
+        Printer.out("join: "+s);
         return s;
     };
 }

@@ -3,6 +3,7 @@ package erenik.evergreen.common.combat;
 import java.util.Random;
 
 // import erenik.evergreen.android.act.EncounterActivity;
+import erenik.evergreen.common.Player;
 import erenik.evergreen.common.encounter.Encounter;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogTextID;
@@ -14,7 +15,7 @@ import erenik.util.Tuple;
 /**
  * Created by Emil on 2016-10-30.
  */
-public class Combatable extends Object
+public abstract class Combatable extends Object
 {
     public float hp;
     public float maxHP;
@@ -52,22 +53,35 @@ public class Combatable extends Object
     /* Inflicts damage. This may be adjusted by implementers, but should mostly apply it straight to HP.
        Returns the damage inflicted (>0)
     */
-    int InflictDamage(int damage, Combatable attacker)
-    {
-        if (damageReflecting > 0)
-        {
-            if (Dice.RollD6(2) >= 11)
-                attacker.InflictDamage(1, this);
-        }
+    int InflictDamage(int damage, Combatable attacker) {
         damage *= receivedDamageMultiplier;
         float php = hp;
-        hp -= damage;
-        System.out.println("Damage taken: "+damage+" hp reduced from "+php+" to "+hp);
-        if (hp <= 0) {
-            hp = 0;
-        }
+        int iDamage = Math.round(damage);
+        if (iDamage < 1)
+            iDamage = 1; // Minimum 1.
+        attacker.OnDealtDamage(this, iDamage);
+        OnReceivedDamage(attacker, iDamage);
+        hp -= iDamage;
+   //     Printer.out("Damage taken: "+damage+" hp reduced from "+php+" to "+hp);
         return damage;
     }
+
+    protected abstract void OnKilled(Combatable targetYouKilled);
+    protected abstract void OnDied(Combatable attackerWhoKilledYou);
+    protected abstract void OnDealtDamage(Combatable target, int damage);
+    protected abstract void OnReceivedDamage(Combatable fromAttacker, int damage);
+    /*{
+        Printer.out("Combatable.OnKilled, has to be overridden");
+        new Exception().printStackTrace();
+        System.exit(1);
+    }*/
+
+    /*{
+        Printer.out("Combatable.OnDied, has to be overridden");
+        new Exception().printStackTrace();
+        System.exit(1);
+    }*/
+
     public boolean SetName(String newName)
     {
         if (newName.contains(";"))
@@ -93,26 +107,6 @@ public class Combatable extends Object
         a += (hitsAttempted == 0? initialAttackBonus : 0); // Add attack bonus if it's the first attack, and there exists any such bonus..?
         a -= consecutiveFleeAttempts; // Decreases when trying to flee.
         return a;
-    }
-    /// Apply poisons, regen, remove debuffs, etc.
-    void NewTurn(Encounter enc) {
-        // Count down the snares/binds.
-        for (int i = 0; i < ensnared.size(); ++i) {
-            Tuple<Integer, Integer> t = ensnared.get(i);
-            ++t.x;
-            if (t.x >= t.y) {
-                ensnared.remove(t);
-                --i;
-            }
-        }
-        hp += hpRegenPerTurn;
-        // Multiply?
-        if (multiplies > 0 && timesMultiplied < timesMultiply)
-        {
-            Enemy e = new Enemy(enemyType, emissionsWhenCreated);
-            e.isAttacker = isAttacker;
-            enc.AddCombatant(e);
-        }
     }
     /// Check HP?
     /// Order this enemy to attack the player. Returns true if it kills the target.
@@ -152,7 +146,12 @@ public class Combatable extends Object
             else
                 enc.LogEnc(new Log(isPlayer? LogTextID.playerMonsterAttack : LogTextID.monsterPlayerAttack, isPlayer? LogType.ATTACK : LogType.ATTACKED, name, target.name, ""+damageDealt));
             if (target.hp  <= 0){ // Killed player?
-                enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
+                if (target.isPlayer && isPlayer)
+                    enc.LogEnc(new Log(LogTextID.playerDefeatedPlayer, LogType.INFO, name, target.name));
+                else
+                    enc.LogEnc(new Log(isPlayer? LogTextID.playerVanquishedMonster : LogTextID.monsterKnockedOutPlayer, isPlayer? LogType.DEFEATED_ENEMY : LogType.DEFEATED, name, target.name));
+                target.OnDied(this); // Do post-defeat actions.
+                OnKilled(target);
                 return true;
             }
         }
@@ -166,14 +165,13 @@ public class Combatable extends Object
     // Most of these are used mainly by enemies, but may also be used by some player weapons perhaps?
     EnemyType enemyType = null;
     int level = 0; // Base fight stats
-    int ensnaring = 0;
+    int ensnaring = 0; // On attack, Roll 2D6, 11+ ensnared, losing 1 Att/Def for 2 turns.
     int initialAttackBonus = 0;
     int initialDamageBonus = 0; // Additional effects
     int damageReflecting = 0;
     int encounterModifierPercent = 0;
-    int multiplies = 0;
-    int timesMultiply = 0;
-    int timesMultiplied = 0;
+    int multiplies = 0; // Swarms
+    int timesMultiplied = 0; // Swarms
     int vehicleAttackBonus = 0;
     int fleePenalty = 0;
     public int attacksPerTurn = 1;
@@ -186,10 +184,28 @@ public class Combatable extends Object
     int hitsAttempted = 0;
 
     /// EList of status effects for this current fight.
-    EList<Tuple<Integer,Integer>> ensnared = new EList<Tuple<Integer, Integer>>(); // May be stacked, hence the list.
+    EList<Tuple<Integer,Integer>> ensnared = new EList<Tuple<Integer, Integer>>(); // May be stacked, hence the list. 1st integer is Att/Def loss, 2nd is # of turns it is lost.
 
     float numDefeatedThisFightAttackBonus = 0, numDefeatedThisGameAttackBonus = 0;
     public Dice attackDamage = new Dice(1, 0, 1);
     Dice tailWhipDamage;
     Dice breathAttackDamage;
+
+    public void OnTurnStart(Encounter enc){
+        if (ensnared.size() > 0){
+            for (int i = 0; i < ensnared.size(); ++i){
+                Tuple<Integer,Integer> t = ensnared.get(i);
+                --t.y;
+                if (t.y <= 0) {
+                    ensnared.remove(t);
+                    --i;
+                }
+            }
+            if (ensnared.size() == 0 && this instanceof Player) {
+                Player pThis = (Player) this;
+                pThis.LogInfo(LogTextID.ensnaredWoreOff, pThis.name);
+            }
+        }
+    }
+
 };

@@ -54,7 +54,10 @@ import erenik.evergreen.common.player.Config;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.Byter;
 import erenik.util.EList;
+import erenik.util.Printer;
+import erenik.weka.transport.SensingFrame;
 import erenik.weka.transport.TransportDetectionService;
+import erenik.weka.transport.TransportOccurrence;
 
 
 /**
@@ -90,7 +93,7 @@ public class EvergreenActivity extends AppCompatActivity
         toast.show();
     }
     void GoToMainScreen() {
-        System.out.println("Starting new activity");
+        Printer.out("Starting new activity");
         Intent i = new Intent(getBaseContext(), MainScreen.class);
         startActivity(i);
     }
@@ -128,12 +131,12 @@ public class EvergreenActivity extends AppCompatActivity
         scrollViewLog = findViewById(R.id.scrollViewLog);
         layoutLog = findViewById(R.id.layoutLog);
         if (scrollViewLog != null) {
-            System.out.println("Event log found.");
+            Printer.out("Event log found.");
             scrollViewLog.setOnClickListener(toggleLogFullScreen);
             scrollViewLog.setClickable(true);
         }
         if (layoutLog != null) {
-            System.out.println("Layout for Event log found.");
+            Printer.out("Layout for Event log found.");
             layoutLog.setOnClickListener(toggleLogFullScreen);
         }
         UpdateLog(); // Update log after subclass has adjusted how it should be presented.
@@ -157,7 +160,7 @@ public class EvergreenActivity extends AppCompatActivity
         int id = 0;
         int stage = 0;
         if (App.GetPlayer() != null)
-            stage = (int) App.GetPlayer().Get(Stat.EMISSIONS) / 25; // Divide by 20 for stage?
+            stage = (int) App.GetPlayer().TotalEmissions() / 25; // Divide by 20 for stage?
         if (bgv != null){
             switch (stage){
                 case 0: id = R.drawable.bg0; break;
@@ -192,7 +195,7 @@ public class EvergreenActivity extends AppCompatActivity
     static public EList<Game> gameList = new EList<>();
 
     void GetGamesList() {
-        System.out.println("Requesting games list from server...");
+        Printer.out("Requesting games list from server...");
         EGPacket pack = EGRequest.byType(EGRequestType.GetGamesList);
         pack.addReceiverListener(new EGPacketReceiverListener() {
             @Override
@@ -226,7 +229,7 @@ public class EvergreenActivity extends AppCompatActivity
                     | View.SYSTEM_UI_FLAG_IMMERSIVE);
         }
         else {
-            System.out.println("Unable to find fullscreen_view, cannot set full-screen flags accordingly.");
+            Printer.out("Unable to find fullscreen_view, cannot set full-screen flags accordingly.");
             Toast("Unable to find fullscreen_view, cannot set full-screen flags accordingly.");
         }
 
@@ -268,6 +271,7 @@ public class EvergreenActivity extends AppCompatActivity
     }
 
     protected boolean SaveToServer() {
+        Printer.out("SaveToServer called");
         ShowProgressBar();
         int secondsToAnalyze = 3600 * 24; // 24 hours?
 
@@ -276,14 +280,16 @@ public class EvergreenActivity extends AppCompatActivity
         intent.putExtra(TransportDetectionService.DATA_SECONDS, secondsToAnalyze);
         startService(intent);
 
+//        AddBroadcastReceiver(int forRequestID);
+
         IntentFilter intentFilter = new IntentFilter(); // Intent.ACTION_ATTACH_DATA
         getBaseContext().registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                System.out.println("BroadcastReceiver onReceive: "+intent);
+                Printer.out("BroadcastReceiver onReceive: "+intent);
 //                if (intent.getClass() instanceof TransportDetectionService)
                 Serializable data = intent.getSerializableExtra(TransportDetectionService.DATA_SECONDS);
-                System.out.println("Yeahhhh: "+data);
+                Printer.out("Yeahhhh: "+data);
             }
         }, intentFilter);
 
@@ -291,7 +297,7 @@ public class EvergreenActivity extends AppCompatActivity
 /*
         Player player = App.GetPlayer();
         player.UpdateTransportMinutes(TransportDetectionService.GetInstance().GetTotalStatsForDataSeconds(secondsToAnalyze));
-        System.out.println("Saving to server, ");// Connect to server.
+        Printer.out("Saving to server, ");// Connect to server.
         player.PrintTopTransports(3);
 
         // SErvice Intent send stuffs.
@@ -319,6 +325,36 @@ public class EvergreenActivity extends AppCompatActivity
         */
         return true;
     }
+
+    private void AddBroadcastReceiver(int forRequestID) {
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_ATTACH_DATA); // Intent.ACTION_ATTACH_DATA
+        /*
+        if (broadcastReceiver == null)
+            broadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    //              Printer.out("BroadcastReceiver onReceive: "+intent);
+                    int request = intent.getIntExtra(TransportDetectionService.REQUEST_TYPE, -1);
+                    Serializable data = intent.getSerializableExtra(TransportDetectionService.SERIALIZABLE_DATA);
+                    //                Printer.out("Req/Res: "+request+" data: "+data);
+                    switch (request){
+                        case -1: break;
+                        case TransportDetectionService.GET_LAST_SENSING_FRAMES:
+                            EList<SensingFrame> sfs = (EList<SensingFrame>) data;
+                            UpdateLog(sfs);
+                            break;
+                        case TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS:
+                            EList<TransportOccurrence> to = (EList<TransportOccurrence>) data;
+                            UpdateGraphWithStats(to);
+                            break;
+                    }
+                }
+            };
+        getBaseContext().registerReceiver(broadcastReceiver, intentFilter);
+        */
+    }
+
+
     /// Performs default actions for some responses, such as removing the active player if the data is no longer valid (e.g. old player/game ID).
     protected void HandleResponse(EGResponseType egResponseType) {
         switch (egResponseType){
@@ -337,7 +373,7 @@ public class EvergreenActivity extends AppCompatActivity
     protected static boolean LoadFromServer(EGPacketReceiverListener responseListener) {
         // Connect to server.
         Player player = App.GetPlayer();
-        System.out.println("Loading from server.");
+        Printer.out("Loading from server.");
         // Send shit.
         EGRequest req = EGRequest.Load(player);
         if (responseListener != null)
@@ -388,7 +424,7 @@ public class EvergreenActivity extends AppCompatActivity
             // at compile-time and do nothing on earlier devices.
 
 //            View anyView = App.currentActivity.
-            System.out.println("mHidePart2Runnable whatevers");
+            Printer.out("mHidePart2Runnable whatevers");
             if (mContentView != null)
                 mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE  | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
@@ -409,7 +445,7 @@ public class EvergreenActivity extends AppCompatActivity
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
-            System.out.println("Hiding the stuff..");
+            Printer.out("Hiding the stuff..");
             hideControls();
         }
     };
@@ -440,11 +476,11 @@ public class EvergreenActivity extends AppCompatActivity
 
     private void hideControls()
     {
-//        System.out.println("Hiding in plain sight -o-o- content: "+mContentView);
+//        Printer.out("Hiding in plain sight -o-o- content: "+mContentView);
         mContentView = findViewById(R.id.fullscreen_view_background);
         if (mContentView != null)
         {
-            System.out.println("goin fullscreen yo: ");
+            Printer.out("goin fullscreen yo: ");
             mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE  | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
             mVisible = false;
             // Schedule a runnable to remove the status and navigation bar after a delay .. hm.
@@ -458,7 +494,7 @@ public class EvergreenActivity extends AppCompatActivity
         }
         else
         {
-            System.out.println("Failed to fullscreen");
+            Printer.out("Failed to fullscreen");
         }
     }
 
@@ -480,7 +516,7 @@ public class EvergreenActivity extends AppCompatActivity
      */
     private void delayedHide(int delayMillis)
     {
-        System.out.println("Delayed hideControls of "+delayMillis);
+        Printer.out("Delayed hideControls of "+delayMillis);
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
@@ -499,7 +535,7 @@ public class EvergreenActivity extends AppCompatActivity
             }
             Intent i = new Intent(getBaseContext(), EventLogViewer.class);
             startActivity(i);
-            System.out.println("Toggle fullscreen");
+            Printer.out("Toggle fullscreen");
         }
     };
 
@@ -516,7 +552,7 @@ public class EvergreenActivity extends AppCompatActivity
         if (player.log == null)
             return;
 //        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), maxLogLinesInEventLog, player.logTypesToShow);
-        System.out.println("Log.UpdateLog");
+        Printer.out("Log.UpdateLog");
         ViewGroup v = (ViewGroup) layoutLog;
         // Remove children.
         v.removeAllViews();
@@ -524,15 +560,15 @@ public class EvergreenActivity extends AppCompatActivity
         int numDisplay = player.log.size();
         numDisplay = numDisplay > maxLogLinesInEventLog ? maxLogLinesInEventLog : numDisplay;
         int startIndex = player.log.size() - numDisplay + 1;
-        System.out.println("Start index: "+startIndex+" log size: "+player.log.size());
+        Printer.out("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
         EList<Log> newLogMessages = player.log.subList(startIndex);
-        System.out.println("Log messages to show: "+newLogMessages.size());
+        Printer.out("Log messages to show: "+newLogMessages.size());
         Log.PrintLastLogMessages(newLogMessages, newLogMessages.size());
         PrintLastLogMessages(newLogMessages.size());
         EList<Log> filteredLogMessages = Log.ApplyFilters(newLogMessages, player.logTypesToFilter);
         if (filteredLogMessages.size() == 0) {
-            System.out.println("Filters mis-behaving, reverting to display all types.");
+            Printer.out("Filters mis-behaving, reverting to display all types.");
             filteredLogMessages = newLogMessages;
         }
         for (int i = 0; i < filteredLogMessages.size(); ++i) {
@@ -548,13 +584,11 @@ public class EvergreenActivity extends AppCompatActivity
 
     /// Creates and returns a new TextView for the larget log-message.
     TextView GetViewForLogMessage(Log l){
-        String s = l.text;
-        if (l.BasicStringVersion() == false)
-            s = App.GetLogText(l.TextID(), l.Args());
+        String s = App.GetLogText(l.TextID(), l.Args());
         TextView t = new TextView(getBaseContext());
         t.setText(s);
         int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
-        // System.out.println("Colorizing: "+Integer.toHexString(hex));
+        // Printer.out("Colorizing: "+Integer.toHexString(hex));
         t.setTextColor(hex);
         alternateLogMessageColor = !alternateLogMessageColor;
         int colorID = alternateLogMessageColor? R.color.logColor1 : R.color.logColor2;
@@ -567,16 +601,15 @@ public class EvergreenActivity extends AppCompatActivity
     }
 
 
-
-    protected void UpdateItemList(ViewGroup vg, InventionType type) {
+    EList<View> itemButtons = new EList<>();
+    protected void UpdateItemList(ViewGroup vg, InventionType typeRelevant) {
         // Clear it.
         vg.removeAllViews();
         Player player = App.GetPlayer();
         int added = 0;
+        itemButtons.clear();
         for (int i = 0; i < player.cd.inventory.size(); ++i) { // EList all items of specific type.
             Invention item = player.cd.inventory.get(i);
-            if (item.type != type)
-                continue;
             /// First add a LinearLayout (horizontal)
             LinearLayout ll = new LinearLayout(getBaseContext());
             // Give it an ID? Skip?
@@ -591,18 +624,20 @@ public class EvergreenActivity extends AppCompatActivity
             ll.setBackgroundResource(R.drawable.small_button);
             int padding = 35;
             ll.setPadding(padding,0,padding,0);
-            vg.addView(ll);
-
-            ll.setOnClickListener(itemClicked);
+//            ll.setOnClickListener(itemClicked);
 
             // Make a button out of it.
             EvergreenButton b = new EvergreenButton(getBaseContext());
-            b.setText(item.name);
+            if (item.Get(InventionStat.Equipped) >= 0)
+                b.setText(item.name+" [Equipped]");
+            else
+                b.setText(item.name);
             // Screen div 10 height per element?
             layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT, 0.1f);
             layoutParams.gravity = Gravity.LEFT;
             b.setLayoutParams(layoutParams);
             b.setOnClickListener(itemClicked);
+            itemButtons.add(b);
             b.setBackgroundColor(0x00);
             b.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.mainTextColor));
             ll.addView(b);
@@ -616,6 +651,11 @@ public class EvergreenActivity extends AppCompatActivity
             if (item.type == InventionType.Armor){
                 AddIconAndBonus(InventionStat.DefenseBonus, item, ll);
             }
+            // At the end, skip those not relevant, so that items will still retain their respective indices... ?.
+            if (item.type != typeRelevant)
+                continue;
+            vg.addView(ll);
+
             ++added;
         }
         if (added == 0){
@@ -663,11 +703,9 @@ public class EvergreenActivity extends AppCompatActivity
         ll.addView(tv);
     }
 
-    private final View.OnClickListener itemClicked = new View.OnClickListener()
-    {
+    private final View.OnClickListener itemClicked = new View.OnClickListener() {
         @Override
-        public void onClick(View v)
-        {
+        public void onClick(View v) {
             Button b = null;
             if (v instanceof Button){
                 b = (Button)v;
@@ -676,34 +714,25 @@ public class EvergreenActivity extends AppCompatActivity
                 ViewGroup vg = (ViewGroup) v;
                 b = (Button) vg.getChildAt(0);
             }
-            String itemName = (String) b.getText();
-            System.out.println("Item clicked: "+itemName);
-            // Equip it?
+
+            int index = itemButtons.indexOf(v);
+            Printer.out("Item index clicked: "+index);
             Player player = App.GetPlayer();
-            for (int i = 0; i < player.cd.inventory.size(); ++i) {
-                Invention item = player.cd.inventory.get(i);
-                if (item.name.equals(itemName))
-                {
-                    // Equip it?
-                    System.out.println("Found the item.");
-                    // Open screen for this item?
-                    Intent intent = new Intent(getBaseContext(), ItemDetails.class);
-                    intent.putExtra("ItemIndex", i);
-                    startActivity(intent);
-
-//                    player.Equip(item);
-  //                  System.out.println("Equipped it.");
-    //                UpdateUI();
-                }
+            if (index >= 0 && index < player.cd.inventory.size()) {
+                Invention item = player.cd.inventory.get(index);
+                // Equip it?
+                Printer.out("Found the item.");
+                // Open screen for this item?
+                Intent intent = new Intent(getBaseContext(), ItemDetails.class);
+                intent.putExtra("ItemIndex", index);
+                startActivity(intent);
             }
-
-           // clicked(b.getText());
         }
     };
 
     public void UpdateUI() {
         // Should be subclassed?
-//        System.out.println("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
+//        Printer.out("EvergreenActivity.UpdateUI Should be subclassed to take care of updates to UI from various events (network packets, changing gear, etc).");
         UpdateLog(); // Update the log, if it exists there.
     };
 
@@ -726,7 +755,7 @@ public class EvergreenActivity extends AppCompatActivity
                         int num = (int) Byter.toObject(reply.GetBody());
                         logMessagesOnServer = num;
                         Toast("Log messages on server: "+logMessagesOnServer);
-                        System.out.println("Num log msgs on server: "+num);
+                        Printer.out("Num log msgs on server: "+num);
                         App.GetPlayer().log.clear();
                         // Request them.
                         RequestLogMessages(numMostRecentMessagesToFetch);
@@ -752,7 +781,7 @@ public class EvergreenActivity extends AppCompatActivity
                         int num = (int) Byter.toObject(reply.GetBody());
                         logMessagesOnServer = num;
                         Toast("Log messages on server: "+logMessagesOnServer);
-                        System.out.println("Num log msgs on server: "+num);
+                        Printer.out("Num log msgs on server: "+num);
                         App.GetPlayer().log.clear();
                         // Request them.
                         RequestLogMessages(numMostRecentMessagesToFetch);
@@ -770,12 +799,19 @@ public class EvergreenActivity extends AppCompatActivity
     static long lastLogRequest = 0;
     ArrayList<EGPacket> replies = new ArrayList<>();
     ArrayList<EGPacket> packetsSent = new ArrayList<>();
+    int numErrors = 0;
+
+    int ErrorsAndPacketRepliesReceived(){
+        return numErrors + replies.size();
+    }
+
     protected boolean RequestLogMessages(final int numMostRecentOnes, final long oldestIDtoInclude) {
         if (System.currentTimeMillis() == lastLogRequest + 3000)
             return false;
+        numErrors = 0;
         packetsSent.clear();
         replies.clear();
-        System.out.println("Requesting log messages: "+numMostRecentOnes);
+        Printer.out("Requesting log messages: "+numMostRecentOnes);
         lastLogRequest = System.currentTimeMillis();
         int numPerBatch = 50;
         ShowProgressBar();
@@ -794,6 +830,7 @@ public class EvergreenActivity extends AppCompatActivity
                     switch (reply.ResType()){
                         case LogMessages: {
                             replies.add(reply);
+                            OnReplyOrErrorReceived();
                             break;
                         }
                         default:
@@ -803,15 +840,26 @@ public class EvergreenActivity extends AppCompatActivity
                 @Override
                 public void OnError(EGPacketError error) {
                     // Hide as long as we get something?
-                    HideProgressBar();
+                    ++numErrors;
                     Toast("RequestLogMessages: An error occurred");
+                    OnReplyOrErrorReceived();
                 }
             });
             App.Send(pack);
         }
-        System.out.println("Sent "+packetsSent.size()+" req packets");
+        Printer.out("Sent "+packetsSent.size()+" req packets");
         logMessagesUpdatedHandler.sendMessageDelayed(new Message(), 1000);
         return true;
+    }
+
+    private void OnReplyOrErrorReceived() {
+        if (ErrorsAndPacketRepliesReceived() < packetsSent.size()) {
+            Printer.out("Received "+numErrors+" errors, "+replies.size()+" replies, out of "+packetsSent.size());
+            return;
+        }
+        lastRequestDone = true;
+        Printer.out("Received all replies :)");
+        HideProgressBar();
     }
 
     Handler logMessagesUpdatedHandler = new Handler(new Handler.Callback() {
@@ -820,7 +868,7 @@ public class EvergreenActivity extends AppCompatActivity
         };
         @Override
         public boolean handleMessage(Message msg) {
-            System.out.println("logMessagesUpdatedHandler?");
+            Printer.out("logMessagesUpdatedHandler?");
             // Check if all replies have been received?
             int packsWaitingUpdates = 0;
             for (int i = 0; i < packetsSent.size(); ++i){
@@ -842,11 +890,16 @@ public class EvergreenActivity extends AppCompatActivity
                 EGPacket reply = replies.get(i);
                 switch (reply.ResType()){
                     case LogMessages:
-                        System.out.println("LogMessages received");
-                        messages = reply.GetLogMessages();
+                        Printer.out("LogMessages received");
+                        try {
+                            messages = reply.GetLogMessages();
+                        } catch(Exception e){
+                            ToastUp("Errors reading log-messages.");
+                            e.printStackTrace();
+                        }
                         break;
                     default:
-                        System.out.println("Reply: "+reply.ResType().name());
+                        Printer.out("Reply: "+reply.ResType().name());
                         continue;
                 }
                 if (messages == null){
@@ -862,7 +915,7 @@ public class EvergreenActivity extends AppCompatActivity
                 player.log = newLog;
             }
             UpdateLog(); // Update UI once we have them all.
-            System.out.println("Total messages received: "+totalLogMessagesReceived);
+            Printer.out("Total messages received: "+totalLogMessagesReceived);
             PrintLastLogMessages(5);
             // Update the gui?
             OnLogMessagesUpdated();
@@ -884,12 +937,18 @@ public class EvergreenActivity extends AppCompatActivity
 
 
     static long lastRCD = 0;
+    static boolean lastRequestDone = true;
     protected void RequestClientData() {
         long now = System.currentTimeMillis();
         if (now < lastRCD + 5000)
             return;
+        if (!lastRequestDone){
+            Printer.out("Last request not done yet.");
+            return;
+        }
+        lastRequestDone = false;
         lastRCD = now;
-        System.out.println("Requesting client data... queuedActiveActions: "+App.GetPlayer().cd.queuedActiveActions.size());
+        Printer.out("Requesting client data... queuedActiveActions: "+App.GetPlayer().cd.queuedActiveActions.size());
         ToastUp("Saving/Updating...");
         try {
             EGPacket pack = EGRequest.Save(App.GetPlayer());
@@ -902,6 +961,8 @@ public class EvergreenActivity extends AppCompatActivity
                 @Override
                 public void OnError(EGPacketError error) {
                     HideProgressBar();
+                    Toast("Error: "+error.name());
+                    lastRequestDone = true;
                 }
             });
             App.Send(pack);;
@@ -921,6 +982,7 @@ public class EvergreenActivity extends AppCompatActivity
                     if (cd == null) {
                         HideProgressBar();
                         ToastUp("Errors parsing client data");
+                        lastRequestDone = true;
                         return false;
                     }
                     Toast("Client data received");
@@ -928,13 +990,16 @@ public class EvergreenActivity extends AppCompatActivity
                     App.GetPlayer().UpdateFrom(cd);
                     UpdateUI();
                     // Request new log messages if relevant.
-                    if (!RequestLogMessages(100, (long) 0)) // Add option to only request new messages? App.GetPlayer().Get(Config.LatestLogMessageIDSeen)
+                    if (!RequestLogMessages(100, (long) 0)) { // Add option to only request new messages? App.GetPlayer().Get(Config.LatestLogMessageIDSeen)
                         HideProgressBar(); // If not requesting log messages, then hide progress bar straight away, otherwise wait for the incoming log-messages.
+                        lastRequestDone = true;
+                    }
                     return true;
                 default:
                     ToastUp("Other reply: "+reply.ResType().name());
             }
         }
+        ToastUp("Player.HandleClientData: Something is very wrong");
         return false;
     }
 
@@ -949,7 +1014,7 @@ public class EvergreenActivity extends AppCompatActivity
         }
         int logMessagesAdded = 0;
         long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
-        System.out.println("LastID seen: "+lastLogMessageIDSeen);
+        Printer.out("LastID seen: "+lastLogMessageIDSeen);
         EList<Log> toDisplay = new EList<>();
         for (int i = 0; i < p.log.size(); ++i){
             Log l = p.log.get(i);
@@ -958,7 +1023,7 @@ public class EvergreenActivity extends AppCompatActivity
             // The old check, where it bases relevant messages on what is saved server-side, which was bugging more or less....
             //     if (player.log.get(i).displayedToEndUser == 0)
             //            return true;
-            System.out.println("l.LogID(): "+l.LogID());
+            Printer.out("l.LogID(): "+l.LogID());
             toDisplay.add(l);
         }
         return toDisplay;
@@ -970,7 +1035,7 @@ public class EvergreenActivity extends AppCompatActivity
     }
 
     protected void LoadPlayerData(Player player, final OnPacketReplyListener onPacketReplyListener) {
-        System.out.println("Load player data...");
+        Printer.out("Load player data...");
         EGPacket pack = EGRequest.Load(player);
         ShowProgressBar();
         pack.addReceiverListener(new EGPacketReceiverListener() {

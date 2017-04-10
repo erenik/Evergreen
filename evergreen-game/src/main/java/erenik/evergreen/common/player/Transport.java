@@ -8,6 +8,7 @@ import java.util.Random;
 
 import erenik.util.EList;
 import erenik.util.ESerializable;
+import erenik.util.Printer;
 import erenik.weka.transport.TransportType;
 
 /**
@@ -72,10 +73,10 @@ public class Transport implements Serializable {
         switch (tt)
         {
             default:
-                System.out.println("Not implemented transport: "+name());
+                Printer.out("Not implemented transport: "+name());
                 break;
             case Idle:
-                Set(TransportStat.Weight, 0);
+                Set(TransportStat.Weight, 0.05f); // It should have some weight still, but not a lot.
                 break;
             case Boat:
                 Set(TransportStat.ForagingBonus, 5); // Fishing!
@@ -87,6 +88,7 @@ public class Transport implements Serializable {
                 Set(TransportStat.ForagingBonus, 2);
                 Set(TransportStat.AmountEnemiesEncounteredRatio, 0.75f);
                 Set(TransportStat.EmissionsPerDay, -2);
+                Set(TransportStat.Weight, 0.25f); // Lower weight - need to walk quite a lot to reach somewhere.
                 break;
             case Bike:
                 Set(TransportStat.ForagingBonus, 1);
@@ -94,6 +96,7 @@ public class Transport implements Serializable {
                 Set(TransportStat.SpeedBonus, 1);
                 Set(TransportStat.FleeBonus, 1);
                 Set(TransportStat.EmissionsPerDay, -1);
+                Set(TransportStat.Weight, 0.5f); // Lower weight - need to bike a bit to reach somewhere.
                 break;
             case Bus:
                 Set(TransportStat.ForagingBonus, -2);
@@ -161,13 +164,13 @@ public class Transport implements Serializable {
             total += transports.get(i).defaultProbability;
         Random transportRandom = new Random();
         float r = transportRandom.nextFloat() * total;
-    //    System.out.println("Randomed " + r + " out of " + total);
+    //    Printer.out("Randomed " + r + " out of " + total);
         for (int i = 0; i < transports.size(); ++i) {
             Transport t = transports.get(i);
             r -= t.defaultProbability;
-      //      System.out.println("Total " + total);
+      //      Printer.out("Total " + total);
             if (r < 0) {
-      //          System.out.println("Yo " + t.name());
+      //          Printer.out("Yo " + t.name());
                 return t;
             }
         }
@@ -197,7 +200,7 @@ public class Transport implements Serializable {
             if (s.contains(t.name()))
                 return t;
         }
-        System.out.println("ERROR: Unknown transport: "+s);
+        Printer.out("ERROR: Unknown transport: "+s);
         new Exception().printStackTrace();
         System.exit(15);
         return Transport.Unknown;

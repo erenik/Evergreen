@@ -74,7 +74,7 @@
             android:orientation="horizontal">
             <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonMenu" android:text="@string/menu" />
             <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/nextDay" android:text="@string/nextDay" />
-            <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/button3" android:text="@string/messages" />
+            <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/inventory" android:text="@string/inventory" />
         </LinearLayout>
     </LinearLayout>
 

@@ -17,6 +17,8 @@ import javax.crypto.spec.PBEParameterSpec;
 
 import java.security.*;
 
+import erenik.util.Printer;
+
 /**
  * Created by Emil on 2016-11-23.
  */
@@ -90,7 +92,7 @@ public class Auth {
         while (password.length() % cipher.getBlockSize() > 0){
             password = password + " ";
         }
-        System.out.println("Password mofified to : \""+password+"\"");
+        Printer.out("Password mofified to : \""+password+"\"");
         SecretKey secretKey = GenSecretKey(password);
         int iterationCount = 100;// specifies parameters used with password based encryption
         PBEParameterSpec parameterSpec = new PBEParameterSpec( salt, iterationCount );   // obtain cipher instance reference
@@ -102,14 +104,14 @@ public class Auth {
     {
         try {
             Cipher cipher = InitCipher(password, Cipher.ENCRYPT_MODE);
-            System.out.println("Block size: "+cipher.getBlockSize());
+            Printer.out("Block size: "+cipher.getBlockSize());
             while(textToEncrypt.length() < cipher.getBlockSize()){
                 textToEncrypt = textToEncrypt + " ";
             }
             // create secret key and get cipher instance
-            System.out.println("pw for encryption: "+password);
+            Printer.out("pw for encryption: "+password);
             for (int i = 0; i  < textToEncrypt.length(); ++i){
-                System.out.println((int)textToEncrypt.charAt(i)+" "+(int)textToEncrypt.charAt(i));
+                Printer.out((int)textToEncrypt.charAt(i)+" "+(int)textToEncrypt.charAt(i));
             }
             byte[] bytesToEncrypt = textToEncrypt.getBytes(StandardCharsets.UTF_8);
             byte[] cipherText = new byte[cipher.getOutputSize(bytesToEncrypt.length)];
@@ -119,7 +121,7 @@ public class Auth {
             return encrypted;
         } catch ( Exception exception ) {
             exception.printStackTrace();
-            System.out.println("DTYING");
+            Printer.out("DTYING");
             System.exit( 1 );
         }
         return null;
@@ -131,22 +133,22 @@ public class Auth {
             Cipher cipher = InitCipher(password, Cipher.DECRYPT_MODE);
             byte[] bytesToDecrypt = textToDecrypt.getBytes();
             int decryptedLength = cipher.getOutputSize(bytesToDecrypt.length);
-            System.out.println("decryptedLength: "+decryptedLength);
+            Printer.out("decryptedLength: "+decryptedLength);
             byte[] cipherText = new byte[decryptedLength];
             // decryption pass
             byte[] plainText = new byte[cipher.getOutputSize(decryptedLength)];
             int ptLength = cipher.update(cipherText, 0, decryptedLength, plainText, 0);
-            System.out.println(new String(plainText));
+            Printer.out(new String(plainText));
 
             int eights = ptLength /8;
             int newPtLength = (eights + 1) * 8; 
 
             ptLength += cipher.doFinal(plainText, ptLength);
-            System.out.println(new String(plainText));
-            System.out.println(ptLength);
+            Printer.out(new String(plainText));
+            Printer.out(ptLength);
         } catch ( Exception exception ) {
             exception.printStackTrace();
-            System.out.println("DTYI4242NG");
+            Printer.out("DTYI4242NG");
             System.exit( 1 );
         }
         return null;
@@ -156,13 +158,13 @@ public class Auth {
     {
         String text = "Hello world!";
         String s3 = Auth.Sign(text, "yeah");
-        System.out.println("Text: "+text+" \nSigned: "+s3);
+        Printer.out("Text: "+text+" \nSigned: "+s3);
         
         
         String s2 = Auth.Encrypt(text, "albatross");
-        System.out.println(text+" encrypted: "+s2+" ");
+        Printer.out(text+" encrypted: "+s2+" ");
         String de = Auth.Decrypt(s2, "albatross");
-        System.out.println(s2+" decrypted: "+de+" ");
+        Printer.out(s2+" decrypted: "+de+" ");
     }
 }
 

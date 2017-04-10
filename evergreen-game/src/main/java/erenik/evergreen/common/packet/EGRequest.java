@@ -55,7 +55,7 @@ public class EGRequest extends EGPacket {
     }
     public static EGRequest Save(Player player) {
         player.sendLogs = Player.SEND_NO_LOG_MESSAGES;
-        System.out.println("EGRequest.Save, SEND_CLIENT_SEEN_MESSAGES");
+       // Printer.out("EGRequest.Save, SEND_CLIENT_SEEN_MESSAGES");
         EGRequest eg = new EGRequest(EGRequestType.Save, player.toByteArr());
         return eg;
     };

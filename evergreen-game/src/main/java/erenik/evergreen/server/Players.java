@@ -11,6 +11,8 @@ import erenik.util.EList;
 import erenik.util.EList;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
+import erenik.util.Printer;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -69,7 +71,7 @@ public class Players {
     void RegisterDefaultPlayers() 
     {
         /*
-        System.out.println("Register default players: ");
+        Printer.out("Register default players: ");
         Player p = new Player();
         p.SetName("Yoyo hp ");
         p.cd.inventory.add(Invention.RandomWeapon(0));
@@ -80,14 +82,14 @@ public class Players {
         p.Set(Stat.ABANDONED_SHELTER, 3);
         p.cd.inventory.add(Invention.RandomWeapon(0));
         p.cd.inventions.add(Invention.RandomWeapon(2));
-        System.out.println("Before: "+p.Name());
+        Printer.out("Before: "+p.Name());
         p.PrintAll();
         p = readPlayerFromFile("playerSave.sav");
-        System.out.println("\nAfter: "+p.Name());
+        Printer.out("\nAfter: "+p.Name());
         p.PrintAll();
         players.add(p);
 */
-        System.out.println();
+        Printer.out();
     }
     
     public static boolean writePlayerToFile(Player object, String filename) 
@@ -114,7 +116,7 @@ public class Players {
         return true;
     }
     public static Player readPlayerFromFile(String filename) {
-        System.out.println("Loading player from file: "+filename);
+        Printer.out("Loading player from file: "+filename);
         ObjectInputStream objectIn = null;
         Player player = null;
         try {
@@ -126,7 +128,7 @@ public class Players {
             // Do nothing
             return null;
         } catch (IOException e) {
-            System.out.println("IOException: "+e.toString());
+            Printer.out("IOException: "+e.toString());
             return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

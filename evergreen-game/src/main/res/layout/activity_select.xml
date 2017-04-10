@@ -31,7 +31,8 @@
                     />
                 <!--android:layout_weight="wrap_content" -->
                 <!-- First a scroll-view with the selectable skills or actions -->
-                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3">
+                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3"
+                    android:fadeScrollbars="false" android:scrollbarFadeDuration="0">
                     <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutItems">
                     </LinearLayout>
                 </ScrollView>
@@ -42,7 +43,8 @@
                 <erenik.evergreen.android.ui.EvergreenTextView
                     style="@style/Evergreen.Text" android:text="Current Queue" android:id="@+id/textViewHeader2" />
 
-                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3">
+                <ScrollView android:layout_width="match_parent" android:layout_height="0px" android:layout_weight="3"
+                    android:fadeScrollbars="false" android:scrollbarFadeDuration="0">
                     <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutQueue">
                         <LinearLayout style="@style/Evergreen.Layout">
                             <TextView style="@style/Evergreen.Text" android:layout_width="match_parent" android:text = "Yo" android:layout_weight="10" />

@@ -6,14 +6,7 @@ package erenik.evergreen.common.player;
 
 public enum Config {
     /// Config stats.
-    /*  0 - Easiest, 10% progress lost upon death (all stats n skills).
-        1 - Easy, 20%,
-        2 - Medium, 35% loss,
-        3 - Hard, 50% loss,
-        4 - Unforgiving, 75% loss.
-        5 - Wipeout, 100%, hardcore
-     */
-    Difficulty(0),
+    Difficulty(0), // See Player/Difficulty.
     Avatar(0), // The profile picture they choose on character creation.
     StartingBonus(0), // What bonus to start with.
     CreationTime(0), // Time of creation saved as a float.

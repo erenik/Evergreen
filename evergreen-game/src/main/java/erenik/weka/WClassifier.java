@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 import erenik.util.Tuple;
 import erenik.weka.transport.TransportType;
 import weka.classifiers.AbstractClassifier;
@@ -50,12 +51,12 @@ public class WClassifier implements Serializable {
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeInt(version);
         out.writeObject(name);
-        System.out.println("Saving abstract classifier");
+        Printer.out("Saving abstract classifier");
         out.writeObject(cls);
-        System.out.println("Saving training data - cleared");
+        Printer.out("Saving training data - cleared");
         currentSettings.trainingDataWhole.clear(); // Clear it?
         out.writeObject(currentSettings.trainingDataWhole);
-        System.out.println("Done");
+        Printer.out("Done");
         out.writeBoolean(isTrained);
     }
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -120,13 +121,13 @@ public class WClassifier implements Serializable {
 
         if (isTrained) {
             if (currentSettings.useNaiveIdleCheck && IsIdle(inst)) {
-//                System.out.println("Is idle, classifying as such "+currentStats.idleClassified);
+//                Printer.out("Is idle, classifying as such "+currentStats.idleClassified);
                 ++currentStats.idleClassified;
                 return Idle();
             }
             return cls.classifyInstance(inst);
         }
-        System.out.println("\nTrying to classify instance on untrained classifier.");
+        Printer.out("\nTrying to classify instance on untrained classifier.");
         new Exception().printStackTrace();
         System.exit(1);
         return -1;
@@ -138,13 +139,13 @@ public class WClassifier implements Serializable {
         for (int i = 0; i < currentSettings.trainingDataFold.numAttributes(); ++i){
             String nameAttr = currentSettings.trainingDataFold.classAttribute().value(i);
             currentSettings.trainingDataFold.classAttribute();
-         //   System.out.println("Name: "+nameAttr);
+         //   Printer.out("Name: "+nameAttr);
             if (nameAttr.equals("Idle")) {
                 idleIndex = i;
                 return idleIndex;
             }
         }
-        System.out.println("Couldn't find index of Idle, returning -1");
+        Printer.out("Couldn't find index of Idle, returning -1");
         new Exception().printStackTrace();
         return -1;
     }
@@ -153,11 +154,11 @@ public class WClassifier implements Serializable {
     private boolean IsIdle(Instance inst) {
         double accStdev = inst.value(Index.ACC_STD),
             gyroStdev = inst.value(Index.GYR_STD);
-//        System.out.println("accStdev: "+accStdev+" gyroStdev: "+gyroStdev);
+//        Printer.out("accStdev: "+accStdev+" gyroStdev: "+gyroStdev);
     //    if (accStdev == 0) {
   //          ++totalAccStdevNull;
 //            if (totalAccStdevNull % 10 == 0)
-                //System.out.println("totalAccstdevnull: "+totalAccStdevNull);
+                //Printer.out("totalAccstdevnull: "+totalAccStdevNull);
       //  }
         if (accStdev < currentSettings.naiveIdleThreshold && gyroStdev < currentSettings.naiveIdleThreshold){
             return true;
@@ -197,11 +198,11 @@ public class WClassifier implements Serializable {
     }
 
     void PrintHistorySleep() {
-        System.out.println("History set sizes and sleep samples and their affects on accuracy.");
+        Printer.out("History set sizes and sleep samples and their affects on accuracy.");
         // Grab sleep sessions tested?
         EList<Integer> sleepSessionsTested = GetSleepSessionsTested();
         // Print them one row at a time?
-        System.out.println("Sleep sessions");
+        Printer.out("Sleep sessions");
         System.out.print("Acc   ");
         for (int i = 0; i < sleepSessionsTested.size(); ++i){
             System.out.printf("  %1$4s", sleepSessionsTested.get(i));
@@ -222,7 +223,7 @@ public class WClassifier implements Serializable {
                 System.out.printf(" %.3f", cs.accuracy);
             }
         }
-        System.out.println();
+        Printer.out();
     }
 
     private EList<Integer> GetSleepSessionsTested() {
@@ -252,27 +253,62 @@ public class WClassifier implements Serializable {
 
     private boolean BuildClassifier() {
         if (currentSettings.trainingDataFold == null){
-            System.out.println("trainingDataFold null, assign it before building.");
+            Printer.out("trainingDataFold null, assign it before building.");
             new Exception().printStackTrace();
             return false;
         }
         try {
             if (currentSettings.normalizeAcceleration){
-                System.out.println("Normalizing acceleration values");
+                Printer.out("Normalizing acceleration values");
                 NormalizeAccValues(currentSettings.trainingDataFold);
             }
-
+            if (currentSettings.classConversions.size() > 0)
+                PerformClassConversions(currentSettings.trainingDataFold);
             long startTimeMs = System.currentTimeMillis();
             cls.buildClassifier(currentSettings.trainingDataFold);
             currentStats.trainingTimeMs = System.currentTimeMillis() - startTimeMs;
             if (currentStats.trainingTimeMs > 200) // Print only if the classifier actually is slow?
-                System.out.println(" Classifier trained, took "+currentStats.trainingTimeMs+"ms");
+                Printer.out(" Classifier trained, took "+currentStats.trainingTimeMs+"ms");
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
         isTrained = true;
         return true;
+    }
+
+    private void PerformClassConversions(Instances instances) {
+        int conP = 0;
+        for (int i = 0; i < currentSettings.classConversions.size(); ++i){
+            ClassConversion cc = currentSettings.classConversions.get(i);
+            double classValue = GetClassValue(cc.className, instances);
+            double newClassValue = GetClassValue(cc.newClassName, instances);
+            if (newClassValue == -1) {
+                // Then add it?
+                instances.classAttribute().addStringValue(cc.newClassName);
+                newClassValue = GetClassValue(cc.newClassName, instances);
+            }
+
+            Printer.out("cv" +classValue+" ncv: "+newClassValue);
+            for (int j = 0; j < instances.size(); ++j){
+                Instance inst = instances.get(j);
+                double val = inst.value(8); // 0-3 acc, 4-7 gyr, 8 - class
+                if (val == classValue) {
+                    inst.setValue(8, newClassValue);
+                    ++conP;
+                }
+            }
+        }
+
+        Printer.out("\nConversions performed: "+conP);
+    }
+
+    private double GetClassValue(String className, Instances instances) {
+        for (int i = 0; i < instances.classAttribute().numValues(); ++i){
+            if (className.equals(instances.classAttribute().value(i)))
+                return i;
+        }
+        return -1;
     }
 
     /// Normalizes min, max anv Avg by dividing by avg (-> 1.0)
@@ -285,11 +321,11 @@ public class WClassifier implements Serializable {
             double accMin = inst.value(0); // Acc min
             double accMax = inst.value(1); // Acc Max.
             double accAvg = inst.value(2); // Acc Avg.
-           // System.out.println("To normalized: "+accMin+" "+accMax+" "+accAvg);
+           // Printer.out("To normalized: "+accMin+" "+accMax+" "+accAvg);
             accMin /= accAvg;
             accMax /= accAvg;
             accAvg /= accAvg;
-           // System.out.println("Normalized: "+accMin+" "+accMax+" "+accAvg);
+           // Printer.out("Normalized: "+accMin+" "+accMax+" "+accAvg);
             inst.setValue(0, accMin);
             inst.setValue(1, accMax);
             inst.setValue(2, accAvg);
@@ -300,11 +336,11 @@ public class WClassifier implements Serializable {
         double accMin = inst.value(0); // Acc min
         double accMax = inst.value(1); // Acc Max.
         double accAvg = inst.value(2); // Acc Avg.
-        // System.out.println("To normalized: "+accMin+" "+accMax+" "+accAvg);
+        // Printer.out("To normalized: "+accMin+" "+accMax+" "+accAvg);
         accMin /= accAvg;
         accMax /= accAvg;
         accAvg /= accAvg;
-        // System.out.println("Normalized: "+accMin+" "+accMax+" "+accAvg);
+        // Printer.out("Normalized: "+accMin+" "+accMax+" "+accAvg);
         inst.setValue(0, accMin);
         inst.setValue(1, accMax);
         inst.setValue(2, accAvg);
@@ -313,10 +349,10 @@ public class WClassifier implements Serializable {
 
     private int GetIndexOf(Instances instances, String attrName) {
         Attribute classAttribute = instances.classAttribute();
-        System.out.println("num attributes: "+instances.numAttributes());
+        Printer.out("num attributes: "+instances.numAttributes());
         for (int i = 0; i < instances.numAttributes(); ++i){
             Attribute attr = instances.attribute(i);
-            System.out.println("attrStr: "+attr+" name: "+attr.name());
+            Printer.out("attrStr: "+attr+" name: "+attr.name());
             String name = attr.name();
             if (name.equals(attrName))
                 return i;
@@ -351,7 +387,7 @@ public class WClassifier implements Serializable {
 
     private void DoOwnTest(){
         if (currentSettings.testDataWhole == null) {
-            System.out.println("test data null, aborting");
+            Printer.out("test data null, aborting");
             return;
         }
         currentSettings.testDataFold = currentSettings.testDataWhole; // Assume whole has been set but fold has not.
@@ -365,11 +401,11 @@ public class WClassifier implements Serializable {
         Instances data = new Instances(currentSettings.trainingDataWhole); // N-fold validation -> use same base data for testing as training.
         data.randomize(new Random(1)); // But first randomize it.
         if (data.classAttribute().isNominal()) { // And stratify it according to folds.
-//            System.out.println("Stratifying");
+//            Printer.out("Stratifying");
             data.stratify(currentSettings.folds);
         }
         else
-            System.out.println("Not stratifying");
+            Printer.out("Not stratifying");
         currentSettings.testDataWhole = data;
 
         PrepareForTest();
@@ -386,11 +422,11 @@ public class WClassifier implements Serializable {
             TrainAndPredict();
             currentStats.CalcAccuracy();
             if (currentStats.trainingTimeMs > 200) // Display this only if slow?
-                System.out.println("Fold "+currentSettings.fold+" Accuracy: "+Accuracy()+" good: "+currentStats.good+" of: "+currentStats.totalTested); // Accuracy of the tests.
+                Printer.out("Fold "+currentSettings.fold+" Accuracy: "+Accuracy()+" good: "+currentStats.good+" of: "+currentStats.totalTested); // Accuracy of the tests.
         }
         AfterTest();
-  //      System.out.println();
-//        System.out.println(Name()+" 10-fold accuracy: "+numCorrect / (float) numTotal);
+  //      Printer.out();
+//        Printer.out(Name()+" 10-fold accuracy: "+numCorrect / (float) numTotal);
     }
 /*
 From Evaluation.java
@@ -447,21 +483,21 @@ From Evaluation.java
             java.lang.StringBuffer s = new StringBuffer();
             eval.crossValidateModel(currentClassifier.cls, trainingData, 10, new Random(1), out);
             accuracy = out.accuracy;
-            System.out.println(eval.toClassDetailsString()+"\n"+eval.toSummaryString());
+            Printer.out(eval.toClassDetailsString()+"\n"+eval.toSummaryString());
         } catch (Exception ex) {
             Logger.getLogger(WekaManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (verbosity > 0)
-            System.out.println(currentClassifier.Name()+" accuracy: "+out.accuracy);
+            Printer.out(currentClassifier.Name()+" accuracy: "+out.accuracy);
         return accuracy;
     }
 */
     private void PrintSettings() {
-        System.out.println("Performing 10-fold cross with settings: ");
-        System.out.println("  Classifier: "+Name());
-        System.out.println("  History set size (hss): "+currentSettings.historySetSize);
-        System.out.println("  Sleep sessions per sample: "+currentSettings.sleepSessions);
-        System.out.println("  Force averaging before sleep/clear history set after each sleep: "+currentSettings.forceAverageBeforeSleep);
+        Printer.out("Performing 10-fold cross with settings: ");
+        Printer.out("  Classifier: "+Name());
+        Printer.out("  History set size (hss): "+currentSettings.historySetSize);
+        Printer.out("  Sleep sessions per sample: "+currentSettings.sleepSessions);
+        Printer.out("  Force averaging before sleep/clear history set after each sleep: "+currentSettings.forceAverageBeforeSleep);
     }
 
     private void TrainAndPredict() {
@@ -486,7 +522,7 @@ From Evaluation.java
             System.out.print("Performing N-fold cross validation on classifier: " + Name() + ", folds: " + currentSettings.folds);
         }
         else
-            System.out.println("Performing test on classifier: "+Name());
+            Printer.out("Performing test on classifier: "+Name());
         if (verbosity > 1)
             System.out.print("training data: "+currentSettings.trainingDataFold.size()+" testData: "+currentSettings.testDataFold.size()+" ");
 
@@ -501,12 +537,13 @@ From Evaluation.java
     private void Predict() {
         Settings s = currentSettings;
         Instances testData = s.testDataFold;
+        PerformClassConversions(testData); // Convert classes as requested before analysis.
         // Randomize and stratify the test-data.
         if (currentSettings.randomizationDegree > 0) // Adjust it.
             AdjustRandomizeData(testData, currentSettings.randomizationDegree);
 
         if (testData == null){
-            System.out.println("Prediction has no test data");
+            Printer.out("Prediction has no test data");
             new Exception("ey").printStackTrace();
             System.exit(4);
         }
@@ -528,10 +565,17 @@ From Evaluation.java
             if (inst.classValue() == pred){
                 ++currentStats.good;
             }
+            if (currentStats.confusionMatrix == null) {
+                int matrixSize = currentStats.matrixSize = currentSettings.trainingDataFold.classAttribute().numValues();
+                currentStats.confusionMatrix = new int[matrixSize][matrixSize];
+            }
+            ++currentStats.confusionMatrix[(int) inst.classValue()][(int) pred]; // First array the true value, second value the prediction.
+            ++currentStats.trueValuesPerClass[(int) inst.classValue()]; // Increment.
+
             if (verbosity >= 2) {
                 System.out.print("ID: " + inst.value(0));
                 System.out.print(", actual: " + testData.classAttribute().value((int) inst.classValue()));
-                System.out.println(", predicted: " + testData.classAttribute().value((int) pred)+" good: "+currentStats.good);
+                Printer.out(", predicted: " + testData.classAttribute().value((int) pred)+" good: "+currentStats.good);
             }
         }
         currentStats.predictionTimeMs = System.currentTimeMillis() - predictionStartMs;
@@ -555,7 +599,7 @@ From Evaluation.java
         boolean isDone = false;
         @Override
         public void run() {
-            System.out.println("Started training classifier: "+wc.name);
+            Printer.out("Started training classifier: "+wc.name);
             try {
                 wc.BuildClassifier();
             } catch (Exception ex) {
@@ -564,10 +608,10 @@ From Evaluation.java
             }
             isDone = true;
             wc.isTrained = true;
-            System.out.println("Classifier trained: "+wc.name);
+            Printer.out("Classifier trained: "+wc.name);
             /// Test it briefly?
 //            float acc = wc.TestOnDataFolds(inst, 10, 3);
-  //          System.out.println("Tested accuracy on rand/strat/fold training data: "+acc);
+  //          Printer.out("Tested accuracy on rand/strat/fold training data: "+acc);
         }
     };
 
@@ -581,7 +625,7 @@ From Evaluation.java
         EList<ClassificationStats> css = new EList<>();
         // Test on sub-sections of the data?
         int totGood = 0, totTest = 0;
-        System.out.println("Num folds: "+numFolds);
+        Printer.out("Num folds: "+numFolds);
         for (int i = 0; i < numFolds; ++i){
             Instances data = null;
             data = inst.testCV(numFolds, i);
@@ -593,7 +637,7 @@ From Evaluation.java
             totTest += cs.testSize;
         }
         float acc = totGood / (float) totTest;
-        System.out.println("Tested acc on randomized/stratified folds of provided data. Accuracy: "+acc);
+        Printer.out("Tested acc on randomized/stratified folds of provided data. Accuracy: "+acc);
 
         for (int i = 1; i < 3; ++i){
             TestWithVariance(inst, numFolds, i * 0.03f, historySetSize);
@@ -619,7 +663,7 @@ From Evaluation.java
             totTest += cs.testSize;
         }
         float acc = totGood / (float) totTest;
-        System.out.println("Tested acc on randomly adjusted data up to +/-"+Math.round(variance*100) +"%. Accuracy: "+acc);
+        Printer.out("Tested acc on randomly adjusted data up to +/-"+Math.round(variance*100) +"%. Accuracy: "+acc);
     }
 
     /// Tests on target data. If class-values exist, compares with given value.
@@ -647,7 +691,7 @@ From Evaluation.java
             if (verbosity >= 2) {
                 System.out.print("ID: " + inst.value(0));
                 System.out.print(", actual: " + testInstances.classAttribute().value((int) inst.classValue()));
-                System.out.println(", predicted: " + testInstances.classAttribute().value((int) pred)+" good: "+good);
+                Printer.out(", predicted: " + testInstances.classAttribute().value((int) pred)+" good: "+good);
             }
         }
         cs.good = good;
@@ -682,7 +726,7 @@ From Evaluation.java
             valueCount.add(new Tuple<Double, Integer>(valueInHistory, 1)); // Initial count to 1.
         }
         if (valueCount.size() == 0) {
-            System.out.println("Some issue when counting results in WClassifier.ModifyResult, returning value without modification.");
+            Printer.out("Some issue when counting results in WClassifier.ModifyResult, returning value without modification.");
             return value;
         }
         Tuple<Double, Integer> highestCount = valueCount.get(0);
@@ -707,12 +751,12 @@ From Evaluation.java
         for (int i = 0; i < in.numAttributes(); ++i){
             Attribute a = in.attribute(i);
             if (in.classIndex() == i){
-//                System.out.println("Skipping class index");
+//                Printer.out("Skipping class index");
                 continue;
             }
             double value = in.value(i);
             double valueAdjusted = value * (1.0f + randomizer.nextFloat() * plusMinusMinMaxVariation - plusMinusMinMaxVariation * 0.5f);
-//            System.out.println("Attr: "+a+" "+value+" "+a.value(0)+" adj: "+valueAdjusted);
+//            Printer.out("Attr: "+a+" "+value+" "+a.value(0)+" adj: "+valueAdjusted);
             if (a.toString().contains("acc"))
                 in.setValue(i, valueAdjusted);
             if (a.toString().contains("gyro"))

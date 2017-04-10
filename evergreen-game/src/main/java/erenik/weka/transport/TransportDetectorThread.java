@@ -20,6 +20,7 @@ import java.io.ObjectOutputStream;
 
 import erenik.evergreen.R;
 import erenik.util.EList;
+import erenik.util.Printer;
 import erenik.weka.Settings;
 import erenik.weka.WClassifier;
 import weka.classifiers.trees.RandomForest;
@@ -70,7 +71,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     @Override
     public void run() {
-        System.out.println("TransportDetectorThread run");
+        Printer.out("TransportDetectorThread run");
+
+        /// Load data if saved, assuming the service had been killed earlier?
+        callingService.LoadSavedData();
+        if (callingService.transportData == null)
+            callingService.transportData = TransportData.BuildPrimaryTree();
 
         /// Launch Weka, tran it
         GetTrainingDataInputStream();
@@ -82,12 +88,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         EnableSensors();
 
     //    if (!LoadClassifiers()) {
-            System.out.println("Creating and building classifiers...");
+            Printer.out("Creating and building classifiers...");
             classifier = callingService.wekaMan.New(new RandomTree(), GetTrainingDataInputStream(), false);
             // accOnlyClassifier = callingService.wekaMan.NewRandomForest("RandomForest Acc only", GetTrainingDataInputStream(), true);
       //  }
       //  else {
-        //    System.out.println("Classifiers loaded.");
+        //    Printer.out("Classifiers loaded.");
         //}
         // New stats no matter if loaded or creating new...
         classifier.NewClassificationStats(callingService.settings);
@@ -108,14 +114,15 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            boolean classifiersTrained = ClassifyInstances();
+            // Only deal with messaging/updates here and controling the sensor code. Classification should occur in the same callback as the sensor events arrive?
+            boolean classifiersTrained = ClassifiersTrained();
             if (!classifiersTrained) {
-                System.out.println("Iter Second " + ((System.currentTimeMillis() / 1000) % 60));
-                System.out.println("Should sleep? " + callingService.ShouldSleep());
+                Printer.out("Iter Second " + ((System.currentTimeMillis() / 1000) % 60));
+                Printer.out("Should sleep? " + callingService.ShouldSleep());
             }
             /// Check how many occurrences we have calculated now, should we sleep?
             if (callingService.ShouldSleep()) {
-                System.out.println("Sleeping for a bit...");
+                Printer.out("Sleeping for a bit...");
                 // Sleep. Disable callbacks for sensors, etc. for the time being.
                 DisableSensors();
                 callingService.Save(); // Save
@@ -128,7 +135,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 //    classifier.ResetValuesHistory();                    // Clear the history set... or?
                 }
                 try {
-                    //                      System.out.println("Sleeping " + toSleepMs / 1000 + " seconds");
+                    //                      Printer.out("Sleeping " + toSleepMs / 1000 + " seconds");
                     callingService.OnSleep();
                     long totalTimeSlept = 0;
                     long sleepStartMs = System.currentTimeMillis();
@@ -137,12 +144,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                         EvaluateRequests(); // Reply to requests if there are any.
                         totalTimeSlept = System.currentTimeMillis() - sleepStartMs;
                         if (totalTimeSlept > msToSleep) {
-                            System.out.println("Overslept by "+(totalTimeSlept - msToSleep)+"ms");
+                            Printer.out("Overslept by "+(totalTimeSlept - msToSleep)+"ms");
                             break;
                         }
                     }
                     callingService.sleeping = false;
-//                        System.out.println("Sleeping done");
+//                        Printer.out("Sleeping done");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -154,21 +161,25 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         }
     }
 
+    private boolean ClassifiersTrained() {
+        return classifier.IsTrained();
+    }
+
     String classifiersFileName = "classifiers.cls";
     private boolean LoadClassifiers() {
-        System.out.println("Loading classifiers");
+        Printer.out("Loading classifiers");
         ObjectInputStream objectIn = null;
         FileInputStream fileIn = null;
         try {
             fileIn = callingService.getBaseContext().openFileInput(classifiersFileName);
             objectIn = new ObjectInputStream(fileIn);
             classifier = (WClassifier) objectIn.readObject();
-            System.out.println("Primary classifier loaded");
+            Printer.out("Primary classifier loaded");
         //    accOnlyClassifier = (WClassifier) objectIn.readObject();
-         //   System.out.println("Acc-only classifier loaded");
+         //   Printer.out("Acc-only classifier loaded");
             fileIn.getFD().sync();
         } catch (FileNotFoundException fnfe){
-            System.out.println("Couldn't open file, failed to load");
+            Printer.out("Couldn't open file, failed to load");
 //            fnfe.printStackTrace();
             return false;
         }
@@ -176,21 +187,21 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             e.printStackTrace();
             return false;
         }
-        System.out.println("Loaded classifiers");
+        Printer.out("Loaded classifiers");
         didSaveClassifiers = true; // Don't save again if we just loaded them ...
         return true;
     }
     private boolean SaveClassifiers(){
-        System.out.println("Saving classifiers");
+        Printer.out("Saving classifiers");
         ObjectOutputStream objectOut = null;
         FileOutputStream fileOut = null;
         try {
             fileOut = callingService.openFileOutput(classifiersFileName, Activity.MODE_PRIVATE);
             objectOut = new ObjectOutputStream(fileOut);
             objectOut.writeObject(classifier);
-            System.out.println("Primary classifier saved.");
+            Printer.out("Primary classifier saved.");
    //         objectOut.writeObject(accOnlyClassifier);
-     //       System.out.println("Acc-only classifier saved.");
+     //       Printer.out("Acc-only classifier saved.");
             fileOut.getFD().sync();
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
@@ -204,12 +215,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                     objectOut.close();
                 } catch (IOException e2) {
                     // do nowt
-                    System.out.println("Failed to save");
+                    Printer.out("Failed to save");
                     return false;
                 }
             }
         };
-        System.out.println("Saved classifiers");
+        Printer.out("Saved classifiers");
         return true;
     }
 
@@ -240,7 +251,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     }
 
     private void DisableSensors(){
-    //    System.out.println("TransportDetectorThread: Disabling sensors.");
+    //    Printer.out("TransportDetectorThread: Disabling sensors.");
         sensorManager.unregisterListener(this);
     }
 
@@ -251,11 +262,13 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     static boolean didSaveClassifiers = false;
 
-    private boolean ClassifyInstances() {
-//        System.out.println("Classifier trained: "+callingService.classifier.IsTrained());
+    /// Max to classify.
+    private boolean ClassifyInstances(int toClassify) {
+        if (classifier == null)
+            return false;
         if (!classifier.IsTrained()
 //                || !accOnlyClassifier.IsTrained()
-                ) // Return if the classifiers are not trained yet.
+                )
             return false;
 
         if (!didSaveClassifiers){
@@ -265,7 +278,8 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         }
 
         EList<SensingFrame> toCheckAgain = new EList<>();
-        for (int i = 0; i < sensingFrames.size(); ++i) {
+        int classified = 0;
+        for (int i = 0; i < sensingFrames.size() && classified < toClassify; ++i) {
             try {
                 SensingFrame sfToClassify = sensingFrames.get(i);
                 // Skip for up to 5 second(s) after sampling is supposedly finished
@@ -275,25 +289,25 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     //                continue;
       //          }
                 if (Math.abs(sfToClassify.accMagns.size() - averageAccSamples) > averageAccSamples * 0.2f) {
-                    System.out.println("Acc samples "+sfToClassify.accMagns.size()+" avg: "+averageAccSamples);
+                    Printer.out("Acc samples "+sfToClassify.accMagns.size()+" avg: "+averageAccSamples);
                 }
                 if (Math.abs(sfToClassify.gyroMagns.size() - averageGyroSamples) > averageGyroSamples * 0.2f) {
-                    System.out.println("Gyro samples "+sfToClassify.gyroMagns.size()+" avg: "+averageGyroSamples);
+                    Printer.out("Gyro samples "+sfToClassify.gyroMagns.size()+" avg: "+averageGyroSamples);
                 }
                 if (sfToClassify.startTimeSystemMs < System.currentTimeMillis() - 15 * 60 * 1000){
                     // Older than 15 mins ago? Then discard it.
-                    System.out.println("Discarding "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs / 1000)+"s old SF");
+                    Printer.out("Discarding "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs / 1000)+"s old SF");
                     continue;
                 }
                 if (sfToClassify.accMagns.size() < 15 || sfToClassify.gyroMagns.size() < 15){
-                    System.out.println("Post-poning classification of sensing frame with insufficient samples (<15): "+sfToClassify.accMagns.size()+", "+sfToClassify.gyroMagns.size());
+                    Printer.out("Post-poning classification of sensing frame with insufficient samples (<15): "+sfToClassify.accMagns.size()+", "+sfToClassify.gyroMagns.size());
                     sfToClassify.transportString = "Insufficient samples";
                     ++sfToClassify.postPoned;
                     if (sfToClassify.postPoned < 3) // Only consider evaluating it 3 times, since if we are here anyway, then we should have received some samples within 15 seconds..?
                         toCheckAgain.add(sfToClassify);
                     continue;
                 }
-                System.out.println("Classifying SF");
+                Printer.out("Classifying SF");
 
                 averageAccSamples = averageAccSamples * 0.9f + sfToClassify.accMagns.size() * 0.1f;
                 averageGyroSamples = averageGyroSamples * 0.9f + sfToClassify.gyroMagns.size() * 0.1f;
@@ -325,11 +339,12 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 TransportType tt = TransportType.GetForString(classifier.TrainingData().classAttribute().value((int) modified));
                 sfToClassify.transportString = tt.name();
                 callingService.AddTransportOccurrence(new TransportOccurrence(tt, sfToClassify.startTimeSystemMs, sfToClassify.durationMs));
-                System.out.println("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
+                Printer.out("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
                         " (" + classifier.TrainingData().classAttribute().value((int) result) + ")" +
                     " at "+sfToClassify.startTimeSystemMs+" "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs)+"ms ago");
                 finishedSensingFrames.add(sfToClassify); // Add the classified one to the array of sensing frames.
                 callingService.RecalcAverages();
+                ++classified;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -362,9 +377,10 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
         /// Since this method will be called most-often, send the data from here?
         EvaluateRequests();
+        // Also classify any previously saved frames if there are any? Up to 3 for each event that arrives (don't want to lag the main thread too much, you know!)
+        ClassifyInstances(3);
 
         if (sensingFrame == null)
             sensingFrame = new SensingFrame();
@@ -385,7 +401,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             return; // n return.
         }
 
-//        System.out.println("sampleMs: "+sampleMs);
+//        Printer.out("sampleMs: "+sampleMs);
         long frameSensorStartTime = event.sensor.getType() == Sensor.TYPE_ACCELEROMETER? sensingFrame.startTimeAccSensorMs : sensingFrame.startTimeGyroSensorMs;
         long timeSpentMs = sensorSampleMs - frameSensorStartTime;
 
@@ -397,7 +413,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             sensingFrame.startTimeGyroSensorMs = lastGyroTimestamp;
             toSaveIntoArrayForClassification.startTimeSystemMs = System.currentTimeMillis() - 5000;
             lastSavedSF = toSaveIntoArrayForClassification;
-            System.out.println("Frame "+sensingFrames.size()+" finished, "+toSaveIntoArrayForClassification);
+            Printer.out("Frame "+sensingFrames.size()+" finished, "+toSaveIntoArrayForClassification);
             sensingFrames.add(toSaveIntoArrayForClassification);
             callingService.OnSensingFrameFinished();
         //    finishedSensingFrames.add(finishedOne); // Add to list of all those recently finished...?
@@ -416,7 +432,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     private void EvaluateRequests() {
         if (callingService.numLastSensingFramesRequested > 0){
             // Broadcast it?
-       //     System.out.println("Sending last sensing frames as via sendBroadcast, max frames: "+callingService.numLastSensingFramesRequested);
+       //     Printer.out("Sending last sensing frames as via sendBroadcast, max frames: "+callingService.numLastSensingFramesRequested);
             Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
             intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_LAST_SENSING_FRAMES);
             intent.putExtra(TransportDetectionService.NUM_FRAMES, callingService.numLastSensingFramesRequested);
@@ -426,7 +442,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         }
         if (callingService.totalStatSecondsRequested > 0){
             // Broadcast it?
-         //   System.out.println("Sending total stats for given seconds: "+callingService.totalStatSecondsRequested);
+         //   Printer.out("Sending total stats for given seconds: "+callingService.totalStatSecondsRequested);
             Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
             intent.putExtra(TransportDetectionService.REQUEST_TYPE, TransportDetectionService.GET_TOTAL_STATS_FOR_DATA_SECONDS);
             intent.putExtra(TransportDetectionService.DATA_SECONDS, callingService.totalStatSecondsRequested);
@@ -440,7 +456,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         EList<SensingFrame> sensingFrames = GetSensingFrames(maxNum);
         EList<SensingFrame> sfs = new EList<>();
         if (sensingFrames == null){
-            System.out.println("SensingFrames is NULL, TransportDetectionService must have halted.");
+            Printer.out("SensingFrames is NULL, TransportDetectionService must have halted.");
             return sfs;
         }
         for (int i = sensingFrames.size() - 1; i >= 0; --i){
@@ -459,26 +475,26 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 
     static void AddDataToFrame(SensingFrame sf, SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ) { // accSensor
-            //      System.out.println("AccData");
+            //      Printer.out("AccData");
             SensorData newSensorData = new SensorData(); // Copy over data from Android data to own class type.
             newSensorData.timestamp = event.timestamp; // Time-stamp in nanoseconds.
             System.arraycopy(event.values, 0, newSensorData.values, 0, 3);
             MagnitudeData magnData = new MagnitudeData(newSensorData.VectorLength(), newSensorData.timestamp);
             if (sf.accMagns == null){
-                System.out.println("sf accMagns null, sf startTime: "+(System.currentTimeMillis() - sf.startTimeSystemMs)+"ms ago");
+                Printer.out("sf accMagns null, sf startTime: "+(System.currentTimeMillis() - sf.startTimeSystemMs)+"ms ago");
                 return;
             }
             sf.accMagns.add(magnData);
         }
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
-            //  System.out.println("GyroData");
+            //  Printer.out("GyroData");
             SensorData newSensorData = new SensorData(); // Copy over data from Android data to own class type.
             newSensorData.timestamp = event.timestamp; // Time-stamp in nanoseconds.
             System.arraycopy(event.values, 0, newSensorData.values, 0, 3);
             MagnitudeData magnData = new MagnitudeData(newSensorData.VectorLength(), newSensorData.timestamp);
             //          gyroMagnPoints.add(magnData);
             if (sf.gyroMagns == null){
-                System.out.println("sf accMagns null, sf startTime: "+(System.currentTimeMillis() - sf.startTimeSystemMs)+"ms ago");
+                Printer.out("sf accMagns null, sf startTime: "+(System.currentTimeMillis() - sf.startTimeSystemMs)+"ms ago");
                 return;
             }
             sf.gyroMagns.add(magnData);
@@ -496,7 +512,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             }
         }
         if (oldSamplesSaved > 10)
-            System.out.println("Previously saved up to "+oldSamplesSaved+" samples into old SensingFrames");
+            Printer.out("Previously saved up to "+oldSamplesSaved+" samples into old SensingFrames");
         oldSamplesSaved = 0;
         return null;
     }
@@ -510,7 +526,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             }
         }
         if (oldSamplesSaved > 10)
-            System.out.println("Previously saved up to "+oldSamplesSaved+" samples into old SensingFrames");
+            Printer.out("Previously saved up to "+oldSamplesSaved+" samples into old SensingFrames");
         oldSamplesSaved = 0;
         return null;
     }
@@ -527,7 +543,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             case SensorManager.SENSOR_STATUS_UNRELIABLE: s = "Unreliable"; break;
                 default: s = "Dunno";
         }
-        // System.out.println("Accuracy changed: "+accuracy+" s"+s);
+        // Printer.out("Accuracy changed: "+accuracy+" s"+s);
     }
 
     public EList<SensingFrame> GetSensingFrames(int maxNum) {

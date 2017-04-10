@@ -20,7 +20,7 @@ public enum EGPacketType {
     }
     static EGPacketType fromString(String fromString)
     {
-     //   System.out.println("EGPacketType.fromString");
+     //   Printer.out("EGPacketType.fromString");
         for (int i = 0; i < EGPacketType.values().length; ++i)
             if (EGPacketType.values()[i].text.equals(fromString))
                 return EGPacketType.values()[i];

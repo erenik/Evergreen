@@ -2,6 +2,7 @@ package erenik.evergreen;
 
 import erenik.evergreen.common.Player;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 // import erenik.evergreen.android.App;
 // import erenik.evergreen.common.Player;
@@ -42,7 +43,7 @@ public class Simulator
 
     /// Adjusts stats, generates events based on chosen actions to be played, logged. Returns amount of player characters simulated.
     public int RequestNextDay(Player requestingPlayer, boolean isLocalGame) {
-        System.out.println("Simulator.RequestNextDay: Requesting player: "+requestingPlayer);
+        Printer.out("Simulator.RequestNextDay: Requesting player: "+requestingPlayer);
         /// Local game?
         if (isLocalGame){
             // Simulate it?

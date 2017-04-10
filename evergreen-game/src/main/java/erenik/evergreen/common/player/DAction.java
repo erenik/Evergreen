@@ -5,6 +5,7 @@ import java.util.Random;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-10-30.
@@ -100,6 +101,13 @@ public enum DAction {
         for(int i = 0; i < 10; ++i) { // Give N attempts per request.
             // Randomly select one.
             DAction dAction = DAction.values()[randomAction.nextInt(DAction.values().length * 5) % DAction.values().length];
+            // Add an increased chance for certain actions - inventing and crafting, since they require iterated attempts to achieve success?
+            if (randomAction.nextInt(100) > 90){
+                dAction = DAction.Invent;
+            }
+            if (forPlayer.cd.inventionBlueprints.size() > 0 && randomAction.nextInt(100) > 50 + forPlayer.cd.inventory.size()){ // And if we have some inventions, try actually crafting them, until we have filled a decent size of our inventory?
+                dAction = DAction.Craft;
+            }
             Action action = new Action();
             action.SetDailyAction(dAction);
             boolean ok = action.AddRandomArguments(forPlayer); // Retursn true if valid arguments could be added.
@@ -107,7 +115,7 @@ public enum DAction {
                 continue;
             // Check if the action has its requirements fulfilled?
             if (!action.HasValidArguments()) {
-                System.out.println("Action "+dAction.name()+" has BAD arguments.");
+                Printer.out("Action "+dAction.name()+" has BAD arguments.");
                 continue;
             }
             // Generate appropriate arguments based on the given player requesting them?
@@ -117,7 +125,7 @@ public enum DAction {
     }
 
     private boolean HasValidArguments() {
-        System.out.println("Not implemented");
+        Printer.out("Not implemented");
         /*
         for (int i = 0; i < requiredArguments.size(); ++i) {
             ActionArgument aa = requiredArguments.get(i);
@@ -141,7 +149,7 @@ public enum DAction {
     }
 
     private boolean HasPlayerArgument() {
-        System.out.println("Lacking player argument for action "+this.name());
+        Printer.out("Lacking player argument for action "+this.name());
         return false;
     }
 

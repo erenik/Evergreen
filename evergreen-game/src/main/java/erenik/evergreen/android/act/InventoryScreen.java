@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import erenik.evergreen.R;
 import erenik.evergreen.common.Invention.InventionType;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-02-26.
@@ -28,7 +29,7 @@ public class InventoryScreen extends EvergreenActivity {
         // Check reqID?
         int reqCode = getIntent().getIntExtra("ReqCode", 0);
         ReqCode rc = ReqCode.values()[reqCode];
-        System.out.println("Req code: "+reqCode+" rc: "+rc);
+        Printer.out("Req code: "+reqCode+" rc: "+rc);
         switch (rc){
             case DisplayWeapons: typeRelevant = InventionType.Weapon; break;
             case DisplayArmors: typeRelevant = InventionType.Armor; break;
@@ -63,6 +64,13 @@ public class InventoryScreen extends EvergreenActivity {
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UpdateList(); // Update it in-case some equipping actions were going on...
+
     }
 
     void UpdateList(){

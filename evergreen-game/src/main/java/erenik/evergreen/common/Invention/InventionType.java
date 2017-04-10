@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Random;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 
 public enum InventionType
 {
@@ -50,7 +51,7 @@ public enum InventionType
         EList<Invention> inventions = new EList<>();
         Random r = new Random(System.nanoTime());
         float r2 = r.nextFloat() * sumChances;
-        System.out.println("Next int: "+r2);
+        Printer.out("Next int: "+r2);
         for (int j = 0; j < chances.size(); ++j)
         {
             r2 -=  ((Integer)chances.values().toArray()[j]).floatValue();
@@ -60,7 +61,7 @@ public enum InventionType
                 break;
             }
         }
-        System.out.println("Randomed type: "+type.text());
+        Printer.out("Randomed type: "+type.text());
         return type;
     };
 

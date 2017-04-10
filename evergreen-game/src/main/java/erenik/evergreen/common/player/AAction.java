@@ -10,6 +10,7 @@ import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.logging.LogType;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-11-11.
@@ -17,8 +18,8 @@ import erenik.util.EList;
 public enum AAction {
     GiveResources,
     SendMessage,
-    GiveItem, // Oh, yeah!
-    GiveBlueprint,
+    GiveItem, // item, player
+    GiveBlueprint, // item, player?
 //     ReadReceivedMessages,
 //     RequestResources,
 //    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
@@ -84,9 +85,11 @@ public enum AAction {
                 a.requiredArguments.add(ActionArgument.Text);
                 break;
             case GiveItem: a.description = "Give an item to some player";
+                a.requiredArguments.add(ActionArgument.Player);
                 a.requiredArguments.add(ActionArgument.Item);
                 break;
             case GiveBlueprint: a.description = "Give an invention blueprint to some player";
+                a.requiredArguments.add(ActionArgument.Player);
                 a.requiredArguments.add(ActionArgument.Blueprint);
                 break;
         }
@@ -109,7 +112,7 @@ public enum AAction {
                 continue;
             // Check if the action has its requirements fulfilled?
             if (!action.HasValidArguments()) {
-                System.out.println("Action "+action.ActiveAction().name()+" has BAD arguments.");
+                Printer.out("Action "+action.ActiveAction().name()+" has BAD arguments.");
                 continue;
             }
             // Generate appropriate arguments based on the given player requesting them?

@@ -23,6 +23,7 @@ import erenik.evergreen.common.packet.EGPacket;
 import erenik.evergreen.common.packet.EGPacketError;
 import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
+import erenik.util.Printer;
 
 /**
  * Activity that starts the thingy.
@@ -45,7 +46,7 @@ public class TitleScreen extends EvergreenActivity {
                 if (actionId == EditorInfo.IME_ACTION_GO) {
                     // Press?
                     findViewById(R.id.button_tryLoad).callOnClick(); // Call ittt!!
-                    System.out.println("DONEOEENENNEe");
+                    Printer.out("DONEOEENENNEe");
                     return true;
                 }
                 return false;
@@ -98,7 +99,7 @@ public class TitleScreen extends EvergreenActivity {
                 String email = ((EditText)findViewById(R.id.autoCompleteTextView_email)).getText().toString();
                 String pw = ((EditText)findViewById(R.id.editText_password)).getText().toString();
                 String encPw = Auth.Encrypt(pw, Auth.DefaultKey);
-                System.out.println("Sending to server: "+email+" pw: "+encPw);
+                Printer.out("Sending to server: "+email+" pw: "+encPw);
 //                Toast("Trying to send to server...");
                 ShowProgressBar();
                 EGPacket pack = EGRequest.LoadCharacters(email, encPw);
@@ -118,7 +119,7 @@ public class TitleScreen extends EvergreenActivity {
                                 ToastUp("Found no players under that e-mail and password. Try again.");
                                 break;
                             case Players:
-                                System.out.println("Received reply: "+reply.toString());
+                                Printer.out("Received reply: "+reply.toString());
                                 EList<Player> players = reply.parsePlayers();
                                 if (players.size() == 0){
                                     ToastUp("Error parsing Players data");
@@ -143,10 +144,10 @@ public class TitleScreen extends EvergreenActivity {
     }
 
     private void LoadPlayerAndHeadToMainScreenOnSuccess() {
-        System.out.println("LoadPlayerAndHeadToMainScreenOnSuccess..");
+        Printer.out("LoadPlayerAndHeadToMainScreenOnSuccess..");
         if (App.GetPlayer().GameID() == GameID.LocalGame){
             // Head on over to main-screen right away.
-            System.out.println("Player created in local game, heading to main screen right away.");
+            Printer.out("Player created in local game, heading to main screen right away.");
             GoToMainScreen();
             return;
         }
@@ -173,7 +174,7 @@ public class TitleScreen extends EvergreenActivity {
             // Auto-load the first-index one for now?
             Player p = App.GetMostRecentlyEditedPlayer();
             Toast("Auto-loading: "+p.name);
-            System.out.println("Auto-loading player: "+p.name);
+            Printer.out("Auto-loading player: "+p.name);
             App.MakeActivePlayer(p);
             if (p.sendAll == Player.CREDENTIALS_ONLY){
                 LoadPlayerAndHeadToMainScreenOnSuccess();
@@ -190,14 +191,14 @@ public class TitleScreen extends EvergreenActivity {
     }
 
     private void NewGame() {
-        System.out.println("New game, opening intro-screen..");
+        Printer.out("New game, opening intro-screen..");
         Intent i = new Intent(getBaseContext(), IntroScreen.class);
         startActivity(i);
     }
 
     private void TryLoadOrNewGame() {
         if (App.GetPlayers().size() > 0) {
-            System.out.println("Load succeeded. Opening main-screen.");
+            Printer.out("Load succeeded. Opening main-screen.");
             // Actually load into the singleton.
             Player player = App.GetPlayer();
             // Load main-screen.
@@ -205,7 +206,7 @@ public class TitleScreen extends EvergreenActivity {
             startActivity(i);
         }
         else {
-            System.out.println("New game, opening intro-screen..");
+            Printer.out("New game, opening intro-screen..");
             Intent i = new Intent(getBaseContext(), IntroScreen.class);
             startActivity(i);
         }

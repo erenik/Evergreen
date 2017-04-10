@@ -2,8 +2,10 @@ package erenik.evergreen.android.act;
 
 import android.os.Bundle;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -14,6 +16,7 @@ import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionStat;
 import erenik.evergreen.common.Invention.Weapon;
 import erenik.evergreen.common.Player;
+import erenik.util.Printer;
 
 public class ItemDetails extends EvergreenActivity {
 
@@ -32,7 +35,7 @@ public class ItemDetails extends EvergreenActivity {
         });
 
         int itemIndex = getIntent().getIntExtra("ItemIndex", 0);
-        System.out.println("Index: "+itemIndex);
+        Printer.out("Index: "+itemIndex);
         final Player player = App.GetPlayer();
         item = player.cd.inventory.get(itemIndex);
         if (item == null) {
@@ -53,15 +56,33 @@ public class ItemDetails extends EvergreenActivity {
                 break;
         }
         View v = findViewById(R.id.buttonEquip);
+        if (item.Get(InventionStat.Equipped) >= 0)
+            ((Button)v).setText("Unequip");
         v.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (item.Get(InventionStat.Equipped) >= 0){
+                    Printer.out("Unequipped.");
+                    item.Set(InventionStat.Equipped, -1);
+                    Toast("Unequipped "+item.name);
+                    UpdateEquipButtonText();
+                    return;
+                }
                 player.Equip(item);
-                System.out.println("Equipping item.");
+                Printer.out("Equipping item.");
                 Toast("Equipped "+item.name);
-                HideEquipButton();
+                UpdateEquipButtonText();
+//                HideEquipButton();
             }
         });
+    }
+
+    void UpdateEquipButtonText(){
+        Button button = (Button) findViewById(R.id.buttonEquip);
+        if (item.Get(InventionStat.Equipped) >= 0)
+            button.setText("Unequip");
+        else
+            button.setText("Equip");
     }
 
     public void UpdateUI(){
@@ -76,6 +97,7 @@ public class ItemDetails extends EvergreenActivity {
             String customDisplay = "";
             switch (stat){
                 // Skip display of some stats?
+                case Blueprint:
                 case QualityLevel:
                 case MaterialCost:
                 case ProgressRequiredToCraft:
@@ -89,7 +111,7 @@ public class ItemDetails extends EvergreenActivity {
                 case AttackDamageBonus:
                     continue;
                 case DefenseBonus:
-                    System.out.println("Defense: "+statValue);
+                    Printer.out("Defense: "+statValue);
                 // For others, skip their display if their value is default (0)?
                 default:
                     if (statValue <= 0)
@@ -110,12 +132,20 @@ public class ItemDetails extends EvergreenActivity {
             vg.addView(ll);
 
             // Add text
-            tv = new EvergreenTextView(getBaseContext());
+            tv = new TextView(getBaseContext());
             if (customDisplay.length() > 0)
                 tv.setText(customDisplay);
             else
                 tv.setText(stat.name()+": "+statValue);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
+            layoutParams.setMargins(15,0,15,0); // Margins left n right.
+            layoutParams.gravity = Gravity.CENTER;
+            tv.setLayoutParams(layoutParams);
+
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+//            tv.setTextSize(100);
+
             ll.addView(tv);
         }
     }

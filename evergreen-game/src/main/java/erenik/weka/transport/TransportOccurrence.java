@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-03-06.
@@ -73,7 +74,7 @@ public class TransportOccurrence implements Serializable {
         switch (dt){
             case Milliseconds: duration += millis; break;
             default:
-                System.out.println("Bad dt");
+                Printer.out("Bad dt");
                 System.exit(3);
         }
     }

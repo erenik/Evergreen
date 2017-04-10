@@ -16,6 +16,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.logging.Log;
 import erenik.evergreen.common.player.Config;
+import erenik.util.Printer;
 
 import static erenik.evergreen.common.player.Config.LatestLogMessageIDSeen;
 
@@ -42,16 +43,16 @@ public class ResultsScreen extends EvergreenActivity  {
         Player p = App.GetPlayer();
         int logMessagesAdded = 0;
         long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
-        System.out.println("LastID seen: "+lastLogMessageIDSeen+" log size: "+p.log.size());
+        Printer.out("LastID seen: "+lastLogMessageIDSeen+" log size: "+p.log.size());
         for (int i = 0; i < p.log.size(); ++i){
             boolean centered = false;
             int textSize = 18;
             int drawableLeftSide = 0;
             Log l = p.log.get(i);
-            System.out.println("l "+l.LogID()+" t: "+l.TextID().name());
+            Printer.out("l "+l.LogID()+" t: "+l.TextID().name());
             if (l.LogID() <= lastLogMessageIDSeen)
                 continue;
-            System.out.println("l.LogID(): "+l);
+            Printer.out("l.LogID(): "+l);
             l.displayedToEndUser = 1;
             lastID = l.LogID();
             TextView viewToAdd = null;
@@ -113,13 +114,11 @@ public class ResultsScreen extends EvergreenActivity  {
                 case debug:
                 case undefined:
                     // Print a bad thingy? Cause crash?
-                    String s = "Old text version: "+l.text;
-                    if (l.BasicStringVersion() == false)
-                        s = "Not configured new text: "+App.GetLogText(l.TextID(), l.Args());
+                    String s = "Not configured new text: "+App.GetLogText(l.TextID(), l.Args());
                     TextView t = new TextView(getBaseContext());
                     t.setText(s);
                     int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));
-                    // System.out.println("Colorizing: "+Integer.toHexString(hex));
+                    // Printer.out("Colorizing: "+Integer.toHexString(hex));
                     t.setTextColor(hex);
                     alternateLogMessageColor = !alternateLogMessageColor;
                     int colorID = alternateLogMessageColor? R.color.logColor1 : R.color.logColor2;
@@ -165,7 +164,7 @@ public class ResultsScreen extends EvergreenActivity  {
         }
         if (logMessagesAdded == 0) {
             finish(); // Don't show this if empty....
-            System.out.println("I'm sorry, master...");
+            Printer.out("I'm sorry, master...");
         }
         b.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,7 +175,7 @@ public class ResultsScreen extends EvergreenActivity  {
                     p.log.get(i).displayedToEndUser = 1;
                 if (lastID > p.Get(Config.LatestLogMessageIDSeen)) {
                     p.Set(LatestLogMessageIDSeen, lastID);
-                    System.out.println("LastID set to: " + p.Get(Config.LatestLogMessageIDSeen));
+                    Printer.out("LastID set to: " + p.Get(Config.LatestLogMessageIDSeen));
                 }
                 SaveLocally();
                 finish();

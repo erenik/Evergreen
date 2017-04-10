@@ -31,6 +31,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.evergreen.android.ui.EvergreenButton;
+import erenik.util.Printer;
 
 
 public class SelectActivity extends EvergreenActivity {
@@ -38,39 +39,43 @@ public class SelectActivity extends EvergreenActivity {
     static final int SELECT_DAILY_ACTION = 0;
     static final int SELECT_SKILL = 1;
 
-    EList<String> selected = new EList<String>();
-    EList<Skill> selectedSkills = new EList<Skill>();
+//    EList<String> selected = new EList<String>();
+    EList<SkillType> selectedSkills = new EList<SkillType>();
     EList<Action> selectedActions = new EList<Action>();
     int buttonBgId = R.drawable.small_button;
     AAction activeAction = null;
     int type = -1; // Integer used when launching the activity - to know if we are choosing DActions, Skills or AActions.
 
+
+    EList<View> queueButtons = new EList<>(), // To see the details or edit.
+        removeButtons = new EList<>(); // To remove them from the queue.
+
     private final View.OnClickListener addItem = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Button b = (Button) v;
-            clicked(b);
+            itemClicked.onClick(b);
             String text = (String) b.getText();
-            Skill s = Skill.GetFromString(text);
-            if (s != null){
-                selected.add(text);
+            SkillType s = SkillType.GetFromString(text);
+            if (s != null){ // If it's a skill, just add the text? No?
+                selectedSkills.add(s);
                 updateQueue();
                 return;
             }
-            Action a = Action.GetFromString(text);
-            if (a == null) {
-                System.out.println("Action null, couldn't set properly D:");
+            Action action = Action.GetFromString(text);
+            if (action == null) {
+                Printer.out("Action null, couldn't set properly D:");
                 return;
             }
-            if (a.requiredArguments.size() >= 1) {
+            if (action.requiredArguments.size() >= 1) {
                 // Open window to confirm addition of it.
                 SelectDetailsDialogFragment sdf = new SelectDetailsDialogFragment();
-                sdf.a = a;
+                sdf.action = action;
                 FragmentManager fragMan = getSupportFragmentManager();
                 sdf.show(fragMan, "selectDactionDetails");
                 return;
             }
-            selected.add(text);
+            selectedActions.add(action);
             updateQueue(); // Update queue gui.
         }
     };
@@ -86,35 +91,60 @@ public class SelectActivity extends EvergreenActivity {
     });
 */
 
-    private final View.OnClickListener itemClicked = new View.OnClickListener()
-    {
+    private final View.OnClickListener itemClicked = new View.OnClickListener() {
         @Override
-        public void onClick(View v)
-        {
+        public void onClick(View v) {
             Button b = (Button)v;
-            clicked(b);
+            String text = (String) b.getText();
+            SkillType s = SkillType.GetFromString(text);
+            if (s != null){
+                skillClicked(s);
+            }
+            Action a = Action.GetFromString(text);
+            if (a == null){
+                Printer.out("Clicked null-content button.");
+                return;
+            }
+            Printer.out("Clicked: "+a.text);
+            String string = a.toString().split(":")[0]; // First stuff before any eventual arguments.
+            if (a != null) {
+                ActionClicked(a, false);
+            }
         }
     };
 
-    private void clicked(Button b) {
-        String text = (String) b.getText();
-        Skill s = Skill.GetFromString(text);
-        if (s != null){
-            skillClicked(s);
+    private final View.OnClickListener itemClickedInQueue = new View.OnClickListener() {
+        @Override
+        public void onClick(View v){
+            Button b = (Button) v;
+            String text = (String) b.getText();
+            SkillType s = SkillType.GetFromString(text);
+            if (s != null){
+                skillClicked(s);
+                return;
+            }
+            Action a = null;
+            if (queueButtons.contains(b)){
+                Printer.out("Is queue button1!!!1");
+                int index = queueButtons.indexOf(b);
+                a = selectedActions.get(index);
+            }
+            else {
+                Printer.out("is not queue button...");
+            }
+            if (a == null){
+                Printer.out("Clicked null-content button.");
+                return;
+            }
+            Printer.out("Clicked: "+a.text);
+            String string = a.toString().split(":")[0]; // First stuff before any eventual arguments.
+            if (a != null) {
+                ActionClicked(a, true);
+            }
         }
-        Action a = Action.GetFromString(text);
-        if (a == null){
-            System.out.println("Clicked null-content button.");
-            return;
-        }
-        System.out.println("Clicked: "+a.text);
-        String string = a.toString().split(":")[0]; // First stuff before any eventual arguments.
-        if (a != null) {
-            ActionClicked(a);
-        }
-    }
+    };
 
-    private void skillClicked(Skill skill) {
+    private void skillClicked(SkillType skill) {
         TextView tvName = (TextView) findViewById(R.id.textViewItemName);
         tvName.setText(skill.text); // Show arguments here as well.
         TextView desc = (TextView) findViewById(R.id.textViewDescription);
@@ -122,14 +152,19 @@ public class SelectActivity extends EvergreenActivity {
     }
 
     // For displaying default title?
-    public void ActionClicked(Action action){
-        ActionClicked(action, action.text);
-    }
-    public void ActionClicked(Action a, String header){
+    public void ActionClicked(Action action, boolean inQueue){
         TextView tvName = (TextView) findViewById(R.id.textViewItemName);
-        tvName.setText(header); // Show arguments here as well.
+        tvName.setText(action.text); // Show arguments here as well.
         TextView desc = (TextView) findViewById(R.id.textViewDescription);
-        desc.setText(a.description);
+
+        String argsStr = "\n";
+        if (inQueue && action.requiredArguments != null)
+            for (int i = 0; i < action.requiredArguments.size(); ++i){
+                ActionArgument actionArg = action.requiredArguments.get(i);
+                if (actionArg.value.length() > 0)
+                    argsStr += "\n" + actionArg.name()+": "+actionArg.value;
+            }
+        desc.setText(action.description + argsStr);
     }
 
     private final View.OnClickListener clear = new View.OnClickListener()
@@ -137,38 +172,39 @@ public class SelectActivity extends EvergreenActivity {
         @Override
         public void onClick(View v)
         {
-            selected.clear();
+            selectedActions.clear();
+            selectedSkills.clear();
             updateQueue();
         }
     };
-    private final View.OnClickListener removeParentFromQueue = new View.OnClickListener()
-    {
+    private final View.OnClickListener removeParentFromQueue = new View.OnClickListener() {
         @Override
-        public void onClick(View v)
-        {
+        public void onClick(View v) {
             v = (View) v.getParent(); // First get the main button.
             ViewGroup parent = (ViewGroup) v.getParent();
-            // Get index.
-            int index = parent.indexOfChild(v);
-            selected.remove(index);
+            int index = parent.indexOfChild(v);             // Get index. or check the lists of views?
+            if (selectedSkills.size() > 0)
+                selectedSkills.remove(index);
+            else if (selectedActions.size() > 0)
+                selectedActions.remove(index);
             parent.removeView(v);
             updateQueue(); // Update queue gui.
         }
     };
     // Updates queue gui.
-    public void updateQueue()
-    {
+    public void updateQueue() {
+        queueButtons.clear();
+        removeButtons.clear();
         // Yeah.
         ViewGroup vg = (ViewGroup) findViewById(R.id.layoutQueue);
         vg.removeAllViews();
-        for (int i = 0; i < selected.size() && i < 8; ++i) // Max 8?
-        {
+        EList<Object> selected = (EList<Object>) (selectedActions.size()  > 0? selectedActions : selectedSkills);
+        for (int i = 0; i < selected.size() && i < 8; ++i){ // Max 8?
             /// First add a LinearLayout (horizontal)
             LinearLayout ll = new LinearLayout(getBaseContext());
             // Give it an ID?
             int id  = 0;
-            switch(i)
-            {
+            switch(i) {
                 case 0: id = R.id.queueLayout0; break;
                 case 1: id = R.id.queueLayout1; break;
                 case 2: id = R.id.queueLayout2; break;
@@ -187,15 +223,24 @@ public class SelectActivity extends EvergreenActivity {
 
             // Make a button out of it.
             EvergreenButton b = new EvergreenButton(getBaseContext());
-            b.setText(selected.get(i));
+            // Now for the text..
+            if (selected.get(i) instanceof Action){
+                Action a = (Action) selected.get(i);
+                b.setText(a.text);
+            }
+            else {
+                SkillType s = (SkillType) selected.get(i);
+                b.setText(s.text);
+            }
             // Screen div 10 height per element?
             layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 2.f);
             layoutParams.setMargins(5,0,5,0); // Margins left n right.
             layoutParams.gravity = Gravity.CENTER;
             b.setLayoutParams(layoutParams);
-            b.setOnClickListener(itemClicked);
+            b.setOnClickListener(itemClickedInQueue);
             b.setBackgroundColor(0x00);
             b.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.mainTextColor));
+            queueButtons.add(b);
             ll.addView(b);
 
             // Add a button in the button to remove it.
@@ -206,6 +251,7 @@ public class SelectActivity extends EvergreenActivity {
             removeButton.setScaleType(ImageView.ScaleType.FIT_CENTER); // Scale to fit?
             removeButton.setOnClickListener(removeParentFromQueue);
             removeButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 4.0f)); // Weight at the end?
+            removeButtons.add(removeButton);
             ll.addView(removeButton);
         }
     }
@@ -217,21 +263,15 @@ public class SelectActivity extends EvergreenActivity {
             Player player = App.GetPlayer();
             // Check stuff in list at present. Catenate. Return result? Save into player?
             if (type == SELECT_DAILY_ACTION) {
-                player.cd.dailyActions.clear();
-                for (int i = 0; i < selected.size(); ++i)
-                    player.cd.dailyActions.add(Action.ParseFrom(selected.get(i)));                    // Just save it as Strings?
+                player.cd.dailyActions = selectedActions;
             }
             else if (type == SELECT_SKILL) {
                 player.cd.skillTrainingQueue.clear();
-                for (int i = 0; i < selected.size(); ++i)
-                    player.cd.skillTrainingQueue.add(selected.get(i));
+                for (int i = 0; i < selectedSkills.size(); ++i)
+                    player.cd.skillTrainingQueue.add(selectedSkills.get(i).text);
             }
             else if (type == SELECT_ACTIVE_ACTION){
-                player.cd.queuedActiveActions.clear();
-                for (int i = 0; i < selected.size(); ++i) {
-                    player.cd.queuedActiveActions.add(Action.ParseFrom(selected.get(i)));                    // Just save it as Strings?
-                    System.out.println("Queued action: "+player.cd.queuedActiveActions.get(i));
-                }
+                player.cd.queuedActiveActions = selectedActions;
             }
             App.SaveLocally(); // Save the updates first.
             // It will probably auto-save when returning to the main-screen. Do not do this here....
@@ -244,14 +284,13 @@ public class SelectActivity extends EvergreenActivity {
         public void onClick(View v)
         {
             // Return it?
-            System.out.println("Canceling");
+            Printer.out("Canceling");
             setResult(-1);
             finish();
         }
     };
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select);
@@ -276,7 +315,7 @@ public class SelectActivity extends EvergreenActivity {
             case SELECT_SKILL:
                 header = "Select skill to train";
                 itemsHeaderName = "Trainable Skills";
-                itemNames = Skill.Names();
+                itemNames = SkillType.Names();
                 break;
         }
         TextView tv = (TextView) findViewById(R.id.textViewPossibleItems);
@@ -301,16 +340,15 @@ public class SelectActivity extends EvergreenActivity {
         // Load from player.
         Player p = App.GetPlayer();
         if (type == SELECT_DAILY_ACTION) {
-            for (int i = 0; i < p.cd.dailyActions.size(); ++i)
-                selected.add(p.cd.dailyActions.get(i).toString());
+            selectedActions = p.cd.dailyActions;
         }
         else if (type == SELECT_SKILL) {
+            selectedSkills.clear();
             for (int i = 0; i < p.cd.skillTrainingQueue.size(); ++i)
-                selected.add(p.cd.skillTrainingQueue.get(i));
+                selectedSkills.add(SkillType.GetFromString(p.cd.skillTrainingQueue.get(i)));
         }
         if (type == SELECT_ACTIVE_ACTION) {
-            for (int i = 0; i < p.cd.queuedActiveActions.size(); ++i)
-                selected.add(p.cd.queuedActiveActions.get(i).toString());
+            selectedActions = p.cd.queuedActiveActions;
         }
         // Update the queue
         updateQueue();

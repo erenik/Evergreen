@@ -46,6 +46,7 @@ import erenik.evergreen.common.packet.EGPacketReceiverListener;
 import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.Config;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -83,10 +84,10 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TextView b = (TextView) view;
-                System.out.println("Bonus selected: "+b.getText());
+                Printer.out("Bonus selected: "+b.getText());
                 for (int i = 0; i < Player.StartingBonus.values().length; ++i){
                     String text  = (String) b.getText();
-                    System.out.println(Player.StartingBonus.values()[i].text);
+                    Printer.out(Player.StartingBonus.values()[i].text);
                     if (text.equals(Player.StartingBonus.values()[i].text)){
                         bonusID = i;
                     }
@@ -94,7 +95,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
                 if (bonusID == -1) {
                     bonusID = spinnerStartingBonus.getSelectedItemPosition();
                 }
-                System.out.println("Using index.. "+bonusID+" "+position);
+                Printer.out("Using index.. "+bonusID+" "+position);
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
@@ -181,7 +182,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TextView b = (TextView) view;
-                System.out.println("Difficulty selected: "+b.getText());
+                Printer.out("Difficulty selected: "+b.getText());
                 difficulty = (String) b.getText();
             }
             @Override
@@ -205,7 +206,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         if (requestCode == SELECT_AVATAR) {
             if (resultCode > 0) {
                 avatarID = resultCode;
-                System.out.println("Avatar set to: "+avatarID);
+                Printer.out("Avatar set to: "+avatarID);
                 // Update the profile pic?
                 ImageButton ib = (ImageButton) findViewById(R.id.buttonSelectAvatar);
                 ib.setImageResource(App.GetDrawableForAvatarID(avatarID));
@@ -267,12 +268,12 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         player.gameID = App.gameID; // Set the game ID.
         player.SetName(et.getText().toString());
         player.Set(Config.Avatar, avatarID);
-        System.out.println("Registering with avatar: "+player.Get(Config.Avatar));
+        Printer.out("Registering with avatar: "+player.Get(Config.Avatar));
         String[] difficulties = getResources().getStringArray(R.array.difficulty);
         for (int i = 0; i < difficulties.length; ++i) {
             if (difficulty.equals(difficulties[i])) {
                 player.Set(Config.Difficulty, i);
-                System.out.println("Difficulty set to: "+i);
+                Printer.out("Difficulty set to: "+i);
             }
         }
         player.Set(Config.StartingBonus, bonusID);
@@ -353,8 +354,8 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
                             e.printStackTrace();
                             return;
                         }
-                        System.out.println("Cool..?");
-                        System.out.println("Player: "+player.name);
+                        Printer.out("Cool..?");
+                        Printer.out("Player: "+player.name);
                         App.MakeActivePlayer(player);
                         GoToMainScreen();
                         finish();
@@ -384,7 +385,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() >= 4;
     }
 
     /**

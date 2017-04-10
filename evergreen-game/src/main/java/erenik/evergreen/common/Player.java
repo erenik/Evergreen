@@ -28,6 +28,7 @@ import erenik.evergreen.common.player.*;
 import erenik.util.Byter;
 import erenik.util.Dice;
 import erenik.util.EList;
+import erenik.util.Printer;
 import erenik.weka.transport.TransportOccurrence;
 import erenik.weka.transport.TransportType;
 
@@ -41,8 +42,13 @@ import java.io.ObjectStreamException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static erenik.evergreen.common.Invention.InventionStat.CraftingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.Equipped;
 import static erenik.evergreen.common.Invention.InventionStat.InventingBonus;
 import static erenik.evergreen.common.Invention.InventionStat.ParryBonus;
+import static erenik.evergreen.common.Invention.InventionStat.QualityLevel;
+import static erenik.evergreen.common.Invention.InventionStat.ScoutingBonus;
+import static erenik.evergreen.common.Invention.InventionStat.StealthBonus;
 
 /**
  * Created by Emil on 2016-10-25.
@@ -145,9 +151,9 @@ public class Player extends Combatable implements Serializable {
     EList<Event> events = new EList<Event>();
     /// Log of messages for this specific player.
     public EList<Log> log = new EList<Log>();
-    /// To increase bonuses/chance of invention if failing a lot in series.
-    int successiveInventingAttempts = 0;
-    int successiveCraftingAttempts = 0;
+    /// To increase bonuses/chance of invention if failing a lot in series - save this across sessions?
+    private int successiveInventingAttempts = 0;
+    private int successiveCraftingAttempts = 0;
     /// Total crafting progress into current crafting invention.
     int craftingProgress = 0;
     Invention inventionCurrentlyBeingCrafted = null; // For inventions requiring multiple turns to craft.
@@ -161,6 +167,11 @@ public class Player extends Combatable implements Serializable {
     public int gameID = -1;
 
     public EList<String> knownStrongholds = new EList<>();
+
+
+    public int TotalEmissions(){
+        return (int) (Get(Stat.AccumulatedEmissions) + Get(Stat.InheritedEmissions));
+    }
 
     // Auto-created. Start-using whenever.
     public EList<LogType> logTypesToFilter = DefaultLogTypesToFilter();
@@ -202,7 +213,7 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void writeTo(java.io.ObjectOutputStream out) throws IOException {
-       // System.out.println("Player writeObject");
+       // Printer.out("Player writeObject");
         int version = VERSION_4_CREDENTIALS_ONLY; // 0 - Added active actions. 1- email
         out.writeInt(version);
         out.writeInt(gameID);
@@ -217,7 +228,7 @@ public class Player extends Combatable implements Serializable {
 
         out.writeObject(sysmsg);
         out.writeObject(name);
-//        System.out.println("name: "+name);
+//        Printer.out("name: "+name);
         out.writeObject(email);
         out.writeObject(password);
 
@@ -240,7 +251,7 @@ public class Player extends Combatable implements Serializable {
     }
 
     public boolean readFrom(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-//        System.out.println("Player start");
+//        Printer.out("Player start");
         try {
             int version = in.readInt();
             Init();
@@ -254,18 +265,18 @@ public class Player extends Combatable implements Serializable {
                 email = (String) in.readObject();
                 password = (String) in.readObject();
                 if (gameID == GameID.LocalGame) {
-                    System.out.println("Player read - Credentials only - in local game....?");
+                    Printer.out("Player read - Credentials only - in local game....?");
                     new Exception("Player read with only credentials in local game").printStackTrace();
                     return false;
                 }
                 return true;
             }
-          //  System.out.println("Player read - All");
+          //  Printer.out("Player read - All");
 
             if (version >= VERSION_2_SYSMSG)
                 sysmsg = (String) in.readObject();
             name = (String) in.readObject();
-            //        System.out.println("name: "+name);
+            //        Printer.out("name: "+name);
             email = (String) in.readObject();
             password = (String) in.readObject();
 
@@ -277,15 +288,15 @@ public class Player extends Combatable implements Serializable {
                     transports.add(t);
             }
 
-//            System.out.println("Player read - before log");
+//            Printer.out("Player read - before log");
 
             if (!cd.readFrom(in)){
-                System.out.println("Failed to read client-data.");
+                Printer.out("Failed to read client-data.");
                 return false;
             }
             readLogs(in);
 
-//            System.out.println("Player read - after log");
+//            Printer.out("Player read - after log");
             inventionCurrentlyBeingCrafted = (Invention) in.readObject();
 
             knownStrongholds = (EList<String>) in.readObject();
@@ -299,11 +310,11 @@ public class Player extends Combatable implements Serializable {
             if (logTypesToFilter == null || logTypesToFilter.size() == 0)
                 logTypesToFilter = DefaultLogTypesToFilter();
         }catch (ClassCastException e){
-            System.out.println("Tis bad.");
+            Printer.out("Tis bad.");
             e.printStackTrace();
             return false;
         }
-//        System.out.println("Init from readOBject!");
+//        Printer.out("Init from readOBject!");
         return true;
     }
 
@@ -321,7 +332,7 @@ public class Player extends Combatable implements Serializable {
                     if (l.displayedToEndUser == 1)
                         clientSeen.add(l);
                 }
-                System.out.println("Client seen messages only: "+clientSeen.size()+" / "+log.size());
+                Printer.out("Client seen messages only: "+clientSeen.size()+" / "+log.size());
                 out.writeObject(clientSeen);
                 break;
             case SEND_SERVER_NEW_MESSAGES:
@@ -329,11 +340,11 @@ public class Player extends Combatable implements Serializable {
                 int startIndex = log.size() > 100? log.size() - 100 : 0; // Send at most 100 messages?
                 for (int i = startIndex; i < log.size(); ++i){
                     Log l = log.get(i);
-//                    System.out.println(i+" Displayed to end user: "+l.displayedToEndUser);
+//                    Printer.out(i+" Displayed to end user: "+l.displayedToEndUser);
                     if (l.displayedToEndUser == 0)
                         serverConfirmed.add(l);
                 }
-                System.out.println("Server new messages only: "+serverConfirmed.size()+" / "+log.size());
+                Printer.out("Server new messages only: "+serverConfirmed.size()+" / "+log.size());
                 out.writeObject(serverConfirmed);
                 break;
             case SEND_MESSAGES_SINCE_LAST_NEW_DAY:
@@ -343,14 +354,14 @@ public class Player extends Combatable implements Serializable {
                     Log l = log.get(i);
                     sinceLastDay.add(l);
                 }
-                System.out.println("Since last-day messages only: "+sinceLastDay.size()+" / "+log.size());
+                Printer.out("Since last-day messages only: "+sinceLastDay.size()+" / "+log.size());
                 out.writeObject(sinceLastDay);
                 break;
             case SEND_ALL:
                 out.writeObject(log);
                 break;
             default:
-                System.out.println("SHOULDN'T BE HERE, Player write object.");
+                Printer.out("SHOULDN'T BE HERE, Player write object.");
                 System.exit(14);
         }
     }
@@ -363,7 +374,7 @@ public class Player extends Combatable implements Serializable {
                 break;
             default:
                 //        if (logMessagesRead != SEND_ALL) // If not all (not saving locally), display what it is that we got.
-                //          System.out.println("log messages read/received: "+logMessagesRead);
+                //          Printer.out("log messages read/received: "+logMessagesRead);
                 log = (EList<Log>) in.readObject();
         }
     }
@@ -384,7 +395,7 @@ public class Player extends Combatable implements Serializable {
 
     public int MaxHP() {
         int maxHP = GetInt(Stat.MAX_HP);
-        for (int i = 0; i < Get(Skill.Survival).Level(); ++i)
+        for (int i = 0; i < Get(SkillType.Survival).Level(); ++i)
             maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
         return  maxHP;
     }
@@ -395,7 +406,7 @@ public class Player extends Combatable implements Serializable {
         return GetInt(Stat.SPEED);
     }
     public int UnarmedCombatBonus() {
-        return GetEquippedWeapon() == null? Get(Skill.UnarmedCombat).Level() : 0;
+        return GetEquippedWeapon() == null? Get(SkillType.UnarmedCombat).Level() : 0;
     }
     public EList<Invention> GetEquippedInventions() {
         EList<Invention> equipped = new EList<>();
@@ -416,10 +427,10 @@ public class Player extends Combatable implements Serializable {
         return tot;
     }
     public int BaseAttack() {
-        int att = GetInt(Stat.BASE_ATTACK) + GetInt(Stat.ATTACK_BONUS);
+        int att = GetInt(Stat.BASE_ATTACK);
         att += UnarmedCombatBonus(); // Max +9 Attack
         att += GetEquipped(InventionStat.AttackBonus);
-        att += GetEquippedWeapon() != null ?  (Get(Skill.WeaponizedCombat).Level() + 1) / 2 : 0;
+        att += GetEquippedWeapon() != null ?  (Get(SkillType.WeaponizedCombat).Level() + 1) / 2 : 0;
         return att;
     }
     public int OnTransportAttack() {
@@ -429,25 +440,31 @@ public class Player extends Combatable implements Serializable {
     public float Get(TransportStat stat) {
         long totalSeconds = GetWeightedTransportSeconds();
         if (totalSeconds == 0){
-            System.out.println("Total seconds 0! returning");
-            return 0;
+            Printer.out("Total seconds 0! Generating random transport data and using it instead.");
+            // Use default values? Randmize?
+            RandomizeGenerateTransportUsageData();
+            return Get(stat);
+//            return 0;
             // Randomize it?
-           // RandomizeTransportDurations();
            // totalSeconds = GetWeightedTransportSeconds();
             // totalSeconds =
         }
-        System.out.println("totalSeconds: "+totalSeconds);
+        Printer.out("totalSeconds: "+totalSeconds);
         float totalWeighted = 0;
         System.out.print("Ratios: ");
         for (int i = 0; i < transports.size(); ++i){
             Transport t = transports.get(i);
             float ratio = t.secondsUsed / (float)totalSeconds * t.Get(TransportStat.Weight);
-            System.out.print(ratio+", ");
+            System.out.print(String.format("%.2f", ratio)+", ");
             totalWeighted += ratio * t.Get(stat);
         }
-        System.out.println();
-        System.out.println("Total weighted "+stat.name()+": "+totalWeighted);
+        Printer.out();
+        Printer.out("Total weighted "+stat.name()+": "+totalWeighted);
         return totalWeighted;
+    }
+
+    private void GenerateEventsBasedOnTransportsUsed() {
+
     }
 
     private long GetWeightedTransportSeconds() {
@@ -478,10 +495,10 @@ public class Player extends Combatable implements Serializable {
         return (int) (BaseDefense() + Get(TransportStat.SocialSupport));
     }
     public int BaseDefense() {
-        int def = GetInt(Stat.BASE_DEFENSE) + GetInt(Stat.DEFENSE_BONUS);
+        int def = GetInt(Stat.BASE_DEFENSE);
         def += (UnarmedCombatBonus()-1) / 3;
         def += GetEquipped(InventionStat.DefenseBonus);
-        def += Get(Skill.DefensiveTraining).Level();
+        def += Get(SkillType.DefensiveTraining).Level();
         return def;
     }
     public Dice Damage()
@@ -494,8 +511,8 @@ public class Player extends Combatable implements Serializable {
             damage.diceType = weapon.Get(InventionStat.AttackDamageDiceType);
             damage.dice = weapon.Get(InventionStat.AttackDamageDice);
             damage.bonus = weapon.Get(InventionStat.AttackDamageBonus);
-            damage.bonus += Get(Skill.WeaponizedCombat).Level() / 2;
-            System.out.println("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
+            damage.bonus += Get(SkillType.WeaponizedCombat).Level() / 2;
+            Printer.out("Damage: "+damage.dice+"D"+damage.diceType+"+"+damage.bonus);
         }
         return damage;
     }
@@ -506,18 +523,21 @@ public class Player extends Combatable implements Serializable {
             cd.statArr[i] = Stat.values()[i].defaultValue;
         for (int i = 0; i < cd.skills.size(); ++i) // Reset EXP in each skill?
             cd.skills.get(i).setTotalEXP(0);
-        if (cd.inventions != null)
-            cd.inventions.clear();
+        if (cd.inventionBlueprints != null)
+            cd.inventionBlueprints.clear();
         transports = Transport.DefaultTransports();
         // Clear both queues.
         cd.dailyActions.clear();
         cd.skillTrainingQueue.clear();
     }
 
+    public void Adjust(Statistic statistic, long amount) {
+        cd.statistics[(statistic.ordinal())] += amount;
+    }
     public void Adjust(Stat s, float amount) {
         cd.statArr[s.ordinal()] += amount;
         if (s == Stat.HP && cd.statArr[s.ordinal()] <= 0) {
-            System.out.println("Died, informing listeners");
+            Printer.out("Died, informing listeners");
             for (int i = 0; i < listeners.size(); ++i)
                 listeners.get(i).OnPlayerDied(this);
         }
@@ -527,8 +547,9 @@ public class Player extends Combatable implements Serializable {
     {
         return cd.statArr[stat];
     }
-    public float Get(Stat s)
-    {
+    public float Get(Stat s) {
+        if (s == Stat.AccumulatedEmissions && cd.statArr[s.ordinal()] < 0) // IF negative emissions, correct it here.
+            cd.statArr[s.ordinal()] = 0;
         return cd.statArr[s.ordinal()];
     }
     public int GetInt(Stat s)
@@ -594,7 +615,7 @@ public class Player extends Combatable implements Serializable {
         encountersToProcess.clear();
         Adjust(Stat.TurnPlayed, 1);
         Adjust(Stat.TurnSurvived, 1);
-        System.out.println("Turn: " + Get(Stat.TurnPlayed));
+        Printer.out("Turn: " + Get(Stat.TurnPlayed));
     }
     static Random emissionsRand = new Random(System.currentTimeMillis());
     /// Adjusts stats, generates events based on chosen actions to be played, logged
@@ -608,22 +629,26 @@ public class Player extends Combatable implements Serializable {
         NewDay();  // New day :3
         LogInfo(LogTextID.newDayPlayerTurnPlayed, ""+(int) Get(Stat.TurnPlayed));
         Transport t = Transport.RandomOf(transports);
-       // System.out.println("Randomed transport.. "+t.name());
+       // Printer.out("Randomed transport.. "+t.name());
         Set(Stat.CurrentTransport, t.tt.ordinal());
 
-        // Calculate the general transport bonus granted from the previous day?
-
-
-        // Or just give bonuses and random events based on the distances traveled etc?
-
+     //   CalcAggregateTransportBonuses();         // Calculate the general transport bonus granted from the previous day?
+        GenerateEventsBasedOnTransportsUsed();         // Or just give bonuses and random events based on the distances traveled etc?
 
         // Bonuses for greening habits?
         LogInfo(LogTextID.transportOfTheDay, GetCurrentTransport().tt.name());
         float emissionsToGenerate = Get(TransportStat.EmissionsPerDay);
         emissionsToGenerate *= emissionsRand.nextFloat() * 0.5f + 0.75f;// Add some randomness to emissions-generation? +/-25%
-        //if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling?
-        // Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
-        Adjust(Stat.EMISSIONS, emissionsToGenerate);
+        int iEm = Math.round(emissionsToGenerate);         //if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling?
+        if (iEm > 0)
+            GenerateEmissions(iEm);         // Log("Generated "+Stringify(emissionsToGenerate)+" units of emissions.", LogType.INFO);
+        else {
+            Adjust(Statistic.TotalEmissionsReduced, -iEm);
+            Adjust(Stat.AccumulatedEmissions, iEm);
+        }
+        if (Get(Stat.InheritedEmissions) > 0)         // Decrement inherited emissions if any.
+            Adjust(Stat.InheritedEmissions, -1);
+
         // Yeah.
         Adjust(Stat.FOOD, -2);
         if (GetInt(Stat.FOOD) >= 0) {
@@ -640,10 +665,10 @@ public class Player extends Combatable implements Serializable {
             }
         }
         /// Gain EXP? Spend unspent EXP?
-        int expToGain = (int) (2 + Get(Skill.Studious).Level() + Get(Stat.UNALLOCATED_EXP));
+        int expToGain = (int) (2 + Get(SkillType.Studious).Level() + Get(Stat.UNALLOCATED_EXP));
         // Erase unallocated exp. It will be re-added later perhaps.
         Set(Stat.UNALLOCATED_EXP, 0);
- //       System.out.println("Exp gained: "+expToGain);
+ //       Printer.out("Exp gained: "+expToGain);
         GainEXP(expToGain);
 
         EvaluateDailyActions(game); // Daily actions if any
@@ -663,29 +688,47 @@ public class Player extends Combatable implements Serializable {
             enc.Simulate();
         }
         if (IsAlive() == false)
-            KnockOut();
+            ReviveIfKnockedOut();
         for (int i = 0; i < listeners.size(); ++i) // Inform listeners, new day is over.
             listeners.get(i).OnPlayerNewDay(this);
 
         // Clear queue of daily actions to ensure people actually think what they will do? No?
         cd.dailyActions.clear();
     }
-
-    private void KnockOut() {
-        System.out.println("Knocking out...!");
+    // ow, ow! wat....
+    private void ReviveIfKnockedOut() {
+        Printer.out("Player.ReviveIfKnockedOut");
         Adjust(Stat.Lives, -1);
         if (Get(Stat.Lives) <= 0){ // Fully dead?
             return;
         }
-        Set(Stat.HP, Get(Stat.MAX_HP) / 2); // Reset HP to 25% of max.
-        Adjust(Stat.FOOD, Get(Stat.FOOD) * -0.75f); // Reduce food.
-        Adjust(Stat.MATERIALS, Get(Stat.MATERIALS) * -0.75f); // Reduce food.
+//        Adjust(Statistic.TimesKnockedOut, 1); // Already updated elsewhere.
+        Set(Stat.HP, Get(Stat.MAX_HP) * (0.5f + 0.05f * Get(SkillType.Survival).Level())); // Reset HP to 25% of max. + 5% per level in Survival?
+        float lossPerKO = Difficulty.LossRatio((int) Get(Config.Difficulty));
+        float newRate = 1 - lossPerKO;
+        Set(Stat.FOOD, Get(Stat.FOOD) * newRate); // Reduce food and materials
+        Set(Stat.MATERIALS, Get(Stat.MATERIALS) * newRate);  // Reduce food and materials
+        for (int i = 0; i < cd.skills.size(); ++i){
+            Skill s = cd.skills.get(i);
+            int oldLevel = s.Level();
+            s.setTotalEXP((int) (s.TotalExp() * newRate)); // Reduce exp in all skills. They can level-down.
+            int newLevel = s.Level();
+            if (newLevel < oldLevel){
+                LogInfo(LogTextID.skillLeveledDown, s.name(), ""+s.Level());
+                Adjust(Statistic.SkillLevelDowns, 1);
+            }
+        }
+        /// Lose inventions? No.
+///        for (int i = 0; i < cd.inventions.size(); ++i){
+   //     }
+        /// Lose items? ... Too many variables.
+        // if (Stat.SHELTER_DEFENSE > )
+  //          Set(Stat.SHELTER_DEFENSE, Get(Stat.SHELTER_DEFENSE) - 1);
         // Reduce other stuff?
         LogInfo(LogTextID.secondLife);
     }
 
-    public void ClampHP()
-    {
+    public void ClampHP() {
         float hp = Get(Stat.HP);
         if (hp > MaxHP())
             hp = MaxHP();
@@ -694,8 +737,7 @@ public class Player extends Combatable implements Serializable {
         Set(Stat.HP, hp);
     }
 
-    String Stringify(float value)
-    {
+    String Stringify(float value) {
         // Stringifies target value, based on some assumptions.
         int iValue = Math.round(value);
         float remainder = value - iValue;
@@ -726,7 +768,7 @@ public class Player extends Combatable implements Serializable {
         else if (cd.dailyActions.size() > 4)
             Log(LogTextID.tooManyDailyActionsLossOfTime, LogType.PROBLEM_NOTIFICATION);
         hoursPerAction = hoursSimulated / div;
-//        System.out.println("hoursPerAction: "+hoursPerAction);
+//        Printer.out("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
         // Execute at most 8 actions per day, regardless of queue.
         for (int i = 0; i < cd.dailyActions.size() && i < MAX_ACTIONS; ++i) {
@@ -742,86 +784,130 @@ public class Player extends Combatable implements Serializable {
         return formattedFloat;
     }
 
-    void EvaluateAction(Action a, Game game) {
+    void EvaluateAction(Action action, Game game) {
         float units = 1;
-        String playerName = a.GetPlayerName();
+        String playerName = action.GetPlayerName();
         Player player = null;
-        if (playerName != null)
+        if (playerName != null) {
             player = game.GetPlayer(playerName);
+            // If the action has a player as its target somehow, and that player is dead, then cancel the action and notify this player.
+            if (player != null && !player.IsAlive()){
+                LogInfo(LogTextID.playerNotAliveAnymore, playerName);
+                return;
+            }
+            if (player == null){
+                Printer.out("Player ("+playerName+") null for action "+action.text);
+                return;
+            }
+        }
         /// THEN ACTIVE ACTIONS
-        if (a.ActiveAction() != null) {
-//            System.out.println("EvaluationAction - Active action. "+a);
-            switch (a.ActiveAction()) {
+        if (action.ActiveAction() != null) {
+//            Printer.out("EvaluationAction - Active action. "+a);
+            switch (action.ActiveAction()) {
                 default:
-                    System.out.println("Unsure how to evaluate action: "+a);
+                    Printer.out("Unsure how to evaluate action: "+action);
+                    new Exception().printStackTrace();
+                    System.exit(154);
                     break;
                 case GiveItem:
-                    String itemName = a.Get(ActionArgument.Item).trim();
+                    Printer.out("GiveItem");
+                    String itemName = action.Get(ActionArgument.Item).trim();
                     Invention item = GetItemByName(itemName);
-                    if (player == null)
+                    if (player == null) {
+                        Printer.out("Player null, name: "+playerName);
                         return;
+                    }
                     if (item == null) {
-                        System.out.println("Couldn't find item by name: " + itemName);
+                        Printer.out("Couldn't find item by name: " + itemName);
                         return;
                     }
                     cd.inventory.remove(item); // Do the transfer
                     player.cd.inventory.add(item);
+                    item.Set(Equipped, -1); // Unequip it.
                     LogInfo(LogTextID.gaveItemToPlayer, itemName, playerName); // Log it.
-                    player.LogInfo(LogTextID.receivedItemFromPlayer, itemName, playerName);
+                    Adjust(Statistic.ItemsGiven, 1);
+                    player.LogInfo(LogTextID.receivedItemFromPlayer, itemName, name);
+                    Printer.out("GiveItem - gave item to player");
+                    break;
+                case GiveBlueprint:
+                    String blueprint = action.Get(ActionArgument.Blueprint).trim();
+                    Invention bp = GetBlueprintByName(blueprint);
+                    Printer.out("GiveBlueprint");
+                    if (player == null) {
+                        Printer.out("Player null, name: " + playerName);
+                        return;
+                    }
+                    if (bp == null){
+                        Printer.out("Couldn't find blueprint by name: "+blueprint);
+                        return;
+                    }
+                    cd.inventionBlueprints.remove(bp);
+                    player.cd.inventionBlueprints.add(bp);
+                    LogInfo(LogTextID.gaveBlueprintToPlayer, blueprint, playerName);
+                    Adjust(Statistic.BlueprintsGiven, 1);
+                    player.LogInfo(LogTextID.receivedBlueprintFromPlayer, blueprint, name);
+                    Printer.out("GiveBlueprint - gave blueprint to player");
                     break;
                 case GiveResources:
+                    Printer.out("GiveResources");
                     if (player == null) {
-                        System.out.println("NULL player");
+                        Printer.out("Player null");
                         return;
                     }
                     Stat s = null;
-                    String type = a.Get(ActionArgument.ResourceType).trim();
+                    String type = action.Get(ActionArgument.ResourceType).trim();
                     if (type.equals("Food"))
                         s = Stat.FOOD;
                     else if (type.equals("Materials"))
                         s = Stat.MATERIALS;
                     else {
-                        System.out.println("Bad resource type");
+                        Printer.out("Bad resource type");
                         Log(LogTextID.debug, LogType.INFO, "Bad resource type");
                         return;
                     }
-                    String quantity = a.Get(ActionArgument.ResourceQuantity);
+                    String quantity = action.Get(ActionArgument.ResourceQuantity);
                     float qu = Float.parseFloat(quantity);
                     float quantAvail = Get(s);
-                    float toSend = Math.min(qu, quantAvail);
+                    long toSend = (long) Math.min(qu, quantAvail);
                     if (toSend < 0) {
-                        System.out.println("negative quant");
+                        LogInfo(LogTextID.sendPlayerResourcesFailed, type, playerName);
+                        Printer.out("negative quant");
                         return;
                     }
+                    Adjust(Statistic.ResourcesGiven, toSend);
                     player.Adjust(s, toSend);
+                    player.Adjust(Statistic.ResourcesReceived, toSend);
                     Adjust(s, -toSend);
                     LogInfo(LogTextID.SentPlayerResources, playerName, formattedFloat(toSend, 2), type);
                     player.LogInfo(LogTextID.ReceivedPlayerResources, this.name, formattedFloat(toSend, 2), type);
                     break;
                 case SendMessage:
                     if (player == null) {
-                        System.out.println("NULL player");
+                        Printer.out("NULL player");
                         return;
                     }
+                    Adjust(Statistic.MessagesSent, 1);
                     LogInfo(LogTextID.MessageSentToPlayer, playerName);
-                    player.LogInfo(LogTextID.MessageReceivedFromPlayer, playerName, a.Get(ActionArgument.Text));
+                    player.LogInfo(LogTextID.MessageReceivedFromPlayer, name, action.Get(ActionArgument.Text));
                     break;
             }
             return;
         }
 
-        if (a.DailyAction() != null)
-            switch (a.DailyAction()) {
+        if (action.DailyAction() != null)
+            switch (action.DailyAction()) {
                 case GatherFood:
                     units = Dice.RollD3(2);  // 2 to 6 base.
-                    units += Get(Skill.Foraging).Level(); // + Foraging level constant?
+                    units += Get(SkillType.Foraging).Level(); // + Foraging level constant?
                     units += Get(TransportStat.ForagingBonus);
-                    units += GetEquipped(InventionStat.HarvestBonus); // Add harvest bonus from equipment.
+                    units += GetEquipped(InventionStat.ForagingBonus); // Add harvest bonus from equipment.
                     if (units < 1) units = 1; // Get at least 1.
                     units *= t_starvingModifier;
                     units *= hoursPerAction;
-                    Adjust(Stat.FOOD, units);
-                    LogInfo(LogTextID.foragingFood, Stringify(units));
+                    int iUnits = Math.round(units);
+                    Adjust(Statistic.FoodGathered, iUnits);
+                    Adjust(Stat.FOOD, iUnits);
+                    LogInfo(LogTextID.foragingFood, ""+iUnits);
                     break;
                 case GatherMaterials:
                     units = Dice.RollD3(2); // 2 to 6 base.
@@ -829,14 +915,16 @@ public class Player extends Combatable implements Serializable {
                     units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
                     units *= t_starvingModifier;
                     units *= hoursPerAction;
-                    LogInfo(LogTextID.gatherMaterials, Stringify(units));
-                    Adjust(Stat.MATERIALS, units);
+                    int iMUnits = Math.round(units);
+                    Adjust(Statistic.MaterialsGathered, iMUnits);
+                    LogInfo(LogTextID.gatherMaterials, ""+iMUnits);
+                    Adjust(Stat.MATERIALS, iMUnits);
                     break;
                 case Scout:
-                    Scout();
+                    Scout(game);
                     break;
                 case Recover:
-                    units = (1 + 0.5f * Get(Skill.Survival).Level()); // 1 + 0.5 for each survival skill.
+                    units = (1 + 0.5f * Get(SkillType.Survival).Level()); // 1 + 0.5 for each survival skill.
                     units += GetEquipped(InventionStat.RecoveryBonus); // +2 for First aid kit, for example.
                     units *= 0.5f * hoursPerAction; // Recovery +50/100/150/200/250%
                     units *= t_starvingModifier;
@@ -846,23 +934,23 @@ public class Player extends Combatable implements Serializable {
                     break;
                 case BuildDefenses: BuildDefenses(); break;
     //            case AugmentTransport: AugmentTransport(); break;
-                case LookForPlayer: LookForPlayer(a, game); break;
+                case LookForPlayer: LookForPlayer(action, game); break;
                 case LookForPlayers: LookForPlayers(game); break;
     //            case Expedition: Log("Not implemented yet - Expedition", LogType.ATTACKED); break;
-                case Invent: Invent(a); break;
-                case Craft: Craft(a); break;
-                case Steal: Steal(a, game); break;
-                case AttackAPlayer: AttackAPlayer(a, game);
+                case Invent: Invent(action); break;
+                case Craft: Craft(action); break;
+                case Steal: Steal(action, game); break;
+                case AttackAPlayer: AttackAPlayer(action, game);
                     break;
                 case Study:
                     // Gain exp into current skill perhaps..?
-                    int toGain = Dice.RollD3(2) + Get(Skill.Studious).Level();
+                    int toGain = Dice.RollD3(2) + Get(SkillType.Studious).Level();
                     Log(LogTextID.studiesEXP, LogType.PROGRESS);
                     GainEXP(toGain);
                     break;
                 case ReduceEmissions: ReduceEmissions(); break;
                 default:
-                    System.out.println("Uncoded daily action");
+                    Printer.out("Uncoded daily action");
                     System.exit(15);
             }
     }
@@ -875,34 +963,48 @@ public class Player extends Combatable implements Serializable {
         }
         return null;
     }
+    private Invention GetBlueprintByName(String itemName) {
+        for (int i = 0; i < cd.inventionBlueprints.size(); ++i){
+            Invention item = cd.inventionBlueprints.get(i);
+            if (item.name.equals(itemName))
+                return item;
+        }
+        return null;
+    }
 
     private void ReduceEmissions() {
         int successful = 0;
         float amount = 0;
-        for (int i = 0; i < hoursPerAction; ++i) {
-            int diceRoll = r.nextInt(100);
+        int toRandom = Math.round(hoursPerAction) + Get(SkillType.Recycling).Level(); // Hours + Recycling skill # of random-times.
+        for (int i = 0; i < toRandom; ++i) {
+            int diceRoll = r.nextInt(100) + Get(SkillType.Recycling).Level(); // Increase emission reductions with the recycling skill.
             if (diceRoll > 50){
                 amount += Dice.RollD3(1);
                 ++successful;
             }
         }
         if (successful > hoursPerAction * 0.75) {
-            amount += Get(Stat.EMISSIONS) * 0.25f; // Successful, get bonus 25% of total.
-            Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, Stringify(amount));
+            amount += Get(Stat.AccumulatedEmissions) * 0.25f; // Successful, get bonus 25% of total.
         }
         else if (successful > hoursPerAction * 0.5) {
-            amount += Get(Stat.EMISSIONS) * 0.1f; // Successful, get bonus 25% of total.
-            Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, Stringify(amount));
+            amount += Get(Stat.AccumulatedEmissions) * 0.1f; // Successful, get bonus 25% of total.
         }
         else if (successful > hoursPerAction * 0.25) {
-            amount += Get(Stat.EMISSIONS) * 0.05f; // Successful, get bonus 25% of total.
-            Log(LogTextID.reduceEmissionsNotSoSuccessful, LogType.SUCCESS, Stringify(amount));
+            amount += Get(Stat.AccumulatedEmissions) * 0.05f; // Successful, get bonus 25% of total.
         }
-        else
-            Log(LogTextID.reduceEmissionsFailed, LogType.SUCCESS, Stringify(amount));
-        Adjust(Stat.EMISSIONS, -amount);
-        if (Get(Stat.EMISSIONS) < 0) {
-            Set(Stat.EMISSIONS, 0);
+        amount *= t_starvingModifier;
+        float cap = Get(Stat.AccumulatedEmissions) * 0.5f;
+        if (amount > cap)
+            amount = cap; // Cap it at 50% of the total?
+
+        Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, Stringify(amount));
+//        Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, Stringify(amount));
+  //      Log(LogTextID.reduceEmissionsNotSoSuccessful, LogType.SUCCESS, Stringify(amount));
+    //    Log(LogTextID.reduceEmissionsFailed, LogType.SUCCESS, Stringify(amount));
+        Adjust(Statistic.TotalEmissionsReduced, (long) amount);
+        Adjust(Stat.AccumulatedEmissions, -amount);
+        if (Get(Stat.AccumulatedEmissions) < 0) {
+            Set(Stat.AccumulatedEmissions, 0);
         }
     }
 
@@ -919,7 +1021,6 @@ public class Player extends Combatable implements Serializable {
         // Create a custom encounter for this.
         Encounter enc = new Encounter(this, p);
         enc.Simulate(); // Simulate it.
-
     }
 
     private void AugmentTransport() {
@@ -959,12 +1060,12 @@ public class Player extends Combatable implements Serializable {
             7~8, failed, but not detected
             2~6, failed & detected, player traps may activate, player may use ranged attacks on the spy, or stronghold defenders appear (1D6 severity, random type).
         */
-        int roll = Dice.RollD6(2 + Get(Skill.Thief).Level());
+        int roll = Dice.RollD6(2 + Get(SkillType.Thief).Level() + GetEquipped(StealthBonus)); // Roll 2D6 + D6s for Thief skill, + D6s from bonuses from gear.
         if (roll < 7) { // Failed and detected.
             Log(LogTextID.stealFailedDetected, LogType.ATTACK_MISS, targetPlayerName);
             p.Log(LogTextID.playerTriedToStealFromYouFailedDetected, LogType.ATTACKED, name);
             /// Add stealing player into target player's list of known players, so that they may retaliate?
-            p.FoundPlayer(name);
+            p.FoundPlayer(p);
 
 //            Log("While trying to steal from "+targetPlayerName+" you were detected! You didn't manage to steal anything.", LogType.ATTACK_MISS);
 //            p.Log(""+name+" tried to steal from you, but failed as he was detected!", LogType.ATTACKED);
@@ -995,21 +1096,21 @@ public class Player extends Combatable implements Serializable {
     }
 
     private void LookForPlayers(Game game) {
-        int searchChances = (int) (hoursPerAction * 6); // Attempts per hour?
-        EList<String> playerNamesFound = new EList<>();
+        int searchChances = (int) (hoursPerAction * (1 + 0.5f * Speed()) + 0.25f * GetEquipped(ScoutingBonus)); // Attempts per hour?
+        EList<Player> playersFound = new EList<>();
         int failedAttempts = 0;
         for (int i = 0; i < searchChances; ++i) {
             int randInt = r.nextInt(100);
             if (randInt > 90 - failedAttempts) { // 10% chance at each iteration, +1% or each failed attempt until success - reset to 10%.
                 failedAttempts = 0;
-                Player randomPlayer = game.RandomPlayer(KnownNamesSelfIncluded());
+                Player randomPlayer = game.RandomLivingPlayer(KnownNamesSelfIncluded());
                 if (randomPlayer == null)
                     return;
                 String newPlayer = randomPlayer.name;
                 if (newPlayer != null && newPlayer != name) {
                     if (KnowsThisPlayer(newPlayer))
                         return; // Skip it then.
-                    playerNamesFound.add(randomPlayer.name);
+                    playersFound.add(randomPlayer);
                     //                    knownPlayerNames.add(newPlayer);
                 }
             }
@@ -1017,10 +1118,10 @@ public class Player extends Combatable implements Serializable {
                 ++failedAttempts;
 
         }
-        if (playerNamesFound.size() > 0){
-            Log(LogTextID.searchPlayers_success, LogType.SUCCESS, playerNamesFound.size()+"");
-            for (int i = 0; i < playerNamesFound.size(); ++i){
-                FoundPlayer(playerNamesFound.get(i));
+        if (playersFound.size() > 0){
+            Log(LogTextID.searchPlayers_success, LogType.SUCCESS, playersFound.size()+"");
+            for (int i = 0; i < playersFound.size(); ++i){
+                FoundPlayer(playersFound.get(i));
             }
         }
         else
@@ -1034,8 +1135,13 @@ public class Player extends Combatable implements Serializable {
         String name = this.da.requiredArguments.get(0).value;
         name = name.trim();
         Player player = null;
-        // Try search for players now then.
-        player = game.GetPlayer(name);
+        int searchBonus = (int) (GetEquipped(ScoutingBonus) + Get(TransportStat.SpeedBonus) + Get(Stat.SPEED));
+        // Try search for players now then...
+        for (int i = 0; i < hoursPerAction + 1 + searchBonus; ++i) {
+            if (r.nextInt(100) > 80) {
+                player = game.GetPlayer(name);
+            }
+        }
         if (KnowsThisPlayer(name)){
             LogInfo(LogTextID.searchPlayer_alreadyFound, name);
             return;
@@ -1045,12 +1151,12 @@ public class Player extends Combatable implements Serializable {
         if (player == null)
             player = game.GetPlayer(name, true, false);
         if (player == null) {
-            int randInt = r.nextInt(100);
+            int randInt = r.nextInt(100 + GetEquipped(ScoutingBonus));
             Log(LogTextID.searchPlayerFailed, LogType.ACTION_FAILURE, name);
 //            Log("Despite searching, you were unable to find a player called "+name+".", LogType.ACTION_FAILURE);
             // Add chance to find random other players?
             if (randInt < 50) {
-                Player randomPlayer = game.RandomPlayer(KnownNamesSelfIncluded());
+                Player randomPlayer = game.RandomLivingPlayer(KnownNamesSelfIncluded());
                 if (randomPlayer == null)
                     return;
                 String newPlayer = randomPlayer.name;
@@ -1068,7 +1174,7 @@ public class Player extends Combatable implements Serializable {
                 return;
         }
         if (player != null)
-            FoundPlayer(player.name);
+            FoundPlayer(player);
 //        Log(LogTextID.debug, LogType.INFO, "knownNAmes: "+cd.knownPlayerNames);
     }
 
@@ -1082,7 +1188,10 @@ public class Player extends Combatable implements Serializable {
         return false;
     }
 
-    private void FoundPlayer(String playerName) {
+    private void FoundPlayer(Player player) {
+        if (player.IsAlive() == false)
+            return; // Lolno wat.
+        String playerName = player.name;
         if (cd.knownPlayerNames == null)
             cd.knownPlayerNames = new EList<String>();
         if (KnowsThisPlayer(playerName))
@@ -1093,6 +1202,7 @@ public class Player extends Combatable implements Serializable {
         Log(LogTextID.foundPlayer, LogType.SUCCESS, playerName);
 //        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);
         cd.knownPlayerNames.add(playerName);
+        Adjust(Statistic.PlayerDiscoveries, 1);
     }
 
     private EList<String> KnownNamesSelfIncluded() {
@@ -1106,40 +1216,35 @@ public class Player extends Combatable implements Serializable {
     }
 
     private void Craft(Action da) {
-        float emit = ConsumeMaterials(hoursPerAction * 0.5f);
+        float emit = ConsumeMaterials(1 + hoursPerAction * 0.5f);
         // How many times to random.
-        float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
+        float toRandom = 1 + 0.5f + hoursPerAction; // Roll once for each hour?
         toRandom *= t_starvingModifier;
         toRandom *= CalcMaterialModifier();
+        toRandom *= 1 + 0.5f * Get(SkillType.Crafting).Level() + 0.25f * GetEquipped(CraftingBonus); // Increase random chances by 50% for each level in crafting.
         String s = da.text+": ";
         // Check if inveting has been queued for any special item?
         if (da.requiredArguments.size() == 0) {
-            System.out.println("required argument in Player.Craft");
+            Printer.out("required argument in Player.Craft");
             System.exit(14);
         }
         String whatToCraft = da.requiredArguments.get(0).value;
         whatToCraft = whatToCraft.trim();
         Invention toCraft = null;
-        for (int i = 0; i < cd.inventions.size(); ++i) {
-            Invention inv = cd.inventions.get(i);
-            System.out.println("Invention names: "+inv.name+", toCraft: "+whatToCraft);
-            if (inv.name.equals(whatToCraft))
-                toCraft = inv;
-        }
+        toCraft = GetInventionBlueprint(whatToCraft);
         if (toCraft == null) {
             Log(LogTextID.craftingFailedNullItem, LogType.ACTION_FAILURE);
-            System.out.println("toCraft null, what did you wanna craft again?");
+            Printer.out("toCraft null, what did you wanna craft again?");
             return;
             //            System.exit(15);
         }
         int progressRequired = toCraft.Get(InventionStat.ProgressRequiredToCraft);
         float progress = 0.0f;
         boolean craftedSomething = false;
-        System.out.println("toRandom iterations: "+toRandom);
+        Printer.out("toRandom iterations: "+toRandom);
         successiveCraftingAttempts = 0;
         float progressGained = 0;
-        for (int i = 0; i < toRandom; ++i) // Times to random.
-        {
+        for (int i = 0; i < toRandom; ++i){ // Times to random.
             float relativeChance = toRandom > 1.0 ? 1 : toRandom;
             relativeChance += successiveCraftingAttempts * 0.05f;
             progress += Dice.RollD3(1) * relativeChance;
@@ -1151,29 +1256,51 @@ public class Player extends Combatable implements Serializable {
         if (progress >= progressRequired) {
             // Crafted!
             Invention newlyCraftedObject = toCraft.CraftInventionFromBlueprint();
+            Adjust(Statistic.ItemsCrafted, 1);
             float ratioOverProgressed = (progress - progressRequired) / progressRequired;
-            System.out.println("ratioOverProgressed: "+ratioOverProgressed);
+            Printer.out("ratioOverProgressed: "+ratioOverProgressed);
             Random rCrafting = new Random(System.nanoTime());
             int levelAdjustment = 0;
             while(ratioOverProgressed > 0) {
                 float randF = rCrafting.nextFloat();
                 if (randF < ratioOverProgressed) {
-                    System.out.println("level increased +1");
+                    Printer.out("level increased +1");
+                    ++levelAdjustment;
                 }
                 ratioOverProgressed -= randF;
             }
+            Printer.out("HQ item obtained! Log it?");
             newlyCraftedObject.Set(InventionStat.QualityLevel, newlyCraftedObject.Get(InventionStat.QualityLevel) + levelAdjustment);
             // Update quality level.
             newlyCraftedObject.UpdateDetails();
             cd.inventory.add(newlyCraftedObject);
             LogInfo(LogTextID.craftingComplete, newlyCraftedObject.name);
+            switch (newlyCraftedObject.Get(QualityLevel)){
+                case 0: Adjust(Statistic.ItemCrafted_level_0, 1); break;
+                case 1: Adjust(Statistic.ItemCrafted_level_1, 1);break;
+                case 2: Adjust(Statistic.ItemCrafted_level_2, 1);break;
+                case 3: Adjust(Statistic.ItemCrafted_level_3, 1);break;
+                case 4: Adjust(Statistic.ItemCrafted_level_4, 1);break;
+                default:
+                case 5: Adjust(Statistic.ItemCrafted_level_5, 1);break;
+            }
         }
-        else
-        {
+        else {
             LogInfo(LogTextID.craftingProgressed, ""+progress, ""+progressGained, ""+progressRequired);
 //            Log("Crafting progressed by "+progress+" units. Progress is now at "+progressGained+" out of "+progressRequired+".", LogType.INFO);
             // Store as unfinished business?
         }
+    }
+
+    private Invention GetInventionBlueprint(String nameOfBlueprint) {
+        for (int i = 0; i < cd.inventionBlueprints.size(); ++i) {
+            Invention inv = cd.inventionBlueprints.get(i);
+            if (inv.name.equals(nameOfBlueprint)) {
+                return inv;
+            }
+        }
+        Printer.out("Couldn't find invention of given name: "+nameOfBlueprint);
+        return null;
     }
 
     private void Invent(Action inventAction) {
@@ -1182,10 +1309,11 @@ public class Player extends Combatable implements Serializable {
         float toRandom = 0.5f + hoursPerAction; // Roll once for each hour?
         toRandom *= t_starvingModifier;
         toRandom *= CalcMaterialModifier();
+        toRandom *= 1.f + 0.25f * GetEquipped(InventingBonus);
         String s = da.text+": ";
         // Check if inveting has been queued for any special item?
         boolean inventedSomething = false;
-        System.out.println("toRandom iterations: "+toRandom);
+        Printer.out("toRandom iterations: "+toRandom);
         for (int i = 0; i < toRandom; ++i) { // Times to random.
             float relativeChance = toRandom > 1.0 ? 1 : toRandom;
             InventionType type = null;
@@ -1194,7 +1322,7 @@ public class Player extends Combatable implements Serializable {
                 type = InventionType.GetFromString(typeStr);
             }
             if (type == null) {
-                System.out.println("Bad invention type.");
+                Printer.out("Bad invention type.");
 //                Log("Bad invention type", LogType.Error);
                 System.exit(14);
                 return;
@@ -1202,16 +1330,18 @@ public class Player extends Combatable implements Serializable {
             if (type == InventionType.Any) {
                 type = InventionType.RandomType();
                 relativeChance += 0.05f; // + 5% chance of inventing if random?
-                System.out.println("Type: "+type.name());
+                Printer.out("Type: "+type.name());
             }
             Invention inv = AttemptInvent(type, relativeChance);
             // Craft it on success?
             if (inv != null){
                 successiveInventingAttempts = 0;
                 inventedSomething = true;
+                // Based on number of iterations toRandom, give a chance of higher quality if it succeeded early - i.e. time to polish it for the remaining duration?
+                Adjust(Statistic.ItemsInvented, 1);
                 // Add it to inventory too.
                 cd.inventory.add(inv.CraftInventionFromBlueprint());
-                // Don't auto-equip... Present dialog for it.
+                // Don't auto-equip... Present dialog for it?
              //   Equip(inv);
             }
             ++successiveInventingAttempts;
@@ -1231,12 +1361,11 @@ public class Player extends Combatable implements Serializable {
         inv.Set(InventionStat.Equipped, (int) Get(Stat.ID));
     }
 
-    public float getInventionProgress(InventionType type, int subType)
-    {
+    // For when inventing...?
+    public float getInventionProgress(InventionType type, int subType) {
         float progress = 0;
-        for (int i = 0; i < cd.inventions.size(); ++i)
-        {
-            Invention inv = cd.inventions.get(i);
+        for (int i = 0; i < cd.inventionBlueprints.size(); ++i) {
+            Invention inv = cd.inventionBlueprints.get(i);
             if (inv.type != type)
                 continue;
             if (subType >= 0 && inv.Get(InventionStat.SubType) != subType)
@@ -1250,12 +1379,12 @@ public class Player extends Combatable implements Serializable {
         int subType = inv.RandomizeSubType();
         // 1.0 base, + 0.1 for each level in Inventing, +0.25 of the invention progress in the same category/main invention type and 1x subtype progress.
         float bonusFromInventingBefore = 0.001f * getInventionProgress(type, -1) + 0.025f * getInventionProgress(type, subType);
-        float inventingLevel = Get(Skill.Inventing).Level();
-        float rMax = (1.f + 0.05f * inventingLevel + bonusFromInventingBefore) * relativeChance;
+        float inventingLevel = Get(SkillType.Inventing).Level();
+        float rMax = (1.f + 0.05f * inventingLevel + bonusFromInventingBefore) * relativeChance; // + 5% chance for each skill level in Inventing.
         rMax += 0.07f * GetEquipped(InventingBonus);  /// Random max increases by +0.07 (7%) for each point in inventing gear.
         float random = r.nextFloat() * rMax; // Random 0 to 1 + 0.1 max for each Inventing level, * relChance
         float successThreshold = 0.75f - successiveInventingAttempts * 0.03f - inventingLevel * 0.02f; // Increase success possibility with higher inventing skill, and for each attempt in succession.
-        System.out.println("randomed: "+random+" out of 0-"+rMax+", successThreshold: "+successThreshold+" bonusFromBefore: "+bonusFromInventingBefore);
+        Printer.out("randomed: "+random+" out of 0-"+rMax+", successThreshold: "+successThreshold+" bonusFromBefore: "+bonusFromInventingBefore);
         if (random < successThreshold)
             return null;            // No success.
         // Determine high-quality ratio.
@@ -1264,30 +1393,35 @@ public class Player extends Combatable implements Serializable {
             levelSuccess = 0;
         inv.Set(InventionStat.QualityLevel, levelSuccess);
         inv.RandomizeDetails();
-        System.out.println("Level success: " + levelSuccess+" item name: "+inv.name);
-        for (int i = 0; i < cd.inventions.size(); ++i) {
-            Invention i2 = cd.inventions.get(i);
-            if (i2.name.equals(inv.name)) {
-                // Save type of invention? Add progress to the invention we already had?
-                i2.Adjust(InventionStat.TimesInvented, 1);
-                LogInfo(LogTextID.inventingOldThoughts, inv.name);
-               // Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
-                return null;
-            }
+        Printer.out("Level success: " + levelSuccess+" item name: "+inv.name);
+        Invention existingBlueprint = GetBlueprintByName(inv.name);
+        if (existingBlueprint != null){
+            existingBlueprint.Adjust(InventionStat.TimesInvented, 1);             // Save type of invention? Add progress to the invention we already had?
+            LogInfo(LogTextID.inventingOldThoughts, inv.name); // Log("While trying to invent something new, your thoughts go back to the old version of the "+inv.name+", perhaps you will be luckier next time.", LogType.INFO);
+            return null;
         }
-        cd.inventions.add(inv);
+        switch (inv.Get(QualityLevel)){
+            case 0: Adjust(Statistic.InventionsLevel_0, 1); break;
+            case 1: Adjust(Statistic.InventionsLevel_1, 1); break;
+            case 2: Adjust(Statistic.InventionsLevel_2, 1); break;
+            case 3: Adjust(Statistic.InventionsLevel_3, 1); break;
+            case 4: Adjust(Statistic.InventionsLevel_4, 1); break;
+            default:
+            case 5: Adjust(Statistic.InventionsLevel_5, 1); break;
+        }
+        cd.inventionBlueprints.add(inv);
         Log(LogTextID.inventSuccess, LogType.SUCCESS, inv.type.text(), inv.name);
 //        Log("Invented a new " + inv.type.text() + ": " + inv.name, LogType.SUCCESS);
         return inv;
     }
 
-    void Scout() {
+    void Scout(Game game) {
         int speed = Speed(); //  1 base.
         speed += Get(TransportStat.SpeedBonus); // + based on transport.
         speed += GetEquipped(InventionStat.ScoutingBonus); // Add scouting bonus from gear. e.g. +2
         // Randomize something each hour? Many things with speed?
         float speedBonus = (float) Math.pow(speed, 0.5f); // Square root we made earlier.
-        System.out.println("Speed: "+speed+" bonus(pow-modified): "+speedBonus);
+        Printer.out("Speed: "+speed+" bonus(pow-modified): "+speedBonus);
         float toRandom = hoursPerAction * speedBonus;
         toRandom *= t_starvingModifier;
         Map<Finding, Integer> chances = new HashMap<Finding, Integer>();
@@ -1295,20 +1429,24 @@ public class Player extends Combatable implements Serializable {
         // There will however be more of other resources available later on. :D
         int turn = (int) Get(Stat.TurnSurvived);
         int randomEncounter = 5 + turn; // Increase chance of combat for each survived turn, and maybe emissions as well?
-        randomEncounter /= (1 + 0.5f * Get(Skill.SilentScouting).Level()); // Each level of scouting reduces encounter rate.
+        randomEncounter /= (1 + 0.5f * Get(SkillType.SilentScouting).Level()); // Each level of scouting reduces encounter rate.
         // -33% at 1st level, -50% at 2nd level, -60% at 3rd level, -66% at 4th, -71.5%, etc. (/1.5, /2, /2.5, /3, /3.5)
         chances.put(Finding.RandomEncounter, randomEncounter);
         chances.put(Finding.Nothing, 50);
         chances.put(Finding.Food, 15);
         chances.put(Finding.Materials, 15);
-        chances.put(Finding.AbandonedShelter, 10 + turn);
-        chances.put(Finding.RandomPlayerShelter, 10);
-        chances.put(Finding.EnemyStronghold, 1+turn/3);
+        chances.put(Finding.FoodHotSpot, 5);
+        chances.put(Finding.MaterialsDepot, 5);
+        chances.put(Finding.RandomPlayer, 5);
+        chances.put(Finding.RandomItem, 2);
+//        chances.put(Finding.AbandonedShelter, 10 + turn);
+  //      chances.put(Finding.RandomPlayerShelter, 10);
+    //    chances.put(Finding.EnemyStronghold, 1+turn/3);
         int sumChances = 0;
         for (int i = 0; i < chances.size(); ++i) {
             sumChances += (Integer) chances.values().toArray()[i];
         }
-//        System.out.println("Sum chances: "+sumChances);
+//        Printer.out("Sum chances: "+sumChances);
         EList<Finding> foundList = new EList<Finding>();
         String foundStr = "Found: ";
         while(toRandom > 0) {
@@ -1324,23 +1462,25 @@ public class Player extends Combatable implements Serializable {
             }
         }
 
-        System.out.println(foundStr);
+        Printer.out(foundStr);
         float amount = 0;
-        int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0;
-        float foodFound = 0, matFound = 0;
+        int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0, numRandPlayers = 0, numRandItems = 0;
+        int foodFound = 0, matFound = 0;
         String s = da.text+": While scouting the area, you ";
-        for (int i = 0; i < foundList.size(); ++i)
-        {
+        for (int i = 0; i < foundList.size(); ++i) {
             Finding f = foundList.get(i);
-            switch(f)            // Evaluate it.
-            {
+            switch(f){            // Evaluate it.
                 case Nothing: break;
                 case RandomEncounter: numEncounters  += 1; break;
-                case Food: numFoodStashes += 1; foodFound += 1 + r.nextFloat() * 2; break;
-                case Materials: numMatStashes += 1; matFound = 1 + r.nextFloat() * 2; break;
-                case AbandonedShelter: numAbShelters += 1; playEvents = true; break;
-                case RandomPlayerShelter: numRPS += 1; playEvents = true; break;
-                case EnemyStronghold: numEnStrong += 1; break;
+                case Food: numFoodStashes += 1; foodFound += Dice.RollD3(1); break;
+                case Materials: numMatStashes += 1; matFound += Dice.RollD3(1); break;
+                case RandomPlayer: numRandPlayers += 1; break;
+                case RandomItem: numRandItems +=1; break;
+        //        case FoodHotSpot: ++numFoodHotSpots;
+      //          case MaterialsDepot: ++numMatDepos;
+//                case AbandonedShelter: numAbShelters += 1; playEvents = true; break;
+  //              case RandomPlayerShelter: numRPS += 1; playEvents = true; break;
+    //            case EnemyStronghold: numEnStrong += 1; break;
                 default: s += "\n Not implemented: "+f.toString(); break;
             }
         }
@@ -1357,30 +1497,57 @@ public class Player extends Combatable implements Serializable {
             encountersToProcess.add(enc);
         }
         if (foodFound > 0) {
-            LogInfo(LogTextID.scoutFoodStashes, "" + numFoodStashes, Stringify(foodFound));
+            LogInfo(LogTextID.scoutFoodStashes, "" + numFoodStashes, ""+foodFound);
             Adjust(Stat.FOOD, foodFound);
+            Adjust(Statistic.ResourcesFoundByScouting, foodFound);
         }
         if (matFound > 0) {
-            LogInfo(LogTextID.scoutMatStashes, "" + numMatStashes, Stringify(matFound));
+            LogInfo(LogTextID.scoutMatStashes, "" + numMatStashes, ""+matFound);
 //            s += numMatStashes > 1 ? "\n- find " + numMatStashes + " stashes of materials, totalling at " + Stringify(matFound) + " units" : numMatStashes == 1 ? "\n a stash of materials: " + Stringify(matFound) + " units" : "";
             Adjust(Stat.MATERIALS, matFound);
+            Adjust(Statistic.ResourcesFoundByScouting, matFound);
+        }
+        if (numRandPlayers > 0){
+            // Just log that you found players, no need to display more stuff before...
+            for (int i = 0; i < numRandPlayers; ++i) {
+                FindRandomPlayer(5, game);
+            }
+        }
+        if (numRandItems > 0){
+            LogInfo(LogTextID.scoutFoundItems, ""+numRandItems);
+            for (int i = 0; i < numRandItems; ++i){
+                Invention inv = Invention.Random(0);
+                Obtained(inv);
+            }
+            Adjust(Statistic.ItemsFoundByScouting, numRandItems);
         }
         /// Advanced shit... Queue up for exploration later?
-        s += numAbShelters > 1? "\n- find "+numAbShelters+" seemingly abandoned shelters" : numAbShelters == 1? "\n- find an abandoned shelter." : "";
-        Adjust(Stat.ABANDONED_SHELTER, numAbShelters);
-
+//        s += numAbShelters > 1? "\n- find "+numAbShelters+" seemingly abandoned shelters" : numAbShelters == 1? "\n- find an abandoned shelter." : "";
+  //      Adjust(Stat.ABANDONED_SHELTER, numAbShelters);
         // Find max 1 player shelter per scouting round?
-        s += numRPS >= 1? "\n- find a shelter which seems to be inhabited" : "";
-        Adjust(Stat.RANDOM_PLAYERS_SHELTERS, numRPS >= 1? 1 : 0);
-
-        s += numEnStrong >= 1? "\n- find an enemy stronghold." : "";
-        Adjust(Stat.ENEMY_STRONGHOLDS, numEnStrong >= 1? 1 : 0);
-
+    //    s += numRPS >= 1? "\n- find a shelter which seems to be inhabited" : "";
+      //  Adjust(Stat.RANDOM_PLAYERS_SHELTERS, numRPS >= 1? 1 : 0);
+//        s += numEnStrong >= 1? "\n- find an enemy stronghold." : "";
+  //      Adjust(Stat.ENEMY_STRONGHOLDS, numEnStrong >= 1? 1 : 0);
 //        Log(s, LogType.INFO);
     }
+
+    /// Finds a random player - if any are still not found. # of attempts will give the likelihood that one is actually found that was not already known.
+    static Random findRPR = new Random(System.currentTimeMillis());
+    private boolean FindRandomPlayer(int numRandomAttempts, Game game) {
+        for (int i = 0; i < numRandomAttempts; ++i){
+            Player p = game.RandomLivingPlayer(cd.knownPlayerNames);
+            if (KnowsThisPlayer(p.name))
+                continue;
+            FoundPlayer(p);
+            return true;
+        }
+        return false;
+    }
+
     void BuildDefenses() {
         float emit = ConsumeMaterials(hoursPerAction * 0.5f);
-        float progress = Dice.RollD3(2 + Get(Skill.Architecting).Level()); // 2 to 6, increases by 1D3 for each skill in architecting.
+        float progress = Dice.RollD3(2 + Get(SkillType.Architecting).Level()); // 2 to 6, increases by 1D3 for each skill in architecting.
         progress *= 1 + 0.25f * GetEquipped(InventionStat.ConstructionBonus); // + Construction bonus from gear, in percentage., e.g. + 50% for a basic construction kit.
         progress /= Get(Stat.SHELTER_DEFENSE);
         progress *= t_starvingModifier;
@@ -1399,12 +1566,10 @@ public class Player extends Combatable implements Serializable {
         }
     }
     // Varies with skills n stuff. Generates emissions.
-    private float ConsumeMaterials(float baseAmount)
-    {
+    private float ConsumeMaterials(float baseAmount) {
         float s = baseAmount;
-        int lMatEfficiency = Get(Skill.MaterialEfficiency).Level();
-        switch(lMatEfficiency)
-        {
+        int lMatEfficiency = Get(SkillType.MaterialEfficiency).Level();
+        switch(lMatEfficiency) {
             case 4: s *= 0.6f; // 0.3,   40,  Multiplicative effects for each timer :)
             case 3: s *= 0.7f; // 0.5,   20,
             case 2: s *= 0.8f; // 0.72,   10,
@@ -1413,16 +1578,23 @@ public class Player extends Combatable implements Serializable {
             case 0: break;
         }
         Adjust(Stat.MATERIALS, -s); // Consume! 1 unit of materials per hour?
-        GenerateEmissions(s);
+        float emissionsToGenerate = s / (1 + 0.5f * Get(SkillType.Recycling).Level()); // 33%, 50%, 75%, 80%, etc. 1/1.5, 1/2, 1/2.5, 1/3
+        int toGenerate = Math.round(emissionsToGenerate);
+        GenerateEmissions(toGenerate); // Generate emissions based on materials consumed.
         return s;
     }
-    private void GenerateEmissions(float amount)
-    {
-        Adjust(Stat.EMISSIONS, amount);
+    private void GenerateEmissions(int amount) {
+        Adjust(Stat.AccumulatedEmissions, amount);
+        Adjust(Statistic.TotalEmissionsGenerated, amount);
     }
 
-    public Skill Get(Skill skillType) {
+    public Skill Get(SkillType skillType) {
         int index = skillType.ordinal();
+        return cd.skills.get(index);
+    }
+
+    public Skill Get(Skill skill) {
+        int index = skill.GetSkillType().ordinal();
         return cd.skills.get(index);
     }
 
@@ -1435,27 +1607,25 @@ public class Player extends Combatable implements Serializable {
         }
         return t_materialModifier;
     }
-    public void GainEXP(int expGained)
-    {
+    public void GainEXP(int expGained) {
+        Printer.out("EXP gained: "+expGained);
         // Check queued skills.
         int xp = expGained;
-        while (xp > 0 && cd.skillTrainingQueue.size() > 0)
-        {
-            Skill next = Skill.GetFromString(cd.skillTrainingQueue.get(0));
+        while (xp > 0 && cd.skillTrainingQueue.size() > 0) {
+            SkillType next = SkillType.GetFromString(cd.skillTrainingQueue.get(0));
             if (next == null){
-                System.out.println("Bad skill String: "+cd.skillTrainingQueue.get(0));
+                Printer.out("Bad skill String: "+cd.skillTrainingQueue.get(0));
+                new Exception().printStackTrace();
                 System.exit(16);
             }
-            next.ordinal();
             Skill toSkillUp = cd.skills.get(next.ordinal());
             int needed = toSkillUp.EXPToNext();
-            if (needed <= 0)
-            {
-                System.out.println("Needed " + needed + ": skipping this skill, de-queueing.");
+            if (needed <= 0) {
+                Printer.out("Needed " + needed + ": skipping this skill, de-queueing.");
                 cd.skillTrainingQueue.remove(0);
                 continue;
             }
-            System.out.println("EXP to next level? "+needed);
+            Printer.out("EXP to next level? "+needed);
             int toGain = xp;
             if (needed < xp)
                 toGain = needed;
@@ -1464,7 +1634,9 @@ public class Player extends Combatable implements Serializable {
             int levelReached = toSkillUp.GainExp(toGain);
             int newLevel = toSkillUp.Level();
             if (newLevel > oldLevel) {
-                Log(LogTextID.skillLeveledUp, LogType.EXP, toSkillUp.text, ""+levelReached);
+                Log(LogTextID.skillLeveledUp, LogType.EXP, toSkillUp.Text(), ""+levelReached);
+                Adjust(Statistic.MonsterKills.SkillLevelUps, 1);
+                Printer.out("Skill leveled up: "+toSkillUp.Text());
                 //Log("Skill " + toSkillUp.text + " reached level " + levelReached + "!", LogType.EXP);
                 cd.skillTrainingQueue.remove(0);
             }
@@ -1482,12 +1654,76 @@ public class Player extends Combatable implements Serializable {
         c.maxHP = MaxHP();
         c.attackDamage = Damage();
         c.attacksPerTurn = AttacksPerTurn();
-        c.fleeSkill = Get(Skill.FleetRetreat).Level();
+        c.fleeSkill = Get(SkillType.FleetRetreat).Level();
         c.fleeBonusFromTransport = Get(TransportStat.FleeBonus);
         c.ranAway = false; // Reset temporary variables such as fleeing.
-        c.parry = GetEquipped(InventingBonus.ParryBonus) + Get(Skill.Parrying).Level();
+        c.parry = GetEquipped(InventingBonus.ParryBonus) + Get(SkillType.Parrying).Level();
         consecutiveFleeAttempts = 0;
     }
+
+    @Override
+    protected void OnKilled(Combatable targetYouKilled) {
+        if (targetYouKilled instanceof Player) {
+            Adjust(Statistic.PlayerKills, 1);
+            // Take their stuff?
+            Player tP = (Player) targetYouKilled;
+            float ratio = tP.Get(Stat.Lives) > 0? 0.5f : 1.0f; // Get all if the player actually died the final life.
+            int emissionsToInherit = (int) (tP.Get(Stat.AccumulatedEmissions) * ratio);
+            Adjust(Stat.InheritedEmissions, emissionsToInherit); // Add emissions to the attacker.
+            tP.Adjust(Stat.AccumulatedEmissions, -emissionsToInherit);  // Decrease emissions from the player who was defeated.
+            Adjust(Statistic.InheritedEmissions, emissionsToInherit);
+            if (ratio == 1.f) {
+                Adjust(Stat.InheritedEmissions, tP.Get(Stat.InheritedEmissions) + 10);
+                Adjust(Statistic.InheritedEmissions, (long) tP.Get(Stat.InheritedEmissions));
+                tP.Set(Stat.InheritedEmissions, 0);
+            }
+            for (int i = 0; i < tP.cd.inventory.size(); ++i){ /// Transfer all items.
+                Obtained(tP.cd.inventory.get(i));
+            }
+            tP.cd.inventory.clear();
+            for (int i = 0; i < tP.cd.inventionBlueprints.size(); ++i) {            /// And blueprints?
+                Obtained(tP.cd.inventionBlueprints.get(i));
+            }
+            tP.cd.inventionBlueprints.clear();
+        }
+        else
+            Adjust(Statistic.MonsterKills, 1);
+    }
+    // Adds items to inventory and displays an "Obtained ..." log-message. Also works for blueprints.
+    private void Obtained(Invention invention) {
+        // Check blueprint or item?
+        if (invention.Get(InventionStat.Blueprint) == 1){
+            cd.inventionBlueprints.add(invention);
+            LogInfo(LogTextID.obtainedBlueprint, invention.name);
+            return;
+        }
+        cd.inventory.add(invention);
+        LogInfo(LogTextID.obtainedItem);
+    }
+
+    @Override
+    protected void OnDied(Combatable attackerWhoKilledYou) {
+        Adjust(Statistic.TimesKnockedOut, 1);
+        Set(Stat.TurnSurvived, 0); // Every time you're knocked out, reset the turn-survived counter so that the player won't be slaughtered again by AI at least.
+        // Check if we will be revived afterwards?
+        if (!IsAlive()){ // If truly not alive anymore, inform all listeners.
+            for (int i = 0; i < listeners.size(); ++i) {
+                PlayerListener pl = listeners.get(i);
+                pl.OnPlayerDied(this);
+            }
+        }
+    }
+
+    @Override
+    protected void OnDealtDamage(Combatable target, int damage) {
+        Adjust(Statistic.TotalDamageDealt, damage);
+    }
+
+    @Override
+    protected void OnReceivedDamage(Combatable fromTarget, int damage) {
+        Adjust(Statistic.TotalDamageTaken, damage);
+    }
+
     private int AttacksPerTurn() {
         int attacks = 1;
         attacks += (UnarmedCombatBonus() - 1) / 2;
@@ -1513,27 +1749,24 @@ public class Player extends Combatable implements Serializable {
         System.out.print("\nName: " + name +" stats:");
         for (int i = 0; i < cd.statArr.length; ++i)
             System.out.print(" "+cd.statArr[i]);
-        System.out.println("\n skills:");
-        for (int i = 0; i < cd.skills.size(); ++i)
-        {
+        Printer.out("\n skills:");
+        for (int i = 0; i < cd.skills.size(); ++i) {
             Skill s = cd.skills.get(i);
             if (s == null)
                 continue;
-            System.out.print(" "+s.text+":"+s.Level()+":"+s.TotalExp());
+            System.out.print(" "+s.Text()+":"+s.Level()+":"+s.TotalExp());
         }
         System.out.print("\n inventions:");
-        for (int i = 0; i < cd.inventions.size(); ++i)
-        {
-            Invention inv = cd.inventions.get(i);
+        for (int i = 0; i < cd.inventionBlueprints.size(); ++i) {
+            Invention inv = cd.inventionBlueprints.get(i);
             System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
         }
         System.out.print("\n inventory:");
-        for (int i = 0; i < cd.inventory.size(); ++i)
-        {
+        for (int i = 0; i < cd.inventory.size(); ++i) {
             Invention inv = cd.inventory.get(i);
             System.out.print(" "+inv.type.text()+": \""+inv.name+"\", ");
         }
-        System.out.println();
+        Printer.out();
     }
 
     public static Player fromByteArray(byte[] bytes) throws Exception {
@@ -1555,7 +1788,7 @@ public class Player extends Combatable implements Serializable {
     public int ProcessQueuedActiveActions(Game game){
         int numProcessed = 0;
         if (cd.queuedActiveActions.size() > 0)
-            ;// System.out.println("Processing queued active actions: "+cd.queuedActiveActions.size());
+            ;// Printer.out("Processing queued active actions: "+cd.queuedActiveActions.size());
         for (int i = 0; i < cd.queuedActiveActions.size(); ++i){
             Action a = cd.queuedActiveActions.get(i);
             EvaluateAction(a, game);
@@ -1571,19 +1804,19 @@ public class Player extends Combatable implements Serializable {
             s += cd.dailyActions.get(i)+"; ";
         return s;
     }
-
+    // Or LoadFromClient
     public void SaveFromClient(Player clientPlayer) {
         updatesFromClient.add(new Date());
         cd.dailyActions = clientPlayer.cd.dailyActions; // Copy over queued actions.
         cd.skillTrainingQueue = clientPlayer.cd.skillTrainingQueue; // Skill training queue.
         cd.queuedActiveActions = clientPlayer.cd.queuedActiveActions; // And queued active actions.
-     //   System.out.println("Queued Active actions: "+cd.queuedActiveActions.size());
+     //   Printer.out("Queued Active actions: "+cd.queuedActiveActions.size());
         if (log != null && clientPlayer.log != null) {
             for (int i = 0; i < log.size() && i < clientPlayer.log.size(); ++i) {
                 Log clientLog = clientPlayer.log.get(i);
                 Log serverEquivalent = GetLog(clientLog.LogID());
                 if (serverEquivalent == null) {
-                    System.out.println("SOMETHING IS HORRIBLY WRONG syncing log messages");
+                    Printer.out("SOMETHING IS HORRIBLY WRONG syncing log messages");
                     continue;
                 }
                 // Save the state of old log messages that have already been viewed by the player.
@@ -1593,16 +1826,21 @@ public class Player extends Combatable implements Serializable {
             }
         }
         transports = clientPlayer.transports; // Copy over all transports.
-    //    System.out.println("SaveFromClient, transports: "+clientPlayer.TopTransportsAsString(3)); // Print the new transport data we received.
+    //    Printer.out("SaveFromClient, transports: "+clientPlayer.TopTransportsAsString(3)); // Print the new transport data we received.
         EList<Invention> equipped = clientPlayer.GetEquippedInventions();         // Equip those items as requested by the player as well.
         for (int i = 0; i < equipped.size(); ++i){
-            Invention item = equipped.get(i);
-            boolean ok = EquipItemWithID(item.GetID());
-            if (!ok){
-                System.out.println("ERROR: Mismatch in item IDs!");
+            Invention clientItem = equipped.get(i);
+            int index = clientPlayer.cd.inventory.indexOf(clientItem); // Still client here.
+            Invention item = GetItemByIndex(index); // Now in server-data.
+            if (item == null){
+                Printer.out("ERROR: Mismatch in item indices, could not equip player requested items! Player: "+name+" index requested: "+index+" totalItems: "+cd.inventory.size());
+  //              new Exception().printStackTrace();
+                continue;
             }
-            else
-                ; // System.out.println("Equipped: "+GetItemByID(item.GetID()).name);
+            if (item.IsEquipped() == false) {
+                Equip(item);
+                Adjust(Statistic.EquipmentChanges, 1);
+            }
         }
 
     }
@@ -1612,6 +1850,12 @@ public class Player extends Combatable implements Serializable {
             if (log.get(i).LogID() == id)
                 return log.get(i);
         }
+        return null;
+    }
+
+    private Invention GetItemByIndex(int index) {
+        if (index >= 0 && index < cd.inventory.size())
+            return cd.inventory.get(index);
         return null;
     }
 
@@ -1625,6 +1869,17 @@ public class Player extends Combatable implements Serializable {
         return null;
     }
 
+    private boolean EquipItemByIndex(int index) {
+        Invention item = GetItemByIndex(index);
+        if (item != null){
+            Equip(item);
+            return true;
+        }
+        return false;
+    }
+
+
+
     private boolean EquipItemWithID(long id) {
         Invention item = GetItemByID(id);
         if (item != null){
@@ -1634,17 +1889,9 @@ public class Player extends Combatable implements Serializable {
         return false;
     }
 
-    public void InformListeners() {
-        for (int i = 0; i < listeners.size(); ++i) {
-            PlayerListener pl = listeners.get(i);
-            if (!IsAlive())
-                pl.OnPlayerDied(this);
-        }
-    }
-
     public void SaveLog(EList<LogType> filterToSkip, String folder) {
         String path = folder+"/"+gameID+"_player_log_"+name+".txt";
-        System.out.println("SavePlayerLog, dumping logs to file "+path);
+        Printer.out("SavePlayerLog, dumping logs to file "+path);
         try {
             FileOutputStream file = new FileOutputStream(path);
             for (int i = 0; i < log.size(); ++i) {
@@ -1679,12 +1926,13 @@ public class Player extends Combatable implements Serializable {
 
     public void AssignResourcesBasedOnDifficulty() {
         int diff = (int) Get(Config.Difficulty); // from 0 easiest to 5 Wipeout.
-        int multiplier = 6 - diff;
+        int multiplier = 6 - diff; // 1 to 6 depending on difficulty.
         Set(Stat.MAX_HP, Stat.MAX_HP.defaultValue + 2 * BonusFromDifficulty());
         Set(Stat.FOOD, Stat.FOOD.defaultValue * multiplier);
         Set(Stat.MATERIALS, Stat.MATERIALS.defaultValue * multiplier);
-        Set(Stat.BASE_ATTACK, Stat.BASE_ATTACK.defaultValue + multiplier);
-        Set(Stat.BASE_DEFENSE, Stat.BASE_ATTACK.defaultValue + multiplier);
+        Set(Stat.BASE_ATTACK, Stat.BASE_ATTACK.defaultValue + multiplier / 2);
+        Set(Stat.BASE_DEFENSE, Stat.BASE_DEFENSE.defaultValue + multiplier);
+        Set(Stat.Lives, Difficulty.Lives(diff));
         // Heal HP.
         Set(Stat.HP, Get(Stat.MAX_HP));
     }
@@ -1702,11 +1950,11 @@ public class Player extends Combatable implements Serializable {
         AssignResourcesBasedOnStartingBonus(); // Assign starting bonus.
     }
 
-    // Random item from the inventory, can literally be anything.
+    // Random item from the inventory, can literally be anything - no...
     public Invention RandomItem() {
-        if (cd.inventions.size() == 0)
+        if (cd.inventory.size() == 0)
             return null;
-        return cd.inventions.get(r.nextInt(cd.inventions.size()) % cd.inventions.size());
+        return cd.inventory.get(r.nextInt(cd.inventory.size()) % cd.inventory.size());
     }
     // o-o
     public void MarkLogMessagesAsReadByClient() {
@@ -1720,7 +1968,7 @@ public class Player extends Combatable implements Serializable {
             transports.get(i).secondsUsed = 0;
         for (int i = 0; i < transportOccurrences.size(); ++i){
             TransportOccurrence to = transportOccurrences.get(i);
-            System.out.println(to.transport.name()+" dur: "+to.DurationSeconds()+"s ratio: "+to.ratioUsed);
+            Printer.out(to.transport.name()+" dur: "+to.DurationSeconds()+"s ratio: "+to.ratioUsed);
             long durS = to.DurationSeconds();
             Get(to.transport).secondsUsed += durS;
         }
@@ -1736,7 +1984,7 @@ public class Player extends Combatable implements Serializable {
 
     // Prints the transports in the order of highest occurrence.
     public void PrintTopTransports(int topNum) {
-        System.out.println(TopTransportsAsString(topNum));
+        Printer.out(TopTransportsAsString(topNum));
     }
 
     private long TotalTransportSeconds() {
@@ -1768,7 +2016,7 @@ public class Player extends Combatable implements Serializable {
 
     // Returns e.g. "Idle: 3252s, Foot: 1235s, Car: 123s"
     public String TopTransportsAsString(int topNum){
-     //   System.out.println("Top "+topNum+":");
+     //   Printer.out("Top "+topNum+":");
         EList<Transport> to = TransportsSortedBySeconds();
         float totalTimeSeconds = TotalTransportSeconds();
         String s = "";
@@ -1854,7 +2102,7 @@ public class Player extends Combatable implements Serializable {
         }
         /*
         for (int i = 0; i < partList.size(); ++i){
-            System.out.println(partList.get(i));
+            Printer.out(partList.get(i));
         }*/
         return partList;
     }
@@ -1865,6 +2113,27 @@ public class Player extends Combatable implements Serializable {
 
     public int GameID() {
         return gameID;
+    }
+
+    // Emulate various transports.
+    static Random transportRand = new Random(System.currentTimeMillis());
+    public void RandomizeGenerateTransportUsageData() {
+        for (int i = 0; i < transports.size(); ++i) // Generate some other seconds of various degrees.
+            transports.get(i).secondsUsed = 0;
+        transports.get(TransportType.Idle.ordinal()).secondsUsed = 3600;
+        for (int i = 0; i < 5; ++i) // Generate some other seconds of various degrees.
+            transports.get(transportRand.nextInt(transports.size()) % transports.size()).secondsUsed += 3600 / (i + 1); // 3600, 1800, 1200, 900, etc.
+    }
+
+    public void OnPlayerDied(Player player) {
+        for (int i = 0; i < cd.knownPlayerNames.size(); ++i){
+            String name = cd.knownPlayerNames.get(i);
+            if (name.equals(player.name)){
+                LogInfo(LogTextID.playerDied, player.name);
+                Printer.out("Player "+name+" was informed of the death of "+player.name);
+                cd.knownPlayerNames.remove(i);
+            }
+        }
     }
 
     public enum StartingBonus{
@@ -1884,7 +2153,7 @@ public class Player extends Combatable implements Serializable {
     public void AssignResourcesBasedOnStartingBonus() {
         int startingBonusIndex = (int) Get(Config.StartingBonus);
         if (startingBonusIndex < 0 || startingBonusIndex >= StartingBonus.values().length){
-            System.out.println("Bad.");
+            Printer.out("Bad.");
             LogInfo(LogTextID.startingBonusNone);
             return;
         }
@@ -1918,8 +2187,8 @@ public class Player extends Combatable implements Serializable {
                 break;
             case Inventions:
                 LogInfo(LogTextID.startingBonusInventions, ""+2);
-                cd.inventions.add(Invention.Random(BonusFromDifficulty()/3));
-                cd.inventions.add(Invention.Random(BonusFromDifficulty()/3));
+                cd.inventionBlueprints.add(Invention.Random(BonusFromDifficulty()/3));
+                cd.inventionBlueprints.add(Invention.Random(BonusFromDifficulty()/3));
                 break;
         }
     }

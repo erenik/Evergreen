@@ -39,7 +39,7 @@ public enum EGResponseType {
     }
     static EGResponseType fromString(String fromString)
     {
-       //                 System.out.println("EGResponseType.fromString");
+       //                 Printer.out("EGResponseType.fromString");
         for (int i = 0; i < EGResponseType.values().length; ++i)
             if (EGResponseType.values()[i].text.equals(fromString))
                 return EGResponseType.values()[i];

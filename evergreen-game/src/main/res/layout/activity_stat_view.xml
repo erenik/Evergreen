@@ -103,12 +103,25 @@
 
                             <!-- Defense -->
                             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutDefenseDetails" android:orientation="vertical">
+                                <!-- Equipped armor -->
+                                <LinearLayout style="@style/Evergreen.Layout.Row">
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/equippedArmor" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvEquippedArmor" android:text="Very cool"/>
+                                </LinearLayout>
+
                                 <LinearLayout style="@style/Evergreen.Layout">
                                     <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/icon_defense" android:layout_height="30sp"/>
                                     <TextView style="@style/Evergreen.TextView" android:text="@string/defenseOutside" />
                                     <TextView style="@style/Evergreen.TextView" android:id="@+id/tvDefenseWhenOut" />
                                     <TextView style="@style/Evergreen.TextView" android:paddingLeft="8sp" android:text="@string/inShelter" />
                                     <TextView style="@style/Evergreen.TextView" android:id="@+id/tvDefenseWhenInShelter" />
+                                </LinearLayout>
+
+                                <!-- Parrying -->
+                                <LinearLayout style="@style/Evergreen.Layout.Row">
+                                    <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/ic_parrying" android:layout_height="30sp"/>
+                                    <TextView style="@style/Evergreen.TextView" android:text="@string/parrying" />
+                                    <TextView style="@style/Evergreen.TextView" android:id="@+id/tvParryingBonus"   android:text="1"/>
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>

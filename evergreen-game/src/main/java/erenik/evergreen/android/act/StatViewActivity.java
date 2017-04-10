@@ -8,6 +8,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import erenik.evergreen.common.Invention.InventionStat;
+import erenik.evergreen.common.player.SkillType;
 import erenik.util.EList;
 import java.util.Arrays;
 import erenik.util.EList;
@@ -18,6 +20,7 @@ import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Invention.InventionType;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.player.Stat;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-12-09.
@@ -26,7 +29,7 @@ import erenik.evergreen.common.player.Stat;
 public class StatViewActivity extends EvergreenActivity {
     Stat statType = null;
     EList<Stat> relevantStats() {
-        Stat[] statArr = new Stat[]{Stat.BASE_ATTACK, Stat.BASE_DEFENSE, Stat.EMISSIONS, Stat.FOOD, Stat.MATERIALS, Stat.HP};
+        Stat[] statArr = new Stat[]{Stat.BASE_ATTACK, Stat.BASE_DEFENSE, Stat.AccumulatedEmissions, Stat.FOOD, Stat.MATERIALS, Stat.HP};
         return new EList<Stat>(statArr);
     }
     @Override
@@ -36,7 +39,7 @@ public class StatViewActivity extends EvergreenActivity {
 
         int index = getIntent().getIntExtra("Stat", 0);
         statType = Stat.values()[index];
-        System.out.println("Stat type: "+statType.name());
+        Printer.out("Stat type: "+statType.name());
 
         // Set up listeners for main buttons (next, previous, go back?)
         findViewById(R.id.buttonPrevious).setOnClickListener(new View.OnClickListener() {
@@ -95,9 +98,9 @@ public class StatViewActivity extends EvergreenActivity {
             case HP: strIds = new int[]{R.string.HP_name, R.string.HP_desc, R.drawable.icon_hp}; break;
             case FOOD: strIds = new int[]{R.string.Food_name, R.string.Food_desc, R.drawable.icon_food}; break;
             case MATERIALS: strIds = new int[]{R.string.Materials_name, R.string.Materials_desc, R.drawable.icon_materials}; break;
-            case EMISSIONS: strIds = new int[]{R.string.Emissions_name, R.string.Emissions_desc, R.drawable.icon_emissions}; break;
-            case ATTACK_BONUS: case BASE_ATTACK: strIds = new int[]{R.string.Attack_name, R.string.Attack_desc, R.drawable.icon_attack}; break;
-            case DEFENSE_BONUS: case BASE_DEFENSE: strIds = new int[]{R.string.Defense_name, R.string.Defense_desc, R.drawable.icon_defense}; break;
+            case AccumulatedEmissions: strIds = new int[]{R.string.Emissions_name, R.string.Emissions_desc, R.drawable.icon_emissions}; break;
+            case BASE_ATTACK: strIds = new int[]{R.string.Attack_name, R.string.Attack_desc, R.drawable.icon_attack}; break;
+            case BASE_DEFENSE: strIds = new int[]{R.string.Defense_name, R.string.Defense_desc, R.drawable.icon_defense}; break;
         }
         // Update image, text, description.
         TextView tv = (TextView) findViewById(R.id.textView_stat_name);
@@ -107,7 +110,7 @@ public class StatViewActivity extends EvergreenActivity {
         tv = (TextView) findViewById(R.id.textView_stat_quantity);
         Player player = App.GetPlayer();
         switch(statType) {
-            case ATTACK_BONUS: case BASE_ATTACK:
+            case BASE_ATTACK:
                 tv.setText(""+(int) player.AggregateAttackBonus());
                 break;
             default:
@@ -124,7 +127,7 @@ public class StatViewActivity extends EvergreenActivity {
         InventionType typeRelevant = null;
         switch(statType)
         {
-            case ATTACK_BONUS: case BASE_ATTACK:
+            case BASE_ATTACK:
                 Invention weapon = player.GetEquippedWeapon();
                 idmv = R.id.layoutAttackDetails;
                 ((TextView)findViewById(R.id.tvEquippedMainWeapon)).setText(weapon != null? weapon.name : getString(R.string.unarmed));
@@ -134,10 +137,13 @@ public class StatViewActivity extends EvergreenActivity {
                 ((TextView)findViewById(R.id.tvAttacksPerRound)).setText(""+player.attacksPerTurn);
                 typeRelevant = InventionType.Weapon;
                 break;
-            case DEFENSE_BONUS: case BASE_DEFENSE:
+            case BASE_DEFENSE:
                 idmv = R.id.layoutDefenseDetails;
+                Invention armor = player.GetEquippedArmor();
+                ((TextView)findViewById(R.id.tvEquippedArmor)).setText(armor != null? armor.name : getString(R.string.ordinaryClothes));
                 ((TextView)findViewById(R.id.tvDefenseWhenOut)).setText(""+player.BaseDefense());
                 ((TextView)findViewById(R.id.tvDefenseWhenInShelter)).setText(""+player.ShelterDefense());
+                ((TextView)findViewById(R.id.tvParryingBonus)).setText(""+player.GetEquipped(InventionStat.ParryBonus) + player.Get(SkillType.Parrying).Level());
 //                ((TextView)findViewById(R.id.tvAttackDamage)).setText
                 typeRelevant = InventionType.Armor;
                 break;

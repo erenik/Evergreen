@@ -12,7 +12,7 @@ public class NameGenerator {
     public static void main(String[] args)
     {
         for (int i = 0; i < 10; ++i)
-            System.out.println("Name: "+New());
+            Printer.out("Name: "+New());
     }
     public static String New()
     {
@@ -70,14 +70,14 @@ public class NameGenerator {
             if (s.contains(fromS) && (r.nextInt(100) < 50)) {
                 // Replace
                 s = s.replace(fromS, toS); // Replace and update.
-//                System.out.println(" replaced "+fromS+" with "+toS);
+//                Printer.out(" replaced "+fromS+" with "+toS);
             }
         }
         s = capitalize(s, 0);
 
 
 
-//        System.out.println("Random name: "+s);
+//        Printer.out("Random name: "+s);
         return s;
     }
 

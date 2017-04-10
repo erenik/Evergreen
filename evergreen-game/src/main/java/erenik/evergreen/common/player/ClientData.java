@@ -12,6 +12,7 @@ import erenik.evergreen.StringUtils;
 import erenik.evergreen.common.Invention.Invention;
 import erenik.util.Byter;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2017-03-24.
@@ -31,11 +32,16 @@ public class ClientData implements Serializable {
     public void Init(){
         statArr = new float[Stat.values().length];
         configArr = new float[Config.values().length];
-        skills = new EList<Skill>(Skill.values());
+        statistics = new long[Statistic.values().length];
+
+        skills = new EList<Skill>();
+        for (int i = 0; i < SkillType.values().length; ++i)
+            skills.add(new Skill(SkillType.values()[i]));
+
         dailyActions = new EList<>();
         skillTrainingQueue = new EList<>();
         queuedActiveActions = new EList<>();
-        inventions = new EList<>();
+        inventionBlueprints = new EList<>();
         inventory = new EList<>();
         knownPlayerNames = new EList<>();
     }
@@ -43,22 +49,24 @@ public class ClientData implements Serializable {
     // All that is relevant to the client.
     public float[] statArr;
     public float[] configArr;
+    public long[] statistics; // See Statistic enum
     public EList<Skill> skills = new EList<>();        /// Array of exp in each Skill.
     public EList<Action> dailyActions = new EList<>();    /// EList of actions this player will take during the day/turn. optionally with extra arguments after a colon?
     public EList<Action> queuedActiveActions = new EList<>();
-    public EList<String> skillTrainingQueue = new EList<>();        /// Queued skills to be leveled up.
-    public EList<Invention> inventions = new EList<>(); // Blueprints, 1 of each.
+    public EList<String> skillTrainingQueue = new EList<>();    /// Queued skills to be leveled up. contains the .name() (code-literal name) of the Skills to be trained?
+    public EList<Invention> inventionBlueprints = new EList<>(); // Blueprints, 1 of each.
     public EList<Invention> inventory = new EList<>(); // Inventory, may have duplicates of items that can be traded etc.
     public EList<String> knownPlayerNames = new EList<>();
 
     /// SERIALIZABLE - DO NOT CHANGE METHOD PARAMS OR RETURN-TYPE
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-  //      System.out.println("ClientData writeObject");
+  //      Printer.out("ClientData writeObject");
         out.writeInt(totalLogMessagesOnServer);
 
         out.writeObject(statArr);
         out.writeObject(configArr);
         out.writeObject(skills);
+        out.writeObject(statistics);
 
         out.writeInt(dailyActions.size());
         for (int i = 0; i < dailyActions.size(); ++i)
@@ -68,7 +76,7 @@ public class ClientData implements Serializable {
             queuedActiveActions.get(i).writeTo(out);
 
         out.writeObject(skillTrainingQueue);
-        out.writeObject(inventions);
+        out.writeObject(inventionBlueprints);
         out.writeObject(inventory);
 
         out.writeObject(knownPlayerNames);
@@ -76,7 +84,7 @@ public class ClientData implements Serializable {
     }
     /// SERIALIZABLE - DO NOT CHANGE METHOD PARAMS OR RETURN-TYPE
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException, InvalidClassException {
-//        System.out.println("ClientData readObject");
+//        Printer.out("ClientData readObject");
         Init();
 
         totalLogMessagesOnServer = in.readInt();
@@ -84,6 +92,7 @@ public class ClientData implements Serializable {
         statArr = (float[]) in.readObject();
         configArr = (float[]) in.readObject();
         skills = (EList<Skill>) in.readObject();
+        statistics = (long[]) in.readObject();
 
         int numDA = in.readInt();
         dailyActions = new EList<>();
@@ -101,14 +110,13 @@ public class ClientData implements Serializable {
         }
 
         skillTrainingQueue  = (EList<String>) in.readObject();
-        inventions = (EList<Invention>)in.readObject();
+        inventionBlueprints = (EList<Invention>)in.readObject();
         inventory = (EList<Invention>) in.readObject();
 
         knownPlayerNames = (EList<String>) in.readObject();
-
     }
-    private void readObjectNoData() throws ObjectStreamException {
 
+    private void readObjectNoData() throws ObjectStreamException {
     }
 
     public boolean readFrom(ObjectInputStream in) {
@@ -134,7 +142,7 @@ public class ClientData implements Serializable {
     }
 
     public void PrintDetails() {
-        System.out.println("totalLogMesgsonserver: "+totalLogMessagesOnServer+" statArr: "+statArr+" confArr: "+configArr+" skills: "+skills+" dActions: "+dailyActions+
-                " queedAActions"+queuedActiveActions+" skills"+skillTrainingQueue+" invents"+inventions+" items"+inventory);
+        Printer.out("totalLogMesgsonserver: "+totalLogMessagesOnServer+" statArr: "+statArr+" confArr: "+configArr+" skills: "+skills+" dActions: "+dailyActions+
+                " queedAActions"+queuedActiveActions+" skills"+skillTrainingQueue+" invents"+inventionBlueprints+" items"+inventory);
     }
 }

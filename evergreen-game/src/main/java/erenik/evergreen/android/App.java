@@ -33,6 +33,7 @@ import erenik.evergreen.common.packet.EGRequest;
 import erenik.evergreen.common.player.*;
 import erenik.evergreen.R;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  * Created by Emil on 2016-10-26.
@@ -64,7 +65,10 @@ public class App {
 
     static void InitCommunicator(){
         comm = new EGPacketCommunicator();
-//        comm.SetServerIP(defaultAddress); // Home/local address
+        // Do some initial tests to see which IP to use? no?
+
+
+//        comm.SetServerIP("192.168.0.11"); // Home/local address
 //        comm.SetServerIP("10.104.33.248"); // School address
         comm.SetServerIP("www.erenik.com"); // Public address
     }
@@ -89,10 +93,10 @@ public class App {
         event.type = player.NextEvent();
         if (event.type == Finding.Nothing)
         {
-            System.out.println("HandleGeneratedEvents: nothing");
+            Printer.out("HandleGeneratedEvents: nothing");
             return false;
         }
-        System.out.println("HandleGeneratedEvents, type: " + event.type.name());
+        Printer.out("HandleGeneratedEvents, type: " + event.type.name());
 
         /// For now, just skip the event, act as if it was already handled.
         player.PopEvent(event.type);
@@ -108,7 +112,7 @@ public class App {
             return true;
         }
         else {
-            System.out.println("Activity not instance of fragmentAcitvity: "+currentActivity.getLocalClassName());
+            Printer.out("Activity not instance of fragmentAcitvity: "+currentActivity.getLocalClassName());
         }*/
         return false;
     };
@@ -121,10 +125,12 @@ public class App {
             case ATTACKED_MISS:
             case ACTION_FAILURE:
             case ATTACK_MISS: return R.color.attackMiss;
+            case ENC_INFO:
             case INFO: return R.color.info;
             case DEFEATED_ENEMY:
             case SUCCESS: return R.color.success;
             case PROGRESS: return R.color.progress;
+            case ACTION_NO_PROGRESS: return R.color.actionNoProgress;
             case EXP: return R.color.exp;
             case DEFEATED:
                 return R.color.defeated;
@@ -146,7 +152,7 @@ public class App {
     // Specify filter.
     public static void UpdateLog(ViewGroup vg, Context context, int maxLinesToDisplay, EList<LogType> typesToShow)
     {
-        System.out.println("WTF?");
+        Printer.out("WTF?");
     }*/
 
     /// Utility method.
@@ -158,7 +164,7 @@ public class App {
     }
     /// Go to game-over screen.
     public static void GameOver() {
-        System.out.println("GaME OVER!!!");
+        Printer.out("GaME OVER!!!");
         Intent i = new Intent(currentActivity.getBaseContext(), GameOver.class);
         currentActivity.startActivity(i);
     }
@@ -169,7 +175,7 @@ public class App {
             ac = mainScreenActivity;
         else if (ac == null && runningActivities.size() > 0)
             ac = runningActivities.get(0);
-//        System.out.println("currentActivity: "+currentActivity+" mainScreen: "+mainScreenActivity+" index 0: "+(runningActivities.size() > 0? runningActivities.get(0) : "no"));
+//        Printer.out("currentActivity: "+currentActivity+" mainScreen: "+mainScreenActivity+" index 0: "+(runningActivities.size() > 0? runningActivities.get(0) : "no"));
         if (ac == null)
             return null;
         return GetPreferences(ac);
@@ -192,7 +198,7 @@ public class App {
             }
             @Override
             public void onActivityResumed(Activity activity) {
-                System.out.println("Acitivity resumed: " + activity.getLocalClassName());
+                Printer.out("Acitivity resumed: " + activity.getLocalClassName());
                 App.currentActivity = (EvergreenActivity) activity;
             }
             @Override
@@ -203,12 +209,12 @@ public class App {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState)
             {
-                System.out.println("Acitivity created: " + activity.getLocalClassName());
+                Printer.out("Acitivity created: " + activity.getLocalClassName());
                 App.currentActivity = (EvergreenActivity) activity; // this?
             }
             @Override
             public void onActivityStarted(Activity activity) {
-                System.out.println("Acitivity started: " + activity.getLocalClassName());
+                Printer.out("Acitivity started: " + activity.getLocalClassName());
                 App.currentActivity = (EvergreenActivity) activity;
                 runningActivities.add(activity);
             }
@@ -239,19 +245,19 @@ public class App {
     public static final String localFileSaveName = "Evergreen.sav";
     public static boolean SaveLocally() {
         if (currentActivity == null) {
-            System.out.println("Couldn't save, no current activity D:");
+            Printer.out("Couldn't save, no current activity D:");
             return false;
         }
-        System.out.println("SaveLocally");
+        Printer.out("SaveLocally");
         Context context = currentActivity.getBaseContext();
         Player player = App.GetPlayer(); // Fetch current player to save.
         if (context == null) {
-            System.out.println("Context null. Aborting");
+            Printer.out("Context null. Aborting");
             return false;
         }
         SharedPreferences sp = App.GetPreferences();
         if (sp == null) {
-            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
+            Printer.out("Unable to save locally in preferences: Unable to fetch preferences.");
             return false;
         }
         SharedPreferences.Editor editor = sp.edit();
@@ -283,33 +289,33 @@ public class App {
                     objectOut.close();
                 } catch (IOException e2) {
                     // do nowt
-                    System.out.println("Failed to save");
+                    Printer.out("Failed to save");
                     return false;
                 }
             }
         };
         editor.apply();
-        System.out.println("Saved");
+        Printer.out("Saved");
         return true;
     }
 
     /// Loads data from shared preferences to see if there is character data.
     public static boolean LoadLocally() {
-        System.out.println("LoadLocally");
+        Printer.out("LoadLocally");
         Context context = currentActivity.getBaseContext();
         SharedPreferences sp = App.GetPreferences();
         if (sp == null) {
-            System.out.println("Unable to save locally in preferences: Unable to fetch preferences.");
+            Printer.out("Unable to save locally in preferences: Unable to fetch preferences.");
             return false;
         }
         boolean saveExists = sp.getBoolean(Constants.SAVE_EXISTS, false);
         if (saveExists == false) {
-            System.out.println("No save exists in saved preferences. Returning.");
+            Printer.out("No save exists in saved preferences. Returning.");
             return false;
         }
         int numPlayersSaved = sp.getInt(Constants.NUM_PLAYERS, 0);
         if (numPlayersSaved == 0) {
-            System.out.println("Save exists, but 0 players..?");
+            Printer.out("Save exists, but 0 players..?");
             return true;
         }
         String activePlayerName = player != null? player.name : "";
@@ -330,7 +336,7 @@ public class App {
                     player = p;
             }
         } catch (FileNotFoundException e) {
-            System.out.println("No file found with name "+localFileSaveName);
+            Printer.out("No file found with name "+localFileSaveName);
             return false;
         } catch (IOException e) {
             e.printStackTrace();
@@ -352,7 +358,7 @@ public class App {
                 }
             }
         }
-        System.out.println("Loaded "+numPlayersSaved+" player characters successfully.");
+        Printer.out("Loaded "+numPlayersSaved+" player characters successfully.");
         return true;
     }
 
@@ -371,7 +377,7 @@ public class App {
         App.player = playerToBecomeActive;
         if (players.indexOf(playerToBecomeActive) == -1) // Add it to the array if needed :)
             players.add(playerToBecomeActive);
-        System.out.println("GameID: "+playerToBecomeActive.gameID);
+        Printer.out("GameID: "+playerToBecomeActive.gameID);
     }
 
     public static Player GetMostRecentlyEditedPlayer() {
@@ -399,9 +405,29 @@ public class App {
             case 5: return R.drawable.av_05;
             case 6: return R.drawable.av_06;
             case 7: return R.drawable.av_07;
+            case 8: return R.drawable.av_08;
+            case 9: return R.drawable.av_09;
+            case 10: return R.drawable.av_10;
+            case 11: return R.drawable.av_11;
+            case 12: return R.drawable.av_12;
+            case 13: return R.drawable.av_13;
+            case 14: return R.drawable.av_14;
+            case 15: return R.drawable.av_15;
+            case 16: return R.drawable.av_16;
+            case 17: return R.drawable.av_17;
+  //          case 18: return R.drawable.av_18;
+//            case 19: return R.drawable.av_19;
         }
-        return R.drawable.icon;
+        return -1;
     }
+    public static int AvatarIDs() {
+        for (int i = 0; ; ++i){
+            int id = GetDrawableForAvatarID(i);
+            if (id == -1)
+                return i;  // Means we had up until this number in total :)
+        }
+    }
+
 
     public static void DoQueuedActions() {
         // If local game, apply changes straight away.
@@ -458,7 +484,7 @@ public class App {
                 return;
             }
         }
-        System.out.println("FAILED TO UPDATE");
+        Printer.out("FAILED TO UPDATE");
         System.exit(14);
     }
 

@@ -32,6 +32,7 @@ import erenik.evergreen.common.player.ClientData;
 import erenik.evergreen.server.EGTCPServer;
 import erenik.util.Byter;
 import erenik.util.EList;
+import erenik.util.Printer;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -130,7 +131,7 @@ public class EGPacket {
     public static EGPacket logMessages(EList<Log> logMessages){
         EList<Log> lm = new EList();
         lm.addAll(logMessages);
-        System.out.println("Replying "+lm.size()+" logMessages, printing the last 5");
+        Printer.out("Replying "+lm.size()+" logMessages, printing the last 5");
         Log.PrintLastLogMessages(lm, 5);
         EGPacket pack = new EGPacket(EGResponseType.LogMessages);
 
@@ -167,7 +168,7 @@ public class EGPacket {
             Logger.getLogger(Player.class.getName()).log(Level.SEVERE, null, ex);
         }
         pack.body = baos.toByteArray();
-        System.out.println("Total bytes: "+pack.body.length);
+        Printer.out("Total bytes: "+pack.body.length);
         return pack;
     }
     // Parse players from the body.
@@ -185,14 +186,14 @@ public class EGPacket {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("Read players: "+players.size());
+        Printer.out("Read players: "+players.size());
         return players;
     }
 
     static byte[] bytePart(byte[] bytes, int startIndex, int stopIndex) throws Exception {
         int len = stopIndex - startIndex;
         if (stopIndex > bytes.length)
-            throw new Exception("Will read outside array, bad operation while builting packet.");
+            throw new Exception("Will read outside array, bad operation while builting packet. stopIndex: "+stopIndex+" length: "+bytes.length);
         byte[] b = new byte[stopIndex - startIndex];
         for (int i = 0; i < len; ++i)
             b[i] = bytes[i+startIndex];
@@ -209,7 +210,7 @@ public class EGPacket {
         {
             System.out.print(" "+(int)bytes[i]);
         }
-        System.out.println("");
+        Printer.out("");
     }
     /// Build final packet contents to send.
     public byte[] build()
@@ -236,7 +237,7 @@ public class EGPacket {
         return bytes;
     }
     public static EGPacket packetFromBytes(byte[] arr) {
-//        System.out.println("packetFromBytes arrLen: "+arr.length);
+//        Printer.out("packetFromBytes arrLen: "+arr.length);
         EGPacket pack = new EGPacket();
         int argN = 0, 
             startIndexKey = 0, 
@@ -249,18 +250,22 @@ public class EGPacket {
             if (c == ' '){
                 startIndexValue = i + 1;
                 key = new String(arr, startIndexKey, i - startIndexKey);
-            //    System.out.println("Key: "+key);
+            //    Printer.out("Key: "+key);
             }
             if (c == '\n')
             {
                 val = new String(arr, startIndexValue, i - startIndexValue);
                 val = val.trim();
                 startIndexKey = i + 1;
-//                System.out.println("Val: "+val);
-                if (key.equals("VER"))
-                {
+//                Printer.out("Val: "+val);
+                if (key.equals("VER")) {
                     pack.version = Integer.parseInt(val);
-           //         System.out.println("VER "+pack.version+" "+val);
+           //         Printer.out("VER "+pack.version+" "+val);
+//                    if (pack.version != Game.GAME_VERSION){
+                        // Flag it and return?
+  //                      pack.error = EGPacketError.BadVersion;
+    //                    return pack;
+      //              }
                 }
                 if (key.equals("PT")) {
                     pack.type = EGPacketType.fromString(val);
@@ -275,22 +280,22 @@ public class EGPacket {
                     newPack.body = pack.body;
                     newPack.bodyLen = pack.bodyLen;
                     pack = newPack;
-         //           System.out.println("PT "+pack.type+" "+val);
+         //           Printer.out("PT "+pack.type+" "+val);
                 }
                 if (key.equals("REQ")) {
                     pack.reqt = EGRequestType.fromString(val);
-       //             System.out.println("REQ "+pack.reqt+" "+val);
+       //             Printer.out("REQ "+pack.reqt+" "+val);
                 }
                 if (key.equals("RES")) {
                     pack.rest = EGResponseType.fromString(val);
-     //               System.out.println("RES "+pack.rest+" "+val);
+     //               Printer.out("RES "+pack.rest+" "+val);
                 }
                 if (key.equals("LEN"))
                 {
                     bodyLength = Integer.parseInt(val);
-             //       System.out.println("bodyLength: "+bodyLength);
+             //       Printer.out("bodyLength: "+bodyLength);
                 }
-//                System.out.println("key: "+key+" value: "+val);
+//                Printer.out("key: "+key+" value: "+val);
                 ++argN;
                 if (argN >= 4)
                 {
@@ -299,7 +304,7 @@ public class EGPacket {
                         try {
                             pack.body = bytePart(arr, bodyStart, bodyStart + bodyLength);
                         } catch (Exception e) {
-                            System.out.println("Error: "+e.getMessage());
+                            Printer.out("Error: "+e.getMessage());
                             e.printStackTrace();
                         }
                         //                   System.out.print("Tail bytes of parsed body: ");
@@ -309,7 +314,7 @@ public class EGPacket {
                 }
             }
         }
-//        System.out.println("argN found: "+argN);
+//        Printer.out("argN found: "+argN);
         pack.receiveTime = System.currentTimeMillis(); // Received timestamp.
         if (pack.type != null)
             return pack;
@@ -329,22 +334,21 @@ public class EGPacket {
             if (c == ' '){
                 startIndexValue = i + 1;
                 key = str.substring(startIndexKey, i);
-  //              System.out.println("Key: "+key);
+  //              Printer.out("Key: "+key);
             }
             if (c == '\n')
             {
                 val = str.substring(startIndexValue, i);
                 val = val.trim();
                 startIndexKey = i + 1;
-//                System.out.println("Val: "+val);
-                if (key.equals("VER"))
-                {
+//                Printer.out("Val: "+val);
+                if (key.equals("VER")) {
                     pack.version = Integer.parseInt(val);
-//                    System.out.println("VER "+pack.version+" "+val);
+//                    Printer.out("VER "+pack.version+" "+val);
                 }
                 if (key.equals("PT")) {
                     pack.type = EGPacketType.fromString(val);
-  //                  System.out.println("PT "+pack.type+" "+val);
+  //                  Printer.out("PT "+pack.type+" "+val);
                 }
                 if (key.equals("REQ")) {
                     pack.reqt = EGRequestType.fromString(val);
@@ -386,6 +390,9 @@ public class EGPacket {
             out.flush();
             sendTime = System.currentTimeMillis();
             return true; // Success. Sent well.
+        } catch (java.net.ConnectException e){
+            Printer.out("Could not connect to given address: "+address+", port: "+portN);
+            error = EGPacketError.CouldNotEstablishConnection;
         } catch (IOException ex) {
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, "Unable to connect to target address/port: "+address+":"+portN, ex);
             error = EGPacketError.CouldNotEstablishConnection;
@@ -397,7 +404,7 @@ public class EGPacket {
     public EGPacket ReadFromSocket(EGSocket sock) {
         try {
             if (sock.isClosed()) {
-                System.out.println("Socket closed");
+                Printer.out("Socket closed");
                 lastError = EGResponseType.SocketClosed;
                 return null;
             }
@@ -411,12 +418,12 @@ public class EGPacket {
             if (bytesAvail > (BUF_LEN / 10)) // More than a tenth of max? 4kB? then maybe worth spamming about it...
                 System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
             if (bytesRead <= 0){
-                System.out.println("0 bytes read from stream.");
+                Printer.out("0 bytes read from stream.");
                 return null;
             }
-//            System.out.println("read "+bytesRead+" bytes");
+//            Printer.out("read "+bytesRead+" bytes");
             EGPacket pack = EGPacket.packetFromBytes(buff);
-      //      System.out.println("Got packet: "+pack);
+      //      Printer.out("Got packet: "+pack);
             return pack;
         } catch (IOException ex) {
             Logger.getLogger(EGPacket.class.getName()).log(Level.SEVERE, null, ex);
@@ -430,7 +437,7 @@ public class EGPacket {
         }
         EGPacket reply = ReadFromSocket(socketSentOn);
         if (reply != null) {
-//            System.out.println("Got a reply: " + reply);
+//            Printer.out("Got a reply: " + reply);
             replies.add(reply);
         }
     }
@@ -441,7 +448,7 @@ public class EGPacket {
         System.out.print("EGPacket Body: ");
         for (int i = 0; i < body.length; ++i)
             System.out.print(body[i]);
-        System.out.println();
+        Printer.out();
     }
 
     public static EGPacket gamesList(EList<Game> games)
@@ -459,7 +466,7 @@ public class EGPacket {
     public EList<Game> parseGamesList()
     {
         String bodyAsStr = new String(body);
-        System.out.println("bodyASStr: "+bodyAsStr);
+        Printer.out("bodyASStr: "+bodyAsStr);
         String[] lines = bodyAsStr.split("\n");
         EList<Game> games = new EList<>();
         for (int i = 0; i < lines.length; ++i)
@@ -505,7 +512,7 @@ public class EGPacket {
         EList<Log> list = new EList<>();
         try {
             int numLogMessages = in.readInt();
-            System.out.println("numLogMessages: "+numLogMessages);
+            Printer.out("numLogMessages: "+numLogMessages);
             for (int i = 0; i < numLogMessages; ++i){
                 Log l = new Log();
                 l.readFrom(in);

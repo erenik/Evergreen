@@ -213,7 +213,7 @@
     <string name="unarmed">Unarmed</string>
 
     <!-- Log messages with arguments -->
-    <string name="reduceEmissionsSuccessful">Your attempt at reducing emissions was successful. Emissions decreased by (arg) points.</string>
+    <string name="reduceEmissionsSuccessful">You reduced your emissions by (arg) points.</string>
     <string name="reduceEmissionsMostlySuccessful">Your attempt at reducing emissions was mostly successful. Emissions decreased by (arg) points.</string>
     <string name="reduceEmissionsNotSoSuccessful">Your attempt at reducing emissions didn\'t go too well. Emissions decreased by (arg) points.</string>
     <string name="reduceEmissionsFailed">Your attempt at reducing emissions failed. Emissions decreased by (arg) points.</string>
@@ -306,5 +306,22 @@
     <string name="playerParries">(arg) parries the attack!</string>
     <string name="gaveItemToPlayer">You gave the (arg) to (arg).</string>
     <string name="receivedItemFromPlayer">You received a (arg) from (arg).</string>
+    <string name="gaveBlueprintToPlayer">You gave the blueprint for (arg) to (arg).</string>
+    <string name="receivedBlueprintFromPlayer">You received the blueprint for (arg) from (arg).</string>
+    <string name="playerNotAliveAnymore">Player (arg) is not alive anymore...</string>
+    <string name="ensnared">(arg) is ensnared by the (arg)!</string>
+    <string name="ensnaredWoreOff">(arg)\'s ensnared effect wears off.</string>
+    <string name="multiplies">The (arg) multiplies itself!</string>
+    <string name="sendPlayerResourcesFailed">Insufficient (arg) when trying to send to (arg).</string>
+    <string name="playerDied">Player (arg) was defeated.</string>
+    <string name="skillLeveledDown">Skill (arg) leveled down to (arg).</string>
+    <string name="playerDefeatedPlayer">(arg) defeated (arg).</string>
+    <string name="obtainedBlueprint">You obtained a blueprint of (arg).</string>
+    <string name="obtainedItem">You obtained (arg).</string>
+    <string name="scoutFoundItems">While out scouting, you found (arg) items!</string>
+    <string name="equippedArmor">Equipped armor:</string>
+    <string name="ordinaryClothes">Ordinary clothes</string>
+    <string name="parrying">Parrying: </string>
+    <string name="inventory">Inventory</string>
 
 </resources>

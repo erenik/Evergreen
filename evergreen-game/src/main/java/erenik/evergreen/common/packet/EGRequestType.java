@@ -27,7 +27,7 @@ public enum EGRequestType {
     }
     static EGRequestType fromString(String fromString)
     {
-         //       System.out.println("EGRequestType.fromString");
+         //       Printer.out("EGRequestType.fromString");
         for (int i = 0; i < EGRequestType.values().length; ++i)
             if (EGRequestType.values()[i].text.equals(fromString))
                 return EGRequestType.values()[i];

@@ -6,6 +6,7 @@
 package erenik.weka;
 
 import erenik.util.EList;
+import erenik.util.Printer;
 
 /**
  *
@@ -26,10 +27,28 @@ public class ClassificationStats {
     /// Time in Ms required to train the classifier using the given test-set.
     public long trainingTimeMs = 0;
     public long predictionTimeMs = 0;
+    // Array of values - mainly for confusion matrix.
+    // First array the true value, second value the prediction.
+    public int[][] confusionMatrix = null;
+    public int matrixSize = 0;
+    public String[] classValues = null;
+    public int[] trueValuesPerClass = null;
 
     ClassificationStats(WClassifier wc, Settings s) {
         this.s.CopyFrom(s);
         this.wc = wc;
+
+        if (s.testDataWhole != null) {
+            classValues = new String[s.testDataWhole.classAttribute().numValues()];
+            trueValuesPerClass = new int[classValues.length];
+            for (int i = 0; i < s.testDataWhole.classAttribute().numValues(); ++i) {
+                classValues[i] = s.testDataWhole.classAttribute().value(i);
+                trueValuesPerClass[i] = 0;
+            }
+        }
+        else {
+            Printer.out("testDataWhole null, initializing ClassificationStats without class values saved");
+        }
     }
 
     String ToString() {
@@ -77,5 +96,34 @@ public class ClassificationStats {
                 .replace("normAcc", Format(s.normalizeAcceleration? "Yes" : "No", 5))
         ;
         return format;
+    }
+
+    public String confusionMatrixAsString(){
+        String string = "\nPredicted values in each column\n";
+//        Printer.out(" settings"+s+" fold: "+s.trainingDataFold);
+        // Predicted value on top.
+        char a = 'a';
+        int cs = 5; // Cell-size.
+        for (int predictedValue = 0; predictedValue < matrixSize; ++predictedValue){ // So, horizontally predicted values for the given true value. so true value on the right - rows
+            if (trueValuesPerClass[predictedValue] == 0)
+                continue;
+            string += Format((char)(a+predictedValue)+" ", cs);
+        }
+        string += " True values in each row. ";
+        for (int trueValue = 0; trueValue < matrixSize; ++trueValue){
+            if (trueValuesPerClass[trueValue] == 0)
+                continue;
+            string += "\n";
+            for (int predictedValue = 0; predictedValue < matrixSize; ++predictedValue){ // So, horizontally predicted values for the given true value. so true value on the right - rows
+                if (trueValuesPerClass[predictedValue] == 0)
+                    continue;
+                string += Format((confusionMatrix[trueValue][predictedValue])+" ", cs);
+            }
+            string += " "+(char)(a+trueValue)+" - "
+                    +" TP "+  Format(String.format("%.1f", 100 * confusionMatrix[trueValue][trueValue] / (float) trueValuesPerClass[trueValue]), 4)
+                            +" "+classValues[trueValue];
+//            string += " "+(a+trueValue)+" "+s.trainingDataFold.classAttribute().value(trueValue);
+        }
+        return string;
     }
 }

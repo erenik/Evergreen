@@ -22,7 +22,7 @@ public enum InventionStat {
     // for Tools, the ToolType etc.
     // IF -1, is bad, should be randomized before proceeding to details.
     SubType(-1),
-    Equipped(-1), // non-negative to signify which player has it equipped. 0 for localhost player, 1+ for multiplayer player games.
+    Equipped(-1), // non-negative to signify which player has it equipped. 0 for localhost player, 1+ for multiplayer player games. -1 if not equipped.
     AdditionalEffect(-1),
     IsRanged(0), // If 1, is true.
     AttackBonus(0),
@@ -35,21 +35,22 @@ public enum InventionStat {
     /// Ranged attacks.
     RangedAttackBonus(0), RangedDamageBonus(0),
     /// Tool stats
-    HarvestBonus(0), // +food per Foraging,
     ScavengingBonus(0), // +Material per Material search,
     RecoveryBonus(0), // + HP per turn?
     ConstructionBonus(0), // + building progress.
     InventingBonus(0), // + inventing bonus.
     ScoutingBonus(0), // + scouting.
+    StealthBonus(0),
     /// Shelter addition stats.
     GreenhouseProductivity(0),
     EscapePath(0),
     Crenelation(0),
     Recycler(0),
     // Vehicle upgrades.
-    Catalyst(0),
-    Compressor(0), // + Speed, + Flee
-    ;
+//    Catalyst(0),
+  //  Compressor(0), // + Speed, + Flee
+    CraftingBonus(0),
+    ForagingBonus(0);
     public int defaultValue = 0;
     InventionStat(int defaultValue)
     {

@@ -18,7 +18,7 @@ public class Dice
         int total = bonus;
         for (int i = 0; i < dice; ++i)
             total += r.nextInt(diceType) + 1;
-       // System.out.println(dice+"D"+diceType+""+(bonus > 0? "+"+bonus : bonus < 0? ""+bonus : "")+" = "+total);
+       // Printer.out(dice+"D"+diceType+""+(bonus > 0? "+"+bonus : bonus < 0? ""+bonus : "")+" = "+total);
         return total;
     }
     public int diceType; // Sides of the dice. E.g. 6 for D6, 3 for D3. etc.
@@ -36,7 +36,7 @@ public class Dice
         int total = 0;
         for (int i = 0; i < numDice; ++i)
             total += r.nextInt(6) + 1;
-  //      System.out.println(numDice+"D6 = "+total);
+  //      Printer.out(numDice+"D6 = "+total);
         return total;
     }
     static public int RollD3(int numDice)
@@ -44,7 +44,7 @@ public class Dice
         int total = 0;
         for (int i = 0; i < numDice; ++i)
             total += r.nextInt(3) + 1;
-//        System.out.println(numDice+"D3 = "+total);
+//        Printer.out(numDice+"D3 = "+total);
         return total;
     }
 

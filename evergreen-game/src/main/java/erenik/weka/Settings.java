@@ -1,5 +1,6 @@
 package erenik.weka;
 
+import erenik.util.EList;
 import weka.core.Instances;
 
 /**
@@ -40,6 +41,7 @@ public class Settings {
     public String testDataSource = "";
     // TODO: Add a button/toggle for this in any UI that uses the service?
     public boolean normalizeAcceleration = true; // If true, divides accMin, accMax and accAvg by accAvg before training and testing.
+    public EList<ClassConversion> classConversions = new EList<>();
 
     //    @override
     public String toString(){

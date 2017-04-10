@@ -14,6 +14,7 @@ import erenik.evergreen.android.App;
 import erenik.evergreen.R;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.Player;
+import erenik.util.Printer;
 
 public class EventLogViewer extends EvergreenActivity {
 
@@ -36,7 +37,7 @@ public class EventLogViewer extends EvergreenActivity {
                     break;
                 case R.id.checboxVanquished:
                     SetFilter(LogType.DEFEATED_ENEMY, cb.isChecked());
-                    System.out.println("Log typ set for DEFEATED_ENEMY: "+cb.isChecked());
+                    Printer.out("Log typ set for DEFEATED_ENEMY: "+cb.isChecked());
                     break;
             }
             UpdateLog();
@@ -75,7 +76,7 @@ public class EventLogViewer extends EvergreenActivity {
     int logMessagesToLoad = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        System.out.println("EventLogViewer onCreate");
+        Printer.out("EventLogViewer onCreate");
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_viewer);
