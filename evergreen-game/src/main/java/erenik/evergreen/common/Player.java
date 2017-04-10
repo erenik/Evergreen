@@ -437,12 +437,17 @@ public class Player extends Combatable implements Serializable {
         return (int) (BaseAttack() + Get(TransportStat.SocialSupport));
     }
     // Returns the weighted stat of transport bonuses.
+    static int attemptsToGetTransportStat = 0;
     public float Get(TransportStat stat) {
         long totalSeconds = GetWeightedTransportSeconds();
         if (totalSeconds == 0){
             Printer.out("Total seconds 0! Generating random transport data and using it instead.");
             // Use default values? Randmize?
             RandomizeGenerateTransportUsageData();
+            ++attemptsToGetTransportStat;
+            if (attemptsToGetTransportStat > 3){
+                return 1;
+            }
             return Get(stat);
 //            return 0;
             // Randomize it?
