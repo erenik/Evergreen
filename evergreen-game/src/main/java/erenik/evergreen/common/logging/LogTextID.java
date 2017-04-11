@@ -61,6 +61,7 @@ public enum LogTextID {
     playerNotAliveAnymore,
     ensnared, ensnaredWoreOff, multiplies, sendPlayerResourcesFailed, playerDied, skillLeveledDown, playerDefeatedPlayer, obtainedItem, obtainedBlueprint, scoutFoundItems,
     targetStunned, entHatred, tailWhip, tailWhipMiss, breathAttack, breathAttackMiss, gaiaHeal, slashOfHeavens, slashOfHeavensPartial, recycled,
-    wantsToFleeButCannot, couldNotFindPlayer, assaultsOfTheEvergreen, damageReflectedWhileAttacking, stumbledUpon, stumbledUponFood, stumbledUponMaterials, stumbledUponItem, wheelAccident, wheelOmen1, wheelOmen2, wheelOmen3, wheelOmen3, flyingOmen1, flyingOmen2,
+    wantsToFleeButCannot, couldNotFindPlayer, assaultsOfTheEvergreen, damageReflectedWhileAttacking, stumbledUpon, stumbledUponFood, stumbledUponMaterials, stumbledUponItem, wheelAccident, wheelOmen1, wheelOmen2,
+    wheelOmen3, flyingOmen1, flyingOmen2,
 
 }

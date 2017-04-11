@@ -44,7 +44,7 @@ public class Network {
         Printer.out("Init communicator called");
         comm = new EGPacketCommunicator();
         // Do some initial tests to see which IP to use? no?
-      //  comm.SetServerIP("192.168.0.11"); // Home/local address
+     //   comm.SetServerIP("192.168.0.11"); // Home/local address
 //        comm.SetServerIP("10.104.33.248"); // School address
         comm.SetServerIP("www.erenik.com"); // Public address
 //
