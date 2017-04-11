@@ -65,10 +65,14 @@ public class TransportDetectionService extends Service {
     private boolean forceAverageBeforeSleep = true;
 
     public void SetHistorySetSize(int newSize){
+        newSize = 12;
         settings.historySetSize = newSize;
         Printer.out("History set size: "+settings.historySetSize);
     }
     public void SetSleepSessions(int newVal) {
+        // Check if the sleep-sessions value is supported.
+        // For now, hard-coded.
+        newVal = 12;
         settings.sleepSessions = newVal;
         Printer.out("Sleep sessions: "+settings.sleepSessions);
     }
@@ -328,9 +332,16 @@ public class TransportDetectionService extends Service {
         // New array of 0s for each transport.
         EList<TransportOccurrence> totalTransportDurationUsages = new EList<>();
         int durationTotalMs = 0;
+        int detectionMethodUsed = TransportOccurrence.GetMostUsedDetectionMethod(transportOccurrences);
+        /*
+        if (transportOccurrences.size() > 0){
+            detectionMethodUsed = transportOccurrences.get(0).detectionMethodUsed; // Grab the first one in the array?
+        }
+        */
+
         /// Create a new counter for each transport.
         for (int i = 0; i < TransportType.values().length; ++i){
-            TransportOccurrence occ = new TransportOccurrence(TransportType.values()[i], 0, DurationType.Milliseconds);
+            TransportOccurrence occ = new TransportOccurrence(TransportType.values()[i], 0, DurationType.Milliseconds, detectionMethodUsed);
             totalTransportDurationUsages.add(occ);
         }
         // Increment.
@@ -366,7 +377,9 @@ public class TransportDetectionService extends Service {
         return dataSamplerThread.GetTransportString(value);
     }
 
+    TransportOccurrence lastAdded = null;
     void AddTransportOccurrence(TransportOccurrence transportOccurrence) {
+        lastAdded = transportOccurrence;
         transportData.AddData(transportOccurrence, null); // Add it to the object which will be presisted between sessions and interruptions.
     }
 
@@ -378,5 +391,11 @@ public class TransportDetectionService extends Service {
     void OnSleep() {
         sleeping = true; // Flag as sleeping
         sensingFramesSinceLastSleep = 0;
+    }
+
+    public int LastAddedTransportOccurrenceDetectionMethod() {
+        if (lastAdded == null)
+            return TransportOccurrence.NOT_CLASSIFIED_YET;
+        return lastAdded.detectionMethodUsed;
     }
 }

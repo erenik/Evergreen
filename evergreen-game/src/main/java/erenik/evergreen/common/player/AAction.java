@@ -100,7 +100,7 @@ public enum AAction {
 
     static Random randomAction = new Random(System.currentTimeMillis());
     public static Action RandomActiveAction(Player forPlayer) {
-        if (forPlayer.IsAlive() == false)
+        if (!forPlayer.IsAliveOutsideCombat())
             return null;
         for(int i = 0; i < 10; ++i) { // Give N attempts per request.
             // Randomly select one.

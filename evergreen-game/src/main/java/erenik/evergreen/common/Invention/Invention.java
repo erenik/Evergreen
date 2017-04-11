@@ -199,7 +199,7 @@ public class Invention implements Serializable {
                 System.exit(4);
         }
         Set(InventionStat.SubType, inventionSubType);
-        Printer.out("Sub-type set to: "+inventionSubType+" type: "+this.type);
+      //  Printer.out("Sub-type set to: "+inventionSubType+" type: "+this.type);
         UpdateDetails();
         return inventionSubType;
     }

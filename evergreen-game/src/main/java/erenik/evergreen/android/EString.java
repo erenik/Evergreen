@@ -114,6 +114,20 @@ public class EString {
             case slashOfHeavens: id = R.string.slashOfHeavens; break;
             case slashOfHeavensPartial: id = R.string.slashOfHeavensPartial; break;
             case recycled: id = R.string.recycled; break;
+            case wantsToFleeButCannot: id = R.string.wantsToFleeButCannot; break;
+            case couldNotFindPlayer: id = R.string.couldNotFindPlayer; break;
+            case assaultsOfTheEvergreen: id = R.string.assaultsOfTheEvergreen; break;
+            case damageReflectedWhileAttacking: id = R.string.damageReflectedWhileAttacking; break;
+            case stumbledUpon: id = R.string.stumbledUpon; break;
+            case stumbledUponFood: id = R.string.stumbledUponFood; break;
+            case stumbledUponMaterials: id = R.string.stumbledUponMaterials; break;
+            case stumbledUponItem: id = R.string.stumbledUponItem; break;
+            case wheelAccident: id = R.string.wheelAccident; break;
+            case wheelOmen1: id = R.string.wheelOmen1; break;
+            case wheelOmen2: id = R.string.wheelOmen2; break;
+            case wheelOmen3: id = R.string.wheelOmen3; break;
+            case flyingOmen1: id = R.string.flyingOmen1; break;
+            case flyingOmen2: id = R.string.flyingOmen2; break;
             default:
                 s = logTextID.name(); break;
         }

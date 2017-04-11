@@ -38,7 +38,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     SensorManager sensorManager;
 
     public WClassifier classifier = null,
-           // accOnlyClassifier = null,
+            accOnlyClassifier = null,
             gyroOnlyClassifier = null;
 
     private Sensor accSensor, gyroSensor;
@@ -131,7 +131,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 // Emulate what we just detected in between? Or skip it?
                 if (lastSavedSF != null) {
                     TransportType tt = TransportType.GetForString(lastSavedSF.transportString);
-                    callingService.AddTransportOccurrence(new TransportOccurrence(tt, lastSavedSF.startTimeSystemMs, secondsToSleep * 1000)); // Create an entry corresponding to the average value (i.e., the last modified result).
+                    callingService.AddTransportOccurrence(new TransportOccurrence(tt, lastSavedSF.startTimeSystemMs, secondsToSleep * 1000, callingService.LastAddedTransportOccurrenceDetectionMethod())); // Create an entry corresponding to the average value (i.e., the last modified result).
                 //    classifier.ResetValuesHistory();                    // Clear the history set... or?
                 }
                 try {
@@ -267,7 +267,7 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         if (classifier == null)
             return false;
         if (!classifier.IsTrained()
-//                || !accOnlyClassifier.IsTrained()
+ //               || !accOnlyClassifier.IsTrained()
                 )
             return false;
 
@@ -325,20 +325,23 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
                 inst.setValue(3, sfToClassify.accStdev); // Avg Stdev
                 boolean evaluateGyro = sfToClassify.gyroAvg != 0; // Check if gyro data is available, if just 0, then use the acc-only classifier.
                 double result;
-//                if (evaluateGyro) {
+                if (evaluateGyro) {
                     inst.setValue(4, sfToClassify.gyroMin);
                     inst.setValue(5, sfToClassify.gyroMax);
                     inst.setValue(6, sfToClassify.gyroAvg);
                     inst.setValue(7, sfToClassify.gyroStdev);
                     result = classifier.ClassifyInstance(inst);
-  //              }
-//                else
-  //                  result = accOnlyClassifier.ClassifyInstance(inst);
+                }
+                else {
+                    if (!accOnlyClassifier.IsTrained()) // Return if the classifier is not trained yet.
+                        return false;
+                    result = accOnlyClassifier.ClassifyInstance(inst);
+                }
                 double modified = classifier.ModifyResult(result, callingService.settings.historySetSize, valuesHistory);                // Use the smoothing window
                 // Save it.
                 TransportType tt = TransportType.GetForString(classifier.TrainingData().classAttribute().value((int) modified));
                 sfToClassify.transportString = tt.name();
-                callingService.AddTransportOccurrence(new TransportOccurrence(tt, sfToClassify.startTimeSystemMs, sfToClassify.durationMs));
+                callingService.AddTransportOccurrence(new TransportOccurrence(tt, sfToClassify.startTimeSystemMs, sfToClassify.durationMs, GetDetectionModeForInstance(evaluateGyro)));
               //  Printer.out("Transport predicted (w/o. window): " + classifier.TrainingData().classAttribute().value((int) modified) +
                 //  " (" + classifier.TrainingData().classAttribute().value((int) result) + ")" +
                 //    " at "+sfToClassify.startTimeSystemMs+" "+(System.currentTimeMillis() - sfToClassify.startTimeSystemMs)+"ms ago");
@@ -353,6 +356,20 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 //        finishedSensingFrames.clear();
         sensingFrames = toCheckAgain; // Replace old list with new list of those frames which were not evaluated now.
         return true;
+    }
+
+    private int GetDetectionModeForInstance(boolean hasGyro) {
+        Printer.out("Training values normalized: "+classifier.trainingValuesNormalized+"" +
+                "HSS: "+callingService.settings.historySetSize+" sleepSessions: "+callingService.settings.sleepSessions+"" +
+                "hasGyro: "+hasGyro);
+        if (classifier.trainingValuesNormalized){
+
+        }
+        // Check if there was gyro?
+        if (hasGyro){
+            return TransportOccurrence.ACC_GYRO_RT_HSS_12_SS_12_AN_DEFAULT;
+        }
+        return TransportOccurrence.ACC_ONLY_RT_HSS_12_SS_12_AN_DEFAULT;
     }
 
     /// Query next sampling.

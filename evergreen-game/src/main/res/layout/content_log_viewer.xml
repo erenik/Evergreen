@@ -12,7 +12,9 @@
         android:id="@+id/layoutMenuAndLog" android:orientation="vertical">
         <LinearLayout style="@style/Evergreen.Layout">
             <TextView style="@style/Evergreen.Text" android:text="Messages to show: "/>
-            <Spinner style="@style/Evergreen.Spinner" android:id="@+id/spinnerLogMessagesToDisplay"></Spinner>
+            <Spinner style="@style/Evergreen.Spinner" android:id="@+id/spinnerLogMessagesToDisplay"
+                android:layout_gravity="center"
+                />
         </LinearLayout>
         <TextView style="@style/Evergreen.Text"
             android:text="Filters"

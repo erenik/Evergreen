@@ -11,6 +11,7 @@ import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.player.Finding;
 import erenik.evergreen.common.player.Stat;
+import erenik.evergreen.common.player.Statistic;
 import erenik.evergreen.common.player.TransportStat;
 import erenik.util.Dice;
 import erenik.util.EList;
@@ -33,6 +34,7 @@ public class Encounter {
     Random r = new Random();
     boolean isRandom = false;
     boolean isAssaultOfTheEvergreen = false;
+    boolean fleeable = true;
     boolean dead = false;
     int fleeExp = 0;
     private int turnCreated = -1;
@@ -46,7 +48,7 @@ public class Encounter {
 
     static final int maxEnemyAttacksPerRound = 3;
 
-    public EList<EncounterListener> listeners = new EList<>();
+//    public EList<EncounterListener> listeners = new EList<>();
 
     /// Creates an encounter with target player as main involved player.
     public Encounter(int turn) {
@@ -70,6 +72,7 @@ public class Encounter {
             p.PrepareForCombat(!p.isAttacker); // Does what?
             p.runsAway = true;
             p.runAwayAtHPPercentage = 0.25f; // Should check the stats-preferences.
+            p.wantedToFleeButCouldNotDesperation = 0;
         }
     }
     // Total emissions of all participating players. Sum.
@@ -78,7 +81,7 @@ public class Encounter {
         // Calculate turn as the maximum of all involved players?
         totalEmissions = 0;
         turnCreated = -1;
-        Printer.out("Num involved players: "+GetInvolvedPlayers().size());
+      //  Printer.out("Num involved players: "+GetInvolvedPlayers().size());
         for (int i = 0; i < GetInvolvedPlayers().size(); ++i) {
             Player player = GetInvolvedPlayers().get(i);
             totalEmissions += player.TotalEmissions();
@@ -87,7 +90,7 @@ public class Encounter {
         }
         if (!pvp && (totalEmissions < 0 || turnCreated < 0)) {
             PrintAllCombatants();
-            Printer.out("Emissions: "+totalEmissions+" turnCreated: "+turnCreated);
+        //    Printer.out("Emissions: "+totalEmissions+" turnCreated: "+turnCreated);
             new Exception().printStackTrace();
             System.exit(12);
         }
@@ -152,9 +155,9 @@ public class Encounter {
                 Printer.out("Ending combat prematurely? TRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
             return;
         }// Skip simulation if players already dead previously?
-        Printer.out("Simulating encounter");
+//        Printer.out("Simulating encounter");
         if (pvp)
-            Printer.out("PVP START!");
+           ;// Printer.out("PVP START!");
 
         // If attacks of the evergreen - allow ranged weapons...?
 
@@ -172,44 +175,45 @@ public class Encounter {
                 DoCombatRound(attackers, defenders);
             DoCombatRound(defenders, attackers);
         }
-        Printer.out("Combat over");
+//        Printer.out("Combat over");
+
+        int expToGain = 0;
+        if (enemyType != null) {
+        //    Printer.out("CreepsAlive: "+CreepsAlive()+" killed: "+CreepsKilled()+" total: "+CreepsTotal()+" enemyTypeEXP: "+enemyType.exp+" fleeExp: "+fleeExp);
+            expToGain = (int) (CreepsKilled() * enemyType.exp + fleeExp);
+        }
+        // So you won, did you defeat the other player?
+        for (int j = 0; j < LosingPlayers().size(); ++j) {
+            expToGain += 5 + LosingPlayers().get(j).Get(TurnSurvived) / 2;
+        }
         // Copy over relevant stats to the more persistent array of stats.
         EList<Player> players = GetInvolvedPlayers();
         for (int i = 0; i < players.size(); ++i) {
             Player player = players.get(i);
             player.Set(Stat.HP, player.hp);
-        }
-        if (PlayersDead()) { // Game over?
-            Printer.out("Players dead");
-            OnEncounterEnded();
-            return;
-        }
-        else {
-            LogEnc(new Log(LogTextID.encounterSurvived, LogType.SUCCESS));
-            int expToGain = 0;
-            if (enemyType != null) {
-                Printer.out("CreepsAlive: "+CreepsAlive()+" killed: "+CreepsKilled()+" total: "+CreepsTotal()+" enemyTypeEXP: "+enemyType.exp+" fleeExp: "+fleeExp);
-                expToGain = (int) (CreepsKilled() * enemyType.exp + fleeExp);
-            }
-            else {
-                // So you won, did you defeat the other player?
-                for (int i = 0; i < LosingPlayers().size(); ++i) {
-                    expToGain += 5 + LosingPlayers().get(i).Get(TurnSurvived) / 2;
+            player.Adjust(Statistic.TotalEncountersParticipatedIn, 1);
+            /// For the players that are alive...
+            if (player.IsAliveInCombat()){
+                LogEnc(new Log(LogTextID.encounterSurvived, LogType.SUCCESS));
+//                player
+                if (expToGain > 0) {
+                    LogEnc(new Log(LogTextID.expGained, LogType.EXP, ""+expToGain));
                 }
+                player.GainEXP(expToGain);
+                player.Adjust(Statistic.EXPGainedInCombat, expToGain);
+                if (isAssaultOfTheEvergreen)
+                    player.Adjust(Statistic.EvergreenEncountersSurvived, 1);
             }
-            if (expToGain > 0) {
-                LogEnc(new Log(LogTextID.expGained, LogType.EXP, ""+expToGain));
-            }
-            for (int i = 0; i < players.size(); ++i) {
-                players.get(i).GainEXP(expToGain);
+            else { // Else - if dead
+                player.ReviveIfKnockedOut();                 /// Revive etc. now? instead of elsewhere...?
             }
         }
-        OnEncounterEnded(); // Save, push logs, etc.
     }
 
     /// Only call when u know the combat is already over.
     private EList<Player> LosingPlayers() {
-        EList<Player> players = GetInvolvedPlayers();
+        if (pvp == false) // No stuff here.
+            return new EList<>();
         if (StillAliveAndDidntAllRunAway(attackers))
             return new EList<Player>(defenders);
         else
@@ -268,7 +272,7 @@ public class Encounter {
         EList<Player> players = GetInvolvedPlayers();
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
-            Printer.out("Player hp: "+p.hp);
+        //    Printer.out("Player hp: "+p.hp);
             if (p.hp > 0)
                 return false;
         }
@@ -291,7 +295,7 @@ public class Encounter {
             else if (c.isAttacker == false && c.hp > 0)
                 ++defendersAlive;
         }
-        Printer.out("Attackers alive: "+attackersAlive+" Defenders alive: "+defendersAlive);
+//        Printer.out("Attackers alive: "+attackersAlive+" Defenders alive: "+defendersAlive);
         if (attackersAlive > 100) {
             Printer.out(">100 attackers, wtf.");
             PrintAllCombatants();
@@ -299,23 +303,6 @@ public class Encounter {
             System.exit(2);
         }
         return attackersAlive > 0 && defendersAlive > 0;
-    }
-    // When the encounter ends, paste in the combat log into their own logs.
-    private void OnEncounterEnded() {
-        Printer.out("OnEncounterEnded");
-        EList<Player> players = GetInvolvedPlayers();
-        for (int i = 0; i < players.size(); ++i) {
-            Player player = players.get(i);
-//            player.log.addAll(log); // Add current log there with all attack stuff.
-            for (int j = 0; j < listeners.size(); ++j)
-                listeners.get(j).OnEncounterEnded(this);
-/*
-            if (player.IsAlive() == false) {
-                player.InformListeners();
-            }
-            */
-        }
-        Printer.out("The encounter ended.");
     }
 
     private EList<Player> GetInvolvedPlayers() {
@@ -326,7 +313,6 @@ public class Encounter {
                 players.add((Player) comb);
             }
         }
-        Printer.out("NUM involved players: "+players.size());
         return players;
     }
 
@@ -354,80 +340,100 @@ public class Encounter {
                 ++numEnemiesAttacked;
                 if (numEnemiesAttacked > maxEnemyAttacksPerRound) {
                     //     LogEnc(new Log("Skipping remaining enemies", LogType.INFO));
-                    Printer.out("Skipping remaining "+(activeCombatants.size() - i)+" attackers this round");
+                   // Printer.out("Skipping remaining "+(activeCombatants.size() - i)+" attackers this round");
                     break;
                 }
             }
-            // Flee? Under 25%?
+            // Flee? Under 25%? Only if the encounter permits.
             if (c.runsAway && (c.hp / c.maxHP) <  c.runAwayAtHPPercentage) {
-             //   LogEnc(new Log(c.name+" tries to run away!", LogType.INFO));
+                if (fleeable){
+                    //   LogEnc(new Log(c.name+" tries to run away!", LogType.INFO));
 //                Printer.out("Trying to run away!");
-                int fleetRetreat = c.fleeSkill;
-                int fleeCR = (opposingCombatants.size()-1) / 2 - fleetRetreat - c.consecutiveFleeAttempts;
-                fleeCR -= c.fleeBonusFromTransport; // Decrease challenge rating with transport flee bonus.
-                int roll = Dice.RollD6(4); // 4-24, 14 mid, +/- 10
-                if (roll > 14 + fleeCR) {
-                    // Success?
-                    LogEnc(new Log(c instanceof Player? LogTextID.playerFledFromCombat : LogTextID.fledFromCombat, LogType.INFO, c.name));
-                    if (fleetRetreat > 0)
-                        fleeExp = (int) Math.pow(2, fleetRetreat - 1);
-                    c.ranAway = true;
-                    return;
-                }
-                else {
-                    LogEnc(new Log(c instanceof Player? LogTextID.playerTriedToFlee : LogTextID.triedToFlee, LogType.ACTION_FAILURE, c.name));
-                    ++c.consecutiveFleeAttempts;
+                    int fleetRetreat = c.fleeSkill;
+                    int fleeCR = (opposingCombatants.size()-1) / 2 - fleetRetreat - c.consecutiveFleeAttempts;
+                    fleeCR -= c.fleeBonusFromTransport; // Decrease challenge rating with transport flee bonus.
+                    int roll = Dice.RollD6(4); // 4-24, 14 mid, +/- 10
+                    if (roll > 14 + fleeCR) {
+                        // Success?
+                        LogEnc(new Log(c instanceof Player? LogTextID.playerFledFromCombat : LogTextID.fledFromCombat, LogType.INFO, c.name));
+                        if (fleetRetreat > 0)
+                            fleeExp = (int) Math.pow(2, fleetRetreat - 1);
+                        c.ranAway = true;
+                        return;
+                    }
+                    else {
+                        LogEnc(new Log(c instanceof Player? LogTextID.playerTriedToFlee : LogTextID.triedToFlee, LogType.ACTION_FAILURE, c.name));
+                        ++c.consecutiveFleeAttempts;
+                    }
+                } else { // Not flee-able.
+                    LogEnc(new Log(LogTextID.wantsToFleeButCannot, LogType.ENC_INFO, c.name));
+                    ++c.wantedToFleeButCouldNotDesperation;
                 }
             }
+            DoAttackRound(c, opposingCombatants);
+        }
+    }
+
+    private void DoAttackRound(Combatable c, EList<Combatable> opposingCombatants) {
+        for (int i = 0; i < c.attacksPerTurn; ++i) {
             Combatable target = GetTarget(opposingCombatants, c);
             if (target == null) {
-            //    LogEnc(new Log("Found no target, skipping", LogType.INFO));
-//                Printer.out("Found no target, skipping");
                 continue;
             }
             c.Attack(target, this);
         }
     }
+
     /// Generates a 'random' encounter, based on player statistics?
     public void RandomMonsterEncounter(int d3, int d6, int bonus, Player attackedPlayer) {
         primaryAttackedPlayer = attackedPlayer;
         isRandom = true;
-        enemyType = RandomEnemyType(attackedPlayer);
+        enemyType = RandomEnemyTypeMaxLevel(turnCreated / 16); // max lvl 0 creates up to turn 16, then max lvl 1, 32 - L2, 48 - L3, 64 - L4
         GenerateEnemies(d3, d6, bonus);
+        LogEnc(new Log(LogTextID.encounterNumMonsters, LogType.INFO, ""+CreepsTotal(), enemyType.name)); // Log for when meeting random encounters.
         CalcEncounterEXP();
     }
     public void AssaultsOfTheEvergreen(Player playerBeingAssaulted) {
         primaryAttackedPlayer = playerBeingAssaulted;
         isAssaultOfTheEvergreen = true;
+        fleeable = false;
+        LogEnc(new Log(LogTextID.assaultsOfTheEvergreen, LogType.INFO));
         Printer.out("Assaults of the Evergreen, - turn: "+turnCreated);
-        enemyType = RandomEnemyType(playerBeingAssaulted);
         // Attacks of the evergreen?
         int everGreenTurn = turnCreated % 16;
-        int everGreenStage = turnCreated / 16;
+        int level = turnCreated / 16; // 0-15= 0, 16-31= 1, 32-47= 2, 48-63= 3, 64= 4
         int d3 = 0, d6 = 0, bonus = 0;
         switch(everGreenTurn) {
             default: break; // The pattern repeats every 16 turns.
             case 0:  // Turns 16, 32, 48 and 64.
-                bonus += everGreenStage + 1;
-                d6 += everGreenStage;
+                bonus += level + 1;
             case 15:
                 bonus += 1;
-                d6 += everGreenStage;
+                d6 += level;
             case 13:
                 bonus += 1;
-                d3 += everGreenStage;
+                d3 += level;
             case 10:
                 bonus += 1;
-                d3 += everGreenStage;
             case 6:
-                d3 += everGreenStage + 1;
-                bonus += everGreenStage + 1;
+                d3 += level + 1;
+                bonus += level + 1;
+                break;
+        }
+        enemyType = RandomEnemyType(level);
+        switch (level){
+            case 0: // Turns 0-15
+            case 1: // Turns 16-31
+            case 2: // Turns 32-47
+            case 3: // Turns 48-63
+                break; // Use the above.
+            case 4: // Turns 64 and upward.
+                enemyType = RandomEnemyType(5); // After turn 64, let any monster attack except the gaia protector? Or at Level 5 for end-game monsters?
                 break;
         }
         if (turnCreated == 64) {
-            d6 *= 2; // Double the dice? // Just add the final boss?
-            d3 *= 2;
-            bonus *= 2;
+            d3 = d6 = 0;
+            bonus = 1;
             enemyType = EnemyType.GaiaProtector; // Final boss, yo.
         }
         int numGenerated = GenerateEnemies(d3, d6, bonus);
@@ -438,7 +444,7 @@ public class Encounter {
     // Populates a number of enemies for the encounter based on given number of dices. Total emissions and enemy-type encounter amount ratios are taken into account within.
     private int GenerateEnemies(int d3, int d6, int bonus) {
         int totalEnemies = Dice.RollD3(d3) + Dice.RollD6(d6) + bonus;
-        Printer.out("totalEnemies from initial dice roll: "+totalEnemies);
+     //   Printer.out("totalEnemies from initial dice roll: "+totalEnemies);
         totalEnemies *= enemyType.encounterAmount;
         if (isAssaultOfTheEvergreen)
             totalEnemies +=  totalEmissions / 25; // + 1 enemy for each 12.5 emissions? so 8 at 100? shouldn't be too bad.. o.O
@@ -446,7 +452,7 @@ public class Encounter {
             totalEnemies *= primaryAttackedPlayer.Get(TransportStat.AmountEnemiesEncounteredRatio);
             totalEnemies += totalEmissions / 50;
         }
-        Printer.out("totalEnemies: "+totalEnemies);
+    //    Printer.out("totalEnemies: "+totalEnemies);
         if (totalEnemies < 1)
             totalEnemies = 1;
         int iAmount = totalEnemies;
@@ -455,17 +461,28 @@ public class Encounter {
             e.isAttacker = true;
             AddCombatant(e);
         }
-        LogEnc(new Log(LogTextID.encounterNumMonsters, LogType.INFO, ""+CreepsTotal(), enemyType.name));
         return iAmount;
     }
 
-    private EnemyType RandomEnemyType(Player attackedPlayer) {
-        int level = attackedPlayer.TurnsSurvived() / 16;
+    private EnemyType RandomEnemyTypeMaxLevel(int maxLevel) {
         EList<EnemyType> typesPossible = new EList<EnemyType>();
         for (int i = 0; i < EnemyType.values().length; ++i) {
-            if (EnemyType.values()[i].level <= level)
+            if (EnemyType.values()[i].level <= maxLevel)
                 typesPossible.add(EnemyType.values()[i]);
         }
+        /// Randomly choose type.
+        int ri = r.nextInt(typesPossible.size());
+        EnemyType et = typesPossible.get(ri);
+        return et;
+    }
+    private EnemyType RandomEnemyType(int givenLevel) {
+        EList<EnemyType> typesPossible = new EList<EnemyType>();
+        for (int i = 0; i < EnemyType.values().length; ++i) {
+            if (EnemyType.values()[i].level == givenLevel)
+                typesPossible.add(EnemyType.values()[i]);
+        }
+        if (typesPossible.size() == 0)
+            return null;
         /// Randomly choose type.
         int ri = r.nextInt(typesPossible.size());
         EnemyType et = typesPossible.get(ri);
@@ -491,28 +508,23 @@ public class Encounter {
             }
         }
     }
+    /*
     public void AbandonedShelter() {
         /*
         Printer.out("Abandoned shelters decrease from "+player.Get(Stat.ABANDONED_SHELTER));
         player.Adjust(Stat.ABANDONED_SHELTER, -1);;
         Log("Found some food", LogType.INFO);
         player.Adjust(Stat.FOOD, 1);
-        */
         // TODO: Add more descriptions and the random results.
-        OnEncounterEnded(); // Save, push logs, etc.
     }
-
     public void RandomPlayerShelter() {
-        /*
         player.Adjust(Stat.RANDOM_PLAYERS_SHELTERS, -1); // Decrease the events to spawn...
         player.Adjust(Stat.RandomPlayerFound, 1); // Increase this. Will be sent to server to see who you found.
         Log("Found some food", LogType.INFO);
         player.Adjust(Stat.FOOD, 1);
-        */
         // TODO: Perhaps add more actions later.
-        OnEncounterEnded(); // Save, push logs, etc.
     }
-
+*/
     public void AddCombatant(Combatable combatant) {
         if (combatant.isAttacker) { // Add it?
             if (!attackers.contains(combatant)) {

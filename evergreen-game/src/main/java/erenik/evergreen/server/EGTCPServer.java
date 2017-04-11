@@ -123,6 +123,12 @@ public class EGTCPServer extends Thread {
         int numAIs = 5, iarg = 0;
         for (int i = 0; i < args.length; ++i){
 //            Printer.out("args "+i+": "+args[i]);
+            // No args here.
+            if (args[i].equals("-noPauses")) {
+                Game.noPauses = true;
+                Printer.out("-noPauses found");
+            }
+            // 1 args below
             if (i >= args.length - 1)
                 continue;
             String arg = args[i+1];
@@ -137,6 +143,7 @@ public class EGTCPServer extends Thread {
             }
             if (args[i].equals("-secondsPerDay")){
                 Game.secondsPerDay = iarg;
+                Printer.out("-secondsPerDay "+iarg);
             }
         }
         if (args.length > 2) {
@@ -167,6 +174,9 @@ public class EGTCPServer extends Thread {
         // Create main game list.
         if (!LoadGames()) {
             games = Game.CreateDefaultGames();
+            for (int i = 0; i < games.size(); ++i){
+                AddListenersAndSetSysMsg(games.get(i).players);
+            }
         }
         Host();
         /// Host server.
@@ -414,7 +424,7 @@ public class EGTCPServer extends Thread {
             return;
         }
         playerInSystem.SaveFromClient(player); // Save configured content from the client.
-        LogPlayerStats("PlayerSave: "+playerInSystem.name+", Transports: "+playerInSystem.TopTransportsAsString(5));
+        LogPlayerStats("PlayerSave: "+playerInSystem.name+", Transports: "+playerInSystem.TopTransportsAsString(5)+" ClassifierSetting: "+playerInSystem.TopTransportClassifierSettingUsed());
         Game game = GetGameById(playerInSystem.gameID);
         playerInSystem.ProcessQueuedActiveActions(game); // Process queued active actions, if any.
 //            Log("Save success, playerName: "+playerInSystem.name+", replying up-to-date data to client");
@@ -576,6 +586,11 @@ public class EGTCPServer extends Thread {
 //        player.gameID
         AddListenersAndSetSysMsg(player);
         Reply(sock, EGPacket.player(player).build());        // Notify success by replying the updated player.
+    }
+
+    private void AddListenersAndSetSysMsg(EList<Player> players) {
+        for (int i = 0; i < players.size(); ++i)
+            AddListenersAndSetSysMsg(players.get(i));
     }
 
     private void AddListenersAndSetSysMsg(Player player) {

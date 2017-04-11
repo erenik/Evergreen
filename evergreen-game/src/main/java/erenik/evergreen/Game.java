@@ -12,14 +12,19 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Random;
 
+import erenik.evergreen.common.AI;
 import erenik.evergreen.common.Enumerator;
+import erenik.evergreen.common.Invention.Invention;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.common.auth.Auth;
 import erenik.evergreen.common.logging.Log;
+import erenik.evergreen.common.player.Config;
+import erenik.evergreen.common.player.Difficulty;
 import erenik.evergreen.common.player.Skill;
 import erenik.evergreen.common.player.SkillType;
 import erenik.evergreen.common.player.Stat;
 import erenik.evergreen.common.player.Statistic;
+import erenik.util.Dice;
 import erenik.util.EList;
 import erenik.util.FileUtil;
 import erenik.util.Json;
@@ -42,6 +47,7 @@ public class Game implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public static int secondsPerDay = 60; // The hard-coded. Default 1 minute per round, can be set via command-line arg in Server code now, -simulationTime
+    public static boolean noPauses = false;
     private int day = 0;
 
     public Game(){
@@ -202,7 +208,7 @@ public class Game implements Serializable {
             return 0;
         }
         int activePlayers = ActivePlayers();
-        if (activePlayers == 0){
+        if (activePlayers == 0 && !noPauses){
             if (ShouldPrintDaysSkipped())
                 Log("Game.NextDay, "+gameID.name+" players "+activePlayers+"/"+players.size()+", skipping since 0 active players.");
             ++numNextDaysSkipped;
@@ -212,7 +218,7 @@ public class Game implements Serializable {
             if (ShouldPrintDaysSkipped())
                 Printer.out("Check time?");
         }
-        else if (UpdatesSinceLastDay() == 0){
+        else if (UpdatesSinceLastDay() == 0 && !noPauses){
             if (ShouldPrintDaysSkipped())
                 Log("Game.NextDay, "+activePlayers+" active players, but skipping since no update has happened since last day. GameID: "+GameID());
             try {
@@ -229,12 +235,13 @@ public class Game implements Serializable {
         LogAndPrint("Game.NextDay, "+gameID.name+" day "+day+" players "+activePlayers+"/"+players.size());
         ++day;
         int numSimulated = 0;
-        for (int i = 0; i < players.size(); ++i)
-        {
+        for (int i = 0; i < players.size(); ++i) {
             Player p = players.get(i);
-            if (p.isAI)
-                continue;
-            if (p.IsAlive() == false)
+            if (p.ai != null)
+                p.ai.Update(p);
+//              if (p.isAI) // /WAT I don't even.
+  //            continue;
+            if (!p.IsAliveOutsideCombat())
                 continue;
             if (activePlayers < 3)
                 Printer.out(p.Name()+" next day..");
@@ -266,9 +273,8 @@ public class Game implements Serializable {
 
     public int ActivePlayers() {
         int tot = 0;
-        for (int i = 0; i < players.size(); ++i)
-        {
-            if (players.get(i).IsAlive() == false)
+        for (int i = 0; i < players.size(); ++i) {
+            if (!players.get(i).IsAliveOutsideCombat())
                 continue;
             ++tot;
         }
@@ -279,18 +285,17 @@ public class Game implements Serializable {
     public Player GetPlayer(String name, boolean contains, boolean startsWith) {
         if (name == null)
             return null;
-        Printer.out("Looking for "+name);
-        for (int i = 0; i < players.size(); ++i)
-        {
+    //    Printer.out("Looking for "+name);
+        for (int i = 0; i < players.size(); ++i) {
             Player p = players.get(i);
             if (contains && p.Name().contains(name)) {
-                Printer.out("Player "+i+" contains? "+p.Name());
+      //          Printer.out("Player "+i+" contains? "+p.Name());
                 return p;
-            }if (startsWith && p.Name().startsWith(name))
-        {
-            Printer.out("Player "+i+" startsWith? "+p.Name());
-            return p;
-        }
+            }
+            if (startsWith && p.Name().startsWith(name)) {
+            //    Printer.out("Player "+i+" startsWith? "+p.Name());
+                return p;
+            }
         }
         return null;
     }
@@ -325,15 +330,48 @@ public class Game implements Serializable {
         return games;
     }
     private void CreateDefaultPlayers() {
-        // Create default players?
-        Player player = new Player();
-        player.name = "Erenik";
-        player.isAI = false;
-        player.email = "emil_hedemalm@hotmail.com";
-        player.password = Auth.Encrypt("1234", Auth.DefaultKey);
-        player.gameID = GameID();
-        Printer.out("Adding default player");
-        AddPlayer(player);
+        int numTest = 1; // Set 6 to test all difficulties.
+        for (int i = 0; i < 1; ++i) {
+            // Create default players?
+            Player player = new Player();
+            player.name = "Erenik ";
+            if (numTest > 1)
+                player.name += Difficulty.String(i);
+            player.isAI = false;
+            player.email = "emil_hedemalm@hotmail.com";
+            player.password = Auth.Encrypt("1234", Auth.DefaultKey);
+            player.gameID = GameID();
+
+            player.ai = new AI(AI.Erenik);
+
+            player.Set(Config.Difficulty, i); // 0-5 in difficulty
+            player.ReviveRestart();
+
+            // 1 life
+            player.Set(Stat.Lives, 1);
+            player.Set(Stat.FOOD, 1000);
+            player.Set(Stat.MATERIALS, 1000);
+            player.Set(Stat.SHELTER_DEFENSE, 7);
+
+            int quality = 0;
+            player.cd.inventory.add(Invention.RandomWeapon(quality)); // Give a good weapon.
+            player.cd.inventory.add(Invention.RandomArmor(quality)); // Armor
+            player.cd.inventory.add(Invention.RandomTool(quality)); // And tool.
+            // Equip all.
+            for (int j = 0; j < player.cd.inventory.size(); ++j) {
+                player.Equip(player.cd.inventory.get(j));
+            }
+
+//            player.SetLevel(SkillType.WeaponizedCombat, 9);
+  //          player.SetLevel(SkillType.DefensiveTraining, 9);
+    //        player.SetLevel(SkillType.Survival, 9);
+      //      player.SetLevel(SkillType.Parrying, 9);
+
+            Printer.out("Adding default player");
+            player.PrintAll();
+
+            AddPlayer(player);
+        }
     }
 
 
@@ -439,7 +477,7 @@ public class Game implements Serializable {
             int playerIndex = r.nextInt(players.size());
   //          Printer.out("player index: "+playerIndex);
             Player randPlayer = players.get(playerIndex);
-            if (randPlayer.IsAlive() == false)
+            if (!randPlayer.IsAliveOutsideCombat())
                 continue;
             boolean alreadyKnown = false;
             for (int j = 0; j < knownPlayerNames.size(); ++j) {
@@ -507,17 +545,15 @@ public class Game implements Serializable {
 
         for (int i = 0; i < players.size(); ++i){
             Player p = players.get(i);
-            if (p.IsAlive() && p.Get(Stat.TurnSurvived) > longestTurnSurvived)
+            if (p.IsAliveOutsideCombat() && p.Get(Stat.TurnSurvived) > longestTurnSurvived)
                 longestTurnSurvived = (int) p.Get(Stat.TurnSurvived);
-            if (p.IsAlive()) {
-            }
             for (int j = 0; j < p.cd.skills.size(); ++j) {
                 Skill s = p.cd.skills.get(j);
                 int skillIndex = s.GetSkillType().ordinal();
                 int skillLevel = s.Level();
 //                Printer.out("skills Level "+s.Level());
                 skillStatistics[0][skillIndex] += skillLevel;
-                if (!p.IsAlive())
+                if (!p.IsAliveOutsideCombat())
                     continue;
                 if (skillLevel > skillStatistics[2][skillIndex])
                     skillStatistics[2][skillIndex] = skillLevel;
@@ -528,8 +564,9 @@ public class Game implements Serializable {
                 switch (Stat.values()[j]){
                     case BASE_ATTACK: statValue = p.BaseAttack(); break;
                     case BASE_DEFENSE: statValue = p.BaseDefense(); break;
+                    case MAX_HP: statValue = p.MaxHP(); break; // Max hp taking into account skills, etc.
                 }
-                if (p.IsAlive()) {
+                if (p.IsAliveOutsideCombat()) {
                     statStatistics[1][j] += statValue;
                     if (statValue > statStatistics[2][j])
                         statStatistics[2][j] = statValue;

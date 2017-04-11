@@ -286,7 +286,7 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
             Toast("Trying to update gui with null player D:");
             return;
         }
-        if (!player.IsAlive()) {
+        if (!player.IsAliveOutsideCombat()) {
             App.GameOver();
             finish(); // Finish this activity.
             return;

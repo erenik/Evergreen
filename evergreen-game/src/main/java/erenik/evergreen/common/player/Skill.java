@@ -92,16 +92,14 @@ public class Skill implements Serializable {
         int level = Level();
         totalExp += amount;
         int newLevel = Level();
-        if (newLevel != level)
-        {
-            Printer.out("Skill.GainExp: new level reached");
+        if (newLevel != level) {
+        //    Printer.out("Skill.GainExp: new level reached");
             return newLevel;
         }
         return -1;
     }
 
-    public int TotalExp()
-    {
+    public int TotalExp() {
         return (int) totalExp;
     }
     private float totalExp = 0;

@@ -12,7 +12,7 @@ public enum Config {
     CreationTime(0), // Time of creation saved as a float.
     RunAway(0.25f), // Default HP-percentage when the player wants to run for his/her life to survive combats (if applicable).
     LatestLogMessageIDSeen(0),
-    ;
+    RetainDailyActionsOnNewTurn(0); // 0 - not retained, reset on new day/when turn survived is not the same on client & server. 1 - Use daily actions even if a new turn occurrs that might make you want to change it.
     Config(float defaultValue){ this.defaultValue = defaultValue; };
     public float defaultValue;
 }

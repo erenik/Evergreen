@@ -45,7 +45,7 @@ public class Action{
 
     void LoadArgs(EList<String> fromList){
         if (fromList == null) {
-            Printer.out(" null list");
+//            Printer.out(" null list");
             return;
         }
         for (int i = 0; i < fromList.size() && i < requiredArguments.size(); ++i){
@@ -231,9 +231,9 @@ public class Action{
                     break;
                 case InventionCategory:
                     index = raction.nextInt(InventionType.values().length);
-                    Printer.out("index: "+index+" tot: "+InventionType.values().length);
+                 //   Printer.out("index: "+index+" tot: "+InventionType.values().length);
                     aa.value = InventionType.values()[index].text();
-                    Printer.out("Random invention category added: "+aa.value);
+               //     Printer.out("Random invention category added: "+aa.value);
                     break;
                 case InventionToCraft:
                     if (forPlayer.cd.inventionBlueprints.size() == 0)

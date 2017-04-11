@@ -1,5 +1,8 @@
 package erenik.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by Emil on 2017-04-09.
  */
@@ -13,8 +16,9 @@ public class Printer {
         out(""+iV);
     }
     public static void out(String msg){
-        System.out.println(msg);
+        String dateStrNow = new SimpleDateFormat("MM/dd, HH:mm,").format(new Date());
+        System.out.println(dateStrNow+" "+msg);
         if (printToFile)
-            FileUtil.AppendWithTimeStampToFile("logs", "Printer", msg);
+            FileUtil.AppendWithTimeStampToFile("MM/dd, HH:mm," , "logs", "Printer", msg);
     }
 }

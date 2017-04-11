@@ -45,4 +45,16 @@ public class Difficulty {
         System.exit(1);
         return -1;
     }
+
+    public static String String(int i) {
+        switch (i){
+            case Easiest: return "Easiest";
+            case Easy: return "Easy";
+            case Medium: return "Medium";
+            case Hard: return "Hard";
+            case Unforgiving: return "Unforgiving";
+            case Wipeout: return "Wipeout";
+        }
+        return "Bad difficulty";
+    }
 }

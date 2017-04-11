@@ -12,7 +12,6 @@ import erenik.util.Printer;
  */
 
 public enum Statistic implements Serializable {
-
     // Statistical values which will impact the game to some extent - to be determined.
     TimesKnockedOut, // Reached 0 HP but revived.
     MonsterKills, // Added
@@ -25,6 +24,7 @@ public enum Statistic implements Serializable {
     MaterialsGathered, // added
     TotalEmissionsGenerated, // Added
     TotalEmissionsReduced, // via the reduction actions and walking/cycling.
+    EXPGainedInCombat,
     ResourcesGiven,
     ResourcesReceived,
     ResourcesFoundByScouting,
@@ -49,7 +49,14 @@ public enum Statistic implements Serializable {
     ItemCrafted_level_3,
     ItemCrafted_level_4,
     ItemCrafted_level_5,
-    ;
+    TotalEncountersParticipatedIn, EvergreenEncountersSurvived;
+
+
+
+    void Global(){
+
+    }
+
     private static final long serialVersionUID = 1L;
 
     Statistic()

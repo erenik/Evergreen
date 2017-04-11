@@ -11,7 +11,6 @@ import android.support.v7.app.AlertDialog;
 import erenik.evergreen.common.Player;
 import erenik.evergreen.android.App;
 import erenik.evergreen.common.encounter.Encounter;
-import erenik.evergreen.common.encounter.EncounterListener;
 import erenik.evergreen.common.player.Finding;
 import erenik.util.Printer;
 
@@ -33,6 +32,7 @@ public class EventDialogFragment extends DialogFragment
 
     @Override
     public Dialog onCreateDialog(final Bundle savedInstanceState) {
+        /*
         enc.listeners.add(new EncounterListener() {
             @Override
             public void OnEncounterEnded(Encounter enc) {
@@ -40,7 +40,7 @@ public class EventDialogFragment extends DialogFragment
                 App.Save();
             }
         });
-
+*/
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         String moreText = "\n\nDo you want to play the event now?";

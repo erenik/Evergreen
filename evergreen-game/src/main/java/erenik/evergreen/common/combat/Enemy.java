@@ -7,6 +7,7 @@ import erenik.evergreen.common.logging.LogTextID;
 import erenik.evergreen.common.logging.LogType;
 import erenik.evergreen.common.player.Stat;
 import erenik.util.Dice;
+import erenik.util.Printer;
 import erenik.util.Tuple;
 
 /**
@@ -15,6 +16,7 @@ import erenik.util.Tuple;
 public class Enemy extends Combatable {
 //    static int turn = 0; // Should be set (copied to) before creating new enemies.
     private int turnCreated = 0;
+    private int breathAttackCooldown = 3;
 
     public Enemy(EnemyType type, float emissions, int turn, Encounter enc) {
         turnCreated = turn;
@@ -27,13 +29,16 @@ public class Enemy extends Combatable {
         exp = type.exp;
         /// Scale up by emissions.
         defense += emissions / 20; // 5 times per 100
-        attackDamage.bonus += (emissions / 50); // 2 times per 100.
         UpdateStats(enc);
     }
 
     // Called when? Each turn of combat? Yaaaas.
     public void OnTurnStart(Encounter enc){
         super.OnTurnStart(enc);
+        if (hp <= 0) {
+//            Printer.out("Ghost ent...");
+            return;
+        }
         hp += hpRegenPerTurn;
         // Multiply?
         if (multiplies > 0 && timesMultiplied < multiplies && enc.attackers.size() < 20) { // Don't multiply if there attacker number is still saturated.
@@ -50,6 +55,7 @@ public class Enemy extends Combatable {
     }
 
     private void UpdateStats(Encounter enc) {
+        UpdateBaseDamage();
         attack = enemyType.attack;
         attack += emissionsWhenCreated / 12.5; // 8 times per 100
         attack += (4 - level) + turnCreated / 10; // Increase attack for each turn that has elapsed as well?
@@ -70,25 +76,26 @@ public class Enemy extends Combatable {
             case Swarm:
                 multiplies = 1;
                 break;
-            case Troll:
-                attackDamage = new Dice(4, 1, 1);
+            case Troll: // Extra dice?
+                attackDamage.dice += 1; // And number of dice.
+                attackDamage.diceType += 2; // Increase dice type.
+                attackDamage.bonus += 1; // n add some bonus.
                 break;
             case Raptor:
-                attackDamage = new Dice(3, 1, 0);
+                attackDamage.diceType += 1; // Only slightly bigger dice.
                 attacksPerTurn = 2;
                 break;
             case Dragon:
-                attackDamage = new Dice(3, 1, 1);
+                attackDamage.bonus += 1;
+                attackDamage.diceType += 3;
                 hpRegenPerTurn = 0.5f;
                 break;
             case Ent:
-                attackDamage = new Dice(3, 2, 0); // 2D3
+                attackDamage.diceType += 4;
+                attackDamage.dice += 1; // = new Dice(3, 2, 0); // 2D3
                 float bonus = enc.GetTotal(Stat.EntHatred); // Increase attack with ent-hatred.
-                if (bonus > 0) {
-                    System.out.println("Ent hatred");
-                }
-                attack += bonus; // Oh yeah.
-                attackDamage.bonus += bonus / 5; // For each 5 ents killed, increase damage of attacks as well.
+                attack += bonus / 3; // Oh yeah.
+                attackDamage.bonus += bonus / 7; // For each 5 ents killed, increase damage of attacks as well.
                 hpRegenPerTurn = 1;
                 break;
             case GaiaProtector:
@@ -101,7 +108,51 @@ public class Enemy extends Combatable {
                 else
                     attacksPerTurn = 3;
                 break;
+            case ToxicOoze:
+                receivedDamageMultiplier = 0.25f;
+                attackDamage.dice += 1;
+                attackDamage.bonus += 1;
+                hpRegenPerTurn = 1;
+                break;
+            case RockGolem:
+                attackDamage.dice += 2;
+                attackDamage.diceType += 2;
+                attackDamage.bonus += 2;
+                hpRegenPerTurn = 1;
+                break;
         }
+    }
+
+    private void UpdateBaseDamage() {
+        int emissions = (int) emissionsWhenCreated;
+        /// Base damage for all mobs is always just 1.
+        if (emissions < 25)
+            attackDamage = new Dice(1, 1, 0); // 1 base
+        else if (emissions < 50)
+            attackDamage = new Dice(2, 1, 0); // 1d2
+        else if (emissions < 75)
+            attackDamage = new Dice(3, 1, 0); // 1d3
+        else if (emissions < 100)
+            attackDamage = new Dice(4, 1, 0); // 1d4
+        else if (emissions < 125)
+            attackDamage = new Dice(6, 1, 0); // 1d6
+        else if (emissions < 150)
+            attackDamage = new Dice(8, 1, 1); // 1d8+1
+        else if (emissions < 175)
+            attackDamage = new Dice(8, 1, 2); // 1d8+2
+        else if (emissions < 200)
+            attackDamage = new Dice(8, 1, 2); // 1d8+2
+        else if (emissions < 250)
+            attackDamage = new Dice(10, 1, 3); // 1d10+3
+        else
+            attackDamage = new Dice(12, 1, 4); // 1d12+4
+        if (emissions > 25)
+            Printer.out("Base damage set to: "+attackDamage);
+    }
+
+    @Override
+    public void PrepareForCombat(boolean defendingShelter) {
+        // Uhhh... do nothing?
     }
 
     @Override
@@ -137,7 +188,11 @@ public class Enemy extends Combatable {
     protected void OnReceivedDamage(Combatable fromAttacker, int damage, Encounter enc) {
         if (damageReflecting > 0){
             if (Dice.RollD6(2) + damageReflecting >= 12) {
-                fromAttacker.InflictDamage(1, this, enc);
+                int diceType = 1 + damageReflecting / 3; // Scale up damage reflectance as its strength increases
+                Dice d = new Dice(diceType, 1, 0); // Take 1-X damage, based on reflectance.
+                int damageToTake = d.Roll();
+                fromAttacker.InflictDamage(damageToTake, this, enc);
+                enc.LogEnc(new Log(LogTextID.damageReflectedWhileAttacking, LogType.ENC_INFO, name, fromAttacker.name, ""+damageToTake));
             }
         }
     }
@@ -147,6 +202,8 @@ public class Enemy extends Combatable {
     public boolean Attack(Combatable target, Encounter enc) {
         switch (enemyType){
             case Dragon: {
+                if (breathAttackCooldown > 0)
+                    --breathAttackCooldown;
                 int roll = Dice.RollD6(1);
                 switch (roll) {
                     default:
@@ -154,25 +211,38 @@ public class Enemy extends Combatable {
                         break;
                     case 1:  // 33% Tail-whip!
                     case 2: {
-                        boolean hit = AttackHit(target, CurrentAttack() + 3, true, enc);
+                        boolean hit = AttackHit(target, CurrentAttack() + 2, true, enc);
                         if (hit) {
-                            int damage = Dice.RollD3(2);
+                            Dice newDice = attackDamage.copy();
+                            newDice.dice += 1; // Like base attack, but more dice.
+                            newDice.bonus += 1;
+                            int damage = newDice.Roll();
                             enc.LogEnc(new Log(LogTextID.tailWhip, LogType.ATTACKED, name, target.name, "" + damage));
                             target.InflictDamage(damage, this, enc);
+                            AfterDamageDealt(target, enc); // To get messages logged properly.
                         } else {
                             enc.LogEnc(new Log(LogTextID.tailWhipMiss, LogType.ATTACKED_MISS, name, target.name));
                         }
                         break;
                     }
                     case 3: // 16% Breath attack
-                        boolean hit = AttackHit(target, CurrentAttack() + 5, false, enc);
+                        if (breathAttackCooldown > 0){
+                            DefaultAttack(target, enc);
+                            break;
+                        }
+                        boolean hit = AttackHit(target, CurrentAttack() + 4, false, enc);
                         if (hit) {
-                            int damage = Dice.RollD3(3);
+                            Dice newDice = attackDamage.copy();
+                            newDice.dice += 2; // Like base attack, but more dice n bonus.
+                            newDice.bonus += 2;
+                            int damage = newDice.Roll();
                             enc.LogEnc(new Log(LogTextID.breathAttack, LogType.ATTACKED, name, target.name, "" + damage));
                             target.InflictDamage(damage, this, enc);
+                            AfterDamageDealt(target, enc); // To get messages logged properly.
                         } else {
                             enc.LogEnc(new Log(LogTextID.breathAttackMiss, LogType.ATTACKED_MISS, name, target.name));
                         }
+                        breathAttackCooldown = 3; // Wait like 1 round at least between breaths.
                         break;
                 }
                 break;
@@ -202,6 +272,7 @@ public class Enemy extends Combatable {
                             enc.LogEnc(new Log(LogTextID.slashOfHeavensPartial, LogType.ATTACKED, name, target.name, ""+damage));
                             target.InflictDamage(damage, this, enc);
                         }
+                        AfterDamageDealt(target, enc); // To get messages logged properly.
                         break;
                 }
                 break;

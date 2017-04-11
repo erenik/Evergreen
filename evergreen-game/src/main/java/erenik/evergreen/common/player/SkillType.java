@@ -7,9 +7,9 @@ import erenik.util.EList;
  */
 
 public enum SkillType {
-    Foraging("Foraging", AddLinear(5,5,4), "Increases food acquired while foraging. Increases chance to find good foraging spots."),
+    Foraging("Foraging", AddLinear(5,5,9), "Increases food acquired while foraging. Increases chance to find good foraging spots."),
     FleetRetreat("Fleet retreat", AddLinearAccum(5, 4, 4), "Makes fleeing easier. Gains more EXP from encounters on successful retreats."),
-    Survival("Survival", AddLinearAccum(5,5,5), "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
+    Survival("Survival", AddLinearAccum(5,5,9), "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
     Architecting("Architecting", AddLinear(10,10,6), "Increases building speed when building shelter defenses and other structures"), // Add for Shelter additions later.
     MaterialEfficiency("Material efficiency",  Quadratic(5, 2, 5), "Adds a chance to retain some materials that would otherwise have been spent. Saved materials reduce emissions generated as well."),
     Recycling("Recycling", AddLinear(5, 5, 5), "Reduces emission generation when crafting and inventing. Also increases efficiency of the Reduce Emissions daily actions"),
@@ -18,12 +18,13 @@ public enum SkillType {
     DefensiveTraining("Defensive training", AddLinearAccum(5,5,7), "Increases overall defense during combat. Increases survivability"),
     UnarmedCombat("Unarmed combat", AddLinearAccum(3,2,9), "Increases attack, damage and amount of attacks while fighting unarmed."),
     WeaponizedCombat("Weaponized combat", AddLinearAccum(3,1,6), "Increases attack and damage of attacks while using weapons."),
-    Marksmanship("Marksmanship", AddLinear(5,5,6), "If you have a ranged weapon: Enables ranged attacks before melee combat starts. Increases ranged attack, damage and amount of attacks."), // Not added yet.
     Parrying("Parrying", AddLinearAccum(2, 5, 6), "Enables parrying of melee attacks. Increases probability at higher levels."), // Not added yet.
     SilentScouting("Silent scouting", AddLinearAccum(10, 5, 5), "Reduces risks of scouting by lowering the monster encounter rate while scouting."),
     Thief("Thief", AddLinear(5, 5, 5), "Reduces risks and increases profits when stealing from other players"), // Not added yet.
-    GroupCombatTraining("Group combat training", AddLinear(5,5,5), "Increases attack and defense while fighting with an ally."), // Not added yet.
     Studious("Studious", AddLinearAccum(20,10,5), "Grants additional EXP each turn. Increases EXP gained when choosing the Study action")
+    // To add later again perhaps.
+    //    Marksmanship("Marksmanship", AddLinear(5,5,6), "If you have a ranged weapon: Enables ranged attacks before melee combat starts. Increases ranged attack, damage and amount of attacks."), // Not added yet.
+    //   GroupCombatTraining("Group combat training", AddLinear(5,5,5), "Increases attack and defense while fighting with an ally."), // Not added yet.
     ;
 
     public String text = "text";

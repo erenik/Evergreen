@@ -58,4 +58,13 @@ public class Dice
     public float Average() {
         return (Min() + Max()) * 0.5f;
     }
+
+    public Dice copy() {
+        return new Dice(diceType, dice, bonus);
+    }
+
+    @Override
+    public String toString() {
+        return "Dice "+dice+"d"+diceType+(bonus > 0? "+"+bonus : bonus == 0? "" : ""+bonus);
+    }
 }

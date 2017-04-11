@@ -336,7 +336,7 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
 
         player.email = email;
         player.password = Auth.Encrypt(password, Auth.DefaultKey);
-        Toast("Registering character with server..."+player.name+" startingBonus: "+player.Get(Config.StartingBonus));
+        Toast("Registering character with server..."); // +player.name+" startingBonus: "+player.Get(Config.StartingBonus));
         ShowProgressBar();
         // Send a packet to the server. Display the loading whatevers.
         EGPacket pack = EGRequest.CreatePlayer(player);

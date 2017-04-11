@@ -81,7 +81,7 @@ public class EGTCPClient extends Thread
         // Fetch state. See if it changed?
         for (int i = 0; i < players.size(); ++i) {
             final Player player = players.get(i);
-            if (player.IsAlive() == false)
+            if (!player.IsAliveOutsideCombat())
                 continue;
 //            Printer.out("Client updating player "+player.name);
             UpdatePlayer(player);

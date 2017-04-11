@@ -33,6 +33,7 @@ public class WClassifier implements Serializable {
     private ClassificationStats currentStats = null;
     /// Settings currently used for the last training or testing.
     private Settings currentSettings = null;
+    public boolean trainingValuesNormalized = false;
 
     WClassifier(AbstractClassifier cls){
         this.cls = cls;
@@ -116,8 +117,10 @@ public class WClassifier implements Serializable {
     }
 
     public double ClassifyInstance(Instance inst) throws Exception {
-        if (currentSettings.normalizeAcceleration)
+        if (currentSettings.normalizeAcceleration) {
+            Printer.out("Normalizing acceleration values");
             NormalizeAccValues(inst);
+        }
 
         if (isTrained) {
             if (currentSettings.useNaiveIdleCheck && IsIdle(inst)) {
@@ -261,6 +264,7 @@ public class WClassifier implements Serializable {
             if (currentSettings.normalizeAcceleration){
                 Printer.out("Normalizing acceleration values");
                 NormalizeAccValues(currentSettings.trainingDataFold);
+                trainingValuesNormalized = true;
             }
             if (currentSettings.classConversions.size() > 0)
                 PerformClassConversions(currentSettings.trainingDataFold);

@@ -42,8 +42,8 @@
 
                 <!-- Frame layout for the rendering of the shelter/defense/home and all additions -->
                 <FrameLayout android:layout_width="match_parent" android:layout_height="190sp" android:padding="3sp">
-                    <ImageView android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:id="@+id/imageView_defenseLevel" android:src="@drawable/def_level_3" />
+                    <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/imageView_defenseLevel" android:src="@drawable/def_level_3" android:scaleType="fitCenter" />
                 </FrameLayout>
 
                 <!-- /// Second Row of stats -->

@@ -62,6 +62,8 @@ public class ResultsScreen extends EvergreenActivity  {
                     if (trans.contains("Bus")) drawableLeftSide = R.drawable.ri_bus;
                     if (trans.contains("Foot") || trans.contains("Walking")) drawableLeftSide = R.drawable.ri_foot;
                     if (trans.contains("Train")) drawableLeftSide = R.drawable.ri_train;
+                    if (trans.contains("Tram")) drawableLeftSide = R.drawable.ri_train;
+                    if (trans.contains("Subway")) drawableLeftSide = R.drawable.ri_train;
                     if (trans.contains("Car")) drawableLeftSide = R.drawable.ri_car;
                     if (trans.contains("Bike")) drawableLeftSide = R.drawable.ri_bike;
 //                    if (trans.contains("Bus")) drawableLeftSide = R.drawable.ri_bus;
@@ -98,6 +100,11 @@ public class ResultsScreen extends EvergreenActivity  {
                 case searchPlayer_alreadyFound: drawableLeftSide = R.drawable.ri_look_for_player_failed; break;
                 case foundPlayer:
                 case searchPlayer_foundAnother: drawableLeftSide = R.drawable.ri_look_for_player; break;
+                case wheelOmen1:
+                case wheelOmen2:
+                case wheelOmen3:
+                case wheelAccident:
+                        drawableLeftSide = R.drawable.ri_wheel; break;
 
                 default: // Nothing special.
                     break;

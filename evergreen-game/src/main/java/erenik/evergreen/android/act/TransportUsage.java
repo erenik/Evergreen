@@ -113,7 +113,9 @@ public class TransportUsage  extends EvergreenActivity {
                 SharedPreferences.Editor e = sp.edit();
                 e.putInt(PREF_HISTORY_SET, val);
                 e.commit();
-                TransportDetectionService.GetInstance().SetHistorySetSize(val);
+                // Should make a new Intent to set history set size based on recommendations from the server.
+                // TODO: Add intent for this.
+//                TransportDetectionService.GetInstance().SetHistorySetSize(val);
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
@@ -138,7 +140,9 @@ public class TransportUsage  extends EvergreenActivity {
                 SharedPreferences.Editor e = sp.edit();
                 e.putInt(PREF_SLEEP_SESSIONS, val);
                 e.commit();
-                TransportDetectionService.GetInstance().SetSleepSessions(val);
+                // Should make a new Intent to set history set size based on recommendations from the server.
+                // TODO: Add intent for this.
+//                TransportDetectionService.GetInstance().SetSleepSessions(val);
             }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}

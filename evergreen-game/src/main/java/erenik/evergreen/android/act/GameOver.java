@@ -18,8 +18,7 @@ import erenik.evergreen.common.player.Stat;
 public class GameOver extends EvergreenActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_over);
 
@@ -49,6 +48,14 @@ public class GameOver extends EvergreenActivity {
         findViewById(R.id.buttonRestartSameCharacter).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (App.IsLocalGame()){
+                    // Just restart it.
+                    App.GetPlayer().PrepareForTotalRestart();
+                    App.GetPlayer().ReviveRestart();
+                    GoToMainScreen();
+                    finish();
+                    return;
+                }
                 // Request a restart of the same character.
                 EGPacket pack = EGRequest.RestartSameCharacter(App.GetPlayer());
                 ShowProgressBar();

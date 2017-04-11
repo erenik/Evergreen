@@ -333,5 +333,20 @@
     <string name="slashOfHeavens">The (arg) uses Slash of Heavens on (arg). It strikes true, dealing (arg) points of damage.</string>
     <string name="slashOfHeavensPartial">The (arg) uses Slash of Heavens on (arg). It only hits partially, dealing (arg) points of damage.</string>
     <string name="recycled">Recycled (arg). Gained (arg) materials back from recycling.</string>
+    <string name="retainDailyActions">Retain daily actions after new turn</string>
+    <string name="wantsToFleeButCannot">(arg) wants to run away, but cannot!</string>
+    <string name="couldNotFindPlayer">Despite search, you couldn\'t find (arg).</string>
+    <string name="assaultsOfTheEvergreen">As night falls, you are assaulted by monsters from the evergreen.</string>
+    <string name="damageReflectedWhileAttacking">While attacking the (arg), (arg) takes (arg) point(s) of damage.</string>
+    <string name="stumbledUpon">While out (arg), you stumble upon (arg).</string>
+    <string name="stumbledUponFood">While out (arg), you stumbled upon some food supplies that seem abandoned. Found (arg) units of Food.</string>
+    <string name="stumbledUponMaterials">While out (arg), you stumbled upon a crate of crafts materials you think you could make use of. Found (arg) units of Materials.</string>
+    <string name="stumbledUponItem">While out (arg), you stumbled upon an abandoned (arg). It looks dusty but usable.</string>
+    <string name="wheelAccident">While out driving, another vehicle veers into your vehicle! You take (arg) points of damage. Luckily you can still drive and manage to get away from the madman.</string>
+    <string name="wheelOmen3">As you drive over some bumps, you hear some unusual noises coming from under the vehicle. Something has been broken and it\'s now leaking fuel into the street as you drive onward. Nothing you can do about it right now.</string>
+    <string name="wheelOmen2">The day is shining brightly, but behind you the exhaust is emitting a nice plume of smoke that seems to extinguish and start again after every turn you make.</string>
+    <string name="wheelOmen1">You come to a halt at one of your depos, and accidentally knock over some oil canisters. No time to clean that up now though.</string>
+    <string name="flyingOmen1">Before departing, you observe the other planes as they prepare for taking off. Funny how the exhausts are rarely visible compared to those from cars.</string>
+    <string name="flyingOmen2">While in the sky, you look over the clouds. These look a shade grey, probably about to storm later.</string>
 
 </resources>

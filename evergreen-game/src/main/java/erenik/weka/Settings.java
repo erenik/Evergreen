@@ -26,11 +26,11 @@ public class Settings {
     float naiveIdleThreshold = 0.01f;
 
     /// Size of history set for smoothing results (take away high-frequency noise).
-    public int historySetSize = 0;
+    public int historySetSize = 12;
     /// # of samples slept/skipped and compared with for each sample taken.
-    public int sleepSessions = 0;
+    public int sleepSessions = 12;
     /// If true, make use of the history set size capabilities, calculating the average of x samples before sleeping, instead of averaging samples taken after each sleep.
-    boolean forceAverageBeforeSleep = false;
+    boolean forceAverageBeforeSleep = true;
     /// How much to alter the test data when predicting - to not use the base data if non-0.
     float randomizationDegree = 0.0f;
     boolean accelerometerOnly = false;

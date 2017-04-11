@@ -96,7 +96,7 @@ public enum DAction {
     static Random randomAction = new Random(System.currentTimeMillis());
     /// Generates a random daily action for the given player. Returns null if nothing could be generated.
     public static Action RandomDailyAction(Player forPlayer) {
-        if (forPlayer.IsAlive() == false)
+        if (!forPlayer.IsAliveOutsideCombat())
             return null;
         for(int i = 0; i < 10; ++i) { // Give N attempts per request.
             // Randomly select one.

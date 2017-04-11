@@ -115,17 +115,19 @@ public class TransportData implements Serializable {
         }
     }
 
+    /// Does what?
     private void Aggregate() {
         EList<TransportOccurrence> newData = new EList<>();
         for (int i = 0; i < TransportType.values().length; ++i){
             TransportType tt = TransportType.values()[i];
             long durationTimeMs = GetTimeMs(tt);
-            TransportOccurrence newOcc = new TransportOccurrence(tt, this.startTimeMs, durationTimeMs);
+            TransportOccurrence newOcc = new TransportOccurrence(tt, this.startTimeMs, durationTimeMs, TransportOccurrence.GetMostUsedDetectionMethod(data));
             newData.add(newOcc);
         }
         data.clear();     // Clear the old data.
         data = newData;   // Replace with new aggregate to reduce memory/storage needed.
     }
+
 
     private EList<TransportData> Hours() {
         EList<TransportData> result = new EList<>();

@@ -188,6 +188,7 @@ public class Weapon extends Invention  implements Serializable {
                 Adjust(InventionStat.AttackDamageBonus, 3);
                 additionalEffectDice = 1;
                 Adjust(InventionStat.BonusAttacks, 1);
+                break;
             case 6:
             default:
                 name = name+" +4";
@@ -246,7 +247,7 @@ public class Weapon extends Invention  implements Serializable {
                 Adjust(InventionStat.BonusAttacks, 1);
                 Adjust(InventionStat.AttackBonus, -1);
                 Adjust(InventionStat.AttackDamageBonus, -2);
-                name = "Swift" + name;
+                name = "Swift " + name;
                 break;
         }
     }

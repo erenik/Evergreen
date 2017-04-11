@@ -2,6 +2,7 @@ package erenik.evergreen.android.act;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,13 +73,20 @@ public class MenuActivity extends EvergreenActivity {
         findViewById(R.id.buttonHelp).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NotImplemented();
+                // Open a link to web-page or facebook page?
+                String url = "https://www.facebook.com/AssaultsOfTheEvergreen/";
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+                // //                NotImplemented();
+
             }
         });
         findViewById(R.id.buttonOptions).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NotImplemented();
+                Intent i = new Intent(getBaseContext(), Options.class);
+                startActivity(i);
+//                NotImplemented();
             }
         });
         findViewById(R.id.buttonQuitGame).setOnClickListener(new View.OnClickListener() {
