@@ -976,9 +976,20 @@ public class Player extends Combatable implements Serializable {
 //        Printer.out("hoursPerAction: "+hoursPerAction);
         foodHarvested = 0.0f;
         // Execute at most 8 actions per day, regardless of queue.
+        int stealAttempts = 0, attackAttempts = 0;
         for (int i = 0; i < cd.dailyActions.size() && i < MAX_ACTIONS; ++i) {
             /// Parse actions and execute them.
             da = cd.dailyActions.get(i);
+            switch (da.DailyAction()){
+                case Steal:
+                    ++stealAttempts;
+                    if (stealAttempts > 1)
+                        continue;
+                case AttackAPlayer:
+                    ++attackAttempts;
+                    if (attackAttempts > 1)
+                        continue;
+            }
             EvaluateAction(da, game);
         }
         if (cd.dailyActions.size() == 0){
@@ -1377,6 +1388,8 @@ public class Player extends Combatable implements Serializable {
             // Add chance to find random other players?
             if (randInt < 50) {
                 Player randomPlayer = game.RandomLivingPlayer(KnownNamesSelfIncluded());
+                if (randomPlayer == this) // Return if self, no need to imply stupid in vain
+                    return;
                 if (randomPlayer == null)
                     return;
                 String newPlayer = randomPlayer.name;

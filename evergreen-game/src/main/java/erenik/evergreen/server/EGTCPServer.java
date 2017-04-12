@@ -349,8 +349,9 @@ public class EGTCPServer extends Thread {
                 if (CheckCredentials(fla.player, sock)){
                     EList<Log> logMessagesToReply = GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.numMsgsFromStartIndex - 1, fla.oldestLogIDToInclude);
                     Reply(sock, EGResponse.logMessages(logMessagesToReply).build());
-                    Printer.out("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size()+" oldestToInclude: "+fla.oldestLogIDToInclude
-                            +" replied#: "+logMessagesToReply.size());
+                    // TODO: For future work, uncomment here as needed to debug server sending log-messages out.
+              //      Printer.out("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size()+" oldestToInclude: "+fla.oldestLogIDToInclude
+                //            +" replied#: "+logMessagesToReply.size());
                 }
                 break;
             }

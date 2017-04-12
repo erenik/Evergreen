@@ -36,7 +36,7 @@ public class EGResponse extends EGPacket {
         float turnsSurvived = turns;
         EGResponse eg = new EGResponse(EGResponseType.TurnsSurvived, Byter.toByteArray(turns));
         float turnsRead = (float) Byter.toObject(eg.body);
-        Printer.out("Turns written: "+turns+" read: "+turnsRead);
+     //   Printer.out("Turns written: "+turns+" read: "+turnsRead);
         if (turns != turnsRead) {
             new Exception().printStackTrace();
             System.exit(15);
