@@ -330,8 +330,8 @@ public class Game implements Serializable {
         return games;
     }
     private void CreateDefaultPlayers() {
-        int numTest = 1; // Set 6 to test all difficulties.
-        for (int i = 0; i < 1; ++i) {
+        int numTest = 0; // Set 6 to test all difficulties.
+        for (int i = 0; i < numTest; ++i) {
             // Create default players?
             Player player = new Player();
             player.name = "Erenik ";
