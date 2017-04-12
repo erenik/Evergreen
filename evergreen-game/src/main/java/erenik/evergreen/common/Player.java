@@ -405,7 +405,7 @@ public class Player extends Combatable implements Serializable {
 
     // This should be used instead of Get(Stat.MAX_HP) ?
     public int MaxHP() {
-        int maxHP = GetInt(Stat.MAX_HP);
+        int maxHP = (int) cd.statArr[Stat.MAX_HP.ordinal()];
         for (int i = 0; i < Get(SkillType.Survival).Level(); ++i)
             maxHP += i + 1; // 1/3/6/10/15,  +1,2,3,4,5 increases
         return  maxHP;
@@ -934,12 +934,12 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void ClampHP() {
-        float hp = Get(Stat.HP);
+        float hp = cd.statArr[Stat.HP.ordinal()];
         if (hp > MaxHP())
             hp = MaxHP();
         else if (hp < 0)
             hp = 0;
-        Set(Stat.HP, hp);
+        cd.statArr[Stat.HP.ordinal()] = hp;
     }
 
     String Stringify(float value) {
