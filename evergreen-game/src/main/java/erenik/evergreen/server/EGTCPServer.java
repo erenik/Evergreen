@@ -145,6 +145,10 @@ public class EGTCPServer extends Thread {
                 Game.secondsPerDay = iarg;
                 Printer.out("-secondsPerDay "+iarg);
             }
+            if (args[i].equals("-printStatusInterval")){
+                Game.intervalToPrintGameStatusSeconds = iarg;
+                Printer.out("-printStatusInterval "+iarg);
+            }
         }
         if (args.length > 2) {
             if (args[0].equals("test")) {

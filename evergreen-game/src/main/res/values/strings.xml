@@ -271,7 +271,7 @@
     <string name="somethingAmiss">While walking in your shelter, you notice something grabbing your attention. You try to see what it was, but find nothing is amiss.</string>
     <string name="stealSuccess_whatName">Stole (arg) from (arg).</string>
     <string name="stolen">After re-organizing your things, you notice that (arg) has been stolen from you!</string>
-    <string name="searchPlayerFailed">Despite searching, you were unable to find a player called (arg).</string>
+    <string name="searchPlayerFailed">Despite searching, you were unable to find (arg).</string>
     <string name="foundPlayer">You found the player named (arg)! You can now interact with that player.</string>
     <string name="searchPlayer_foundAnother">However, while searching, you stumbled upon another player!</string>
     <string name="craftingComplete">Crafting complete: (arg)</string>
@@ -335,7 +335,7 @@
     <string name="recycled">Recycled (arg). Gained (arg) materials back from recycling.</string>
     <string name="retainDailyActions">Retain daily actions after new turn</string>
     <string name="wantsToFleeButCannot">(arg) wants to run away, but cannot!</string>
-    <string name="couldNotFindPlayer">Despite search, you couldn\'t find (arg).</string>
+    <string name="couldNotFindPlayer">Despite searching, you couldn\'t find (arg).</string>
     <string name="assaultsOfTheEvergreen">As night falls, you are assaulted by monsters from the evergreen.</string>
     <string name="damageReflectedWhileAttacking">While attacking the (arg), (arg) takes (arg) point(s) of damage.</string>
     <string name="stumbledUpon">While out (arg), you stumble upon (arg).</string>

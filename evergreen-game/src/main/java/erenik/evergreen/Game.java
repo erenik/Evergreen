@@ -49,6 +49,7 @@ public class Game implements Serializable {
     public static int secondsPerDay = 60; // The hard-coded. Default 1 minute per round, can be set via command-line arg in Server code now, -simulationTime
     public static boolean noPauses = false;
     private int day = 0;
+    public static int intervalToPrintGameStatusSeconds = 300;
 
     public Game(){
         logEnumerator = new Enumerator();
@@ -451,7 +452,7 @@ public class Game implements Serializable {
         long nextUpdateMs = dayStartTimeMs + msPerDayInGame;
         long tilNextUpdateMs = nextUpdateMs - System.currentTimeMillis();
         long secondsTilNextUpdate = tilNextUpdateMs / 1000;
-        if (secondsTilNextUpdate % 300 == 0){
+        if (secondsTilNextUpdate % intervalToPrintGameStatusSeconds == 0){
             if (secondsTilNextUpdate != lastSecondNotified){
                 long minutesTilNextUpdate = secondsTilNextUpdate / 60;
                 long hoursTilNextUpdate = minutesTilNextUpdate / 60;
