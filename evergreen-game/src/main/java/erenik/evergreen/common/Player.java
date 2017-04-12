@@ -823,15 +823,17 @@ public class Player extends Combatable implements Serializable {
         }
         NewDay();  // New day :3
         LogInfo(LogTextID.newDayPlayerTurnPlayed, ""+(int) Get(Stat.TurnPlayed));
-        Transport t = Transport.RandomOf(transports);
+  //      Transport t = Transport.HighestOf(transports);
        // Printer.out("Randomed transport.. "+t.name());
-        Set(Stat.CurrentTransport, t.tt.ordinal());
+    //    Set(Stat.CurrentTransport, t.tt.ordinal());
 
      //   CalcAggregateTransportBonuses();         // Calculate the general transport bonus granted from the previous day?
         GenerateEventsBasedOnTransportsUsed();         // Or just give bonuses and random events based on the distances traveled etc?
 
         // Bonuses for greening habits?
-        LogInfo(LogTextID.transportOfTheDay, GetCurrentTransport().tt.name());
+//        LogInfo(LogTextID.transportOfTheDay, GetCurrentTransport().tt.name());
+
+
         float emissionsToGenerate = Get(TransportStat.EmissionsPerDay);
         emissionsToGenerate *= emissionsRand.nextFloat() * 0.5f + 0.75f;// Add some randomness to emissions-generation? +/-25%
         int iEm = Math.round(emissionsToGenerate);         //if (emissionsToGenerate > 0) // Really print this? Better have it more secret? and more random feeling?
