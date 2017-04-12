@@ -1,5 +1,7 @@
 package erenik.evergreen.android;
 
+import android.content.Context;
+
 import erenik.evergreen.R;
 import erenik.evergreen.common.logging.LogTextID;
 import erenik.util.EList;
@@ -9,7 +11,7 @@ import erenik.util.EList;
  */
 
 public class EString {
-    public static String GetLogText(LogTextID logTextID, EList<String> args) {
+    public static String GetLogText(LogTextID logTextID, EList<String> args, Context context) {
         int id = -1; // id on android.
         String s = "";
         switch(logTextID) {
@@ -128,11 +130,14 @@ public class EString {
             case wheelOmen3: id = R.string.wheelOmen3; break;
             case flyingOmen1: id = R.string.flyingOmen1; break;
             case flyingOmen2: id = R.string.flyingOmen2; break;
+            case didNothing: id = R.string.didNothing; break;
             default:
-                s = logTextID.name(); break;
+                s = "No string for logTextID "+logTextID+", "+logTextID.name(); break;
         }
-        if (id != -1)
-            s = App.currentActivity.getString(id);
+        if (id != -1) {
+            s = context.getString(id);
+        }
+//            s = "Couldn't grab apk id of string: "+logTextID;
         // Replace args as needed.
         int replaced = 0;
         while(s.contains("(arg)") && replaced < args.size())

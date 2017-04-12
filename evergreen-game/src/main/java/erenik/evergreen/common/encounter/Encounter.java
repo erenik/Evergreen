@@ -117,7 +117,8 @@ public class Encounter {
                 AssaultsOfTheEvergreen(andMainPlayer);
                 break;
             case RandomEncounter:
-                RandomMonsterEncounter(0, 2, 0, andMainPlayer); // 2d3, no bonus
+                RandomMonsterEncounter(1 + andMainPlayer.TotalEmissions() / 25,  // Amount of monsters depend on player emissions.
+                        0 + andMainPlayer.TotalEmissions() / 50, andMainPlayer.TotalEmissions() / 12, andMainPlayer); //  1 to 12: 1d3, 13 to 23: 1d3+1, 24: 1d3+2, 25 to 35: 2d3+2, 36 to 47: 2d3+3, etc.
                 break;
             default:
                 Printer.out("Bad finding!!!!");

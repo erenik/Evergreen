@@ -16,7 +16,7 @@ public enum Finding {
     EnemyStronghold,
     FoodHotSpot,
     MaterialsDepot,
-    RandomItem, WheelOmen, WheelAccident, FlyingOmen;
+    RandomItem, WheelOmen, WheelAccident, FlyingOmen, RandomItemLevel1, RandomItemLevel2;
     public String GetEventText() {
         switch(this)
         {

@@ -39,6 +39,12 @@ public class Dice
   //      Printer.out(numDice+"D6 = "+total);
         return total;
     }
+    static public int RollD2(int numDice) {
+        int total = 0;
+        for (int i = 0; i < numDice; ++i)
+            total += r.nextInt(2) + 1;
+        return total;
+    }
     static public int RollD3(int numDice)
     {
         int total = 0;

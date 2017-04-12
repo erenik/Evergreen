@@ -84,9 +84,9 @@ public class Invention implements Serializable {
         switch (invention.type){
 //            case RangedWeapon:
             case Weapon:
-                return new Weapon().Blueprint();
+                return new Weapon();
             default:
-                return new Invention(invention.type).Blueprint();
+                return new Invention(invention.type);
         }
     }
     public static Invention MakeBlueprint(Invention invention) {

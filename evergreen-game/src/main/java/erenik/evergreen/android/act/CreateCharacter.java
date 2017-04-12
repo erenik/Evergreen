@@ -79,6 +79,12 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_character);
 
+
+        if (App.IsLocalGame()){
+            EditText et = (EditText) findViewById(R.id.textEditName);
+            et.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        }
+
         final Spinner spinnerStartingBonus = (Spinner) findViewById(R.id.spinnerStartingBonus);
         spinnerStartingBonus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override

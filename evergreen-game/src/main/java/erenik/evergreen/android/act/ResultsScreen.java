@@ -75,6 +75,8 @@ public class ResultsScreen extends EvergreenActivity  {
                 case monsterKnockedOutPlayer: drawableLeftSide = R.drawable.ri_defeated; break;
                 case studiesEXP: // Same exp sign for battles and studying.
                 case expGained: drawableLeftSide = R.drawable.ri_exp; break;
+                case skillLeveledUp: drawableLeftSide = R.drawable.ri_skillup; break;
+                case skillLeveledDown: drawableLeftSide = R.drawable.ri_skilldown; break;
                 case shelterAttacked: drawableLeftSide = R.drawable.ri_shelter_attacked; break;
                 case newDayPlayerTurnPlayed: centered = true; drawableLeftSide = R.drawable.ri_day; textSize = 26; break; // Title!
                 case playerMonsterAttack: drawableLeftSide = R.drawable.ri_attack; break;
@@ -121,7 +123,7 @@ public class ResultsScreen extends EvergreenActivity  {
                 case debug:
                 case undefined:
                     // Print a bad thingy? Cause crash?
-                    String s = "Not configured new text: "+App.GetLogText(l.TextID(), l.Args());
+                    String s = "Not configured new text: "+App.GetLogText(l.TextID(), l.Args(), this);
                     TextView t = new TextView(getBaseContext());
                     t.setText(s);
                     int hex = ContextCompat.getColor(getBaseContext(), App.GetColorForLogType(l.type));

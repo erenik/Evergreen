@@ -8,6 +8,7 @@ import erenik.util.EList;
 
 public enum SkillType {
     Foraging("Foraging", AddLinear(5,5,9), "Increases food acquired while foraging. Increases chance to find good foraging spots."),
+    Scavenging("Scavenging", AddLinear(5,5,9), "Increases materials acquired while looking for materials"),
     FleetRetreat("Fleet retreat", AddLinearAccum(5, 4, 4), "Makes fleeing easier. Gains more EXP from encounters on successful retreats."),
     Survival("Survival", AddLinearAccum(5,5,9), "Increases Max HP, HP recovery gain while using the Recover action."), // Add the HP recovery upon KO for regular mode later (when regular/Hardcore options are there).
     Architecting("Architecting", AddLinear(10,10,6), "Increases building speed when building shelter defenses and other structures"), // Add for Shelter additions later.

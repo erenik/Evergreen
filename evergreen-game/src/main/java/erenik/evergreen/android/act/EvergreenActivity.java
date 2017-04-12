@@ -179,7 +179,8 @@ public class EvergreenActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         setupFullscreenFlags();
-        Network.CheckForNewDataOnServer(App.GetPlayer(), this);
+        if (!App.IsLocalGame()) // Check for updates if multiplayer
+            Network.CheckForNewDataOnServer(App.GetPlayer(), this);
         checkForMoreUpdates = true;
         SetupPacketHandler();
     }
@@ -548,7 +549,7 @@ public class EvergreenActivity extends AppCompatActivity
         if (player.log == null)
             return;
 //        App.UpdateLog((ViewGroup) findViewById(R.id.layoutLog), getBaseContext(), maxLogLinesInEventLog, player.logTypesToShow);
-        Printer.out("Log.UpdateLog");
+      //  Printer.out("Log.UpdateLog");
         ViewGroup v = (ViewGroup) layoutLog;
         // Remove children.
         v.removeAllViews();
@@ -556,12 +557,12 @@ public class EvergreenActivity extends AppCompatActivity
         int numDisplay = player.log.size();
         numDisplay = numDisplay > maxLogLinesInEventLog ? maxLogLinesInEventLog : numDisplay;
         int startIndex = player.log.size() - numDisplay + 1;
-        Printer.out("Start index: "+startIndex+" log size: "+player.log.size());
+      //  Printer.out("Start index: "+startIndex+" log size: "+player.log.size());
         View lastAdded = null;
         EList<Log> newLogMessages = player.log.subList(startIndex);
-        Printer.out("Log messages to show: "+newLogMessages.size());
-        Log.PrintLastLogMessages(newLogMessages, 3);
-        PrintLastLogMessages(3);
+      //  Printer.out("Log messages to show: "+newLogMessages.size());
+    //    Log.PrintLastLogMessages(newLogMessages, 3);
+      //  PrintLastLogMessages(3);
         EList<Log> filteredLogMessages = Log.ApplyFilters(newLogMessages, player.logTypesToFilter);
         if (filteredLogMessages.size() == 0) {
             Printer.out("Filters mis-behaving, reverting to display all types.");
@@ -580,7 +581,7 @@ public class EvergreenActivity extends AppCompatActivity
 
     /// Creates and returns a new TextView for the larget log-message.
     TextView GetViewForLogMessage(Log l){
-        String s = App.GetLogText(l.TextID(), l.Args());
+        String s = App.GetLogText(l.TextID(), l.Args(), this);
         TextView t = new TextView(getBaseContext());
         t.setText(s);
         switch(l.type){
@@ -922,7 +923,7 @@ public class EvergreenActivity extends AppCompatActivity
         }
         UpdateLog(); // Update UI once we have them all.
         Printer.out("Total messages received: "+totalLogMessagesReceived);
-        PrintLastLogMessages(5);
+      //  PrintLastLogMessages(5);
         // Update the gui?
         OnLogMessagesUpdated();
         Printer.out("Successfully batched and presented all log-messages.");
@@ -1094,33 +1095,36 @@ public class EvergreenActivity extends AppCompatActivity
         Player p = App.GetPlayer();
         if (p.log == null){
             ToastUp("log messages null");
+            Printer.out("New log messages to present: no");
             p.log = new EList<>();
             return null;
         }
-        int logMessagesAdded = 0;
         long lastLogMessageIDSeen = (long) p.Get(Config.LatestLogMessageIDSeen);
         Printer.out("LastID seen: "+lastLogMessageIDSeen);
         EList<Log> toDisplay = new EList<>();
         for (int i = 0; i < p.log.size(); ++i){
             Log l = p.log.get(i);
+            if (i > p.log.size() - 5)
+                Printer.out("l.LogID(): "+l.LogID());
             if (l.LogID() <= lastLogMessageIDSeen)
                 continue;
             // The old check, where it bases relevant messages on what is saved server-side, which was bugging more or less....
             //     if (player.log.get(i).displayedToEndUser == 0)
             //            return true;
-         //   Printer.out("l.LogID(): "+l.LogID());
             toDisplay.add(l);
         }
+        Printer.out("New log messages to present: "+toDisplay.size());
         return toDisplay;
     }
 
     static long lastTimeResults = 0;
     void GoToResultsScreen(){
         long now = System.currentTimeMillis();
+        /*
         if (now - lastTimeResults < 5000) { // No duplicates.
             Printer.out("Already presented log just now, stahp it.");
             return;
-        }
+        }*/
         lastTimeResults = now;
         Intent i = new Intent(getBaseContext(), ResultsScreen.class); // Check the log for new messages -... will be there, so wtf just go to the walla walla.
         startActivity(i);

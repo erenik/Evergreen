@@ -179,7 +179,7 @@ public class Log implements Serializable {
                 }
             }
             if (!show) {
-                Printer.out("Skipping message "+l.LogID()+" "+l);
+             //   Printer.out("Skipping message "+l.LogID()+" "+l);
                 continue;
             }
             newList.add(l);

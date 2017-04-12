@@ -346,9 +346,11 @@ public class EGTCPServer extends Thread {
                 break;
             case FetchLog:{
                 EGRequest.ExtraArgs fla = req.parseExtraArgs();
-                Printer.out("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size());
                 if (CheckCredentials(fla.player, sock)){
-                    Reply(sock, EGResponse.logMessages(GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.numMsgsFromStartIndex - 1, fla.oldestLogIDToInclude)).build());
+                    EList<Log> logMessagesToReply = GetPlayerInSystem(fla.player).LogSublist(fla.startIndex, fla.startIndex + fla.numMsgsFromStartIndex - 1, fla.oldestLogIDToInclude);
+                    Reply(sock, EGResponse.logMessages(logMessagesToReply).build());
+                    Printer.out("start index : "+fla.startIndex+" num: "+fla.numMsgsFromStartIndex+" avail: "+GetPlayerInSystem(fla.player).log.size()+" oldestToInclude: "+fla.oldestLogIDToInclude
+                            +" replied#: "+logMessagesToReply.size());
                 }
                 break;
             }
@@ -529,6 +531,7 @@ public class EGTCPServer extends Thread {
         }
         Game game = GetGameById(player.gameID);
         if (game == null){
+            Printer.out("EvaluateRestartRequest: NoSuchGame");
             Reply(sock, EGPacket.error(EGResponseType.NoSuchGame).build());
             return;
         }
@@ -570,11 +573,15 @@ public class EGTCPServer extends Thread {
             Reply(sock, EGPacket.parseError().build());
             return;
         }
+        // One game, so adjust game ID as needed.
+        player.gameID = games.get(0).GameID();
         Game game = GetGameById(player.gameID);
         if (game == null){
+            Printer.out("No such game.. D:");
             Reply(sock, EGPacket.error(EGResponseType.NoSuchGame).build());
             return;
         }
+
         Player exists = game.GetPlayer(player.name);
         if (exists != null) {
             Reply(sock, EGPacket.error(EGResponseType.PlayerWithNameAlreadyExists).build());

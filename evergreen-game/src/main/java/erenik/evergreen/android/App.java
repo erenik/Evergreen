@@ -228,8 +228,8 @@ public class App {
         App.NewActivityLifeCycleCallback(activity);
     }
 
-    public static String GetLogText(LogTextID logTextID, EList<String> args) {
-        return EString.GetLogText(logTextID, args);
+    public static String GetLogText(LogTextID logTextID, EList<String> args, Context context) {
+        return EString.GetLogText(logTextID, args, context);
     }
 
     /// Saves locally, using default preferences location.

@@ -611,7 +611,7 @@ public class Player extends Combatable implements Serializable {
                 int diceDamageToTake = ClampInt(quantity, 1, 2);
                 int damage = Dice.RollD3(diceDamageToTake);
                 Adjust(Stat.HP, -damage);
-                Log(LogTextID.wheelAccident, LogType.OtherDamage, transportString, "" + damage);
+                Log(LogTextID.wheelAccident, LogType.OtherDamage, "" + damage);
                 break;
             case WheelOmen:{
                 // Random incident/story.
@@ -767,6 +767,10 @@ public class Player extends Combatable implements Serializable {
             LogListener ll = logListeners.get(i);
             ll.OnLog(l, this);
         }
+        if (log.size() > 5000){
+            /// Exceeds 5k? then dump old part?
+            log = log.subList(log.size() / 2);
+        }
     }
     public void LogInfo(LogTextID id) {
         Log l = new Log(id, LogType.INFO);
@@ -815,6 +819,10 @@ public class Player extends Combatable implements Serializable {
     static Random emissionsRand = new Random(System.currentTimeMillis());
     /// Adjusts stats, generates events based on chosen actions to be played, logged
     public void NextDay(Game game) {
+        if (GameID() == GameID.LocalGame){
+            Log.logIDEnumerator.value = (long) Get(Config.LatestLogMessageIDSeen); // If the player is from a local game, reset the Log static enumerator to the last viewed log message, or the Results-Screen feature will not work as intended.
+        }
+
         updatesFromClient.clear(); // Clear this array when new days are processed.
         if (GetInt(Stat.HP) <= 0) {
             // TODO: Add a listener-callback mechanism for when the player dies.
@@ -973,6 +981,9 @@ public class Player extends Combatable implements Serializable {
             da = cd.dailyActions.get(i);
             EvaluateAction(da, game);
         }
+        if (cd.dailyActions.size() == 0){
+            LogInfo(LogTextID.didNothing);
+        }
     }
 
     String formattedFloat(float value, int decimals){
@@ -982,7 +993,6 @@ public class Player extends Combatable implements Serializable {
     }
 
     void EvaluateAction(Action action, Game game) {
-        float units = 1;
         String playerName = action.GetPlayerName();
         Player player = null;
         if (playerName != null) {
@@ -1092,47 +1102,53 @@ public class Player extends Combatable implements Serializable {
 
         if (action.DailyAction() != null)
             switch (action.DailyAction()) {
-                case GatherFood:
+                case GatherFood: {
                     int totalFoodGathered = 0;
                     float hoursToRandomize = hoursPerAction * t_starvingModifier;
                     // Randomize each hour.
-                    for (int i = 0; i < hoursToRandomize; ++i){
+                    for (int i = 0; i < hoursToRandomize; ++i) {
                         int foundSomething = (int) (Dice.RollD6(2) + Get(SkillType.Foraging).Level() + Get(TransportStat.ForagingBonus) + GetEquipped(ForagingBonus)); // Roll 2d6 + Foraging skill, gear bonuses, etc..
-                        int diceFound = (foundSomething - 5) / 3; // 8 - 1 dice, 11 - 2 dice, 14 - 3 dice, 17 - 4 dice, etc.
-                        // On 7+, found something?
-                        units = Dice.RollD3(1);  // 1 to 3 base dice for each occurrence.
-                        totalFoodGathered += Math.round(units);
+                        int diceFound = (foundSomething - 5) / 3;
+                        if (diceFound < 1)
+                            continue;
+                        totalFoodGathered += Dice.RollD2(diceFound);  // 1 to 3 base dice for each occurrence.
                     }
-                    if (totalFoodGathered < 1)
-                        totalFoodGathered = 1; // Get at least 1.
+                    if (totalFoodGathered < 2)
+                        totalFoodGathered = 1 + Get(SkillType.Foraging).Level(); // Get at least 1.
                     Adjust(Statistic.FoodGathered, totalFoodGathered);
                     Adjust(Stat.FOOD, totalFoodGathered);
-                    LogInfo(LogTextID.foragingFood, ""+totalFoodGathered);
+                    LogInfo(LogTextID.foragingFood, "" + totalFoodGathered);
                     break;
-                case GatherMaterials:
-                    units = Dice.RollD3(1); // 1 to 3 base.
-                    units += Get(TransportStat.MaterialGatheringBonus);
-                    units += GetEquipped(InventionStat.ScavengingBonus); // Add scavenging bonus from equipment.
-                    units *= t_starvingModifier;
-                    units *= hoursPerAction;
-                    int iMUnits = Math.round(units);
-                    if (iMUnits < 1)
-                        iMUnits = 1;
-                    Adjust(Statistic.MaterialsGathered, iMUnits);
-                    LogInfo(LogTextID.gatherMaterials, ""+iMUnits);
-                    Adjust(Stat.MATERIALS, iMUnits);
+                }
+                case GatherMaterials: {
+                    int totalMaterialsGathered = 0;
+                    float hoursToRandomize = hoursPerAction * t_starvingModifier;
+                    // Randomize each hour.
+                    for (int i = 0; i < hoursToRandomize; ++i) {
+                        int foundSomething = (int) (Dice.RollD6(2) + Get(SkillType.Foraging).Level() + Get(TransportStat.ForagingBonus) + GetEquipped(ForagingBonus)); // Roll 2d6 + Foraging skill, gear bonuses, etc..
+                        int diceFound = (foundSomething - 5) / 3;
+                        if (diceFound < 1)
+                            continue;
+                        totalMaterialsGathered += Dice.RollD2(diceFound);  // 1 to 3 base dice for each occurrence.
+                    }
+                    if (totalMaterialsGathered < 2)
+                        totalMaterialsGathered = 1 + Get(SkillType.Scavenging).Level(); // Get at least 1 + Scavenging skill
+                    Adjust(Statistic.MaterialsGathered, totalMaterialsGathered);
+                    LogInfo(LogTextID.gatherMaterials, "" + totalMaterialsGathered);
+                    Adjust(Stat.MATERIALS, totalMaterialsGathered);
                     break;
+                }
                 case Scout:
                     Scout(game);
                     break;
                 case Recover:
-                    units = (1 + 0.5f * Get(SkillType.Survival).Level()); // 1 + 0.5 for each survival skill.
+                    float units = (1 + 0.5f * Get(SkillType.Survival).Level()); // 1 + 0.5 for each survival skill.
                     units += GetEquipped(InventionStat.RecoveryBonus); // +2 for First aid kit, for example.
                     units *= 0.5f * hoursPerAction; // Recovery +50/100/150/200/250%
                     units *= t_starvingModifier;
                     Adjust(Stat.HP, units);
                     ClampHP();
-                    LogInfo(LogTextID.recoverRecovered, ""+units);
+                    LogInfo(LogTextID.recoverRecovered, ""+String.format(Locale.ENGLISH, "%.2f", units));
                     break;
                 case BuildDefenses: BuildDefenses(); break;
     //            case AugmentTransport: AugmentTransport(); break;
@@ -1629,7 +1645,7 @@ public class Player extends Combatable implements Serializable {
         // Increase liklihood of encounters for each passing turn when scouting -> Scout early on is safer.
         // There will however be more of other resources available later on. :D
         int turn = (int) Get(Stat.TurnSurvived);
-        int randomEncounter = 5 + turn; // Increase chance of combat for each survived turn, and maybe emissions as well?
+        int randomEncounter = 5 + turn - GetEquipped(ScoutingBonus); // Increase chance of combat for each survived turn, and maybe emissions as well?
         randomEncounter /= (1 + 0.5f * Get(SkillType.SilentScouting).Level()); // Each level of silent scouting reduces encounter rate.
         // -33% at 1st level, -50% at 2nd level, -60% at 3rd level, -66% at 4th, -71.5%, etc. (/1.5, /2, /2.5, /3, /3.5)
         chances.put(Finding.RandomEncounter, randomEncounter);
@@ -1639,7 +1655,9 @@ public class Player extends Combatable implements Serializable {
         chances.put(Finding.FoodHotSpot, 5);
         chances.put(Finding.MaterialsDepot, 5);
         chances.put(Finding.RandomPlayer, 5);
-        chances.put(Finding.RandomItem, 2);
+        chances.put(Finding.RandomItem, turn / 2); // Chance to find L0 items, increases as the game progresses?
+        chances.put(Finding.RandomItemLevel1, turn / 4); // Chance to find L1 items, also increases, but slower.
+        chances.put(Finding.RandomItemLevel2, turn / 8); // Chance to find L2 items.
 //        chances.put(Finding.AbandonedShelter, 10 + turn);
   //      chances.put(Finding.RandomPlayerShelter, 10);
     //    chances.put(Finding.EnemyStronghold, 1+turn/3);
@@ -1647,25 +1665,38 @@ public class Player extends Combatable implements Serializable {
         for (int i = 0; i < chances.size(); ++i) {
             sumChances += (Integer) chances.values().toArray()[i];
         }
-//        Printer.out("Sum chances: "+sumChances);
+        Printer.out("Sum chances: "+sumChances);
         EList<Finding> foundList = new EList<Finding>();
      //   String foundStr = "Found: ";
+        int totalFound = 0;
         while(toRandom > 0) {
             toRandom -= 1;
-            float chance = r.nextFloat() * sumChances;
+            float baseChance = r.nextFloat() * sumChances;
+            float chance = baseChance;
             for (int i = 0; i < chances.size(); ++i) {
                 int step = (Integer) chances.values().toArray()[i];
                 chance -= step;
                 if (chance < 0){ // Found it
        //             foundStr += chances.keySet().toArray()[i]+", ";
-                    foundList.add((Finding)chances.keySet().toArray()[i]);
+                    Finding found = (Finding)chances.keySet().toArray()[i];
+                    Printer.out("Found: "+found.name()+" at chance: "+chance);
+                    if (found != Finding.Nothing){
+                        ++totalFound;
+                    }
+                    else {
+                    }
+                    foundList.add(found);
+                    // Break the inner loop.
+                    i = chances.size();
+                    break;
                 }
             }
         }
 
 //        Printer.out(foundStr);
         float amount = 0;
-        int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0, numRandPlayers = 0, numRandItems = 0;
+        int numFoodStashes = 0, numMatStashes = 0,  numEncounters = 0, numAbShelters = 0, numRPS = 0, numEnStrong = 0, numRandPlayers = 0, numRandItems = 0,
+            numRandItemsL1 = 0, numRandItemsL2 = 0;
         int foodFound = 0, matFound = 0;
         String s = da.text+": While scouting the area, you ";
         for (int i = 0; i < foundList.size(); ++i) {
@@ -1673,10 +1704,12 @@ public class Player extends Combatable implements Serializable {
             switch(f){            // Evaluate it.
                 case Nothing: break;
                 case RandomEncounter: numEncounters  += 1; break;
-                case Food: numFoodStashes += 1; foodFound += Dice.RollD3(1); break;
-                case Materials: numMatStashes += 1; matFound += Dice.RollD3(1); break;
+                case Food: numFoodStashes += 1; foodFound += Dice.RollD2(1) + Get(SkillType.Foraging).Level() ; break;
+                case Materials: numMatStashes += 1; matFound += Dice.RollD2(1) + Get(SkillType.Scavenging).Level() ; break;
                 case RandomPlayer: numRandPlayers += 1; break;
                 case RandomItem: numRandItems +=1; break;
+                case RandomItemLevel1: numRandItemsL1 += 1; break;
+                case RandomItemLevel2: numRandItemsL2 += 1; break;
         //        case FoodHotSpot: ++numFoodHotSpots;
       //          case MaterialsDepot: ++numMatDepos;
 //                case AbandonedShelter: numAbShelters += 1; playEvents = true; break;
@@ -1714,13 +1747,22 @@ public class Player extends Combatable implements Serializable {
                 FindRandomPlayer(5, game);
             }
         }
-        if (numRandItems > 0){
-            LogInfo(LogTextID.scoutFoundItems, ""+numRandItems);
+        int totalRandItemsFounds = numRandItems + numRandItemsL1 + numRandItemsL2;
+        if (totalRandItemsFounds > 0){
+            LogInfo(LogTextID.scoutFoundItems, ""+totalRandItemsFounds);
             for (int i = 0; i < numRandItems; ++i){
                 Invention inv = Invention.Random(0);
                 Obtained(inv);
             }
-            Adjust(Statistic.ItemsFoundByScouting, numRandItems);
+            for (int i = 0; i < numRandItemsL1; ++i){
+                Invention inv = Invention.Random(1);
+                Obtained(inv);
+            }
+            for (int i = 0; i < numRandItemsL2; ++i){
+                Invention inv = Invention.Random(2);
+                Obtained(inv);
+            }
+            Adjust(Statistic.ItemsFoundByScouting, totalRandItemsFounds);
         }
         /// Advanced shit... Queue up for exploration later?
 //        s += numAbShelters > 1? "\n- find "+numAbShelters+" seemingly abandoned shelters" : numAbShelters == 1? "\n- find an abandoned shelter." : "";
@@ -2221,6 +2263,8 @@ public class Player extends Combatable implements Serializable {
     public void ReviveRestart() {
         // Keep name, email, password, starting bonus, difficulty,
         log = new EList<Log>(); // Clear the log though?
+        // Reset the config for last log ID seen.
+        Set(Config.LatestLogMessageIDSeen, 0);
         SetDefaultStats();        // reset the rest.
         AssignResourcesBasedOnDifficulty();        // Grant the starting bonus again.
         AssignResourcesBasedOnStartingBonus(); // Assign starting bonus.
@@ -2376,7 +2420,7 @@ public class Player extends Combatable implements Serializable {
             // Really outside? then reply an empty list.
             return new EList<>();
         }
-        if (endIndexInclusive < log.size()){ // At the end? return nothing, yo.
+        if (endIndexInclusive < 0){ // Before the list event starts? return nothing, yo.
             return new EList<>();
         }
         if (startIndex >= log.size())

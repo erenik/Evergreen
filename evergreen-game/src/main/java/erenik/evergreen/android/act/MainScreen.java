@@ -99,6 +99,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
                 // Save progress locally?
                 App.SaveLocally();
                 UpdateUI();
+                /// Go to the results-screen in Single-player as well!
+                OnLogMessagesUpdated();
             }
             else { // Save to server?
                 SaveChangesAndCheckForUpdates();

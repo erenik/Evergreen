@@ -132,7 +132,7 @@ public class EGPacket {
         EList<Log> lm = new EList();
         lm.addAll(logMessages);
         Printer.out("Replying "+lm.size()+" logMessages, printing the last 5");
-        Log.PrintLastLogMessages(lm, 3);
+     //   Log.PrintLastLogMessages(lm, 3);
         EGPacket pack = new EGPacket(EGResponseType.LogMessages);
 
         ObjectOutputStream out = null;

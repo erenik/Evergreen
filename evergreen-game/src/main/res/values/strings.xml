@@ -317,7 +317,7 @@
     <string name="skillLeveledDown">Skill (arg) leveled down to (arg).</string>
     <string name="playerDefeatedPlayer">(arg) defeated (arg).</string>
     <string name="obtainedBlueprint">You obtained a blueprint of (arg).</string>
-    <string name="obtainedItem">You obtained (arg).</string>
+    <string name="obtainedItem">You obtained a (arg).</string>
     <string name="scoutFoundItems">While out scouting, you found (arg) items!</string>
     <string name="equippedArmor">Equipped armor:</string>
     <string name="ordinaryClothes">Ordinary clothes</string>
@@ -348,5 +348,6 @@
     <string name="wheelOmen1">You come to a halt at one of your depos, and accidentally knock over some oil canisters. No time to clean that up now though.</string>
     <string name="flyingOmen1">Before departing, you observe the other planes as they prepare for taking off. Funny how the exhausts are rarely visible compared to those from cars.</string>
     <string name="flyingOmen2">While in the sky, you look over the clouds. These look a shade grey, probably about to storm later.</string>
+    <string name="didNothing">No plans for the day.</string>
 
 </resources>
