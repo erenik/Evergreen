@@ -128,10 +128,14 @@ public class EGPacket {
         pack.body = playerInSystem.toByteArr();
         return pack;
     }
+
+    static int logMessagePacketsReplied = 0;
     public static EGPacket logMessages(EList<Log> logMessages){
         EList<Log> lm = new EList();
         lm.addAll(logMessages);
-        Printer.out("Replying "+lm.size()+" logMessages, printing the last 5");
+        ++logMessagePacketsReplied;
+        if (logMessagePacketsReplied % 100 == 0)
+            Printer.out("Replied "+logMessagePacketsReplied+" logMessages packets");
      //   Log.PrintLastLogMessages(lm, 3);
         EGPacket pack = new EGPacket(EGResponseType.LogMessages);
 

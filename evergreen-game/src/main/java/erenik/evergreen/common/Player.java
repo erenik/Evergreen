@@ -747,8 +747,8 @@ public class Player extends Combatable implements Serializable {
         }
         return cd.statArr[s.ordinal()];
     }
-    public int GetInt(Stat s)
-    {
+    public int GetInt(Stat s) {
+        ClampHP();
         return (int) cd.statArr[s.ordinal()];
     }
     void SetInt(Stat s, int am)
