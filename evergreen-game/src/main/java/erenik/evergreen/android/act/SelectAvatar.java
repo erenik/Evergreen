@@ -31,8 +31,15 @@ public class SelectAvatar  extends EvergreenActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_avatar);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // fill it up.
         LinearLayout ll = (LinearLayout) findViewById(R.id.layoutAvatars);
+        if (ll == null)
+            return;
         ll.removeAllViews();
         LinearLayout llRow = null;
         int imagesInRow = 0;
@@ -60,7 +67,7 @@ public class SelectAvatar  extends EvergreenActivity {
             ib.setPadding(padding,padding,padding,padding);
             LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT);
 //            int margins = 14;
-  //          lllp.setMargins(margins,margins,margins,margins);
+            //          lllp.setMargins(margins,margins,margins,margins);
             ib.setLayoutParams(lllp);
             ib.setScaleType(ImageView.ScaleType.FIT_CENTER);
             ib.setImageResource(App.GetDrawableForAvatarID(i));
@@ -89,6 +96,5 @@ public class SelectAvatar  extends EvergreenActivity {
             if (imagesInRow >= imagesPerRow)
                 llRow = null; // New row.
         }
-
     }
 }

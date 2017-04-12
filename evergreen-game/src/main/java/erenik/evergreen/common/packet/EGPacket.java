@@ -409,18 +409,31 @@ public class EGPacket {
                 return null;
             }
             InputStream is = sock.getInputStream();
-            int bytesAvail = is.available();
-            if (bytesAvail <= 0) {
+            if (is.available() <= 0) { // If no available bytes, just skip it, or wait til later?
                 return null;
             }
             byte[] buff = new byte[BUF_LEN];
-            int bytesRead = is.read(buff, 0, BUF_LEN);
-            if (bytesAvail > (BUF_LEN / 10)) // More than a tenth of max? 4kB? then maybe worth spamming about it...
-                System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
-            if (bytesRead <= 0){
-                Printer.out("0 bytes read from stream.");
-                return null;
+            int totalBytesRead = 0;
+            int timesRead = 0;
+            while (is.available() > 0){ // Read from the socket as long as there are available bytes there.
+                int bytesAvail = is.available();
+                int bytesRead = is.read(buff, totalBytesRead, BUF_LEN - totalBytesRead); // Read bytes, offset with total bytes read, max into BUF_LEN
+                if (bytesAvail > (BUF_LEN / 10)) // More than a tenth of max? 4kB? then maybe worth spamming about it...
+                    System.out.print("\nsocket read bytesAvail: "+bytesAvail+" bytesRead: "+bytesRead);
+                if (bytesRead <= 0){
+                    Printer.out("0 bytes read from stream.");
+                    return null;
+                }
+                totalBytesRead += bytesRead;
+                ++timesRead;
+                try {
+                    Thread.sleep(100);                // Assuming we got here, we got some data, leave some time for the remaining data to arrive?
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+            Printer.out("Read "+timesRead+" times, total of "+totalBytesRead+" bytes read.");
+
 //            Printer.out("read "+bytesRead+" bytes");
             EGPacket pack = EGPacket.packetFromBytes(buff);
       //      Printer.out("Got packet: "+pack);

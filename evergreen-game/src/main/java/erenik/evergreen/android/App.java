@@ -105,6 +105,7 @@ public class App {
             case ATTACK: return R.color.attack;
             case ATTACKED_MISS:
             case ACTION_FAILURE:
+            case ENC_INFO_FAILED:
             case ATTACK_MISS: return R.color.attackMiss;
             case ENC_INFO:
             case INFO: return R.color.info;

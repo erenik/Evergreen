@@ -25,19 +25,38 @@ public class EventLogViewer extends EvergreenActivity {
         @Override
         public void onClick(View v) {
             CheckBox cb = (CheckBox) v;
+            boolean isChecked = cb.isChecked();
             switch(v.getId())
             {
                 case R.id.checkboxMissedAttacks:
                     SetFilter(LogType.ATTACK_MISS, cb.isChecked());
                     SetFilter(LogType.ATTACKED_MISS, cb.isChecked());
+                    SetFilter(LogType.PLAYER_ATTACK_MISS, cb.isChecked());
+                    SetFilter(LogType.PLAYER_ATTACKED_ME_BUT_MISSED, cb.isChecked());
                     break;
                 case R.id.checkboxDamage:
-                    SetFilter(LogType.ATTACK, cb.isChecked());
-                    SetFilter(LogType.ATTACKED, cb.isChecked());
+                    SetFilter(LogType.ATTACK, isChecked);
+                    SetFilter(LogType.ATTACKED, isChecked);
+                    SetFilter(LogType.PLAYER_ATTACK, isChecked);
+                    SetFilter(LogType.PLAYER_ATTACKED_ME, isChecked);
                     break;
                 case R.id.checboxVanquished:
                     SetFilter(LogType.DEFEATED_ENEMY, cb.isChecked());
                     Printer.out("Log typ set for DEFEATED_ENEMY: "+cb.isChecked());
+                    break;
+                case R.id.checkboxOtherCombat:
+                    SetFilter(LogType.ENC_INFO, isChecked);
+                    SetFilter(LogType.ENC_INFO_FAILED, isChecked);
+                    break;
+                case R.id.checboxActionFailed:
+                    SetFilter(LogType.ACTION_FAILURE, cb.isChecked());
+                    SetFilter(LogType.ACTION_NO_PROGRESS, cb.isChecked());
+                    break;
+                case R.id.checkboxInfo: // Group in success here as well for now.
+                    SetFilter(LogType.INFO, cb.isChecked());
+                    SetFilter(LogType.SUCCESS, isChecked);
+                    SetFilter(LogType.EXP, isChecked);
+                    SetFilter(LogType.OtherDamage, isChecked);
                     break;
             }
             UpdateLog();
@@ -90,6 +109,15 @@ public class EventLogViewer extends EvergreenActivity {
         CheckBox checkboxVanquished = (CheckBox) findViewById(R.id.checboxVanquished);
         checkboxVanquished.setChecked(IsFiltered(LogType.DEFEATED_ENEMY));
         checkboxVanquished.setOnClickListener(toggleFilter);
+        CheckBox checkboxOtherCombat = (CheckBox) findViewById(R.id.checkboxOtherCombat);
+        checkboxOtherCombat.setChecked(IsFiltered(LogType.ENC_INFO));
+        checkboxOtherCombat.setOnClickListener(toggleFilter);
+        CheckBox checkboxInfo = (CheckBox) findViewById(R.id.checkboxInfo);
+        checkboxInfo.setChecked(IsFiltered(LogType.INFO));
+        checkboxInfo.setOnClickListener(toggleFilter);
+        CheckBox checkboxActionFailed = (CheckBox) findViewById(R.id.checkboxInfo);
+        checkboxActionFailed.setChecked(IsFiltered(LogType.ACTION_FAILURE));
+        checkboxActionFailed.setOnClickListener(toggleFilter);
 
         Spinner spin = (Spinner) findViewById(R.id.spinnerLogMessagesToDisplay);
         spin.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

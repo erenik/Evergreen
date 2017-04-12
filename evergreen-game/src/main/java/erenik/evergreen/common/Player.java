@@ -1738,6 +1738,10 @@ public class Player extends Combatable implements Serializable {
     private boolean FindRandomPlayer(int numRandomAttempts, Game game) {
         for (int i = 0; i < numRandomAttempts; ++i){
             Player p = game.RandomLivingPlayer(cd.knownPlayerNames);
+            if (p == this) {
+                Printer.out("Skipping self...");
+                continue;
+            }
             if (p == null)
                 continue;
             if (KnowsThisPlayer(p.name))
@@ -2368,6 +2372,13 @@ public class Player extends Combatable implements Serializable {
             return log;
         if (startIndex < 0)
             startIndex = 0;
+        if (startIndex >= log.size()){ // Index ends at log.size() - 1.
+            // Really outside? then reply an empty list.
+            return new EList<>();
+        }
+        if (endIndexInclusive < log.size()){ // At the end? return nothing, yo.
+            return new EList<>();
+        }
         if (startIndex >= log.size())
             startIndex = log.size() - 1;
         if (endIndexInclusive < 0)

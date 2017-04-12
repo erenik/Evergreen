@@ -147,7 +147,7 @@ public class Enemy extends Combatable {
         else
             attackDamage = new Dice(12, 1, 4); // 1d12+4
         if (emissions > 25)
-            Printer.out("Base damage set to: "+attackDamage);
+           ; // Printer.out("Base damage set to: "+attackDamage);
     }
 
     @Override

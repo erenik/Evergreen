@@ -20,7 +20,7 @@
             android:text="Filters"
             />
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             >
             <CheckBox style="@style/Evergreen.Checkbox" android:text="Missed\nattacks" android:id="@+id/checkboxMissedAttacks"
@@ -32,7 +32,16 @@
             <CheckBox style="@style/Evergreen.Checkbox" android:text="Vanquished" android:id="@+id/checboxVanquished"
                 android:button="@drawable/evergreen_checkbox"
                 />
-            <CheckBox style="@style/Evergreen.Checkbox" android:text="Filter4" android:id="@+id/checkbox4"
+            <!-- android:button="@drawable/evergreen_checkbox"-->
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Combat\nother" android:id="@+id/checkboxOtherCombat"
+                android:button="@drawable/evergreen_checkbox"
+                />
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Info" android:id="@+id/checkboxInfo"
+                android:button="@drawable/evergreen_checkbox"
+                />
+            <CheckBox style="@style/Evergreen.Checkbox" android:text="Action failure" android:id="@+id/checboxActionFailed"
                 android:button="@drawable/evergreen_checkbox"
                 />
             <!-- android:button="@drawable/evergreen_checkbox"-->

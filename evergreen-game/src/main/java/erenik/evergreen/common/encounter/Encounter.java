@@ -355,14 +355,14 @@ public class Encounter {
                     int roll = Dice.RollD6(4); // 4-24, 14 mid, +/- 10
                     if (roll > 14 + fleeCR) {
                         // Success?
-                        LogEnc(new Log(c instanceof Player? LogTextID.playerFledFromCombat : LogTextID.fledFromCombat, LogType.INFO, c.name));
+                        LogEnc(new Log(c instanceof Player? LogTextID.playerFledFromCombat : LogTextID.fledFromCombat, LogType.ENC_INFO, c.name));
                         if (fleetRetreat > 0)
                             fleeExp = (int) Math.pow(2, fleetRetreat - 1);
                         c.ranAway = true;
                         return;
                     }
                     else {
-                        LogEnc(new Log(c instanceof Player? LogTextID.playerTriedToFlee : LogTextID.triedToFlee, LogType.ACTION_FAILURE, c.name));
+                        LogEnc(new Log(c instanceof Player? LogTextID.playerTriedToFlee : LogTextID.triedToFlee, LogType.ENC_INFO_FAILED, c.name));
                         ++c.consecutiveFleeAttempts;
                     }
                 } else { // Not flee-able.

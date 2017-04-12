@@ -17,6 +17,7 @@ public enum LogType
     ACTION_FAILURE, // Uses same color as Attacked, but will not be filtered the same way.
     SUCCESS, OtherDamage,
     ENC_INFO, // Other info in encounters. status effects, etc.
+    ENC_INFO_FAILED, // When stuff tries to happen but failes.
     Error,
     PLAYER_ATTACK, // Attacking player, attacked player, damage
     PLAYER_ATTACK_MISS, // Attacking player, attacked player

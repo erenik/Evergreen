@@ -7,6 +7,8 @@ package erenik.evergreen.common.packet;
 
 import erenik.util.EList;
 import erenik.util.EList;
+import erenik.util.Printer;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,6 +46,16 @@ public class EGPacketReceiver extends Thread
                 for (int i = 0; i < packetsWaitingForReponses.size(); ++i) {
                   //  Printer.out("Waiting for response...");
                     EGPacket pack = packetsWaitingForReponses.get(i);
+                    if (pack.sendTimeMs == 0){
+                        if (pack.error != EGPacketError.NoError){
+                            Printer.out("An error occured while sending the packet, so we can skip trying to read responses from it.");
+                            packetsWaitingForReponses.remove(pack);
+                            --i;
+                            continue;
+                        }
+                        Printer.out("Skipping packet as it has still not been sent.");
+                        continue;
+                    }
                     pack.CheckForReply();
                     boolean remove = false;
                     if (pack.lastError != EGResponseType.NoError){

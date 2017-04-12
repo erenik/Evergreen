@@ -832,7 +832,7 @@ public class EvergreenActivity extends AppCompatActivity
         int logMessagesOnServer = App.GetPlayer().cd.totalLogMessagesOnServer;
         int startIndex = logMessagesOnServer - numBatches * numPerBatch + 1;
         totalLogMessagesReceived = 0;
-        for (int i = startIndex; i < logMessagesOnServer; i += numPerBatch){
+        for (int i = startIndex; i <= logMessagesOnServer + 100; i += numPerBatch){ // Request a bit more than the server hints?
             // Send request to update the whole log.
             EGPacket pack = EGRequest.FetchLog(App.GetPlayer(), i, numPerBatch, oldestIDtoInclude);
             packetsSent.add(pack);

@@ -83,7 +83,7 @@
             </LinearLayout>
 
             <TextView
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="12dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Starting details"
@@ -92,7 +92,7 @@
                 android:layout_gravity="center" />
 
             <LinearLayout
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <erenik.evergreen.android.ui.EvergreenTextView
@@ -115,7 +115,7 @@
             </LinearLayout>
 
             <View android:layout_width="match_parent"
-                android:layout_height="65dp" />
+                android:layout_height="24dp" />
 
             <erenik.evergreen.android.ui.EvergreenButton
                 android:id="@+id/registerButton"

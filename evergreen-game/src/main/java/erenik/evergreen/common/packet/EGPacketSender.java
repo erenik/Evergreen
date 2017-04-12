@@ -64,6 +64,7 @@ public class EGPacketSender extends Thread {
     }
 
     public void run() {
+        stop = false;
         threadStarted = true;
         Log("EGPacketSender.run: Starting EGPacketSender thread.");
         int multiplier = 1;
@@ -73,7 +74,7 @@ public class EGPacketSender extends Thread {
             try {
                 for (int i = 0; i < packetsToSend.size(); ++i) {
                     EGPacket pack = packetsToSend.get(i);
-                    boolean ok = pack.Send();
+                    boolean ok = pack.Send(); // Just remove it no matter if it succeeded or failed.
                     boolean remove = true;
                     if (ok) {
                         ++packsSend;
@@ -86,6 +87,7 @@ public class EGPacketSender extends Thread {
                         --i;
                         continue;
                     }
+                    stop = true; // End the thread whenever
                 }
                 if (packsSend > 0)
                     Log("sent "+packsSend+" packs, failed: "+packsFailed);

@@ -202,8 +202,8 @@ public class MainScreen extends EvergreenActivity //AppCompatActivity
     /// Saves changes and checks for updates in one go - 1 packet with SavePlayer, after which it may query for log messages if the server notifies that new log-messages are available.
     void SaveChangesAndCheckForUpdates(){
         long now = System.currentTimeMillis();
-        if (now < lastCheckMs + 5000) { // OK.
-            Printer.out("Skipping check since we already checked 5 second ago.");
+        if (now < lastCheckMs + 3000) { // OK.
+            Printer.out("Skipping check since we already checked 3 second ago.");
             return;
         }
         lastCheckMs = now;

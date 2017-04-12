@@ -30,7 +30,7 @@ public class TransportOccurrence implements Serializable {
         this.duration = duration;
         this.dt = dt;
         this.detectionMethodUsed = detectionMethodUsed;
-        PrintDetectionMethod();
+  //      PrintDetectionMethod();
     }
 
     TransportOccurrence(TransportType transport, long startTimeSystemMs, long durationMs, int detectionMethodUsed){
@@ -39,7 +39,7 @@ public class TransportOccurrence implements Serializable {
         this.duration = durationMs;
         this.dt = DurationType.Milliseconds;
         this.detectionMethodUsed = detectionMethodUsed;
-        PrintDetectionMethod();
+//        PrintDetectionMethod();
     }
 
     private void PrintDetectionMethod() {
