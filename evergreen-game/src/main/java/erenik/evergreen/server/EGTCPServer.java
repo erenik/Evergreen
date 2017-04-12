@@ -462,6 +462,7 @@ public class EGTCPServer extends Thread {
         byte[] buffer = new byte[maxLength];
         try {
             bis.read(buffer, 0, maxLength);
+            bis.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
