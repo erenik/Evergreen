@@ -1196,6 +1196,8 @@ public class Player extends Combatable implements Serializable {
         float cap = Get(Stat.AccumulatedEmissions) * 0.5f;
         if (amount > cap)
             amount = cap; // Cap it at 50% of the total?
+        if (amount < 1)
+            amount = 1;
 
         Log(LogTextID.reduceEmissionsSuccessful, LogType.SUCCESS, Stringify(amount));
 //        Log(LogTextID.reduceEmissionsMostlySuccessful, LogType.SUCCESS, Stringify(amount));
@@ -2396,6 +2398,7 @@ public class Player extends Combatable implements Serializable {
 
     // Emulate various transports.
     static Random transportRand = new Random(System.currentTimeMillis());
+    // RandomizeTransportUsageData
     public void RandomizeGenerateTransportUsageData() {
         for (int i = 0; i < transports.size(); ++i) // Generate some other seconds of various degrees.
             transports.get(i).secondsUsed = 0;

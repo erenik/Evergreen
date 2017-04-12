@@ -172,8 +172,19 @@ public class Transport implements Serializable {
 
     public static Transport RandomOf(EList<Transport> transports) {
         float total = 0;
-        for (int i = 0; i < transports.size(); ++i)
-            total += transports.get(i).defaultProbability;
+        for (int i = 0; i < transports.size(); ++i) {
+            total += transports.get(i).secondsUsed;
+        }
+        Printer.out("Total to random transport seconds: "+total);
+        if (total == 0){
+            Printer.out("Total seconds 0, try the default probability...");
+            for (int i = 0; i < transports.size(); ++i) {
+                total += transports.get(i).defaultProbability; // Then use the default/
+            }
+        }
+
+
+//                    defaultProbability;
         Random transportRandom = new Random();
         float r = transportRandom.nextFloat() * total;
     //    Printer.out("Randomed " + r + " out of " + total);
@@ -186,7 +197,7 @@ public class Transport implements Serializable {
                 return t;
             }
         }
-        return transports.get(transports.size() - 1);
+        return transports.get(transports.size() - 1); // Grab last one.
     }
 
     public static Transport readFrom(ObjectInputStream in) {
