@@ -186,8 +186,8 @@ public class Game implements Serializable {
     static int numNextDaysSkipped = 0;
 
     boolean ShouldPrintDaysSkipped(){
-        if (numNextDaysSkipped < 100 && numNextDaysSkipped % 10 == 0)
-            return true;
+//        if (numNextDaysSkipped < 100 && numNextDaysSkipped % 10 == 0)
+  //          return true;
         if (numNextDaysSkipped < 1000 && numNextDaysSkipped % 100 == 0)
             return true;
         if (numNextDaysSkipped < 1000 && numNextDaysSkipped % 1000 == 0)
@@ -443,10 +443,24 @@ public class Game implements Serializable {
     }
 
     long dayStartTimeMs = 0;
+    long lastSecondNotified = 0;
     /// Return true if a new day occurred.
     public boolean Update(long milliseconds) {
         updateIntervalSeconds = secondsPerDay; // Can set via command-line, -secondsPerDay 60
         int msPerDayInGame = updateIntervalSeconds * 1000; // Should be * 1000
+        long nextUpdateMs = dayStartTimeMs + msPerDayInGame;
+        long tilNextUpdateMs = nextUpdateMs - System.currentTimeMillis();
+        long secondsTilNextUpdate = tilNextUpdateMs / 1000;
+        if (secondsTilNextUpdate % 300 == 0){
+            if (secondsTilNextUpdate != lastSecondNotified){
+                long minutesTilNextUpdate = secondsTilNextUpdate / 60;
+                long hoursTilNextUpdate = minutesTilNextUpdate / 60;
+                int minuteTilNextUpdate = (int) (minutesTilNextUpdate - hoursTilNextUpdate * 60);
+                Printer.out("Time to next update: "+hoursTilNextUpdate+"h "+minuteTilNextUpdate+"m");
+                lastSecondNotified = secondsTilNextUpdate;
+            }
+        }
+
         if (System.currentTimeMillis() > dayStartTimeMs + msPerDayInGame) {        // check if next day should come.
             if (NextDay() != 0) {
                 Save(); // Save to file.

@@ -2465,6 +2465,7 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void OnPlayerDied(Player player) {
+        /// OK, check if we knew this player - check the known player names.
         for (int i = 0; i < cd.knownPlayerNames.size(); ++i){
             String name = cd.knownPlayerNames.get(i);
             if (name.equals(player.name)){
@@ -2499,7 +2500,7 @@ public class Player extends Combatable implements Serializable {
     public enum StartingBonus{
         FoodSupply("Food supply"),
         MaterialsSupply("Materials supply"),
-        Weapon("A Weapon"),
+        Weapon("A weapon"),
         Armor("A body armor"),
         Tool("A tool"),
         Inventions("2 inventions"),

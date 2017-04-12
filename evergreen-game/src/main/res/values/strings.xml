@@ -313,7 +313,7 @@
     <string name="ensnaredWoreOff">(arg)\'s ensnared effect wears off.</string>
     <string name="multiplies">The (arg) multiplies itself!</string>
     <string name="sendPlayerResourcesFailed">Insufficient (arg) when trying to send to (arg).</string>
-    <string name="playerDied">Player (arg) was defeated.</string>
+    <string name="playerDied">You received news that (arg) was defeated.</string>
     <string name="skillLeveledDown">Skill (arg) leveled down to (arg).</string>
     <string name="playerDefeatedPlayer">(arg) defeated (arg).</string>
     <string name="obtainedBlueprint">You obtained a blueprint of (arg).</string>

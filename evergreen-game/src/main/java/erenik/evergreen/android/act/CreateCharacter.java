@@ -91,13 +91,15 @@ public class CreateCharacter extends EvergreenActivity implements LoaderCallback
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TextView b = (TextView) view;
                 Printer.out("Bonus selected: "+b.getText());
+                bonusID = spinnerStartingBonus.getSelectedItemPosition(); // Just set it to the index?
+                /* // No need to for-loop for this shiet.
                 for (int i = 0; i < Player.StartingBonus.values().length; ++i){
                     String text  = (String) b.getText();
                     Printer.out(Player.StartingBonus.values()[i].text);
                     if (text.equals(Player.StartingBonus.values()[i].text)){
                         bonusID = i;
                     }
-                }
+                }*/
                 if (bonusID == -1) {
                     bonusID = spinnerStartingBonus.getSelectedItemPosition();
                 }
