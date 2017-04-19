@@ -127,6 +127,11 @@ public class TransportOccurrence implements Serializable {
                 biggestIndex = method;
             }
         }
+        /*
+        for (int i = 0; i < DETECTION_METHODS; ++i){
+            if (secondsInEach[i] > 0)
+                Printer.out("Method "+i+" seconds: "+secondsInEach[i]);
+        }*/
         return biggestIndex; // Same as method by now.
     }
 

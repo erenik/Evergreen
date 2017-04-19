@@ -20,6 +20,8 @@ public enum AAction {
     SendMessage,
     GiveItem, // item, player
     GiveBlueprint, // item, player?
+    ShareKnownPlayers, // Shares all known players with target.
+
 //     ReadReceivedMessages,
 //     RequestResources,
 //    SendTreatyRequest("Send treaty request", "Request a treaty with target player.\n- Knowledge-Sharing enables automatic sharing of inventions.\n- Alliance/Base-Sharing agreement will join your shelters, and winning conditions will become shared.", ActionArgument.TreatyType);
@@ -64,6 +66,7 @@ public enum AAction {
             case SendMessage: return "Send message";
             case GiveItem: return "Give item";
             case GiveBlueprint: return "Give blueprint";
+            case ShareKnownPlayers: return "Share known player whereabouts";
         }
         return null;
     }
@@ -91,6 +94,9 @@ public enum AAction {
             case GiveBlueprint: a.description = "Give an invention blueprint to some player";
                 a.requiredArguments.add(ActionArgument.Player);
                 a.requiredArguments.add(ActionArgument.Blueprint);
+                break;
+            case ShareKnownPlayers: a.description = "Share current knowledge of player whereabouts to target player.";
+                a.requiredArguments.add(ActionArgument.Player);
                 break;
         }
         //   ExploreAbandonedShelter("Explore Abandoned shelter", "Explores one of the shelters you've found previously. It may yield resources, but could also contain "),
@@ -121,8 +127,7 @@ public enum AAction {
         return null;
     }
 
-    class Argument
-    {
+    class Argument {
         static final int STRING = 0;
         static final int INT = 1;
         Argument(String sData)
@@ -135,15 +140,13 @@ public enum AAction {
         int iData;
     }
 
-    public static EList<String> Names()
-    {
+    public static EList<String> Names() {
         EList<String> l = new EList<String>();
         for (int i = 0; i < values().length; ++i)
             l.add(GetText(values()[i]));
         return l;
     }
-    public static AAction GetFromString(String s)
-    {
+    public static AAction GetFromString(String s) {
         for (int i = 0; i < values().length; ++i)
             if (GetText(values()[i]).equals(s))
                 return values()[i];

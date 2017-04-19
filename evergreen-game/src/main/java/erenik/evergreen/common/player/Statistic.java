@@ -49,7 +49,9 @@ public enum Statistic implements Serializable {
     ItemCrafted_level_3,
     ItemCrafted_level_4,
     ItemCrafted_level_5,
-    TotalEncountersParticipatedIn, EvergreenEncountersSurvived;
+    TotalEncountersParticipatedIn,
+    EvergreenEncountersSurvived,
+    PlayerKnowledgeSharings;
 
 
 
@@ -88,8 +90,13 @@ public enum Statistic implements Serializable {
 
     public static long[] Add(long[] statistics, long[] statistics2) {
         long[] newList = new long[Statistic.values().length];
+        for (int i = 0; i < newList.length; ++i)
+            newList[i] = 0;
         for (int i = 0; i < statistics.length; ++i){
-            newList[i] = statistics[i] + statistics2[i];
+            newList[i] += statistics[i];
+        }
+        for (int i = 0; i < statistics2.length; ++i){
+            newList[i] = statistics2[i];
         }
         return newList;
     }

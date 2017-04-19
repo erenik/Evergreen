@@ -359,9 +359,11 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     }
 
     private int GetDetectionModeForInstance(boolean hasGyro) {
+        /*
         Printer.out("Training values normalized: "+classifier.trainingValuesNormalized+"" +
                 "HSS: "+callingService.settings.historySetSize+" sleepSessions: "+callingService.settings.sleepSessions+"" +
                 "hasGyro: "+hasGyro);
+                */
         if (classifier.trainingValuesNormalized){
 
         }

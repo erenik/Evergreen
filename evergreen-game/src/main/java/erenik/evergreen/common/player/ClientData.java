@@ -93,6 +93,15 @@ public class ClientData implements Serializable {
         configArr = (float[]) in.readObject();
         skills = (EList<Skill>) in.readObject();
         statistics = (long[]) in.readObject();
+        /// If the list of statistics is too small, update it.
+        if (statistics.length < Statistic.values().length){
+            // Make a new array, copy over data.
+            long[] newArr = new long[Statistic.values().length];
+            for (int i = 0; i < statistics.length; ++i){
+                newArr[i] = statistics[i];
+            }
+            statistics = newArr;
+        }
 
         int numDA = in.readInt();
         dailyActions = new EList<>();

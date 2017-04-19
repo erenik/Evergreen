@@ -131,6 +131,9 @@ public class EString {
             case flyingOmen1: id = R.string.flyingOmen1; break;
             case flyingOmen2: id = R.string.flyingOmen2; break;
             case didNothing: id = R.string.didNothing; break;
+            case SharedPlayerKnowledgeWithPlayer: id = R.string.SharedPlayerKnowledgeWithPlayer; break;
+            case PlayerSharedPlayerKnowledgeWithYou: id = R.string.PlayerSharedPlayerKnowledgeWithYou; break;
+            case AlreadyHasPlayerKnowledge: id = R.string.AlreadyHasPlayerKnowledge; break;
             default:
                 s = "No string for logTextID "+logTextID+", "+logTextID.name(); break;
         }

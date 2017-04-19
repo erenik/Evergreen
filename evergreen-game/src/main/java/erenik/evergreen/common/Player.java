@@ -1119,6 +1119,31 @@ public class Player extends Combatable implements Serializable {
                     LogInfo(LogTextID.MessageSentToPlayer, playerName);
                     player.LogInfo(LogTextID.MessageReceivedFromPlayer, name, action.Get(ActionArgument.Text));
                     break;
+                case ShareKnownPlayers: {
+                    if (player == null){
+                        Printer.out("Null player");
+                        return;
+                    }
+                    Adjust(Statistic.PlayerKnowledgeSharings, 1);
+                    LogInfo(LogTextID.SharedPlayerKnowledgeWithPlayer, playerName);
+                    player.LogInfo(LogTextID.PlayerSharedPlayerKnowledgeWithYou, this.name);
+                    int numObtained = 0;
+                    for (int i = 0; i < cd.knownPlayerNames.size(); ++i){
+                        String knownName = cd.knownPlayerNames.get(i);
+                        if (!player.KnowsThisPlayer(knownName) // If the player doesn't know this player
+                                && !knownName.equalsIgnoreCase(player.name)){ // And it isn't their own name
+                            Player playerFound = game.GetPlayer(knownName);
+                            if (playerFound == null)
+                                continue;
+                            player.FoundPlayer(playerFound);
+                            ++numObtained;
+                        }
+                    }
+                    if (numObtained == 0){
+                        player.LogInfo(LogTextID.AlreadyHasPlayerKnowledge, this.name);
+                    }
+                    break;
+                }
             }
             return;
         }
@@ -1443,6 +1468,7 @@ public class Player extends Combatable implements Serializable {
             return;
         if (playerName.equalsIgnoreCase(this.name)){
             Log(LogTextID.foundPlayerSelfLol, LogType.SUCCESS, playerName);
+            return;
         }
         Log(LogTextID.foundPlayer, LogType.SUCCESS, playerName);
 //        Log("You found the player named "+name+"! You can now interact with that player.", LogType.SUCCESS);

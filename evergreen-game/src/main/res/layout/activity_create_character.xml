@@ -37,6 +37,7 @@
                     style="@style/Evergreen.Text" android:text="Name:" />
                 <EditText android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/textEditName"
                     android:inputType="textPersonName" android:layout_weight="1"
+                    android:maxLength="30"
                     android:imeOptions="actionNext" />
                 <erenik.evergreen.android.ui.EvergreenButton
                     android:id="@+id/buttonGenerateName"
@@ -52,6 +53,7 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_email"
                     android:inputType="textEmailAddress"
+                    android:maxLength="50"
                     android:maxLines="1"
                     android:imeOptions="actionNext"
                     />
@@ -60,6 +62,7 @@
                     android:id="@+id/password" android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:hint="@string/prompt_password"
                     android:inputType="textPassword"
+                    android:maxLength="30"
                     android:imeOptions="actionNext"
                     android:maxLines="1" />
                 <!--
@@ -78,6 +81,7 @@
                     android:id="@+id/passwordAgain" android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:hint="@string/password_again"
                     android:inputType="textPassword"
+                    android:maxLength="30"
                     android:imeActionId="@+id/login"
                     android:maxLines="1"/>
             </LinearLayout>

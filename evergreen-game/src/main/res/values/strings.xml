@@ -349,5 +349,8 @@
     <string name="flyingOmen1">Before departing, you observe the other planes as they prepare for taking off. Funny how the exhausts are rarely visible compared to those from cars.</string>
     <string name="flyingOmen2">While in the sky, you look over the clouds. These look a shade grey, probably about to storm later.</string>
     <string name="didNothing">No plans for the day.</string>
+    <string name="SharedPlayerKnowledgeWithPlayer">You shared your knowledge of other players with (arg).</string>
+    <string name="AlreadyHasPlayerKnowledge">You already know all players that (arg) knows.</string>
+    <string name="PlayerSharedPlayerKnowledgeWithYou">(arg) informed you of the whereabouts of all players that they know.</string>
 
 </resources>
