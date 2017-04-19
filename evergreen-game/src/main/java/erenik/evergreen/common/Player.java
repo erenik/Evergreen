@@ -1128,8 +1128,10 @@ public class Player extends Combatable implements Serializable {
                     LogInfo(LogTextID.SharedPlayerKnowledgeWithPlayer, playerName);
                     player.LogInfo(LogTextID.PlayerSharedPlayerKnowledgeWithYou, this.name);
                     int numObtained = 0;
-                    for (int i = 0; i < cd.knownPlayerNames.size(); ++i){
-                        String knownName = cd.knownPlayerNames.get(i);
+                    EList<String> namesToShare = cd.knownPlayerNames.clone();
+                    namesToShare.add(this.name);
+                    for (int i = 0; i < namesToShare.size(); ++i){
+                        String knownName = namesToShare.get(i);
                         if (!player.KnowsThisPlayer(knownName) // If the player doesn't know this player
                                 && !knownName.equalsIgnoreCase(player.name)){ // And it isn't their own name
                             Player playerFound = game.GetPlayer(knownName);
@@ -1139,6 +1141,7 @@ public class Player extends Combatable implements Serializable {
                             ++numObtained;
                         }
                     }
+
                     if (numObtained == 0){
                         player.LogInfo(LogTextID.AlreadyHasPlayerKnowledge, this.name);
                     }

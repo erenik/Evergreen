@@ -74,7 +74,7 @@ public class EGTCPClient extends Thread
             Logger.getLogger(EGTCPServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         log.add("Stopping");
-        Printer.out("Stopping server.");
+        Printer.out("Stopping EGTCPClient.");
     }
 
     private void UpdatePlayers() {
