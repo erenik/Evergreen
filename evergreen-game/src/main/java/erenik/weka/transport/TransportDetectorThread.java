@@ -365,11 +365,19 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
         if (classifier.trainingValuesNormalized){
 
         }
-        // Check if there was gyro?
-        if (hasGyro){
-            return TransportOccurrence.ACC_GYRO_RT_HSS_12_SS_12_AN_DEFAULT;
+        switch (callingService.settings.historySetSize){
+            case 36:
+                if (hasGyro)
+                    return TransportOccurrence.ACC_GYRO_RT_HSS_36_SS_36_AN_DEFAULT;
+                return TransportOccurrence.ACC_ONLY_RT_HSS_36_SS_36_AN_DEFAULT;
+            case 12:
+                if (hasGyro){ // Check if there was gyro?
+                    return TransportOccurrence.ACC_GYRO_RT_HSS_12_SS_12_AN_DEFAULT;
+                }
+                return TransportOccurrence.ACC_ONLY_RT_HSS_12_SS_12_AN_DEFAULT;
+            default:
+                return TransportOccurrence.NOT_LISTED_SETTING;
         }
-        return TransportOccurrence.ACC_ONLY_RT_HSS_12_SS_12_AN_DEFAULT;
     }
 
     /// Query next sampling.
@@ -392,16 +400,45 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
     long lastAccTimestamp = 0;
     long lastGyroTimestamp = 0;
 
+
+    EList<SensorEvent> sensorEvents = new EList<>();
+    static long lastEventReceivedTime = System.currentTimeMillis();
+    static long timeToWhichOldEventsShouldHaveArrived = 0;
+
     @Override
     public void onSensorChanged(SensorEvent event) {
-        /// Since this method will be called most-often, send the data from here?
-        EvaluateRequests();
-        // Also classify any previously saved frames if there are any? Up to 3 for each event that arrives (don't want to lag the main thread too much, you know!)
-        ClassifyInstances(3);
-
-        if (sensingFrame == null)
+        EvaluateRequests();         /// Since this method will be called most-often, send the data from here?
+        ClassifyInstances(3);         // Also classify any previously saved frames if there are any? Up to 3 for each event that arrives (don't want to lag the main thread too much, you know!)
+        if (sensingFrame == null) // Make a new frame if there wasn't any before?
             sensingFrame = new SensingFrame();
+        long now = System.currentTimeMillis();
+        long timePassed = now - lastEventReceivedTime;
+        lastEventReceivedTime = now;
+        if (timePassed > 1000 || timeToWhichOldEventsShouldHaveArrived > 0){ // If there was a gap between sensor changes (>1 sec), then wait some time to buffer them all.
+            sensorEvents.add(event);
+            // Print all events?
+            if (timeToWhichOldEventsShouldHaveArrived == 0) { // Print only first time.
+                Printer.out("Time passed: " + timePassed + "ms");
+                timeToWhichOldEventsShouldHaveArrived = now + 5000; // After delays, allow up to 5 seconds of buffering all old sensor data for evaluation?
+            }
+            if (now > timeToWhichOldEventsShouldHaveArrived){
+                PrintSensorEvents();
+                EvaluateSensorEvents();
+                timeToWhichOldEventsShouldHaveArrived = 0;
+            }
+            return;
+        }
+        EvaluteSensorEvent(event);
+    }
 
+    private void EvaluateSensorEvents() {
+        for (int i = 0; i < sensorEvents.size(); ++i){
+            EvaluteSensorEvent(sensorEvents.get(i));
+        }
+        sensorEvents.clear();
+    }
+
+    private void EvaluteSensorEvent(SensorEvent event) {
         /// Calculate the sensing frame.
         long sensorSampleMs = event.timestamp / 1000000; // in Nano-seconds -> 6 zeroes through Micro- to Milli-seconds
         SensingFrame oldFrame = null; //GetFrameForSampleTime(sampleMs);
@@ -417,11 +454,9 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             AddDataToFrame(oldFrame, event); // If it actually belongs to a pre-existing frame, then add it there.
             return; // n return.
         }
-
 //        Printer.out("sampleMs: "+sampleMs);
         long frameSensorStartTime = event.sensor.getType() == Sensor.TYPE_ACCELEROMETER? sensingFrame.startTimeAccSensorMs : sensingFrame.startTimeGyroSensorMs;
         long timeSpentMs = sensorSampleMs - frameSensorStartTime;
-
         if (timeSpentMs > sensingFrame.durationMs - 5) { // Finish the frame?
             callingService.msTotalTimeAnalyzedSinceThreadStart += 5000;
             SensingFrame toSaveIntoArrayForClassification = sensingFrame;
@@ -433,9 +468,8 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
 //            Printer.out("Frame "+sensingFrames.size()+" finished, "+toSaveIntoArrayForClassification);
             sensingFrames.add(toSaveIntoArrayForClassification);
             callingService.OnSensingFrameFinished();
-        //    finishedSensingFrames.add(finishedOne); // Add to list of all those recently finished...?
+            //    finishedSensingFrames.add(finishedOne); // Add to list of all those recently finished...?
         }
-
         /// Always on?
         float[] values = event.values; // Update TextViews
         String text = "";
@@ -443,7 +477,20 @@ public class TransportDetectorThread extends Thread implements SensorEventListen
             text = text + String.format("%.1f", values[i])+" ";
         }
         AddDataToFrame(sensingFrame, event);
+    }
 
+    private void PrintSensorEvents() {
+        int numAcc = 0, numGyro = 0, numUnknown = 0;
+        for (int i = 0; i < sensorEvents.size(); ++i){
+            SensorEvent event = sensorEvents.get(i);
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                ++numAcc;
+            else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE)
+                ++numGyro;
+            else
+                ++numUnknown;
+        }
+        Printer.out("SensorEvents "+sensorEvents.size()+" of which "+numAcc+" acc "+numGyro+" gyro"+ (numUnknown > 0? numUnknown+" unknown" : ""));
     }
 
     private void EvaluateRequests() {

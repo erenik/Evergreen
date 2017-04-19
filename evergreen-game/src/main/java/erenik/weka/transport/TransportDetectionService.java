@@ -65,14 +65,14 @@ public class TransportDetectionService extends Service {
     private boolean forceAverageBeforeSleep = true;
 
     public void SetHistorySetSize(int newSize){
-        newSize = 12;
+        newSize = 36;
         settings.historySetSize = newSize;
         Printer.out("History set size: "+settings.historySetSize);
     }
     public void SetSleepSessions(int newVal) {
         // Check if the sleep-sessions value is supported.
         // For now, hard-coded.
-        newVal = 12;
+        newVal = 36;
         settings.sleepSessions = newVal;
         Printer.out("Sleep sessions: "+settings.sleepSessions);
     }

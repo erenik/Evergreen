@@ -58,7 +58,7 @@ public class WClassifierTest {
     int historyStep = 1;
     public void DoAllTests(){
         testClassifiers = wekaMan.UseTestClassifiersQuick();
-        //testClassifiers = wekaMan.UseTestClassifiers();
+        testClassifiers = wekaMan.UseTestClassifiers();
        // testClassifiers = wekaMan.UseRandomForest();
 //        maxSleepHistoryToTest = 10;
         minHistoryToTest = 0;

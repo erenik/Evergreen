@@ -21,7 +21,12 @@ public class TransportOccurrence implements Serializable {
         ACC_GYRO_RT_HSS_12_SS_12_AN_DEFAULT = 4, // Random Tree, hss 12, ss 12, acceleration values normalized.
         ACC_ONLY_RF_HSS_12_SS_12_DEFAULT = 5,
         ACC_ONLY_RT_HSS_12_SS_12_AN_DEFAULT = 6, // Random Tree, hss 12, ss 12, acceleration values normalized, only accelerometer values, gyroscope not functioning.
-        DETECTION_METHODS = 7;
+        ACC_GYRO_RT_HSS_36_SS_36_AN_DEFAULT = 7, // Random Tree, hss 12, ss 12, acceleration values normalized.
+        ACC_ONLY_RT_HSS_36_SS_36_AN_DEFAULT = 8, // Random Tree, hss and ss 36, acceleration values normalized,
+        DETECTION_METHODS = 9,
+
+
+    NOT_LISTED_SETTING = 1000;
 
     TransportOccurrence(){}
 

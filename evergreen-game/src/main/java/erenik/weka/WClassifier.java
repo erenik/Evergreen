@@ -118,7 +118,7 @@ public class WClassifier implements Serializable {
 
     public double ClassifyInstance(Instance inst) throws Exception {
         if (currentSettings.normalizeAcceleration) {
-            Printer.out("Normalizing acceleration values");
+      //      Printer.out("Normalizing acceleration values");
             NormalizeAccValues(inst);
         }
 
