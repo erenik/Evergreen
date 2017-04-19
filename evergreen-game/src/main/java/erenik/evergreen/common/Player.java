@@ -314,8 +314,9 @@ public class Player extends Combatable implements Serializable {
                 return false;
             }
             for (int i = 0; i < cd.knownPlayerNames.size(); ++i){ // Remove self from known players if it exists there.
-                String name = cd.knownPlayerNames.get(i);
-                if (name.equalsIgnoreCase(name)) {
+                String knownName = cd.knownPlayerNames.get(i);
+                if (knownName.equalsIgnoreCase(this.name)) {
+                    Printer.out("Removing player name: "+knownName);
                     cd.knownPlayerNames.remove(i);
                     --i;
                 }
