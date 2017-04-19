@@ -313,6 +313,15 @@ public class Player extends Combatable implements Serializable {
                 Printer.out("Failed to read client-data.");
                 return false;
             }
+            for (int i = 0; i < cd.knownPlayerNames.size(); ++i){ // Remove self from known players if it exists there.
+                String name = cd.knownPlayerNames.get(i);
+                if (name.equalsIgnoreCase(name)) {
+                    cd.knownPlayerNames.remove(i);
+                    --i;
+                }
+            }
+
+
             readLogs(in);
 
 //            Printer.out("Player read - after log");
@@ -1433,7 +1442,8 @@ public class Player extends Combatable implements Serializable {
                 if (randomPlayer == null)
                     return;
                 String newPlayer = randomPlayer.name;
-                if (newPlayer != null && newPlayer != name) {
+                if (newPlayer != null && // IF the player is valid
+                        !newPlayer.equalsIgnoreCase(name)) { // And it is NOT your own name...
                     if (KnowsThisPlayer(newPlayer))
                         return; // Skip it then.
                     Log(LogTextID.searchPlayer_foundAnother, LogType.SUCCESS);
@@ -1464,6 +1474,8 @@ public class Player extends Combatable implements Serializable {
     private void FoundPlayer(Player player) {
         if (player.IsAliveOutsideCombat() == false)
             return; // Lolno wat.
+        if (player == this) // Just remove the stupid message of finding yourself... just causing more bugs than benefit right now.
+            return;
         String playerName = player.name;
         if (cd.knownPlayerNames == null)
             cd.knownPlayerNames = new EList<String>();
