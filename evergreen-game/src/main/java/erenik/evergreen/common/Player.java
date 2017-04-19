@@ -220,7 +220,11 @@ public class Player extends Combatable implements Serializable {
     }
 
     public void writeTo(java.io.ObjectOutputStream out) throws IOException {
-       // Printer.out("Player writeObject");
+        if (name.length() > 30){ // Truncate name length if not already done.
+            name = name.substring(0, 30);
+        }
+
+        // Printer.out("Player writeObject");
         int version = VERSION_4_CREDENTIALS_ONLY; // 0 - Added active actions. 1- email
         out.writeInt(version);
         out.writeInt(gameID);
@@ -269,6 +273,10 @@ public class Player extends Combatable implements Serializable {
                 sendAll = in.readInt();
             if (sendAll == CREDENTIALS_ONLY){             // Then send only the credentials..
                 name = (String) in.readObject();
+                if (name.length() > 30){ // Truncate name length if not already done.
+                    name = name.substring(0, 30);
+                }
+
                 email = (String) in.readObject();
                 password = (String) in.readObject();
                 if (gameID == GameID.LocalGame) {
@@ -283,6 +291,10 @@ public class Player extends Combatable implements Serializable {
             if (version >= VERSION_2_SYSMSG)
                 sysmsg = (String) in.readObject();
             name = (String) in.readObject();
+            if (name.length() > 30){ // Truncate name length if not already done.
+                name = name.substring(0, 30);
+            }
+
             //        Printer.out("name: "+name);
             email = (String) in.readObject();
             password = (String) in.readObject();
