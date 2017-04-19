@@ -14,11 +14,15 @@ public class GameInfo {
 
         EGTCPServer serv = new EGTCPServer();
         int numAIs = 5, iarg = 0;
-        boolean emailsTurnSurvived = false;
+        boolean emailsTurnSurvived = false,
+                knownPlayers = false;
         for (int i = 0; i < args.length; ++i){
 //            Printer.out("args "+i+": "+args[i]);
             // No args here.
             if (args[i].equals("-emailsTurnSurvived")) {
+                emailsTurnSurvived = true;
+            }
+            if (args[i].equals("-knownPlayers")) {
                 emailsTurnSurvived = true;
             }
             // 1 args below
@@ -45,6 +49,15 @@ public class GameInfo {
                 Printer.out(String.format("%10s", p.name) + " "
                         + String.format("%30s", p.email)+" "
                         +String.format("%5s", ""+(int)p.Get(Stat.TurnPlayed)));
+            }
+        }
+        if (knownPlayers){
+            for (int i = 0; i < game.players.size(); ++i){
+                Player p = game.players.get(i);
+                Printer.out("Player "+p.name+" known players: "+p.cd.knownPlayerNames.size());
+                for (int j = 0; j < p.cd.knownPlayerNames.size(); ++j){
+                    Printer.out("- "+p.cd.knownPlayerNames.get(j));
+                }
             }
         }
     }
