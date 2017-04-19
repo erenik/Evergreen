@@ -23,7 +23,7 @@ public class GameInfo {
                 emailsTurnSurvived = true;
             }
             if (args[i].equals("-knownPlayers")) {
-                emailsTurnSurvived = true;
+                knownPlayers = true;
             }
             // 1 args below
             if (i >= args.length - 1)
