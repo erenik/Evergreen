@@ -19,8 +19,8 @@ table, th, tr {
 }
 
 .screenshots {
-  width: 85%;
-  height: 50%;
+  width: 100%;
+  height: 400px;
 }
 
 .menubutton a {

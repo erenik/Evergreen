@@ -10,6 +10,15 @@ router.get('/evergreen', function(req, res, next) {
   res.render('evergreen/index', { title: 'Evergreen' });
 });
 
+router.get('/evergreen/contact', function(req, res, next) {
+  res.render('evergreen/contact', { title: 'Evergreen' });
+});
+
+router.get('/evergreen/science', function(req, res, next) {
+  res.render('evergreen/science', { title: 'Evergreen' });
+});
+
+
 router.get('/json', function (req, res, next){
 	res.send('Yoyoyoy');
 });
