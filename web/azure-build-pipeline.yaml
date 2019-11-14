@@ -13,7 +13,7 @@ trigger:
     - hotfix/*
   paths:
     include:
-      web/*
+    - web/*
 
 
 
