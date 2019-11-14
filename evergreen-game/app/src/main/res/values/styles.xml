@@ -11,7 +11,7 @@
         <item name="android:background">@drawable/bg3</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:id">@id/fullscreen_view_background</item>
+       <!-- <item name="android:id">@id/fullscreen_view_background</item>-->
     </style>
 
     <style name="Evergreen.Logo">
@@ -261,5 +261,5 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
-    <item name="fullscreen_view_background" type="id">1414214</item>
+<!--    <item name="fullscreen_view_background" type="id">1414214</item> -->
 </resources>
