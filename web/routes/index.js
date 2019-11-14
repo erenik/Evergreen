@@ -7,15 +7,15 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/dev', function(req, res, next) {
-  res.render('dev', { title: 'Evergreen' });
+  res.render('dev', { title: 'Author' });
 });
 
 
-router.get('/evergreen', function(req, res, next) {
+router.get('/', function(req, res, next) {
   res.render('index', { title: 'Evergreen' });
 });
 
-router.get('/evergreen/contact', function(req, res, next) {
+router.get('/contact', function(req, res, next) {
   res.render('contact', { title: 'Evergreen' });
 });
 
