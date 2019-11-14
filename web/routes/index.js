@@ -6,21 +6,22 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Erenik' });
 });
 
+router.get('/dev', function(req, res, next) {
+  res.render('dev', { title: 'Evergreen' });
+});
+
+
 router.get('/evergreen', function(req, res, next) {
-  res.render('evergreen/index', { title: 'Evergreen' });
+  res.render('index', { title: 'Evergreen' });
 });
 
 router.get('/evergreen/contact', function(req, res, next) {
-  res.render('evergreen/contact', { title: 'Evergreen' });
+  res.render('contact', { title: 'Evergreen' });
 });
 
-router.get('/evergreen/science', function(req, res, next) {
-  res.render('evergreen/science', { title: 'Evergreen' });
+router.get('/science', function(req, res, next) {
+  res.render('science', { title: 'Evergreen' });
 });
 
-
-router.get('/json', function (req, res, next){
-	res.send('Yoyoyoy');
-});
 
 module.exports = router;

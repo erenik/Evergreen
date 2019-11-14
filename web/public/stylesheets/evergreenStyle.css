@@ -10,17 +10,26 @@ a {
   color: #00B7FF;
 }
 
-table, th, tr {
-  /*border: 1px solid black;*/
-}
-
 * {
   text-align: center;
 }
 
 .screenshots {
   width: 100%;
-  height: 400px;
+  height: auto;
+  max-height: 400px;
+}
+
+.imgParent {
+  width: 100%;
+}
+.slidePreview {
+  margin: auto;
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  align-self: center;
 }
 
 .menubutton a {
@@ -32,8 +41,4 @@ table, th, tr {
 
 #evergreen {
   width: 35%;
-}
-
-#menu {
-
 }
