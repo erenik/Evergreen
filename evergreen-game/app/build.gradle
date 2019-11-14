@@ -1,0 +1,72 @@
+
+apply plugin: 'com.android.application'
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+android {
+    signingConfigs {
+        config {
+            keyAlias 'EvergreenKey'
+            storeFile file('D:/Dropbox/Android/keyStore.jks')
+            keyPassword '891103axel'
+            storePassword '891103axel'
+        }
+    }
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+    dexOptions {
+        preDexLibraries = false
+    }
+    defaultConfig {
+        applicationId "erenik.evergreen"
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+        // To flag to ignore errors, use checkReleaseBuilds false
+        // Continue even if there are errors.
+        abortOnError false
+        disable 'MissingTranslation'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://maven.google.com/'
+        name 'Google'
+    }
+}
+
+dependencies {
+    // Web-server shit.
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
+    // For the graph views.
+    implementation 'com.jjoe64:graphview:4.2.2'
+    // Adding WEKA for Machine Learning.
+    // https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-dev
+    //    compile group: 'nz.ac.waikato.cms.weka', name: 'weka-dev', version: '3.9.1'
+    // For Android...
+    // compile files('../libs/wekaSTRIPPED.jar')
+}
+
+/*
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+}*/
