@@ -1,14 +1,47 @@
 extends game
 
 block content
-	img(id="evergreen" src="/img/imgpsh_fullsize.png" )
-	p Login~!
-	| I accept the terms of use.
-	input(
-		type='checkbox'
-		name='agreement'
-		checked
-	)
-	p Register
+	datalist(id='starting_bonuses')
+		option(value='Food')
+		option(value='Materials')
 
-	
+	script(src='/js/register.js')
+	table(align='center')
+		tr
+			th
+				p Name
+			th
+				input(
+					id='name'
+					type='text'
+					text='Ivan'
+				)
+		tr
+			th
+				p Starting bonus
+			th
+				input(
+					id='name'
+					type='list'
+					list='starting_bonuses'
+				)
+		tr
+			th I accept the terms of use.
+			th
+				input(
+					id='termsOfUse'
+					onclick="termsAccepted()"
+					type='checkbox'
+					name='agreement'
+				)
+		tr
+			th
+			th
+				input(
+					id='registerButton'
+					type='submit'
+					value='Register'
+					disabled=true
+				)
+
+
