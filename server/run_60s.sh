@@ -1,4 +1,4 @@
 #!/bin/sh
-java -cp ./java/ erenik.evergreen.server.EGTCPServer -ais 0 -maxActivePlayers 100 -secondsPerDay 60
+java -cp ./java/ evergreen.server.EGTCPServer -ais 0 -maxActivePlayers 100 -secondsPerDay 60
 
 

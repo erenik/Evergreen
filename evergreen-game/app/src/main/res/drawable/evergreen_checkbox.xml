@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_checked="true" android:state_focused="false" android:drawable="@drawable/checkbox_checked_32" />
-    <item android:state_checked="true" android:state_focused="true" android:drawable="@drawable/checkbox_checked_32" />
-    <item android:state_checked="false" android:state_focused="false" android:drawable="@drawable/checkbox_32" />
-    <item android:state_checked="false" android:state_focused="true" android:drawable="@drawable/checkbox_32" />
-</selector>

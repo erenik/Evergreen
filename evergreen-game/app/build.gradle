@@ -17,7 +17,7 @@ android {
         preDexLibraries = false
     }
     defaultConfig {
-        applicationId "erenik.evergreen"
+        applicationId "evergreen"
         minSdkVersion 18
         targetSdkVersion 29
         versionCode 1

@@ -1,0 +1,44 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  color: white;
+  background-image: url("/img/background_fullsize.jpeg");
+  background-size: cover;
+}
+
+a {
+  color: #00B7FF;
+}
+
+* {
+  text-align: center;
+}
+
+.screenshots {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+}
+
+.imgParent {
+  width: 100%;
+}
+.slidePreview {
+  margin: auto;
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  align-self: center;
+}
+
+.menubutton a {
+  font-family: "Verdana";
+  font-size: 18px;
+  color: white;
+  text-decoration: none;
+}
+
+#evergreen {
+  width: 15%;
+}

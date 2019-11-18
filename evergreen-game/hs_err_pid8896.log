@@ -89,7 +89,7 @@ CodeCache: size=245760Kb used=8445Kb max_used=8463Kb free=237314Kb
 Compilation events (10 events):
 Event: 5.519 Thread 0x000000001785f000 1944       2       com.android.dx.rop.code.Rops::opIfNe (17 bytes)
 Event: 5.519 Thread 0x000000001785f000 nmethod 1944 0x00000000035e5b50 code [0x00000000035e5cc0, 0x00000000035e5e48]
-Event: 5.527 Thread 0x000000001785f000 1949       2       java.util.concurrent.locks.AbstractQueuedSynchronizer::isOnSyncQueue (33 bytes)
+Event: 5.527 Thread 0x000000001785f000 1949       2       evergreen.util.concurrent.locks.AbstractQueuedSynchronizer::isOnSyncQueue (33 bytes)
 Event: 5.527 Thread 0x000000001785f000 nmethod 1949 0x00000000035e2750 code [0x00000000035e28c0, 0x00000000035e2af0]
 Event: 5.533 Thread 0x0000000017850800 nmethod 1886 0x000000000360e450 code [0x000000000360e680, 0x000000000360fba8]
 Event: 5.533 Thread 0x0000000017850800 1937       4       com.android.dx.ssa.SCCP::simulateBranch (666 bytes)
@@ -187,18 +187,18 @@ Heap after GC invocations=4 (full 0):
 Deoptimization events (10 events):
 Event: 3.233 Thread 0x0000000017b0b000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000034674cc method=com.android.dx.ssa.LiteralOpUpgrader$1.visitNonMoveInsn(Lcom/android/dx/ssa/NormalSsaInsn;)V @ 55
 Event: 3.234 Thread 0x0000000017b0b000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000031dca9c method=com.android.dx.ssa.SsaMethod.updateOneDefinition(Lcom/android/dx/ssa/SsaInsn;Lcom/android/dx/rop/code/RegisterSpec;)V @ 4
-Event: 3.410 Thread 0x0000000017b31000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000319aa7c method=com.android.dx.util.IntList.binarysearch(I)I @ 105
+Event: 3.410 Thread 0x0000000017b31000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x000000000319aa7c method=com.android.dx.evergreen.util.IntList.binarysearch(I)I @ 105
 Event: 4.137 Thread 0x0000000017b33000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x0000000003521568 method=com.android.dx.cf.code.RopperMachine.run(Lcom/android/dx/cf/code/Frame;II)V @ 1250
 Event: 4.508 Thread 0x0000000017b0e000 Uncommon trap: reason=bimorphic action=maybe_recompile pc=0x00000000034e68d0 method=com.android.dx.cf.code.BytecodeArray.parseInstruction(ILcom/android/dx/cf/code/BytecodeArray$Visitor;)I @ 1130
 Event: 4.508 Thread 0x0000000017b0e000 Uncommon trap: reason=bimorphic action=maybe_recompile pc=0x00000000034e68d0 method=com.android.dx.cf.code.BytecodeArray.parseInstruction(ILcom/android/dx/cf/code/BytecodeArray$Visitor;)I @ 1130
 Event: 4.815 Thread 0x0000000017b31000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000035031e0 method=com.android.dx.dex.code.RopTranslator.pickOrder()V @ 279
 Event: 4.962 Thread 0x0000000002cd3000 Uncommon trap: reason=unloaded action=reinterpret pc=0x00000000035a2730 method=com.android.dx.cf.cst.ConstantPoolParser.parse0(ILjava/util/BitSet;)Lcom/android/dx/rop/cst/Constant; @ 220
 Event: 4.968 Thread 0x0000000017b0b000 Uncommon trap: reason=unstable_if action=reinterpret pc=0x00000000032f2f74 method=com.android.dx.ssa.SCCP.simulateStmt(Lcom/android/dx/ssa/SsaInsn;)V @ 53
-Event: 4.975 Thread 0x0000000017b0b000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000003256680 method=java.util.HashMap.putVal(ILjava/lang/Object;Ljava/lang/Object;ZZ)Ljava/lang/Object; @ 203
+Event: 4.975 Thread 0x0000000017b0b000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x0000000003256680 method=evergreen.util.HashMap.putVal(ILjava/lang/Object;Ljava/lang/Object;ZZ)Ljava/lang/Object; @ 203
 
 Internal exceptions (3 events):
-Event: 0.050 Thread 0x0000000002cd3000 Exception <a 'java/lang/NoSuchMethodError': Method sun.misc.Unsafe.defineClass(Ljava/lang/String;[BII)Ljava/lang/Class; name or signature does not match> (0x00000000eab07cc0) thrown at [C:\src\android\AOSP-openjdk\external\jetbrains\jdk\hotspot\src\share\v›èçROº©?
-Event: 0.050 Thread 0x0000000002cd3000 Exception <a 'java/lang/NoSuchMethodError': Method sun.misc.Unsafe.prefetchRead(Ljava/lang/Object;J)V name or signature does not match> (0x00000000eab07fa8) thrown at [C:\src\android\AOSP-openjdk\external\jetbrains\jdk\hotspot\src\share\vm\prims\jni.cpp, l»ÆQ•bo@
+Event: 0.050 Thread 0x0000000002cd3000 Exception <a 'java/lang/NoSuchMethodError': Method sun.misc.Unsafe.defineClass(Ljava/lang/String;[BII)Ljava/lang/Class; name or signature does not match> (0x00000000eab07cc0) thrown at [C:\src\android\AOSP-openjdk\external\jetbrains\jdk\hotspot\src\share\vï¿½ï¿½ï¿½ROï¿½ï¿½?
+Event: 0.050 Thread 0x0000000002cd3000 Exception <a 'java/lang/NoSuchMethodError': Method sun.misc.Unsafe.prefetchRead(Ljava/lang/Object;J)V name or signature does not match> (0x00000000eab07fa8) thrown at [C:\src\android\AOSP-openjdk\external\jetbrains\jdk\hotspot\src\share\vm\prims\jni.cpp, lï¿½ï¿½Qï¿½bo@
 Event: 2.179 Thread 0x0000000002cd3000 Implicit null exception at 0x00000000030ae522 to 0x00000000030ae629
 
 Events (10 events):

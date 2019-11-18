@@ -8,7 +8,7 @@ rm -r ./java/erenik/evergreen/android/
 echo Building
 javac -cp ./java/ ./java/erenik/evergreen/server/GameInfo.java
 
-java -cp ./java/ erenik.evergreen.server.GameInfo -emailsTurnSurvived
+java -cp ./java/ evergreen.server.GameInfo -emailsTurnSurvived
 
 
 
