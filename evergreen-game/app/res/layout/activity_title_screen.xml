@@ -1,0 +1,49 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".android.act.IntroScreen"
+    style="@style/Evergreen.BG"
+    android:orientation="vertical">
+
+    <LinearLayout style="@style/Evergreen.Layout.Vertical" android:layout_height="match_parent">
+
+
+        <ImageView style="@style/Evergreen.Logo"
+            android:id="@+id/imageViewIntroOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            />
+
+        <FrameLayout android:layout_width="match_parent"
+            android:layout_height="0dp" android:layout_weight="1">
+            <LinearLayout style="@style/Evergreen.Layout.Vertical" android:id="@+id/layoutMainButtons" android:layout_height="match_parent" android:visibility="visible">
+                <!-- The primary full-screen view. This can be replaced with whatever view is needed to present your content, e.g. VideoView, SurfaceView, TextureView, etc. -->
+                <TextView android:id="@+id/fullscreen_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+                <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_singleplayer" style="@style/Evergreen.MainButtons" android:text="@string/singleplayer"  />
+                <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_multiplayer" style="@style/Evergreen.MainButtons" android:text="@string/multiplayer" />
+                <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_loadGame" style="@style/Evergreen.MainButtons" android:text="@string/load_game" />
+                <erenik.evergreen.android.ui.EvergreenButton android:id="@+id/button_menu" style="@style/Evergreen.MainButtons" android:text="@string/menu" />
+                <TextView android:id="@+id/fullscreen_view2" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.5" />
+            </LinearLayout>
+            <LinearLayout android:layout_marginLeft="10dp" android:layout_marginRight="10dp"
+                style="@style/Evergreen.Layout.Vertical" android:id="@+id/layout_loadGameButtons" android:layout_height="match_parent" android:visibility="invisible">
+                <!-- The primary full-screen view. This can be replaced with whatever view is needed to present your content, e.g. VideoView, SurfaceView, TextureView, etc. -->
+                <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+                <AutoCompleteTextView  android:id="@+id/autoCompleteTextView_email" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/prompt_email"
+                    android:inputType="textEmailAddress" android:maxLines="1" android:imeOptions="actionNext" />
+                <EditText android:id="@+id/editText_password" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="@string/prompt_password" android:inputType="textPassword" android:imeOptions="actionGo" android:maxLines="1" />
+                <LinearLayout style="@style/Evergreen.Layout">
+                    <Button style="@style/Evergreen.Button.MainScreenBottom" android:text="@string/back" android:id="@+id/buttonBack"/>
+                    <Button style="@style/Evergreen.Button.MainScreenBottom" android:text="OK" android:id="@+id/button_tryLoad"/>
+
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.5" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <include layout="@layout/progress_bar_overlay"/>
+
+</FrameLayout>

@@ -1,0 +1,100 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Evergreen.BG"
+    tools:context=".android.act.MainScreen">
+    <!--    android:background="@color/backgroundMainGreen" -->
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+
+    <!-- Status above -->
+    <!-- Linear layout for most things? -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/mainLayoutPadding"
+        >
+
+
+        <!-- Scrollview for all main content, may contain several different small screens inside? -->
+        <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+
+            <!-- All content except the last 3 buttons. -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+
+
+                <ImageView style="@style/Evergreen.Logo" android:layout_width="match_parent" android:layout_height="100sp" />
+                <LinearLayout style="@style/Evergreen.Layout">
+                    <FrameLayout android:layout_width="wrap_content" android:layout_height="wrap_content"  android:layout_marginLeft="6sp" >
+                        <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/icon" android:layout_height="80sp" android:layout_width="80sp" />
+                        <ImageView style="@style/Evergreen.ImageView" android:src="@drawable/av_01" android:padding="1sp" android:scaleType="fitCenter" android:layout_height="65sp"
+                            android:layout_width="65sp" android:layout_gravity="center" android:layout_marginBottom="2sp" android:id="@+id/imageView_avatar" />
+                    </FrameLayout>
+                    <erenik.evergreen.android.ui.EvergreenTextView
+                        style="@style/Evergreen.TextBiggest" android:text="Placeholder" android:layout_gravity="center"
+                        android:id="@+id/textViewName"/>
+                </LinearLayout>
+
+                <!-- /// First Row of stats -->
+                <include layout="@layout/row_of_main_stat_icons"/>
+
+                <!-- Frame layout for the rendering of the shelter/defense/home and all additions -->
+                <FrameLayout android:layout_width="match_parent" android:layout_height="190sp" android:padding="3sp">
+                    <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/imageView_defenseLevel" android:src="@drawable/def_level_3" android:scaleType="fitCenter" />
+                </FrameLayout>
+
+                <!-- /// Second Row of stats -->
+                    <!-- Attack -->
+
+                <!-- Main buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <Button style="@style/Evergreen.MainButtons.AdaptiveWidth" android:id="@+id/buttonChooseActiveAction" android:text="@string/ActiveAction"/>
+                    <Button style="@style/Evergreen.MainButtons.AdaptiveWidth" android:id="@+id/buttonChooseAction" android:text="@string/DailyActions" />
+                </LinearLayout>
+                <Button style="@style/Evergreen.MainButtons" android:id="@+id/buttonChooseSkill" android:text="@string/SkillTraining" />
+
+                <!-- Event Log for all past happenings. -->
+                <include layout="@layout/event_log"/>
+
+                <!-- Some empty space at the bottom for design purposes? -->
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Bottom 3 buttons. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonMenu" android:text="@string/menu" />
+            <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/nextDay" android:text="@string/nextDay" />
+            <Button style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/inventory" android:text="@string/inventory" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg3"
+        android:clickable="true"
+        android:id="@+id/layout_sysmsg"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text.Title" android:text="System message" />
+        <erenik.evergreen.android.ui.EvergreenTextView style="@style/Evergreen.Text" android:layout_width="match_parent"
+            android:text="Placeholder placeholds very good." android:background="@color/black_overlay" android:id="@+id/textView_sysMsg"
+            android:textSize="20dp" />
+        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+        <Button style="@style/Evergreen.Button.Wide" android:text="@string/ok" android:id="@+id/button_sysmsgConfirm" />
+    </LinearLayout>
+
+    <include layout="@layout/progress_bar_overlay"/>
+
+</FrameLayout>

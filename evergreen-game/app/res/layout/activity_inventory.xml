@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Evergreen.BG"
+    tools:context=".android.act.StatViewActivity"
+    android:orientation="vertical"
+    >
+
+    <erenik.evergreen.android.ui.EvergreenTextView
+        style="@style/Evergreen.Text.Title.Smaller" android:text="Inventory" />
+    <!-- Icon with stat, text with stat -->
+    <!-- /// First Row of stats -->
+    <LinearLayout style="@style/Evergreen.Layout">
+        <erenik.evergreen.android.ui.EvergreenTextView
+            style="@style/Evergreen.Text" android:text="Category" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="@string/weapons" android:id="@+id/buttonWeapons" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="@string/armor" android:id="@+id/buttonArmor" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="@string/tools" android:id="@+id/buttonTools" />
+    </LinearLayout>
+    <!--
+    <LinearLayout style="@style/Evergreen.Layout">
+        <erenik.evergreen.android.ui.EvergreenTextView
+            style="@style/Evergreen.Text" android:text="Sort by" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="Name" android:id="@+id/buttonSortByName" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="Quality" android:id="@+id/buttonSortByQuality" />
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:text="Date" android:id="@+id/buttonSortByDate" />
+    </LinearLayout>
+-->
+    <erenik.evergreen.android.ui.EvergreenTextView
+        style="@style/Evergreen.TextBigger" android:text="@string/relevantGear" />
+    <!-- Main content when desc text invisible -->
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_weight="1">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/layoutRelevantItems" android:orientation="vertical">
+            <!-- An example entry in the list -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="50sp"
+                android:background="@drawable/small_button">
+                <erenik.evergreen.android.ui.EvergreenButton
+                    android:layout_width="wrap_content"
+                    android:background="@color/transparent" android:layout_gravity="left"
+                    android:layout_height="wrap_content" android:text="Equip Bladiblamba"/>
+                <ImageButton style="@style/Evergreen.ImageView.StatDetailIcon" android:layout_width="65sp"
+                    android:layout_height="match_parent" android:scaleType="fitCenter" android:src="@drawable/weapon_accuracy" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="5-8"
+                    android:textSize="20sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom buttons -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <erenik.evergreen.android.ui.EvergreenButton
+            style="@style/Evergreen.Button.MainScreenBottom" android:id="@+id/buttonBack" android:text="Back" />
+    </LinearLayout>
+
+</LinearLayout>
