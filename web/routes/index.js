@@ -23,5 +23,4 @@ router.get('/science', function(req, res, next) {
   res.render('science', { title: 'Evergreen' });
 });
 
-
 module.exports = router;

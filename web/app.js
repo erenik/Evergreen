@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var game = require('./routes/game');
 var users = require('./routes/users');
+var notfound = require('./routes/notfound');
 
 var app = express();
 
@@ -44,7 +45,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('lost');
 });
 
 module.exports = app;

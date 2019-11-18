@@ -1,7 +1,8 @@
 extends gameLayout
 
 block content
-	img(id="evergreen" src="/img/imgpsh_fullsize.png" )
+	a(href='/game')
+		img(id="evergreen" src="/img/imgpsh_fullsize.png" )
 	p Evergreen Game main page!~!!!!!
 
 	script(src='/js/game.js')
@@ -29,3 +30,7 @@ block foot
 			th(class='menubutton')
 				a(href='/game/log') Log
 
+	table(cellpadding="20" id="menu" align="center")
+		tr
+			th(class='menubutton')
+				a(href='/') Evergreen
