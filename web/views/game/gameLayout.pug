@@ -5,5 +5,37 @@ html
     link(rel='stylesheet', href='/stylesheets/gameStyle.css')
   body
     block header
+    block generalInfo 
+      script(src='/js/game.js')
+
+      table(width="500" align="center")
+        tr
+          th
+            table(align="center")
+              tr
+                th() Players
+                th(id='players') 
+                th
+                th Day
+                th(id='day') 
+                th 
+                th Time until next day 
+                th(id='timeUntilNextDay')
+
     block content
     block foot
+      table(cellpadding="20" id="menu" align="center")
+        tr
+          th(class='menubutton')
+            a(href='/game/login') Login
+          th(class='menubutton')
+            a(href='/game/character') Character
+          th(class='menubutton')
+            a(href='/game/actions') Actions
+          th(class='menubutton')
+            a(href='/game/log') Log
+
+      table(cellpadding="20" id="menu" align="center")
+        tr
+          th(class='menubutton')
+            a(href='/') Evergreen

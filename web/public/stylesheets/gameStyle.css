@@ -42,3 +42,21 @@ a {
 #evergreen {
   width: 15%;
 }
+
+ul.vertical {
+  list-style-type: none;
+  border-radius: 5px;
+  margin: 0;
+  padding: 0;
+  background-color: #555555aa;
+}
+
+li.vertical {
+  border-radius: 5px;
+  margin: 3px;
+  min-height: 20px;
+  background-color: #555555FF;
+}
+li.vertical:hover {
+  background-color: #333 !important
+}

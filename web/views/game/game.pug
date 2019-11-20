@@ -7,32 +7,4 @@ block header
 block content
 	p Evergreen Game main page!~!!!!!
 
-	script(src='/js/game.js')
 
-	table(width="500" align="center")
-		tr
-			th
-				table(align="left")
-					tr
-						th() Players
-						th(id='players') players
-					tr
-						th Day
-						th(id='day') day
-
-block foot
-	table(cellpadding="20" id="menu" align="center")
-		tr
-			th(class='menubutton')
-				a(href='/game/login') Login
-			th(class='menubutton')
-				a(href='/game/character') Character
-			th(class='menubutton')
-				a(href='/game/actions') Actions
-			th(class='menubutton')
-				a(href='/game/log') Log
-
-	table(cellpadding="20" id="menu" align="center")
-		tr
-			th(class='menubutton')
-				a(href='/') Evergreen

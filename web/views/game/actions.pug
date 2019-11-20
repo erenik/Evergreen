@@ -2,4 +2,18 @@ extends game
 
 block content
 	p Actions to come.
+	script(src="/js/actions.js")
 
+	table(align="center" max-width="600px")
+		tr 
+			th
+				p Queueable Actions 
+			th
+				p Queued Actions
+		tr 
+			th(align=top)
+				ul(id="QueueableActions" class="vertical")
+			th(align=top)
+				ul(id="QueuedActions" class="vertical")
+
+ 
