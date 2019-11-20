@@ -82,7 +82,7 @@ stages:
               package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
               startUpCommand: 'npm run start'
 
-- stage: Deploy Prod
+- stage: Deploy_Prod
   displayName: Deploy stage
   dependsOn: Build
   condition: succeeded()
