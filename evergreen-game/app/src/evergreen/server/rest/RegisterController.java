@@ -51,7 +51,6 @@ public class RegisterController {
         return (player != null);
     }
 
-    
 //    @RequestMapping(value = "/register", method = RequestMethod.POST, produces = "application/json")
     @PostMapping("/register")
     public RegisterResult register(@RequestBody RegisterPlayer newRegistration) throws PlayerAlreadyExistsException {

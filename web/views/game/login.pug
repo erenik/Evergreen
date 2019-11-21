@@ -4,6 +4,16 @@ block content
 	datalist(id='starting_bonuses')
 		option(value='Food')
 		option(value='Materials')
+		option(value='Weapon')
+		option(value='Armor')
+		option(value='Tools')
+		option(value='Inventions')
+	datalist(id='difficulties')
+		option(value='Easy')
+		option(value='Medium')
+		option(value='Hard')
+		option(value='Unforgiving')
+		option(value='Wipeout')
 
 	script(src='/js/register.js')
 	table(align='center')
@@ -18,12 +28,30 @@ block content
 				)
 		tr
 			th
+				p Password
+			th
+				input(
+					id='password'
+					type='password'
+					value='hello'
+				)
+		tr
+			th
 				p Starting bonus
 			th
 				input(
-					id='name'
+					id='startingBonus'
 					type='list'
 					list='starting_bonuses'
+				)
+		tr
+			th
+				p Difficulty
+			th
+				input(
+					id='difficulty'
+					type='list'
+					list='difficulties'
 				)
 		tr
 			th I accept the terms of use.
@@ -41,6 +69,7 @@ block content
 					id='registerButton'
 					type='submit'
 					value='Register'
+					onclick="register()"
 					disabled=true
 				)
 
