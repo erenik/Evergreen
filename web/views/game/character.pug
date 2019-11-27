@@ -2,24 +2,35 @@ extends game
 
 block content
 	script(src='/js/character.js')
-	p Character to come.
-	p 
+	p Updates to come.
 	table(align="center")
 		tr 
 			th Stats 
 			th #
+			th(width="50px")
+			th Equipment
+			th 
 		tr
 			th HP  
 			th 
 				text(id="hp") 0
 				| /
 				text(id="maxHp") 0
+			th
+			th Weapon
+			th(id="weapon") None
 		tr
 			th Food 
 			th(id="food") 0
+			th
+			th Armor
+			th(id="armor") None
 		tr
 			th Materials 
 			th(id="materials") 0
+			th
+			th Misc.
+			th(id="misc") None
 		tr
 			th Attack 
 			th(id="attack") 0
